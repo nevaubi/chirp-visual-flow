@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { BarChart2, Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
 
@@ -12,7 +13,7 @@ export default function HeroSection() {
       </div>
 
       {/* Arrow graphic - positioned between navbar and content */}
-      <div className="absolute top-[94px] right-[408px] lg:right-[420px] z-10">
+      <div className="absolute top-[94px] right-[408px] lg:right-[420px] z-10 hidden md:block">
         <svg width="70" height="70" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M42 5C40.5 15 24.5 33.5 5 42.5" stroke="#0087C8" strokeWidth="3" strokeLinecap="round"/>
           <path d="M39 3L44.5 9.5" stroke="#0087C8" strokeWidth="3" strokeLinecap="round"/>
