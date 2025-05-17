@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Wrench } from "lucide-react";
@@ -21,11 +22,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <div className="rounded-full bg-[#0087C8] w-10 h-10 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8c-2.168 0-4 1.832-4 4s1.832 4 4 4 4-1.832 4-4-1.832-4-4-4z" fill="white" />
-                <path d="M12 4c4.416 0 8 3.584 8 8s-3.584 8-8 8-8-3.584-8-8 3.584-8 8-8m0-2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2z" fill="white" />
-                <path d="M19 12c0-3.866-3.134-7-7-7v2c2.757 0 5 2.243 5 5h2z" fill="white" />
-              </svg>
+              <img 
+                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+                alt="Chirpmetrics Logo" 
+                className="h-7 w-7"
+              />
             </div>
             <span className="font-bold text-2xl text-[#0087C8]">chirpmetrics</span>
           </div>
