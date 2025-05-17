@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const BookmarksCallback = () => {
   const navigate = useNavigate();
-  const { authState } = useAuth();
+  const { authState, updateProfile } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,7 +46,14 @@ const BookmarksCallback = () => {
         }
 
         await exchangeCodeForToken(code, userId);
-        
+
+        // Retrieve any pending timezone selection stored before redirect
+        const storedTimezone = sessionStorage.getItem('selected_timezone');
+        if (storedTimezone) {
+          await updateProfile({ timezone: storedTimezone });
+          sessionStorage.removeItem('selected_timezone');
+        }
+
         sessionStorage.setItem('twitter_bookmarks_authorized', 'true');
         toast({ title: 'Bookmarks connected' });
       } catch (err) {
