@@ -24,10 +24,10 @@ const ChirpmetricsDashboard = () => {
           <div className={`relative w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}>
             <video 
               className="w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
+              autoPlay={true}
+              muted={true}
+              loop={true}
+              playsInline={true}
               preload="auto"
               poster="https://placehold.co/800x450/1A1F2C/0EA5E9?text=Chirpmetrics+Dashboard&font=montserrat"
               onLoadedData={() => setVideoLoaded(true)}
