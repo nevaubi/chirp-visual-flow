@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -54,7 +55,18 @@ const WalkthroughPopup = ({
           return {
             icon: <BarChart2 className="h-10 w-10 text-purple-500" />,
             title: "Analytics Insights",
-            description: "Track your performance over time with detailed charts and metrics to help you understand your audience better.",
+            description: (
+              <div className="text-left">
+                <p>Right away we'll start with a profile scan for instant insights. You'll see:</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>your best hour of the day for engagement</li>
+                  <li>performance by tweet type (photo, video, text)</li>
+                  <li>follower mapping and sentiment analysis (if paid)</li>
+                  <li>data driven suggestions for growth</li>
+                  <li>much more</li>
+                </ul>
+              </div>
+            ),
           };
         case 3:
           return {
@@ -84,7 +96,17 @@ const WalkthroughPopup = ({
           return {
             icon: <Twitter className="h-10 w-10 text-[#0087C8]" />,
             title: "Bookmark Integration",
-            description: "We automatically sync with your X bookmarks to help you generate content for your newsletters.",
+            description: (
+              <div className="text-left">
+                <p>Daily, bi-weekly, or weekly. You choose and we do the rest:</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>secure auto-sync with your X bookmarks</li>
+                  <li>smart selection for newsletter topics</li>
+                  <li>tailored for either personal use or paid audience</li>
+                </ul>
+                <p className="mt-2">All we need you to do is... bookmark!</p>
+              </div>
+            ),
           };
         case 3:
           return {
@@ -175,15 +197,17 @@ const WalkthroughPopup = ({
 
           {/* Content */}
           <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center">
               <div className={cn(
                 "p-3 sm:p-4 rounded-full mb-4",
                 isCreatorPlatform ? "bg-blue-100" : "bg-amber-100"
               )}>
                 {content.icon}
               </div>
-              <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{content.title}</h2>
-              <p className="text-sm sm:text-base text-gray-600">{content.description}</p>
+              <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">{content.title}</h2>
+              <div className="text-sm sm:text-base text-gray-600 w-full">
+                {content.description}
+              </div>
             </div>
           </div>
 
