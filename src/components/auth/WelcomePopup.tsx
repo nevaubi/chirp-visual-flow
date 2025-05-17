@@ -30,7 +30,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
   return (
     <Dialog open={open}>
       {/* Custom DialogOverlay with blur effect */}
-      <DialogOverlay className="backdrop-blur-sm" />
+      <DialogOverlay className="backdrop-blur-[2px]" />
       <DialogContent
         className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl"
         onInteractOutside={(e) => e.preventDefault()}
