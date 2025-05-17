@@ -1,18 +1,15 @@
-
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import Features from "../components/Features";
-import CTASection from "../components/CTASection";
-import Footer from "../components/Footer";
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import FeaturesSection from "@/components/FeaturesSection";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
       <Navbar />
-      <main className="flex-grow">
-        <Hero />
-        <Features />
-        <CTASection />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
       </main>
       <Footer />
     </div>
