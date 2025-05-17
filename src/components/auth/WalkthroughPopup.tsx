@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -42,6 +43,7 @@ const WalkthroughPopup = ({
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const totalSteps = 4;
   const { toast } = useToast();
+  const { authState } = useAuth();
 
   // Form state for creator platform step 4
   const [timezone, setTimezone] = useState<string>("");
@@ -81,9 +83,16 @@ const WalkthroughPopup = ({
         setVerificationError(null);
         
         try {
-          // Call the username verification edge function
+          if (!authState.user?.id) {
+            throw new Error("User is not authenticated");
+          }
+          
+          // Call the username verification edge function with user ID
           const { data, error } = await supabase.functions.invoke('username_verification', {
-            body: { username },
+            body: { 
+              username,
+              userId: authState.user.id
+            },
           });
 
           if (error) {
@@ -102,7 +111,12 @@ const WalkthroughPopup = ({
             description: "Your username has been verified successfully",
           });
           
-          // Continue with onComplete (no profile update yet)
+          // Update the profile with timezone and continue with onComplete
+          await supabase.from('profiles').update({
+            timezone
+          }).eq('id', authState.user.id);
+          
+          // Continue with onComplete
           await onComplete();
         } catch (error) {
           console.error("Error verifying username:", error);

@@ -1,5 +1,7 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,17 +15,44 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase client using environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase environment variables");
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Get API key from environment
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) {
       throw new Error("APIFY_API_KEY not found in environment variables");
     }
 
-    const { username } = await req.json();
+    // Parse request body
+    const { username, userId } = await req.json();
     if (!username) {
       throw new Error("Username is required");
     }
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
 
-    // Remove @ if present
+    // Get user profile from database to compare usernames later
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('twitter_username')
+      .eq('id', userId)
+      .single();
+      
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      throw new Error("Could not retrieve user profile");
+    }
+
+    // Remove @ if present in submitted username
     const formattedUsername = username.startsWith('@')
       ? username.substring(1)
       : username;
@@ -75,6 +104,21 @@ serve(async (req) => {
     const isValid = Array.isArray(data) && data.length > 0;
     console.log(`Username ${formattedUsername} is ${isValid ? 'valid' : 'invalid'}`);
 
+    // If not valid, return early
+    if (!isValid) {
+      return new Response(JSON.stringify({
+        success: false,
+        isValid: false,
+        username: formattedUsername,
+        message: "No account found with this username"
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     // Parse only the first tweet's author fields when valid
     let parsedFields = {};
     if (isValid) {
@@ -87,22 +131,40 @@ serve(async (req) => {
         twitter_username: author.name,
         is_verified: author.isBlueVerified,
         location: author.location,
-        "follower_count": author.followers,
-        "following_count": author.following,
+        follower_count: author.followers,
+        following_count: author.following,
         account_creation_date: author.createdAt,
         total_posts: author.statusesCount,
         bio: author.profile_bio?.description ?? ""
       };
     }
 
-    // Return the combined response
+    // NEW VERIFICATION STEP: Compare retrieved twitter username with user's stored username
+    // If the profile has a twitter_username, we compare it with the returned one
+    // Note: profileData.twitter_username might be null for new users, in that case we skip this check
+    if (profileData.twitter_username !== null && 
+        parsedFields.twitter_username !== profileData.twitter_username) {
+      console.log(`Username mismatch: API returned ${parsedFields.twitter_username} but profile has ${profileData.twitter_username}`);
+      return new Response(JSON.stringify({
+        success: false,
+        isValid: false,
+        username: formattedUsername,
+        message: "The account username doesn't match your profile. Please check your account handle spelling and try again.",
+        detectedUsername: parsedFields.twitter_username
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Return the combined response for successful verification
     return new Response(JSON.stringify({
       success: true,
-      isValid,
+      isValid: true,
       username: formattedUsername,
-      message: isValid
-        ? "Username verified successfully"
-        : "No account found with this username",
+      message: "Username verified successfully",
       ...parsedFields
     }), {
       headers: {
