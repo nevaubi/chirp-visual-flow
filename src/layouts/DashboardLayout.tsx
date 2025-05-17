@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -47,34 +47,34 @@ const DashboardLayout = () => {
           </div>
 
           <nav className="flex-1 space-y-1">
-            <a
-              href="/dashboard/home"
-              className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#0087C8] rounded-md transition-colors"
+            <NavLink
+              to="/dashboard/home"
+              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
             >
               <Home size={18} />
               <span>Home</span>
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#0087C8] rounded-md transition-colors"
+            </NavLink>
+            <NavLink
+              to="#"
+              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
             >
               <BarChart2 size={18} />
               <span>Analytics</span>
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#0087C8] rounded-md transition-colors"
+            </NavLink>
+            <NavLink
+              to="#"
+              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
             >
               <Users size={18} />
               <span>Community</span>
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#0087C8] rounded-md transition-colors"
+            </NavLink>
+            <NavLink
+              to="#"
+              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
             >
               <Settings size={18} />
               <span>Settings</span>
-            </a>
+            </NavLink>
           </nav>
 
           {/* User profile */}
