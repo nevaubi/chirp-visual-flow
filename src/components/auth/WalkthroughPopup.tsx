@@ -147,7 +147,16 @@ const WalkthroughPopup = ({
   };
 
   const handleBookmarksConsent = () => {
-    startPkceAuth();
+    if (!authState.user?.id) {
+      toast({
+        title: "Authentication error",
+        description: "Please sign in before connecting Twitter bookmarks",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    startPkceAuth(authState.user.id);
   };
 
   // Content based on platform and step
