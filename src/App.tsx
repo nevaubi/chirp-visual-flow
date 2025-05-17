@@ -13,6 +13,7 @@ import NewUserDirect from "./pages/NewUserDirect";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
+import CreateNewsletter from "./pages/dashboard/CreateNewsletter";
 import { AuthProvider } from "./contexts/AuthContext";
 
 // Create placeholder components for other dashboard pages
@@ -71,6 +72,7 @@ const App = () => (
               <Route element={<DashboardLayout />}>
                 <Route index element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="home" element={<DashboardHome />} />
+                <Route path="newsletter/create" element={<CreateNewsletter />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="community" element={<Community />} />
                 <Route path="settings" element={<Settings />} />
