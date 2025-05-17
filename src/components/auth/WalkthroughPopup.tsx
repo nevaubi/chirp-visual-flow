@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import {
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { Twitter, BookOpen, BarChart2, Activity, Users } from "lucide-react";
+import { Twitter, BookOpen, BarChart2, Activity, Users, Check } from "lucide-react";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -71,8 +70,19 @@ const WalkthroughPopup = ({
         case 3:
           return {
             icon: <Activity className="h-10 w-10 text-[#FF6B35]" />,
-            title: "Engagement Tracking",
-            description: "Monitor how your audience interacts with your content and identify which posts perform best.",
+            title: "Tweet Generation",
+            description: (
+              <div className="text-left">
+                <p>Our AI learns your 'voice profile' to write tweets you'd be proud to post:</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>auto-create high quality tweets in your voice</li>
+                  <li>daily trending topics based on your niche</li>
+                  <li>niche-specific viral tweets to reply to</li>
+                  <li>daily auto-refresh tweet inspiration</li>
+                  <li>seamless and (soon) scheduled posting</li>
+                </ul>
+              </div>
+            ),
           };
         case 4:
           return {
@@ -111,8 +121,23 @@ const WalkthroughPopup = ({
         case 3:
           return {
             icon: <BarChart2 className="h-10 w-10 text-purple-500" />,
-            title: "Performance Analytics",
-            description: "Track how your newsletters perform with detailed metrics on opens, clicks, and subscriber growth.",
+            title: "Seamless Workflows",
+            description: (
+              <div className="text-left">
+                <p>We start with a few simple questions to:</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>learn your goals and any guidelines</li>
+                  <li>preferences and specifics</li>
+                  <li>preferred frequency, day, and email for delivery</li>
+                </ul>
+                <p className="mt-2 flex items-center">
+                  Want newsletters in your unique writing style? Available to all paid tiers 
+                  <span className="ml-1 inline-flex items-center justify-center">
+                    <Check className="h-4 w-4 text-green-500" />
+                  </span>
+                </p>
+              </div>
+            ),
           };
         case 4:
           return {
