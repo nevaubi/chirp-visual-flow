@@ -1,3 +1,5 @@
+
+// Get the Twitter client ID and redirect URI from environment or Supabase secrets
 export const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID || '';
 export const TWITTER_REDIRECT_URI = import.meta.env.VITE_TWITTER_REDIRECT_URI || '';
 

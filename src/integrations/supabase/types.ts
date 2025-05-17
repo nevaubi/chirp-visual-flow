@@ -25,6 +25,9 @@ export type Database = {
           numerical_id: string | null
           timezone: string | null
           total_posts: number | null
+          twitter_bookmark_access_token: string | null
+          twitter_bookmark_refresh_token: string | null
+          twitter_bookmark_token_expires_at: number | null
           twitter_handle: string | null
           twitter_profilepic_url: string | null
           twitter_username: string | null
@@ -45,6 +48,9 @@ export type Database = {
           numerical_id?: string | null
           timezone?: string | null
           total_posts?: number | null
+          twitter_bookmark_access_token?: string | null
+          twitter_bookmark_refresh_token?: string | null
+          twitter_bookmark_token_expires_at?: number | null
           twitter_handle?: string | null
           twitter_profilepic_url?: string | null
           twitter_username?: string | null
@@ -65,31 +71,13 @@ export type Database = {
           numerical_id?: string | null
           timezone?: string | null
           total_posts?: number | null
+          twitter_bookmark_access_token?: string | null
+          twitter_bookmark_refresh_token?: string | null
+          twitter_bookmark_token_expires_at?: number | null
           twitter_handle?: string | null
           twitter_profilepic_url?: string | null
           twitter_username?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      },
-      twitter_tokens: {
-        Row: {
-          user_id: string
-          access_token: string
-          refresh_token: string
-          expires_at: number | null
-        }
-        Insert: {
-          user_id: string
-          access_token: string
-          refresh_token: string
-          expires_at?: number | null
-        }
-        Update: {
-          user_id?: string
-          access_token?: string
-          refresh_token?: string
-          expires_at?: number | null
         }
         Relationships: []
       }

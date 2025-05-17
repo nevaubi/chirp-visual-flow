@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
@@ -31,9 +32,15 @@ serve(async (req) => {
       });
     }
 
+    // Update the profiles table instead of the twitter_tokens table
     const { error } = await supabase
-      .from('twitter_tokens')
-      .upsert({ user_id: userId, access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt });
+      .from('profiles')
+      .update({
+        twitter_bookmark_access_token: accessToken,
+        twitter_bookmark_refresh_token: refreshToken,
+        twitter_bookmark_token_expires_at: expiresAt
+      })
+      .eq('id', userId);
 
     if (error) {
       throw error;

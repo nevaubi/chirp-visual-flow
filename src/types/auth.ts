@@ -20,6 +20,9 @@ export interface Profile {
   account_creation_date: string | null;
   total_posts: number | null;
   location: string | null;
+  twitter_bookmark_access_token: string | null;
+  twitter_bookmark_refresh_token: string | null;
+  twitter_bookmark_token_expires_at: number | null;
 }
 
 export interface AuthState {
