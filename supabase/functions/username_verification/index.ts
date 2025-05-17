@@ -1,10 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
 serve(async (req) => {
@@ -15,25 +14,23 @@ serve(async (req) => {
 
   try {
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-    
     if (!APIFY_API_KEY) {
       throw new Error("APIFY_API_KEY not found in environment variables");
     }
 
     const { username } = await req.json();
-    
     if (!username) {
       throw new Error("Username is required");
     }
 
     // Remove @ if present
-    const formattedUsername = username.startsWith('@') ? username.substring(1) : username;
-    
+    const formattedUsername = username.startsWith('@')
+      ? username.substring(1)
+      : username;
     console.log(`Verifying username: ${formattedUsername}`);
 
     // Prepare the request to Apify
     const apifyUrl = `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`;
-    
     const requestBody = {
       "filter:blue_verified": false,
       "filter:consumer_video": false,
@@ -61,50 +58,70 @@ serve(async (req) => {
       "maxItems": 10,
       "queryType": "Top"
     };
-
     console.log("Sending request to Apify with payload:", JSON.stringify(requestBody));
 
     // Make the API call to Apify
     const response = await fetch(apifyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(requestBody)
     });
-
     const data = await response.json();
     console.log("Apify response:", JSON.stringify(data));
 
     // Determine if the username is valid based on Apify response
-    // If we get any tweets, we consider the username valid
     const isValid = Array.isArray(data) && data.length > 0;
-    
     console.log(`Username ${formattedUsername} is ${isValid ? 'valid' : 'invalid'}`);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        isValid,
-        username: formattedUsername,
-        message: isValid ? "Username verified successfully" : "No account found with this username"
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Parse only the first tweet's author fields when valid
+    let parsedFields = {};
+    if (isValid) {
+      const firstTweet = data[0];
+      const author = firstTweet.author || {};
+
+      parsedFields = {
+        twitter_handle: author.userName,
+        numerical_id: author.id,
+        twitter_username: author.name,
+        is_verified: author.isBlueVerified,
+        location: author.location,
+        "follower-count": author.followers,
+        "following-count": author.following,
+        account_creation_date: author.createdAt,
+        total_posts: author.statusesCount,
+        bio: author.profile_bio?.description ?? ""
+      };
+    }
+
+    // Return the combined response
+    return new Response(JSON.stringify({
+      success: true,
+      isValid,
+      username: formattedUsername,
+      message: isValid
+        ? "Username verified successfully"
+        : "No account found with this username",
+      ...parsedFields
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    );
+    });
+
   } catch (error) {
     console.error("Error in username verification:", error);
-    
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: error.message || "An error occurred during username verification"
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({
+      success: false,
+      message: error.message || "An error occurred during username verification"
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    );
+    });
   }
 });
