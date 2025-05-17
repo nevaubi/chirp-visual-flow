@@ -1,25 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { BarChart2, Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
-
 export default function HeroSection() {
-  return (
-    <section className="pt-28 pb-32 relative overflow-hidden bg-white">
+  return <section className="pt-28 pb-32 relative overflow-hidden bg-white">
       {/* Blue wavy border at the bottom */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg width="100%" height="auto" viewBox="0 0 1440 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 30C240 90 480 120 720 30C960 -60 1200 60 1440 30V200H0V30Z" fill="#0087C8"/>
+          <path d="M0 30C240 90 480 120 720 30C960 -60 1200 60 1440 30V200H0V30Z" fill="#0087C8" />
         </svg>
       </div>
 
       {/* Arrow graphic - positioned between navbar and content */}
       <div className="absolute top-[94px] right-[408px] lg:right-[420px] z-10 hidden md:block">
-        <img 
-          src="/arrow1.png" 
-          alt="Arrow graphic" 
-          width="70" 
-          height="70"
-        />
+        <img src="/arrow1.png" alt="Arrow graphic" width="70" height="70" className="object-scale-down" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative">
@@ -46,7 +38,7 @@ export default function HeroSection() {
                   <div className="flex items-center text-sm text-[#0087C8] font-medium">
                     <span>+104K</span>
                     <svg className="w-3 h-3 ml-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
@@ -54,17 +46,13 @@ export default function HeroSection() {
                 {/* Bar chart */}
                 <div className="mb-4">
                   <div className="h-24 flex items-end justify-between gap-1">
-                    {[22, 35, 28, 45, 30, 35, 70, 42, 52, 35, 28].map((height, i) => (
-                      <div key={i} className="w-full" style={{ height: `${height}%` }}>
-                        <div 
-                          className={`w-full rounded-sm ${
-                            i === 6 ? 'bg-[#0270A8]' : 
-                            i === 10 ? 'bg-[#0270A8]' : 'bg-[#A9D6F0]'
-                          }`}
-                          style={{ height: '100%' }}
-                        ></div>
-                      </div>
-                    ))}
+                    {[22, 35, 28, 45, 30, 35, 70, 42, 52, 35, 28].map((height, i) => <div key={i} className="w-full" style={{
+                    height: `${height}%`
+                  }}>
+                        <div className={`w-full rounded-sm ${i === 6 ? 'bg-[#0270A8]' : i === 10 ? 'bg-[#0270A8]' : 'bg-[#A9D6F0]'}`} style={{
+                      height: '100%'
+                    }}></div>
+                      </div>)}
                   </div>
                 </div>
               </div>
@@ -135,25 +123,19 @@ export default function HeroSection() {
               <div className="absolute top-5 right-5">
                 <div className="h-10 w-10 rounded-full bg-[#FFEEE8] flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" fill="#FF6B35" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" fill="#FF6B35" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
               </div>
               
               {/* Bookmark items */}
               <div className="space-y-3 mb-4">
-                {[
-                  "Top 10 Marketing Strategies for 2023",
-                  "How AI is Transforming Content Creation",
-                  "The Future of Social Media Engagement"
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center p-2 rounded-lg hover:bg-[#FFEEE8] group">
+                {["Top 10 Marketing Strategies for 2023", "How AI is Transforming Content Creation", "The Future of Social Media Engagement"].map((item, i) => <div key={i} className="flex items-center p-2 rounded-lg hover:bg-[#FFEEE8] group">
                     <div className="h-6 w-6 rounded-full bg-[#FFEEE8] flex items-center justify-center mr-2">
                       <Star className="h-3 w-3 text-[#FF6B35]" />
                     </div>
                     <span className="text-sm text-[#0f2e47]">{item}</span>
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               {/* Card footer */}
@@ -170,6 +152,5 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
