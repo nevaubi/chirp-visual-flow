@@ -38,16 +38,21 @@ const Navbar = () => {
             <span className="text-twitter-blue font-semibold text-xl tracking-tight">chirpmetrics</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Updated to match screenshot */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-gray-700 dark:text-gray-200 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors">
               Home
             </Link>
-            <Link to="/tools" className="text-gray-700 dark:text-gray-200 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors flex items-center">
-              <span>Free Tools</span>
+            <Link to="/tools" className="text-gray-700 dark:text-gray-200 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors">
+              Free Tools
+            </Link>
+            <Link to="/growth" className="text-gray-700 dark:text-gray-200 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors">
+              Twitter Growth
+            </Link>
+            <Link to="/newsletter" className="text-gray-700 dark:text-gray-200 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors">
+              Auto Newsletter
             </Link>
             <div className="flex items-center space-x-4">
-              <ThemeToggle />
               <Link to="/login" className="text-twitter-blue hover:text-twitter-dark transition-colors">
                 Sign in
               </Link>
@@ -70,7 +75,7 @@ const Navbar = () => {
           </div>
         </nav>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Updated to match screenshot */}
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="flex flex-col space-y-4 py-4 px-2 bg-white dark:bg-gray-900 rounded-lg">
@@ -87,6 +92,20 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Free Tools
+              </Link>
+              <Link 
+                to="/growth" 
+                className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Twitter Growth
+              </Link>
+              <Link 
+                to="/newsletter" 
+                className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Auto Newsletter
               </Link>
               <Link 
                 to="/login" 
