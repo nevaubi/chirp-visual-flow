@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,11 +56,20 @@ serve(async (req) => {
     };
 
     if (TWITTER_CLIENT_SECRET) {
-      const credentials = btoa(
-        `${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`
-      );
-      headers['Authorization'] = `Basic ${credentials}`;
+      // Use the Deno standard library's base64 encoder instead of btoa
+      const credentialsString = `${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(credentialsString);
+      const encodedCredentials = base64Encode(data);
+      headers['Authorization'] = `Basic ${encodedCredentials}`;
+      
+      console.log("Using client ID and secret for Basic auth");
+    } else {
+      console.log("WARNING: No client secret provided");
     }
+
+    console.log("Request headers:", JSON.stringify(headers));
+    console.log("Request body params:", body.toString());
 
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
