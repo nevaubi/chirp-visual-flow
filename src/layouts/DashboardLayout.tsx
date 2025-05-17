@@ -12,7 +12,8 @@ import {
   Bell, 
   LogOut,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Bookmark
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,9 @@ const DashboardLayout = () => {
   const initials = profile?.twitter_username 
     ? profile.twitter_username.substring(0, 2).toUpperCase() 
     : 'CM';
+
+  // Check if user is in the newsletter dashboard
+  const isNewsletterDashboard = profile?.newsletter_consent === true;
 
   // Check if the current device is mobile
   useEffect(() => {
@@ -52,6 +56,10 @@ const DashboardLayout = () => {
 
   const handleSignOut = () => {
     signOut();
+  };
+
+  const handleCreateNewsletter = () => {
+    navigate('/dashboard/create-newsletter');
   };
 
   const sidebarItems = [
@@ -115,6 +123,27 @@ const DashboardLayout = () => {
           {/* Navigation */}
           <nav className="flex-1 py-6">
             <ul className="space-y-2 px-2">
+              {/* Create Newsletter Button - Only show if the user has newsletter consent */}
+              {isNewsletterDashboard && (
+                <li className="mb-4">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full flex items-center gap-3 justify-start px-3 py-2 bg-amber-500/90 hover:bg-amber-600 text-white rounded-md transition-colors",
+                      !expanded && "justify-center px-0"
+                    )}
+                    onClick={handleCreateNewsletter}
+                  >
+                    <Bookmark size={20} />
+                    {expanded && (
+                      <span className="overflow-hidden whitespace-nowrap font-medium">
+                        Create Newsletter
+                      </span>
+                    )}
+                  </Button>
+                </li>
+              )}
+              
               {sidebarItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
