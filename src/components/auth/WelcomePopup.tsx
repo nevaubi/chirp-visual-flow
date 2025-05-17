@@ -6,6 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Twitter } from "lucide-react";
@@ -28,6 +29,8 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
 
   return (
     <Dialog open={open}>
+      {/* Custom DialogOverlay with blur effect */}
+      <DialogOverlay className="backdrop-blur-sm" />
       <DialogContent
         className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl"
         onInteractOutside={(e) => e.preventDefault()}
@@ -51,7 +54,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
                 Welcome!
               </DialogTitle>
               <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
-                What were you looking for?
+                Which were you looking for?
               </DialogDescription>
             </div>
           </DialogHeader>
