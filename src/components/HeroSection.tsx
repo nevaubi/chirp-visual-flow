@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { BarChart2, Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
 
@@ -14,7 +15,7 @@ export default function HeroSection() {
       {/* Arrow graphic - positioned between navbar and content */}
       <div className="absolute top-[94px] right-[408px] lg:right-[420px] z-10 hidden md:block">
         <img 
-          src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+          src="/lovable-uploads/500bc22a-2740-421b-a6ee-42fc8078a831.png" 
           alt="Arrow graphic" 
           width="70" 
           height="70"
