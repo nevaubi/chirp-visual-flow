@@ -51,7 +51,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
                 Welcome!
               </DialogTitle>
               <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
-                Which option best suits your needs?
+                What were you looking for?
               </DialogDescription>
             </div>
           </DialogHeader>
