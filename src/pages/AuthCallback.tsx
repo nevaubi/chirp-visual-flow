@@ -10,7 +10,21 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('Auth callback page loaded');
+        
+        // Set a timeout to prevent users from being stuck on this page
+        const timeoutId = setTimeout(() => {
+          console.log('Auth callback timeout triggered');
+          toast.error('Authentication timeout', {
+            description: 'The authentication process took too long. Please try again.',
+          });
+          navigate('/auth', { replace: true });
+        }, 10000);
+        
         const { data, error } = await supabase.auth.getSession();
+        
+        // Clear the timeout since we got a response
+        clearTimeout(timeoutId);
 
         if (error) {
           console.error('Authentication error:', error);

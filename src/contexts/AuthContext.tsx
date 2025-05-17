@@ -17,7 +17,7 @@ const initialState: AuthState = {
 interface AuthContextProps {
   authState: AuthState;
   signInWithTwitter: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (force?: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -26,6 +26,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Helper function to clear auth state
+  const clearAuthState = () => {
+    setAuthState({
+      user: null,
+      session: null,
+      profile: null,
+      loading: false,
+      error: null,
+    });
+  };
 
   useEffect(() => {
     const fetchProfile = async (userId: string) => {
@@ -55,31 +66,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (event === 'SIGNED_IN' && session) {
           try {
-            const profile = await fetchProfile(session.user.id);
-            setAuthState({
-              user: session.user,
-              session,
-              profile,
-              loading: false,
-              error: null,
-            });
-            
-            // Redirect to dashboard if not already there
-            if (!location.pathname.includes('/dashboard')) {
-              navigate('/dashboard/home', { replace: true });
-            }
+            // Use setTimeout to defer profile fetch and avoid potential race conditions
+            setTimeout(async () => {
+              const profile = await fetchProfile(session.user.id);
+              setAuthState({
+                user: session.user,
+                session,
+                profile,
+                loading: false,
+                error: null,
+              });
+              
+              // Redirect to dashboard if not already there
+              if (!location.pathname.includes('/dashboard')) {
+                navigate('/dashboard/home', { replace: true });
+              }
+            }, 0);
           } catch (error) {
             console.error('Error handling sign in:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         } else if (event === 'SIGNED_OUT') {
-          setAuthState({
-            user: null,
-            session: null,
-            profile: null,
-            loading: false,
-            error: null,
-          });
+          clearAuthState();
           
           // Redirect to home page if on a protected route
           if (location.pathname.includes('/dashboard')) {
@@ -87,14 +95,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         } else if (session) {
           try {
-            const profile = await fetchProfile(session.user.id);
-            setAuthState({
-              user: session.user,
-              session,
-              profile,
-              loading: false,
-              error: null,
-            });
+            // Use setTimeout to defer profile fetch and avoid potential race conditions
+            setTimeout(async () => {
+              const profile = await fetchProfile(session.user.id);
+              setAuthState({
+                user: session.user,
+                session,
+                profile,
+                loading: false,
+                error: null,
+              });
+            }, 0);
           } catch (error) {
             console.error('Error handling session update:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
@@ -111,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth state...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -124,20 +136,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (data.session) {
-          const profile = await fetchProfile(data.session.user.id);
-          setAuthState({
-            user: data.session.user,
-            session: data.session,
-            profile,
-            loading: false,
-            error: null,
-          });
-          
-          // Redirect to dashboard if on auth or root page
-          if (location.pathname === '/' || location.pathname === '/auth') {
-            navigate('/dashboard/home', { replace: true });
-          }
+          console.log('Session found during initialization:', data.session.user.id);
+          setTimeout(async () => {
+            const profile = await fetchProfile(data.session.user.id);
+            setAuthState({
+              user: data.session.user,
+              session: data.session,
+              profile,
+              loading: false,
+              error: null,
+            });
+            
+            // Redirect to dashboard if on auth or root page
+            if (location.pathname === '/' || location.pathname === '/auth') {
+              navigate('/dashboard/home', { replace: true });
+            }
+          }, 0);
         } else {
+          console.log('No session found during initialization');
           setAuthState({
             ...initialState,
             loading: false,
@@ -193,35 +209,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (force = false) => {
     try {
+      console.log('Sign out initiated, force:', force);
       setAuthState(prev => ({ ...prev, loading: true }));
+      
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.log('Sign out timeout triggered');
+        if (force) {
+          clearAuthState();
+          navigate('/', { replace: true });
+          toast.warning('Signed out locally due to timeout', {
+            description: 'Server connection timed out, but you were signed out locally',
+          });
+        } else {
+          setAuthState(prev => ({ ...prev, loading: false }));
+          toast.error('Sign out timeout', {
+            description: 'Unable to contact authentication server. Please try again.',
+          });
+        }
+      }, 5000);
+      
       const { error } = await supabase.auth.signOut();
       
+      // Clear the timeout since we got a response
+      clearTimeout(timeoutId);
+      
       if (error) {
-        toast.error('Error signing out', {
-          description: error.message,
-        });
-        setAuthState(prev => ({ ...prev, loading: false }));
+        console.error('Error signing out:', error);
+        
+        if (force) {
+          // Force sign out by clearing local state even though API call failed
+          clearAuthState();
+          navigate('/', { replace: true });
+          toast.warning('Forced sign out completed', {
+            description: 'Server error occurred, but you were signed out locally',
+          });
+        } else {
+          setAuthState(prev => ({ ...prev, loading: false }));
+          toast.error('Error signing out', {
+            description: error.message,
+          });
+        }
         return;
       }
       
-      setAuthState({
-        user: null,
-        session: null,
-        profile: null,
-        loading: false,
-        error: null,
-      });
-      
+      clearAuthState();
       navigate('/', { replace: true });
       toast.success('Signed out successfully');
     } catch (error) {
+      console.error('Exception in signOut:', error);
       const err = error as Error;
-      toast.error('Error signing out', {
-        description: err.message,
-      });
-      setAuthState(prev => ({ ...prev, loading: false }));
+      
+      if (force) {
+        clearAuthState();
+        navigate('/', { replace: true });
+        toast.warning('Forced sign out completed', {
+          description: 'An error occurred, but you were signed out locally',
+        });
+      } else {
+        setAuthState(prev => ({ ...prev, loading: false }));
+        toast.error('Error signing out', {
+          description: err.message,
+        });
+      }
     }
   };
 
