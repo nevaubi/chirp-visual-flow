@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogOverlay,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Twitter } from "lucide-react";
@@ -29,16 +28,14 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
 
   return (
     <Dialog open={open}>
-      {/* Custom DialogOverlay with blur effect */}
-      <DialogOverlay className="backdrop-blur-[2px]" />
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl"
+        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
-        <div className="p-3 sm:p-4 lg:p-5">
-          <DialogHeader className="flex flex-col items-center space-y-3">
+        <div className="p-4 sm:p-5 lg:p-6">
+          <DialogHeader className="flex flex-col items-center space-y-2 sm:space-y-3">
             <div className="flex items-center justify-center">
               <img 
                 src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
@@ -54,12 +51,12 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
                 Welcome!
               </DialogTitle>
               <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
-                Which were you looking for?
+                Which option best suits your needs?
               </DialogDescription>
             </div>
           </DialogHeader>
           
-          <div className="flex flex-col gap-3 mt-3">
+          <div className="flex flex-col gap-2 sm:gap-3 mt-3">
             <Button
               onClick={() => handleSelect("newsletters")}
               disabled={loading !== null}
@@ -138,7 +135,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
           </div>
           
           <div className="text-xs text-center text-gray-500 mt-3">
-            Both? - Coming soon!
+            You can change your preference later in settings
           </div>
         </div>
       </DialogContent>
