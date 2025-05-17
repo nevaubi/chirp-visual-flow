@@ -146,7 +146,13 @@ const WalkthroughPopup = ({
     }
   };
 
+  // When requesting bookmarks consent we also persist the selected timezone
+  // so it can be applied after the PKCE flow completes. This avoids the
+  // walkthrough restarting from the first step on return.
   const handleBookmarksConsent = () => {
+    if (timezone) {
+      sessionStorage.setItem('selected_timezone', timezone);
+    }
     startPkceAuth();
   };
 
@@ -332,7 +338,7 @@ const WalkthroughPopup = ({
                   <Label>Your permission to read (but never write or edit) your bookmarks:</Label>
                   <Button onClick={handleBookmarksConsent} variant="outline" className="w-full flex items-center justify-center gap-2">
                     <Twitter className="h-4 w-4" />
-                    Bookmarks Consent
+                    Authorize & Finish
                   </Button>
                 </div>
               </div>
