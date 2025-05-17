@@ -3,16 +3,17 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  BarChart2, 
-  Home, 
-  Users, 
-  Settings, 
-  Search, 
-  Bell, 
+import {
+  BarChart2,
+  Home,
+  Users,
+  Settings,
+  Search,
+  Bell,
   LogOut,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Bookmark,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,9 +28,10 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   
   const profile = authState.profile;
-  const initials = profile?.twitter_username 
-    ? profile.twitter_username.substring(0, 2).toUpperCase() 
+  const initials = profile?.twitter_username
+    ? profile.twitter_username.substring(0, 2).toUpperCase()
     : 'CM';
+  const isNewsletterPlatform = profile?.is_newsletter_platform;
 
   // Check if the current device is mobile
   useEffect(() => {
@@ -114,6 +116,20 @@ const DashboardLayout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 py-6">
+            {isNewsletterPlatform && (
+              <Button
+                className={cn(
+                  "w-full mb-4 bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-3 justify-start px-3",
+                  !expanded && "justify-center px-0"
+                )}
+                onClick={() => navigate('/dashboard/newsletter/create')}
+              >
+                <Bookmark size={20} />
+                {expanded && (
+                  <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
+                )}
+              </Button>
+            )}
             <ul className="space-y-2 px-2">
               {sidebarItems.map((item) => {
                 const isActive = location.pathname === item.path;
