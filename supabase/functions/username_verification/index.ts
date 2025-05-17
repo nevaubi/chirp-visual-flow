@@ -32,7 +32,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { username, userId } = await req.json();
+    const { username, userId, timezone } = await req.json();
     if (!username) {
       throw new Error("Username is required");
     }
@@ -139,7 +139,7 @@ serve(async (req) => {
       };
     }
 
-    // NEW VERIFICATION STEP: Compare retrieved twitter username with user's stored username
+    // Verification step: Compare retrieved twitter username with user's stored username
     // If the profile has a twitter_username, we compare it with the returned one
     // Note: profileData.twitter_username might be null for new users, in that case we skip this check
     if (profileData.twitter_username !== null && 
@@ -159,12 +159,37 @@ serve(async (req) => {
       });
     }
 
+    // Update the user profile with all the parsed data and timezone
+    const updateData = {
+      ...parsedFields,
+    };
+    
+    // Only add timezone if it was provided
+    if (timezone) {
+      updateData.timezone = timezone;
+    }
+    
+    console.log("Updating profile with data:", JSON.stringify(updateData));
+    
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId);
+      
+    if (updateError) {
+      console.error("Error updating profile:", updateError);
+      // Continue with the response even if the update failed
+      // We'll report this in the response
+    }
+
     // Return the combined response for successful verification
     return new Response(JSON.stringify({
       success: true,
       isValid: true,
       username: formattedUsername,
       message: "Username verified successfully",
+      profileUpdated: !updateError,
+      updateError: updateError ? updateError.message : null,
       ...parsedFields
     }), {
       headers: {

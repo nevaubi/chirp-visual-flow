@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          account_creation_date: string | null
           bio: string | null
           created_at: string | null
           follower_count: number | null
@@ -20,13 +21,17 @@ export type Database = {
           is_new: boolean | null
           is_newsletter_platform: boolean | null
           is_verified: boolean | null
+          location: string | null
+          numerical_id: string | null
           timezone: string | null
+          total_posts: number | null
           twitter_handle: string | null
           twitter_profilepic_url: string | null
           twitter_username: string | null
           updated_at: string | null
         }
         Insert: {
+          account_creation_date?: string | null
           bio?: string | null
           created_at?: string | null
           follower_count?: number | null
@@ -36,13 +41,17 @@ export type Database = {
           is_new?: boolean | null
           is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
+          location?: string | null
+          numerical_id?: string | null
           timezone?: string | null
+          total_posts?: number | null
           twitter_handle?: string | null
           twitter_profilepic_url?: string | null
           twitter_username?: string | null
           updated_at?: string | null
         }
         Update: {
+          account_creation_date?: string | null
           bio?: string | null
           created_at?: string | null
           follower_count?: number | null
@@ -52,7 +61,10 @@ export type Database = {
           is_new?: boolean | null
           is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
+          location?: string | null
+          numerical_id?: string | null
           timezone?: string | null
+          total_posts?: number | null
           twitter_handle?: string | null
           twitter_profilepic_url?: string | null
           twitter_username?: string | null

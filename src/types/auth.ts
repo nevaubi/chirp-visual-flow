@@ -16,6 +16,10 @@ export interface Profile {
   is_new: boolean | null;
   is_newsletter_platform: boolean | null;
   is_creator_platform: boolean | null;
+  numerical_id: string | null;
+  account_creation_date: string | null;
+  total_posts: number | null;
+  location: string | null;
 }
 
 export interface AuthState {

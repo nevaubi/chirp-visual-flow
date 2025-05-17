@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -43,7 +42,7 @@ const WalkthroughPopup = ({
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const totalSteps = 4;
   const { toast } = useToast();
-  const { authState } = useAuth();
+  const { authState, updateProfile } = useAuth();
 
   // Form state for creator platform step 4
   const [timezone, setTimezone] = useState<string>("");
@@ -90,11 +89,12 @@ const WalkthroughPopup = ({
             throw new Error("User is not authenticated");
           }
           
-          // Call the username verification edge function with user ID
+          // Call the username verification edge function with user ID and timezone
           const { data, error } = await supabase.functions.invoke('username_verification', {
             body: { 
               username,
-              userId: authState.user.id
+              userId: authState.user.id,
+              timezone
             },
           });
 
@@ -108,16 +108,11 @@ const WalkthroughPopup = ({
             return;
           }
           
-          // At this point, username is verified successfully
+          // At this point, username is verified successfully and profile should be updated by the edge function
           toast({
             title: "Username verified",
-            description: "Your username has been verified successfully",
+            description: "Your profile has been updated with your Twitter information",
           });
-          
-          // Update the profile with timezone and continue with onComplete
-          await supabase.from('profiles').update({
-            timezone
-          }).eq('id', authState.user.id);
           
           // Continue with onComplete
           await onComplete();
@@ -128,10 +123,23 @@ const WalkthroughPopup = ({
           setIsLoading(false);
         }
       } else {
-        // For newsletter platform, just complete without verification
+        // For newsletter platform, just update the timezone and complete
         setIsLoading(true);
-        await onComplete();
-        setIsLoading(false);
+        try {
+          if (timezone) {
+            await updateProfile({ timezone });
+          }
+          await onComplete();
+        } catch (error) {
+          console.error("Error updating timezone:", error);
+          toast({
+            title: "Error",
+            description: "An error occurred while updating your preferences.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
   };
@@ -347,7 +355,7 @@ const WalkthroughPopup = ({
               {isCreatorPlatform ? "Verifying username..." : "Finalizing your setup..."}
             </h3>
             <p className="text-sm sm:text-base text-gray-600 text-center">
-              {isCreatorPlatform ? "Please wait while we verify your account." : "Please wait while we save your preferences."}
+              {isCreatorPlatform ? "Please wait while we verify your account and update your profile." : "Please wait while we save your preferences."}
             </p>
           </div>
         </DialogContent>
