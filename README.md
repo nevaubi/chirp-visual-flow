@@ -65,6 +65,21 @@ This project is built with:
 Create a `.env` file based on `.env.example` and provide your Twitter OAuth credentials.
 These variables are used for the PKCE flow when connecting bookmarks.
 
+## Twitter token refresh workflow
+
+An edge function named `refresh_twitter_tokens` handles automatic refresh of
+expired or soon-to-expire Twitter OAuth tokens stored in the `profiles` table.
+Deploy the function and schedule it using Supabase CLI:
+
+```sh
+supabase functions deploy refresh_twitter_tokens
+supabase functions schedule refresh_twitter_tokens "*/30 * * * *"
+```
+
+This example runs the refresh job every 30 minutes. Adjust the cron expression
+to fit your needs. The function uses your existing Twitter client credentials
+and the service role key to update tokens securely.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/76a4a3b5-161f-4997-8b6e-9a5a7c053ae3) and click on Share -> Publish.

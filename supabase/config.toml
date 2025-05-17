@@ -113,6 +113,9 @@ verify_jwt = true
 [functions.exchange_twitter_code]
 verify_jwt = true
 
+[functions.refresh_twitter_tokens]
+verify_jwt = false
+
 [analytics]
 enabled = false
 # Configure one of the supported backends: "postgres", "clickhouse"
