@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { Twitter, BookOpen, BarChart2, Activity, Users, Check } from "lucide-react";
+import { Twitter, BookOpen, BarChart2, Activity, Users, Check, Loader2 } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -23,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -37,16 +39,83 @@ const WalkthroughPopup = ({
 }: WalkthroughPopupProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const totalSteps = 4;
+  const { toast } = useToast();
+
+  // Form state for creator platform step 4
+  const [timezone, setTimezone] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [permission, setPermission] = useState<boolean>(false);
+
+  // Reset form when opening the dialog
+  useEffect(() => {
+    if (open) {
+      setTimezone("");
+      setUsername("");
+      setPermission(false);
+      setVerificationError(null);
+    }
+  }, [open]);
+
+  // Check if all required fields are filled for creator platform step 4
+  const isCreatorFormValid = timezone && username && permission;
 
   const handleNextStep = async () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     } else {
       // On final step completion
-      setIsLoading(true);
-      await onComplete();
-      setIsLoading(false);
+      // Check if we're in the creator platform and need to verify username
+      if (isCreatorPlatform) {
+        if (!isCreatorFormValid) {
+          toast({
+            title: "Missing information",
+            description: "Please fill in all required fields",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setIsLoading(true);
+        setVerificationError(null);
+        
+        try {
+          // Call the username verification edge function
+          const { data, error } = await supabase.functions.invoke('username_verification', {
+            body: { username },
+          });
+
+          if (error) {
+            throw new Error(error.message);
+          }
+
+          if (!data.isValid) {
+            setVerificationError(data.message || "Could not verify this username. Please check and try again.");
+            setIsLoading(false);
+            return;
+          }
+          
+          // At this point, username is verified successfully
+          toast({
+            title: "Username verified",
+            description: "Your username has been verified successfully",
+          });
+          
+          // Continue with onComplete (no profile update yet)
+          await onComplete();
+        } catch (error) {
+          console.error("Error verifying username:", error);
+          setVerificationError(error.message || "An error occurred during verification. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // For newsletter platform, just complete without verification
+        setIsLoading(true);
+        await onComplete();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -97,13 +166,13 @@ const WalkthroughPopup = ({
           };
         case 4:
           return {
-            icon: null, // Removed the Users icon as requested
+            icon: null,
             title: "All we need to get started is...",
             description: (
               <div className="text-left space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
-                  <Select>
+                  <Select value={timezone} onValueChange={setTimezone}>
                     <SelectTrigger id="timezone" className="w-full">
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
@@ -120,11 +189,24 @@ const WalkthroughPopup = ({
                 
                 <div className="space-y-2">
                   <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
-                  <Input id="handle" placeholder="@username" />
+                  <Input 
+                    id="handle" 
+                    placeholder="@username" 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={cn(verificationError && "border-red-500")}
+                  />
+                  {verificationError && (
+                    <p className="text-sm text-red-500 mt-1">{verificationError}</p>
+                  )}
                 </div>
                 
                 <div className="flex items-start space-x-2">
-                  <Checkbox id="permission" />
+                  <Checkbox 
+                    id="permission" 
+                    checked={permission}
+                    onCheckedChange={(checked) => setPermission(checked as boolean)}
+                  />
                   <div className="grid gap-1.5 leading-none">
                     <Label htmlFor="permission" className="text-sm font-normal">
                       Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
@@ -137,7 +219,6 @@ const WalkthroughPopup = ({
                 
                 <div className="flex items-center justify-between pt-4">
                   <p className="font-medium">Ready to get started?</p>
-                  {/* Removed the Create profile button */}
                 </div>
               </div>
             ),
@@ -193,7 +274,7 @@ const WalkthroughPopup = ({
           };
         case 4:
           return {
-            icon: null, // Removed the Activity icon as requested
+            icon: null,
             title: "To get started, all we need is...",
             description: (
               <div className="text-left space-y-4">
@@ -221,8 +302,6 @@ const WalkthroughPopup = ({
                     Bookmarks Consent
                   </Button>
                 </div>
-                
-                {/* Removed the "Let's get started" button */}
               </div>
             ),
           };
@@ -247,8 +326,12 @@ const WalkthroughPopup = ({
         >
           <div className="p-4 sm:p-6 flex flex-col items-center justify-center min-h-[150px] sm:min-h-[200px]">
             <div className="w-8 h-8 sm:w-10 sm:h-10 mb-4 border-4 border-t-transparent border-[#0087C8] rounded-full animate-spin"></div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 text-center">Finalizing your setup...</h3>
-            <p className="text-sm sm:text-base text-gray-600 text-center">Please wait while we save your preferences.</p>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 text-center">
+              {isCreatorPlatform ? "Verifying username..." : "Finalizing your setup..."}
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 text-center">
+              {isCreatorPlatform ? "Please wait while we verify your account." : "Please wait while we save your preferences."}
+            </p>
           </div>
         </DialogContent>
       </Dialog>
@@ -269,7 +352,6 @@ const WalkthroughPopup = ({
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
               Welcome to your {platformType}!
             </h1>
-            {/* Removed the "Here's a 20sec walkthrough of how to use it" text */}
           </div>
 
           {/* Breadcrumb */}
@@ -327,8 +409,12 @@ const WalkthroughPopup = ({
                   "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
                   "bg-amber-500 hover:bg-amber-600"
               )}
+              disabled={currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid}
             >
               {currentStep < totalSteps ? "Next" : "Finish"}
+              {currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid && (
+                <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
+              )}
             </Button>
           </div>
         </div>
