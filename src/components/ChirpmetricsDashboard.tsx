@@ -1,39 +1,10 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // The Dashboard UI component from the Hero section
 const ChirpmetricsDashboard = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      // Log events to help debug
-      video.addEventListener('loadeddata', () => console.log('Video loaded data'));
-      video.addEventListener('playing', () => console.log('Video is playing'));
-      video.addEventListener('error', (e) => console.error('Video error:', e));
-      video.addEventListener('stalled', () => console.log('Video stalled'));
-      
-      // Force play on load
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => console.log('Video playback started successfully'))
-          .catch(error => console.error('Video playback was prevented:', error));
-      }
-    }
-    
-    return () => {
-      if (video) {
-        video.removeEventListener('loadeddata', () => {});
-        video.removeEventListener('playing', () => {});
-        video.removeEventListener('error', () => {});
-        video.removeEventListener('stalled', () => {});
-      }
-    };
-  }, []);
   
   return (
     <div className="relative rounded-xl border bg-background shadow-lg overflow-hidden">
@@ -52,7 +23,6 @@ const ChirpmetricsDashboard = () => {
         <AspectRatio ratio={16/9} className="rounded-b-xl overflow-hidden">
           <div className={`relative w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}>
             <video 
-              ref={videoRef}
               className="w-full h-full object-cover"
               autoPlay={true}
               muted={true}
