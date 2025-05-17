@@ -13,24 +13,14 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
 import { AuthProvider } from "./contexts/AuthContext";
 
-const queryClient = new QueryClient();
-
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/auth" element={<Auth />} />
-    <Route path="/auth/callback" element={<AuthCallback />} />
-    
-    {/* Protected Routes */}
-    <Route path="/dashboard" element={<ProtectedRoute />}>
-      <Route element={<DashboardLayout />}>
-        <Route path="home" element={<DashboardHome />} />
-      </Route>
-    </Route>
-    
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -39,7 +29,20 @@ const App = () => (
         <AuthProvider>
           <Toaster />
           <Sonner />
-          <AppRoutes />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="home" element={<DashboardHome />} />
+              </Route>
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

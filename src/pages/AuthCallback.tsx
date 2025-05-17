@@ -9,21 +9,32 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (error) {
-        toast.error('Authentication error', {
-          description: error.message,
+        if (error) {
+          console.error('Authentication error:', error);
+          toast.error('Authentication error', {
+            description: error.message,
+          });
+          navigate('/auth', { replace: true });
+          return;
+        }
+
+        if (data.session) {
+          console.log('Successfully authenticated with session:', data.session.user.id);
+          toast.success('Successfully authenticated');
+          navigate('/dashboard/home', { replace: true });
+        } else {
+          console.log('No session found, redirecting to auth');
+          navigate('/auth', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error in handleAuthCallback:', error);
+        toast.error('Authentication failed', {
+          description: error instanceof Error ? error.message : 'Unknown error',
         });
-        navigate('/auth');
-        return;
-      }
-
-      if (data.session) {
-        toast.success('Successfully authenticated');
-        navigate('/dashboard/home');
-      } else {
-        navigate('/auth');
+        navigate('/auth', { replace: true });
       }
     };
 

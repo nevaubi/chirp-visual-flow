@@ -12,16 +12,19 @@ const ProtectedRoute = () => {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#0087C8] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-700">Loading...</h2>
+          <p className="text-gray-500 mt-2">Please wait while we check your authentication status.</p>
         </div>
       </div>
     );
   }
 
   if (!authState.user) {
+    console.log('No user found, redirecting to auth from protected route');
     // Redirect to login page and save the location they were trying to access
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
+  console.log('User authenticated, rendering outlet');
   return <Outlet />;
 };
 
