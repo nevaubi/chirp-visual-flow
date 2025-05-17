@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -12,6 +13,16 @@ import {
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import { Twitter, BookOpen, BarChart2, Activity, Users, Check } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -87,8 +98,49 @@ const WalkthroughPopup = ({
         case 4:
           return {
             icon: <Users className="h-10 w-10 text-green-500" />,
-            title: "Community Management",
-            description: "Keep track of your followers and build stronger relationships with your audience through targeted engagement.",
+            title: "All we need to get started is...",
+            description: (
+              <div className="text-left space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
+                  <Select>
+                    <SelectTrigger id="timezone" className="w-full">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="utc-8">Pacific Time (UTC-8)</SelectItem>
+                      <SelectItem value="utc-5">Eastern Time (UTC-5)</SelectItem>
+                      <SelectItem value="utc+0">Greenwich Mean Time (UTC+0)</SelectItem>
+                      <SelectItem value="utc+1">Central European Time (UTC+1)</SelectItem>
+                      <SelectItem value="utc+8">China Standard Time (UTC+8)</SelectItem>
+                      <SelectItem value="utc+9">Japan Standard Time (UTC+9)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
+                  <Input id="handle" placeholder="@username" />
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox id="permission" />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="permission" className="text-sm font-normal">
+                      Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
+                    </Label>
+                    <div className="text-xs text-muted-foreground">
+                      <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between pt-4">
+                  <p className="font-medium">Ready to get started?</p>
+                  <Button>Create profile</Button>
+                </div>
+              </div>
+            ),
           };
         default:
           return { icon: null, title: "", description: "" };
@@ -142,8 +194,39 @@ const WalkthroughPopup = ({
         case 4:
           return {
             icon: <Activity className="h-10 w-10 text-green-500" />,
-            title: "Content Generation",
-            description: "Click 'Generate Newsletter' to turn your bookmarks into engaging newsletter content for your subscribers.",
+            title: "To get started, all we need is...",
+            description: (
+              <div className="text-left space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newsletter-timezone">Your Timezone (for accurate info and posting):</Label>
+                  <Select>
+                    <SelectTrigger id="newsletter-timezone" className="w-full">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="utc-8">Pacific Time (UTC-8)</SelectItem>
+                      <SelectItem value="utc-5">Eastern Time (UTC-5)</SelectItem>
+                      <SelectItem value="utc+0">Greenwich Mean Time (UTC+0)</SelectItem>
+                      <SelectItem value="utc+1">Central European Time (UTC+1)</SelectItem>
+                      <SelectItem value="utc+8">China Standard Time (UTC+8)</SelectItem>
+                      <SelectItem value="utc+9">Japan Standard Time (UTC+9)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Your permission to read (but never write or edit) your bookmarks:</Label>
+                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                    <Twitter className="h-4 w-4" />
+                    Bookmarks Consent
+                  </Button>
+                </div>
+                
+                <div className="flex justify-center pt-4">
+                  <Button className="w-full sm:w-auto">Let's get started</Button>
+                </div>
+              </div>
+            ),
           };
         default:
           return { icon: null, title: "", description: "" };
