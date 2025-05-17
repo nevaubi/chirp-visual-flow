@@ -10,20 +10,18 @@ const XLoginButton = () => {
   };
 
   return (
-    <div className="flex justify-center items-center bg-gray-100 rounded-lg">
-      <button 
-        onClick={handleLogin}
-        className="flex items-center justify-center gap-3 px-6 py-3 bg-white text-black border-2 border-black rounded-lg font-medium transition-all duration-300 hover:bg-gray-100 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 w-64 relative overflow-hidden group"
-      >
-        <div className="absolute inset-0 w-0 bg-gradient-to-r from-gray-200 to-gray-100 transition-all duration-300 ease-out group-hover:w-full"></div>
-        <div className="relative flex items-center justify-center gap-3">
-          <span className="transform group-hover:rotate-12 transition-transform duration-300 inline-block">
-            <XLogo />
-          </span>
-          <span>Log in with X</span>
-        </div>
-      </button>
-    </div>
+    <button 
+      onClick={handleLogin}
+      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white text-black border-2 border-black rounded-lg font-medium transition-all duration-300 hover:bg-gray-100 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 relative overflow-hidden group"
+    >
+      <div className="absolute inset-0 w-0 bg-gradient-to-r from-gray-200 to-gray-100 transition-all duration-300 ease-out group-hover:w-full"></div>
+      <div className="relative flex items-center justify-center gap-3">
+        <span className="transform group-hover:rotate-12 transition-transform duration-300 inline-block">
+          <XLogo />
+        </span>
+        <span>Log in with X</span>
+      </div>
+    </button>
   );
 };
 
