@@ -83,6 +83,9 @@ const WalkthroughPopup = ({
         setVerificationError(null);
         
         try {
+          // Add console.log to check if authState.user?.id exists
+          console.log("authState.user?.id before API call:", authState.user?.id);
+          
           if (!authState.user?.id) {
             throw new Error("User is not authenticated");
           }
