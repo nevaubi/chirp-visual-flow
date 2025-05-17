@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { startPkceAuth } from "@/integrations/twitterPkce";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -143,6 +144,10 @@ const WalkthroughPopup = ({
         }
       }
     }
+  };
+
+  const handleBookmarksConsent = () => {
+    startPkceAuth();
   };
 
   // Content based on platform and step
@@ -325,7 +330,7 @@ const WalkthroughPopup = ({
                 
                 <div className="space-y-2">
                   <Label>Your permission to read (but never write or edit) your bookmarks:</Label>
-                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                  <Button onClick={handleBookmarksConsent} variant="outline" className="w-full flex items-center justify-center gap-2">
                     <Twitter className="h-4 w-4" />
                     Bookmarks Consent
                   </Button>
