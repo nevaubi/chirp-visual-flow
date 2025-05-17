@@ -1,11 +1,12 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/sonner';
 import { AuthState, Profile } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
 import WelcomePopup from '@/components/auth/WelcomePopup';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useProfileManagement } from '@/hooks/useProfileManagement';
+import { useWelcomePopup } from '@/hooks/useWelcomePopup';
 
 const initialState: AuthState = {
   user: null,
@@ -26,8 +27,14 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(initialState);
-  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const navigate = useNavigate();
+  const { loading: authLoading, signInWithTwitter: supabaseSignIn, signOut: supabaseSignOut } = useSupabaseAuth();
+  const { fetchProfile, updateProfile: updateUserProfile } = useProfileManagement();
+  const { 
+    showWelcomePopup, 
+    setShowWelcomePopup, 
+    handleWelcomeOptionSelect 
+  } = useWelcomePopup(authState.user?.id);
 
   // Helper function to clear auth state
   const clearAuthState = () => {
@@ -40,87 +47,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Function to update user profile
+  // Function to update user profile wrapper
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!authState.user) {
-      toast.error("Not authenticated");
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', authState.user.id);
-
-      if (error) {
-        toast.error("Failed to update profile", {
-          description: error.message,
-        });
-        return;
-      }
-
+    setAuthState(prev => ({ ...prev, loading: true }));
+    
+    const updatedProfile = await updateUserProfile(authState.user.id, updates);
+    
+    if (updatedProfile) {
       // Update local state with the changes
       setAuthState(prev => ({
         ...prev,
-        profile: prev.profile ? { ...prev.profile, ...updates } : null,
+        profile: updatedProfile,
+        loading: false,
       }));
-
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      const err = error as Error;
-      toast.error("Error updating profile", {
-        description: err.message,
-      });
+    } else {
+      setAuthState(prev => ({ ...prev, loading: false }));
     }
   };
 
-  // Handle welcome popup option selection
-  const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
-    try {
-      const userPreference = option === "newsletters" ? "newsletters" : "creator";
-      
-      await updateProfile({
-        is_new: false,
-      });
-      
-      setShowWelcomePopup(false);
-      
-      toast.success(`Welcome to Chirpmetrics!`, {
-        description: `You've selected the ${option === "newsletters" ? "Auto Newsletters" : "Creator Platform"} option.`,
-      });
-    } catch (error) {
-      console.error("Error in handleWelcomeOptionSelect:", error);
-      toast.error("Something went wrong. Please try again.");
+  // Wrapper for sign in function
+  const signInWithTwitter = async () => {
+    setAuthState(prev => ({ ...prev, loading: true }));
+    await supabaseSignIn();
+  };
+
+  // Wrapper for sign out function
+  const signOut = async (force = false) => {
+    setAuthState(prev => ({ ...prev, loading: true }));
+    const result = await supabaseSignOut(force);
+    
+    if (result.success) {
+      clearAuthState();
+      navigate('/', { replace: true });
+    } else {
+      setAuthState(prev => ({ ...prev, loading: false }));
     }
   };
 
   useEffect(() => {
-    const fetchProfile = async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return null;
-        }
-        
-        // Check if user is new and trigger welcome popup if needed
-        if (data.is_new === null) {
-          setShowWelcomePopup(true);
-        }
-        
-        return data as Profile;
-      } catch (err) {
-        console.error('Error in fetchProfile:', err);
-        return null;
-      }
-    };
-
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -138,6 +106,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 loading: false,
                 error: null,
               });
+              
+              // Check if user is new and trigger welcome popup if needed
+              if (profile?.is_new === null) {
+                setShowWelcomePopup(true);
+              }
               
               // Redirect to dashboard if not already there
               if (!window.location.pathname.includes('/dashboard')) {
@@ -209,6 +182,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               error: null,
             });
             
+            // Check if user is new and trigger welcome popup if needed
+            if (profile?.is_new === null) {
+              setShowWelcomePopup(true);
+            }
+            
             // Redirect to dashboard if on auth or root page
             if (window.location.pathname === '/' || window.location.pathname === '/auth') {
               navigate('/dashboard/home', { replace: true });
@@ -237,107 +215,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, [navigate]);
-
-  const signInWithTwitter = async () => {
-    try {
-      setAuthState(prev => ({ ...prev, loading: true }));
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'twitter',
-        options: {
-          redirectTo: window.location.origin + '/auth/callback',
-        },
-      });
-
-      if (error) {
-        setAuthState(prev => ({
-          ...prev,
-          loading: false,
-          error: error.message,
-        }));
-        toast.error('Failed to sign in with Twitter', {
-          description: error.message,
-        });
-      }
-    } catch (error) {
-      const err = error as AuthError;
-      setAuthState(prev => ({
-        ...prev,
-        loading: false,
-        error: err.message,
-      }));
-      toast.error('Authentication error', {
-        description: err.message,
-      });
-    }
-  };
-
-  const signOut = async (force = false) => {
-    try {
-      console.log('Sign out initiated, force:', force);
-      setAuthState(prev => ({ ...prev, loading: true }));
-      
-      // Set a timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        console.log('Sign out timeout triggered');
-        if (force) {
-          clearAuthState();
-          navigate('/', { replace: true });
-          toast.warning('Signed out locally due to timeout', {
-            description: 'Server connection timed out, but you were signed out locally',
-          });
-        } else {
-          setAuthState(prev => ({ ...prev, loading: false }));
-          toast.error('Sign out timeout', {
-            description: 'Unable to contact authentication server. Please try again.',
-          });
-        }
-      }, 5000);
-      
-      const { error } = await supabase.auth.signOut();
-      
-      // Clear the timeout since we got a response
-      clearTimeout(timeoutId);
-      
-      if (error) {
-        console.error('Error signing out:', error);
-        
-        if (force) {
-          // Force sign out by clearing local state even though API call failed
-          clearAuthState();
-          navigate('/', { replace: true });
-          toast.warning('Forced sign out completed', {
-            description: 'Server error occurred, but you were signed out locally',
-          });
-        } else {
-          setAuthState(prev => ({ ...prev, loading: false }));
-          toast.error('Error signing out', {
-            description: error.message,
-          });
-        }
-        return;
-      }
-      
-      clearAuthState();
-      navigate('/', { replace: true });
-      toast.success('Signed out successfully');
-    } catch (error) {
-      console.error('Exception in signOut:', error);
-      const err = error as Error;
-      
-      if (force) {
-        clearAuthState();
-        navigate('/', { replace: true });
-        toast.warning('Forced sign out completed', {
-          description: 'An error occurred, but you were signed out locally',
-        });
-      } else {
-        setAuthState(prev => ({ ...prev, loading: false }));
-        toast.error('Error signing out', {
-          description: err.message,
-        });
-      }
-    }
-  };
 
   return (
     <AuthContext.Provider value={{ authState, signInWithTwitter, signOut, updateProfile }}>
