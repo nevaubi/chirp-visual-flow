@@ -15,7 +15,7 @@ export default function HeroSection() {
       {/* Arrow graphic - positioned between navbar and content */}
       <div className="absolute top-[94px] right-[408px] lg:right-[420px] z-10 hidden md:block">
         <img 
-          src="/lovable-uploads/500bc22a-2740-421b-a6ee-42fc8078a831.png" 
+          src="/arrow1.png" 
           alt="Arrow graphic" 
           width="70" 
           height="70"
