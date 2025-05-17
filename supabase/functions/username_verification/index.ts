@@ -39,6 +39,9 @@ serve(async (req) => {
     if (!userId) {
       throw new Error("User ID is required");
     }
+    
+    // Log received timezone to verify it's coming through correctly
+    console.log(`Received timezone from frontend: ${timezone}`);
 
     // Get user profile from database to compare usernames later
     const { data: profileData, error: profileError } = await supabase
@@ -159,14 +162,18 @@ serve(async (req) => {
       });
     }
 
-    // Update the user profile with all the parsed data and timezone
+    // Initialize the update data with parsed fields
     const updateData = {
       ...parsedFields,
     };
     
-    // Only add timezone if it was provided
+    // IMPORTANT CHANGE: Always prioritize user-selected timezone from dropdown
+    // Only add timezone if it was provided from the frontend
     if (timezone) {
       updateData.timezone = timezone;
+      console.log(`Using user-selected timezone: ${timezone}`);
+    } else {
+      console.log("No timezone provided from frontend");
     }
     
     console.log("Updating profile with data:", JSON.stringify(updateData));
