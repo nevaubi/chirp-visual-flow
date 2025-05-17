@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogOverlay,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Twitter } from "lucide-react";
@@ -15,9 +14,16 @@ import { cn } from "@/lib/utils";
 interface WelcomePopupProps {
   open: boolean;
   onOptionSelect: (option: "newsletters" | "creator") => Promise<void>;
+  disableClose?: boolean;
+  fullscreen?: boolean;
 }
 
-const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
+const WelcomePopup = ({ 
+  open, 
+  onOptionSelect, 
+  disableClose = false,
+  fullscreen = false
+}: WelcomePopupProps) => {
   const [loading, setLoading] = useState<"newsletters" | "creator" | null>(null);
   const [hovered, setHovered] = useState<"newsletters" | "creator" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>("");
@@ -36,7 +42,10 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
     return (
       <Dialog open={true}>
         <DialogContent
-          className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0 font-sans"
+          className={cn(
+            "max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans",
+            fullscreen ? "w-[95%] max-w-2xl" : "w-[95%] max-w-md sm:max-w-lg lg:max-w-xl"
+          )}
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
           hideCloseButton={true}
@@ -54,10 +63,13 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
   return (
     <Dialog open={open}>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0 font-sans"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        hideCloseButton={true}
+        className={cn(
+          "max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans",
+          fullscreen ? "w-[95%] max-w-2xl" : "w-[95%] max-w-md sm:max-w-lg lg:max-w-xl"
+        )}
+        onInteractOutside={(e) => disableClose && e.preventDefault()}
+        onEscapeKeyDown={(e) => disableClose && e.preventDefault()}
+        hideCloseButton={disableClose}
       >
         <div className="p-4 sm:p-5 lg:p-6">
           <DialogHeader className="flex flex-col items-center space-y-2 sm:space-y-3">
@@ -159,9 +171,11 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
             </Button>
           </div>
           
-          <div className="text-xs text-center text-gray-500 mt-3">
-            You can change your preference later in settings
-          </div>
+          {!disableClose && (
+            <div className="text-xs text-center text-gray-500 mt-3">
+              You can change your preference later in settings
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

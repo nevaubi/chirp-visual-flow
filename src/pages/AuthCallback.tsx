@@ -38,7 +38,22 @@ const AuthCallback = () => {
         if (data.session) {
           console.log('Successfully authenticated with session:', data.session.user.id);
           toast.success('Successfully authenticated');
-          navigate('/dashboard/home', { replace: true });
+          
+          // Check if this is a new user by fetching their profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_new')
+            .eq('id', data.session.user.id)
+            .single();
+            
+          if (!profileError && profileData && profileData.is_new === null) {
+            // This is a new user, redirect to the new user flow
+            console.log('New user detected, redirecting to onboarding');
+            navigate('/newuser-direct', { replace: true });
+          } else {
+            // Regular user, redirect to dashboard
+            navigate('/dashboard/home', { replace: true });
+          }
         } else {
           console.log('No session found, redirecting to auth');
           navigate('/auth', { replace: true });

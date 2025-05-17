@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -127,10 +126,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return null;
         }
         
-        // Check if user is new and trigger welcome popup if needed
-        if (data.is_new === null) {
-          setShowWelcomePopup(true);
-        }
+        // Don't automatically show welcome popup for new users
+        // They will be directed to the newuser-direct page instead
+        // if (data.is_new === null) {
+        //   setShowWelcomePopup(true);
+        // }
         
         return data as Profile;
       } catch (err) {
@@ -361,7 +361,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={{ authState, signInWithTwitter, signOut, updateProfile }}>
       {children}
       
-      {/* Render welcome popup when needed */}
+      {/* Render welcome popup when needed (for in-app settings changes) */}
       <WelcomePopup 
         open={showWelcomePopup} 
         onOptionSelect={handleWelcomeOptionSelect}
