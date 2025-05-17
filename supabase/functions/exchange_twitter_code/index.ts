@@ -8,12 +8,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
+// Get Twitter auth credentials from Supabase secrets
+const TWITTER_CLIENT_ID = Deno.env.get('TWITTER_BOOKMARK_CLIENT_ID');
+const TWITTER_REDIRECT_URI = Deno.env.get('TWITTER_BOOKMARK_REDIRECT_URI');
+
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
+    if (!TWITTER_CLIENT_ID || !TWITTER_REDIRECT_URI) {
+      throw new Error("Missing Twitter credentials in environment variables");
+    }
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -22,22 +31,45 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const { userId, accessToken, refreshToken, expiresAt } = await req.json();
-
-    if (!userId || !accessToken || !refreshToken) {
+    
+    const { code, verifier, userId } = await req.json();
+    
+    if (!code || !verifier || !userId) {
       return new Response(JSON.stringify({ success: false, message: 'Missing parameters' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: TWITTER_CLIENT_ID,
+      redirect_uri: TWITTER_REDIRECT_URI,
+      code,
+      code_verifier: verifier
+    });
 
-    // Update the profiles table instead of the twitter_tokens table
+    const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error("Twitter token exchange error:", errorText);
+      throw new Error(`Token exchange failed: ${tokenResponse.status} ${errorText}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    const expiresAt = Math.floor(Date.now() / 1000) + (tokenData.expires_in || 0);
+    
+    // Store tokens in the profiles table
     const { error } = await supabase
       .from('profiles')
       .update({
-        twitter_bookmark_access_token: accessToken,
-        twitter_bookmark_refresh_token: refreshToken,
+        twitter_bookmark_access_token: tokenData.access_token,
+        twitter_bookmark_refresh_token: tokenData.refresh_token,
         twitter_bookmark_token_expires_at: expiresAt
       })
       .eq('id', userId);
@@ -46,7 +78,10 @@ serve(async (req) => {
       throw error;
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ 
+      success: true,
+      expiresAt
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (err) {
