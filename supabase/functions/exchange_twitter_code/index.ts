@@ -10,6 +10,7 @@ const corsHeaders = {
 
 // Get Twitter auth credentials from Supabase secrets
 const TWITTER_CLIENT_ID = Deno.env.get('TWITTER_BOOKMARK_CLIENT_ID');
+const TWITTER_CLIENT_SECRET = Deno.env.get('TWITTER_BOOKMARK_CLIENT_SECRET');
 const TWITTER_REDIRECT_URI = Deno.env.get('TWITTER_BOOKMARK_REDIRECT_URI');
 
 serve(async (req) => {
@@ -49,9 +50,20 @@ serve(async (req) => {
       code_verifier: verifier
     });
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    if (TWITTER_CLIENT_SECRET) {
+      const credentials = btoa(
+        `${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`
+      );
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers,
       body
     });
 
