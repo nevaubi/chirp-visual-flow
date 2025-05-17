@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -202,12 +203,13 @@ const WalkthroughPopup = ({
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="utc-8">Pacific Time (UTC-8)</SelectItem>
-                      <SelectItem value="utc-5">Eastern Time (UTC-5)</SelectItem>
-                      <SelectItem value="utc+0">Greenwich Mean Time (UTC+0)</SelectItem>
-                      <SelectItem value="utc+1">Central European Time (UTC+1)</SelectItem>
-                      <SelectItem value="utc+8">China Standard Time (UTC+8)</SelectItem>
-                      <SelectItem value="utc+9">Japan Standard Time (UTC+9)</SelectItem>
+                      <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                      <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                      <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                      <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
+                      <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
+                      <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -305,17 +307,18 @@ const WalkthroughPopup = ({
               <div className="text-left space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="newsletter-timezone">Your Timezone (for accurate info and posting):</Label>
-                  <Select>
+                  <Select value={timezone} onValueChange={setTimezone}>
                     <SelectTrigger id="newsletter-timezone" className="w-full">
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="utc-8">Pacific Time (UTC-8)</SelectItem>
-                      <SelectItem value="utc-5">Eastern Time (UTC-5)</SelectItem>
-                      <SelectItem value="utc+0">Greenwich Mean Time (UTC+0)</SelectItem>
-                      <SelectItem value="utc+1">Central European Time (UTC+1)</SelectItem>
-                      <SelectItem value="utc+8">China Standard Time (UTC+8)</SelectItem>
-                      <SelectItem value="utc+9">Japan Standard Time (UTC+9)</SelectItem>
+                      <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                      <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                      <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                      <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
+                      <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
+                      <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
