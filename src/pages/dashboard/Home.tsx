@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart2, 
@@ -20,6 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 
 // Chart component - we'll create a simple placeholder
 const EngagementChart = () => (
@@ -462,16 +464,47 @@ const NewsletterDashboard = ({ profile }) => {
 };
 
 const DashboardHome = () => {
-  const { authState } = useAuth();
+  const { authState, updateProfile } = useAuth();
   const profile = authState.profile;
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
   
   // Determine which dashboard to show based on profile settings
   const isNewsletterPlatform = profile?.is_newsletter_platform;
   const isCreatorPlatform = profile?.is_creator_platform;
 
+  // Check if we need to show the walkthrough popup
+  useEffect(() => {
+    if (profile && profile.timezone === null) {
+      setShowWalkthrough(true);
+    }
+  }, [profile]);
+
+  // Handle walkthrough completion
+  const handleWalkthroughComplete = async () => {
+    try {
+      // Set timezone to user's local timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timezone;
+      await updateProfile({ timezone });
+      setShowWalkthrough(false);
+    } catch (error) {
+      console.error("Error updating timezone:", error);
+    }
+  };
+
   // If neither platform is set, show creator platform by default
   if (!isNewsletterPlatform && !isCreatorPlatform) {
-    return <CreatorDashboard profile={profile} />;
+    return (
+      <>
+        <CreatorDashboard profile={profile} />
+        {showWalkthrough && (
+          <WalkthroughPopup 
+            open={showWalkthrough} 
+            onComplete={handleWalkthroughComplete} 
+            isCreatorPlatform={true}
+          />
+        )}
+      </>
+    );
   }
 
   // Show the appropriate platform dashboard
@@ -481,6 +514,14 @@ const DashboardHome = () => {
         <NewsletterDashboard profile={profile} />
       ) : (
         <CreatorDashboard profile={profile} />
+      )}
+      
+      {showWalkthrough && (
+        <WalkthroughPopup 
+          open={showWalkthrough} 
+          onComplete={handleWalkthroughComplete} 
+          isCreatorPlatform={isCreatorPlatform || false}
+        />
       )}
     </>
   );

@@ -65,7 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile: prev.profile ? { ...prev.profile, ...updates } : null,
       }));
 
-      toast.success("Profile updated successfully");
+      // Only show success toast for certain updates, not automatic ones like timezone
+      if (!('timezone' in updates && Object.keys(updates).length === 1)) {
+        toast.success("Profile updated successfully");
+      }
     } catch (error) {
       const err = error as Error;
       toast.error("Error updating profile", {
