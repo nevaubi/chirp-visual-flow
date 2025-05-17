@@ -29,12 +29,12 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
   return (
     <Dialog open={open}>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md rounded-2xl shadow-xl"
+        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
-        <div className="p-3 sm:p-4">
+        <div className="p-3 sm:p-4 lg:p-5">
           <DialogHeader className="flex flex-col items-center space-y-3">
             <div className="flex items-center justify-center">
               <img 
@@ -47,10 +47,10 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               </h1>
             </div>
             <div className="text-center w-full">
-              <DialogTitle className="text-lg sm:text-xl text-center font-extrabold tracking-tight mb-1">
+              <DialogTitle className="text-lg sm:text-xl lg:text-2xl text-center font-extrabold tracking-tight mb-1">
                 Welcome!
               </DialogTitle>
-              <DialogDescription className="text-center text-xs sm:text-sm max-w-xs mx-auto text-gray-600">
+              <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
                 Which option best suits your needs?
               </DialogDescription>
             </div>
@@ -74,7 +74,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               variant="outline"
             >
               <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base font-semibold block mb-1 text-amber-700 line-clamp-1">
+                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-amber-700 line-clamp-1">
                   Auto Newsletters
                 </span>
                 <span className="text-xs text-gray-600 font-normal block line-clamp-2">
@@ -112,7 +112,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               variant="outline"
             >
               <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base font-semibold block mb-1 text-blue-700 line-clamp-1">
+                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-blue-700 line-clamp-1">
                   X Creator Platform
                 </span>
                 <span className="text-xs text-gray-600 font-normal block line-clamp-2">
