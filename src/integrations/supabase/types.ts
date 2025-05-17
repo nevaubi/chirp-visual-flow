@@ -9,7 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          follower_count: number | null
+          following_count: number | null
+          id: string
+          is_verified: boolean | null
+          timezone: string | null
+          twitter_handle: string | null
+          twitter_profilepic_url: string | null
+          twitter_username: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          follower_count?: number | null
+          following_count?: number | null
+          id: string
+          is_verified?: boolean | null
+          timezone?: string | null
+          twitter_handle?: string | null
+          twitter_profilepic_url?: string | null
+          twitter_username?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          follower_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_verified?: boolean | null
+          timezone?: string | null
+          twitter_handle?: string | null
+          twitter_profilepic_url?: string | null
+          twitter_username?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
