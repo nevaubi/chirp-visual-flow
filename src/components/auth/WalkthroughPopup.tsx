@@ -97,7 +97,7 @@ const WalkthroughPopup = ({
           };
         case 4:
           return {
-            icon: <Users className="h-10 w-10 text-green-500" />,
+            icon: null, // Removed the Users icon as requested
             title: "All we need to get started is...",
             description: (
               <div className="text-left space-y-4">
@@ -193,7 +193,7 @@ const WalkthroughPopup = ({
           };
         case 4:
           return {
-            icon: <Activity className="h-10 w-10 text-green-500" />,
+            icon: null, // Removed the Activity icon as requested
             title: "To get started, all we need is...",
             description: (
               <div className="text-left space-y-4">
@@ -306,12 +306,14 @@ const WalkthroughPopup = ({
           {/* Content */}
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col items-center">
-              <div className={cn(
-                "p-3 sm:p-4 rounded-full mb-4",
-                isCreatorPlatform ? "bg-blue-100" : "bg-amber-100"
-              )}>
-                {content.icon}
-              </div>
+              {content.icon && (
+                <div className={cn(
+                  "p-3 sm:p-4 rounded-full mb-4",
+                  isCreatorPlatform ? "bg-blue-100" : "bg-amber-100"
+                )}>
+                  {content.icon}
+                </div>
+              )}
               <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">{content.title}</h2>
               <div className="text-sm sm:text-base text-gray-600 w-full">
                 {content.description}
