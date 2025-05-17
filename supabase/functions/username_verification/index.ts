@@ -87,8 +87,8 @@ serve(async (req) => {
         twitter_username: author.name,
         is_verified: author.isBlueVerified,
         location: author.location,
-        "follower-count": author.followers,
-        "following-count": author.following,
+        "follower_count": author.followers,
+        "following_count": author.following,
         account_creation_date: author.createdAt,
         total_posts: author.statusesCount,
         bio: author.profile_bio?.description ?? ""
