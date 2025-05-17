@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { BarChart2, Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
+import { Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
+import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 
 export default function HeroSection() {
   return (
@@ -27,47 +28,8 @@ export default function HeroSection() {
           {/* Left column with dashboard UI */}
           <div className="w-full lg:w-2/5 pt-[40px]">
             <div className="relative">
-              {/* Dashboard card */}
-              <div className="bg-white rounded-3xl shadow-md p-6 relative border border-gray-200">
-                {/* Twitter logo */}
-                <div className="absolute right-6 top-6">
-                  <Twitter size={24} className="text-[#1D9BF0]" />
-                </div>
-                
-                {/* Dashboard header */}
-                <div className="flex items-center mb-2">
-                  <BarChart2 size={18} className="text-[#0087C8] mr-2" />
-                  <span className="text-sm font-medium text-[#0087C8]">Daily Audience</span>
-                </div>
-                
-                {/* Main stat */}
-                <div className="mb-6">
-                  <div className="text-4xl font-bold text-[#0f2e47]">1,320,545</div>
-                  <div className="flex items-center text-sm text-[#0087C8] font-medium">
-                    <span>+104K</span>
-                    <svg className="w-3 h-3 ml-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </div>
-                
-                {/* Bar chart */}
-                <div className="mb-4">
-                  <div className="h-24 flex items-end justify-between gap-1">
-                    {[22, 35, 28, 45, 30, 35, 70, 42, 52, 35, 28].map((height, i) => (
-                      <div key={i} className="w-full" style={{ height: `${height}%` }}>
-                        <div 
-                          className={`w-full rounded-sm ${
-                            i === 6 ? 'bg-[#0270A8]' : 
-                            i === 10 ? 'bg-[#0270A8]' : 'bg-[#A9D6F0]'
-                          }`}
-                          style={{ height: '100%' }}
-                        ></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              {/* Replace Daily Audience card with ChirpmetricsDashboard */}
+              <ChirpmetricsDashboard />
               
               {/* Floating followers card */}
               <div className="absolute -bottom-12 left-4">
