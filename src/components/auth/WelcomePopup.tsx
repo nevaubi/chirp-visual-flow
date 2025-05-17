@@ -135,7 +135,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
           </div>
           
           <div className="text-xs text-center text-gray-500 mt-3">
-            You can change your preference later in settings
+            Both? - Coming soon!
           </div>
         </div>
       </DialogContent>
