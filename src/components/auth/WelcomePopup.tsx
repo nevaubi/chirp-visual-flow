@@ -82,19 +82,22 @@ const WelcomePopup = ({
             visible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'
           }`}
         >
-          <style jsx="true">{`
-            @keyframes subtle-bounce {
-              0%, 100% { 
-                transform: translateY(0); 
+          {/* Fix: Remove the jsx attribute and use standard style tag */}
+          <style>
+            {`
+              @keyframes subtle-bounce {
+                0%, 100% { 
+                  transform: translateY(0); 
+                }
+                50% { 
+                  transform: translateY(-3px); 
+                }
               }
-              50% { 
-                transform: translateY(-3px); 
+              .animate-subtle-bounce {
+                animation: subtle-bounce 3s ease-in-out infinite;
               }
-            }
-            .animate-subtle-bounce {
-              animation: subtle-bounce 3s ease-in-out infinite;
-            }
-          `}</style>
+            `}
+          </style>
           
           <div className="text-center pt-10 pb-6">
             <h1 className="text-4xl font-bold text-gray-800 mb-6">
