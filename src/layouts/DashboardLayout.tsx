@@ -33,7 +33,8 @@ const DashboardLayout = () => {
     : 'CM';
 
   // Check if user is in the newsletter dashboard
-  const isNewsletterDashboard = profile?.newsletter_consent === true;
+  // Use is_newsletter_platform as fallback if newsletter_consent is not available
+  const isNewsletterDashboard = profile?.newsletter_consent === true || profile?.is_newsletter_platform === true;
 
   // Check if the current device is mobile
   useEffect(() => {
