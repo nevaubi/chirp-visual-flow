@@ -21,13 +21,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="rounded-full bg-[#0087C8] w-10 h-10 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-                alt="Chirpmetrics Logo" 
-                className="h-7 w-7"
-              />
-            </div>
+            <img 
+              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+              alt="Chirpmetrics Logo" 
+              className="h-7 w-7"
+            />
             <span className="font-bold text-2xl text-[#0087C8]">chirpmetrics</span>
           </div>
 
