@@ -137,7 +137,7 @@ const WalkthroughPopup = ({
                 
                 <div className="flex items-center justify-between pt-4">
                   <p className="font-medium">Ready to get started?</p>
-                  <Button>Create profile</Button>
+                  {/* Removed the Create profile button */}
                 </div>
               </div>
             ),
@@ -222,9 +222,7 @@ const WalkthroughPopup = ({
                   </Button>
                 </div>
                 
-                <div className="flex justify-center pt-4">
-                  <Button className="w-full sm:w-auto">Let's get started</Button>
-                </div>
+                {/* Removed the "Let's get started" button */}
               </div>
             ),
           };
@@ -271,9 +269,7 @@ const WalkthroughPopup = ({
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
               Welcome to your {platformType}!
             </h1>
-            <p className="text-sm sm:text-base text-gray-600">
-              Here's a 20sec walkthrough of how to use it
-            </p>
+            {/* Removed the "Here's a 20sec walkthrough of how to use it" text */}
           </div>
 
           {/* Breadcrumb */}
