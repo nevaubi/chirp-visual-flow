@@ -60,6 +60,11 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Environment variables
+
+Create a `.env` file based on `.env.example` and provide your Twitter OAuth credentials.
+These variables are used for the PKCE flow when connecting bookmarks.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/76a4a3b5-161f-4997-8b6e-9a5a7c053ae3) and click on Share -> Publish.

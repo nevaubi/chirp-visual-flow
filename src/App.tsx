@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import BookmarksCallback from "./pages/BookmarksCallback";
 import NewUserDirect from "./pages/NewUserDirect";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/bookmarks/callback" element={<BookmarksCallback />} />
             <Route path="/newuser-direct" element={<NewUserDirect />} />
             
             {/* Protected Routes */}

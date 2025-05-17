@@ -71,6 +71,27 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      },
+      twitter_tokens: {
+        Row: {
+          user_id: string
+          access_token: string
+          refresh_token: string
+          expires_at: number | null
+        }
+        Insert: {
+          user_id: string
+          access_token: string
+          refresh_token: string
+          expires_at?: number | null
+        }
+        Update: {
+          user_id?: string
+          access_token?: string
+          refresh_token?: string
+          expires_at?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {
