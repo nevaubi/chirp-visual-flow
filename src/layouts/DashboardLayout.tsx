@@ -1,127 +1,220 @@
 
-import { useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  BarChart2, 
+  Home, 
+  Users, 
+  Settings, 
+  Search, 
+  Bell, 
+  LogOut,
+  Menu,
+  ChevronRight
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu, X, BarChart2, Home, Users, Settings } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const profile = authState.profile;
   const initials = profile?.twitter_username 
     ? profile.twitter_username.substring(0, 2).toUpperCase() 
     : 'CM';
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  // Check if the current device is mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth < 1024) {
+        setExpanded(false);
+      }
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
-  // Fix: Wrap signOut in a proper event handler
   const handleSignOut = () => {
     signOut();
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile Sidebar Toggle */}
-      <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md text-gray-700"
-        onClick={toggleSidebar}
-        aria-label="Toggle sidebar"
-      >
-        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+  const sidebarItems = [
+    { icon: Home, label: 'Home', path: '/dashboard/home' },
+    { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
+    { icon: Users, label: 'Community', path: '/dashboard/community' },
+    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+  ];
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center gap-2 py-4 mb-8 border-b">
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Mobile Header */}
+      <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <Menu size={20} />
+          </Button>
+          <img 
+            src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+            alt="Chirpmetrics Logo" 
+            className="h-8 w-8"
+          />
+          <span className="font-bold text-xl text-[#0087C8]">chirpmetrics</span>
+        </div>
+        <Avatar className="h-9 w-9 cursor-pointer">
+          <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+      </header>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        <aside 
+          className={cn(
+            "bg-[#181F2C] text-white z-30 flex flex-col transition-all duration-300 ease-in-out",
+            expanded ? "w-60" : "w-16",
+            isMobile && "fixed inset-y-0 left-0",
+            isMobile && !mobileMenuOpen && "transform -translate-x-full",
+            isMobile && mobileMenuOpen && "transform translate-x-0"
+          )}
+          onMouseEnter={() => !isMobile && setExpanded(true)}
+          onMouseLeave={() => !isMobile && setExpanded(false)}
+        >
+          {/* Logo */}
+          <div className={cn(
+            "flex items-center gap-2 p-4 border-b border-gray-700",
+            !expanded && "justify-center"
+          )}>
             <img 
               src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
               alt="Chirpmetrics Logo" 
-              className="h-8 w-8"
+              className="h-8 w-8 shrink-0"
             />
-            <span className="font-bold text-xl text-[#0087C8]">chirpmetrics</span>
+            {expanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
           </div>
 
-          <nav className="flex-1 space-y-1">
-            <NavLink
-              to="/dashboard/home"
-              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
-            >
-              <Home size={18} />
-              <span>Home</span>
-            </NavLink>
-            <NavLink
-              to="#"
-              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
-            >
-              <BarChart2 size={18} />
-              <span>Analytics</span>
-            </NavLink>
-            <NavLink
-              to="#"
-              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
-            >
-              <Users size={18} />
-              <span>Community</span>
-            </NavLink>
-            <NavLink
-              to="#"
-              className={({isActive}) => `flex items-center gap-2 px-4 py-3 ${isActive ? 'bg-blue-50 text-[#0087C8]' : 'text-gray-700 hover:bg-blue-50 hover:text-[#0087C8]'} rounded-md transition-colors`}
-            >
-              <Settings size={18} />
-              <span>Settings</span>
-            </NavLink>
+          {/* Navigation */}
+          <nav className="flex-1 py-6">
+            <ul className="space-y-2 px-2">
+              {sidebarItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <li key={item.label}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full flex items-center gap-3 justify-start px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
+                        isActive && "bg-[#0087C8] hover:bg-[#0087C8]/90",
+                        !expanded && "justify-center px-0"
+                      )}
+                      onClick={() => navigate(item.path)}
+                    >
+                      <item.icon size={20} />
+                      {expanded && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
 
-          {/* User profile */}
-          <div className="mt-auto border-t pt-4">
-            {profile && (
+          {/* User Profile */}
+          <div className={cn(
+            "mt-auto border-t border-gray-700 p-4",
+            !expanded && "flex justify-center"
+          )}>
+            {expanded ? (
               <div className="flex items-center gap-2 mb-4">
-                <Avatar className="h-10 w-10 border border-gray-200">
-                  <AvatarImage src={profile.twitter_profilepic_url || undefined} alt={profile.twitter_username || 'User'} />
+                <Avatar className="h-9 w-9 border border-gray-700">
+                  <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 overflow-hidden">
-                  <p className="font-medium text-sm text-gray-900 truncate">{profile.twitter_username}</p>
-                  <p className="text-xs text-gray-500 truncate">@{profile.twitter_handle}</p>
+                  <p className="font-medium text-sm text-white truncate">{profile?.twitter_username || 'User'}</p>
+                  <p className="text-xs text-gray-400 truncate">@{profile?.twitter_handle || 'handle'}</p>
                 </div>
               </div>
+            ) : (
+              <Avatar className="h-9 w-9 border border-gray-700 mb-4">
+                <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
             )}
             <Button 
-              variant="outline" 
-              className="w-full justify-start text-gray-700" 
+              variant="ghost" 
+              className={cn(
+                "w-full justify-start text-white hover:bg-white/10",
+                !expanded && "justify-center px-0"
+              )}
               onClick={handleSignOut}
             >
-              <LogOut size={16} className="mr-2" />
-              Sign out
+              <LogOut size={16} className={cn("shrink-0", expanded && "mr-2")} />
+              {expanded && <span>Sign out</span>}
             </Button>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Main content */}
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${
-        isSidebarOpen ? 'lg:ml-64' : ''
-      } ml-0 lg:ml-64`}>
-        <div className="p-6">
-          <Outlet />
-        </div>
-      </main>
+        {/* Main Content */}
+        <main className={cn(
+          "flex-1 flex flex-col overflow-y-auto bg-gray-50 transition-all duration-300 relative",
+          isMobile && mobileMenuOpen && "filter blur-sm"
+        )}>
+          {/* Desktop Header */}
+          <header className="hidden lg:flex items-center justify-between p-4 bg-white border-b gap-4">
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input 
+                placeholder="Search..." 
+                className="pl-9 pr-4 py-2 rounded-full bg-gray-100 border-none w-full"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="text-gray-600">
+                <Bell size={20} />
+              </Button>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">
+                  {profile?.twitter_username || 'User'}
+                </span>
+                <Avatar className="h-9 w-9 cursor-pointer">
+                  <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+          </header>
 
-      {/* Overlay to close sidebar on mobile */}
-      {isSidebarOpen && (
+          {/* Content */}
+          <div className="p-6 flex-1">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobile && mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          onClick={() => setMobileMenuOpen(false)}
         />
       )}
     </div>

@@ -13,6 +13,34 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
 import { AuthProvider } from "./contexts/AuthContext";
 
+// Create placeholder components for other dashboard pages
+const Analytics = () => (
+  <div className="space-y-4">
+    <h1 className="text-2xl font-bold">Analytics</h1>
+    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Analytics dashboard content will appear here</p>
+    </div>
+  </div>
+);
+
+const Community = () => (
+  <div className="space-y-4">
+    <h1 className="text-2xl font-bold">Community</h1>
+    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Community management features will appear here</p>
+    </div>
+  </div>
+);
+
+const Settings = () => (
+  <div className="space-y-4">
+    <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Settings configuration will appear here</p>
+    </div>
+  </div>
+);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -39,6 +67,9 @@ const App = () => (
               <Route element={<DashboardLayout />}>
                 <Route index element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="home" element={<DashboardHome />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="community" element={<Community />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
             </Route>
             
