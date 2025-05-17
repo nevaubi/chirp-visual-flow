@@ -29,7 +29,7 @@ export async function startPkceAuth() {
   }
 }
 
-export async function exchangeCodeForToken(code: string, userId: string, timezone?: string) {
+export async function exchangeCodeForToken(code: string, userId: string) {
   const verifier = sessionStorage.getItem('twitter_pkce_verifier');
   sessionStorage.removeItem('twitter_pkce_verifier');
   
@@ -38,10 +38,9 @@ export async function exchangeCodeForToken(code: string, userId: string, timezon
   }
   
   try {
-    console.log('Sending to edge function with timezone:', timezone);
     // Call the edge function to exchange code for tokens and store them
     const { data, error } = await supabase.functions.invoke('exchange_twitter_code', {
-      body: { code, verifier, userId, timezone }
+      body: { code, verifier, userId }
     });
     
     if (error) {

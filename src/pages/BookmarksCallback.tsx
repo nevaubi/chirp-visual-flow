@@ -45,24 +45,18 @@ const BookmarksCallback = () => {
           throw new Error('User is not authenticated');
         }
 
+        await exchangeCodeForToken(code, userId);
+
         // Retrieve any pending timezone selection stored before redirect
         const storedTimezone = sessionStorage.getItem('selected_timezone');
-        console.log('Retrieved timezone from sessionStorage:', storedTimezone);
-
-        // Include the timezone in the token exchange
-        await exchangeCodeForToken(code, userId, storedTimezone || undefined);
-
-        // Only attempt to update profile directly if we have a timezone
-        // This helps avoid race conditions by not running two separate profile updates
         if (storedTimezone) {
-          console.log('Clearing timezone from sessionStorage');
+          await updateProfile({ timezone: storedTimezone });
           sessionStorage.removeItem('selected_timezone');
         }
 
         sessionStorage.setItem('twitter_bookmarks_authorized', 'true');
         toast({ title: 'Bookmarks connected' });
       } catch (err) {
-        console.error('Authorization error:', err);
         toast({
           title: 'Authorization error',
           description: err instanceof Error ? err.message : 'Unknown error',
@@ -74,7 +68,7 @@ const BookmarksCallback = () => {
     };
 
     finishAuth();
-  }, [navigate, authState.user, toast, updateProfile]);
+  }, [navigate, authState.user, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50">
