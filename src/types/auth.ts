@@ -23,7 +23,6 @@ export interface Profile {
   twitter_bookmark_access_token: string | null;
   twitter_bookmark_refresh_token: string | null;
   twitter_bookmark_token_expires_at: number | null;
-  newsletter_consent: boolean | null;
 }
 
 export interface AuthState {

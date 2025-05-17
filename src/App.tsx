@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,7 @@ import NewUserDirect from "./pages/NewUserDirect";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
-import CreateNewsletter from "./pages/dashboard/CreateNewsletter";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Create placeholder components for other dashboard pages
 const Analytics = () => (
@@ -73,7 +74,6 @@ const App = () => (
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="community" element={<Community />} />
                 <Route path="settings" element={<Settings />} />
-                <Route path="create-newsletter" element={<CreateNewsletter />} />
               </Route>
             </Route>
             
