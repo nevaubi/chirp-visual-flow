@@ -36,6 +36,11 @@ export default function Navbar() {
     navigate('/dashboard/home');
   };
 
+  // Fix: Wrap signOut in a proper event handler
+  const handleSignOut = () => {
+    signOut();
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full ${scrolled ? 'bg-white/95 shadow-sm' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -71,7 +76,7 @@ export default function Navbar() {
                 </Button>
                 <Button 
                   className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-4 font-medium flex items-center gap-2"
-                  onClick={signOut}
+                  onClick={handleSignOut}
                 >
                   <LogOut size={16} />
                   <span>Sign out</span>
@@ -157,7 +162,7 @@ export default function Navbar() {
                     className="bg-[#0087C8] hover:bg-[#0270A8] text-white font-medium flex items-center gap-2"
                     onClick={() => {
                       setIsOpen(false);
-                      signOut();
+                      handleSignOut();
                     }}
                   >
                     <LogOut size={16} />

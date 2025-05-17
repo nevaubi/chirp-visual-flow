@@ -19,6 +19,11 @@ const DashboardLayout = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Fix: Wrap signOut in a proper event handler
+  const handleSignOut = () => {
+    signOut();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile Sidebar Toggle */}
@@ -94,7 +99,7 @@ const DashboardLayout = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start text-gray-700" 
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut size={16} className="mr-2" />
               Sign out
