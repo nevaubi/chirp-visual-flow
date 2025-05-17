@@ -12,8 +12,8 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Arrow graphic - positioned directly below navbar in top right */}
-      <div className="absolute top-16 right-8 z-10 hidden md:block">
+      {/* Arrow graphic - positioned directly below the 'Signup for Free' button */}
+      <div className="absolute top-[72px] right-8 z-10 hidden md:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
