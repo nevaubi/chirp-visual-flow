@@ -14,6 +14,8 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   is_new: boolean | null;
+  is_newsletter_platform: boolean | null;
+  is_creator_platform: boolean | null;
 }
 
 export interface AuthState {

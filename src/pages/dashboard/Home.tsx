@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -13,7 +12,9 @@ import {
   Calendar,
   ChevronRight,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  BookOpen,
+  Bookmark
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -86,10 +87,8 @@ const ActivityItem = ({ title, time, description, icon: Icon, color }) => (
   </div>
 );
 
-const DashboardHome = () => {
-  const { authState } = useAuth();
-  const profile = authState.profile;
-
+// Creator Platform Dashboard
+const CreatorDashboard = ({ profile }) => {
   // Sample schedule data
   const scheduleItems = [
     { day: 'Monday', time: '10:00 AM', title: 'Post update on new features' },
@@ -127,7 +126,7 @@ const DashboardHome = () => {
       {/* Welcome header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {profile?.twitter_username || 'User'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to Creator Platform, {profile?.twitter_username || 'User'}</h1>
           <p className="text-gray-600">Here's what's happening with your Twitter account</p>
         </div>
       </div>
@@ -305,6 +304,185 @@ const DashboardHome = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+// Newsletter Platform Dashboard
+const NewsletterDashboard = ({ profile }) => {
+  // Sample newsletter data
+  const recentNewsletters = [
+    { title: "Weekly Tech Roundup", date: "May 10, 2025", subscribers: 542 },
+    { title: "AI Innovations", date: "May 3, 2025", subscribers: 498 },
+    { title: "Developer Updates", date: "Apr 26, 2025", subscribers: 467 },
+  ];
+
+  const bookmarkCollections = [
+    { name: "Tech News", count: 37, lastUpdated: "2 days ago" },
+    { name: "Programming", count: 24, lastUpdated: "1 week ago" },
+    { name: "AI & ML", count: 19, lastUpdated: "3 days ago" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+          <p className="text-gray-600">Generate newsletters from your X bookmarks</p>
+        </div>
+        <Button className="bg-amber-500 hover:bg-amber-600">Generate Newsletter</Button>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Subscribers</CardTitle>
+            <Users className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">578</div>
+            <div className="flex items-center mt-1">
+              <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
+              <p className="text-xs text-green-500">+12 new this week</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Newsletters Sent</CardTitle>
+            <BookOpen className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">12</div>
+            <div className="flex items-center mt-1">
+              <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+              <p className="text-xs text-green-500">3 sent this month</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Average Open Rate</CardTitle>
+            <Activity className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">42.8%</div>
+            <div className="flex items-center mt-1">
+              <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
+              <p className="text-xs text-green-500">+3.2% from last month</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Newsletters */}
+        <Card className="border-none shadow-sm hover:shadow transition-shadow lg:col-span-2">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Recent Newsletters</CardTitle>
+                <CardDescription>Your recently sent newsletters</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" className="gap-1">
+                View all <ChevronRight size={16} />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentNewsletters.map((newsletter, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{newsletter.title}</h3>
+                    <p className="text-xs text-gray-500">Sent on {newsletter.date}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-600">{newsletter.subscribers} subscribers</span>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <ChevronRight size={16} />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bookmark Collections */}
+        <Card className="border-none shadow-sm hover:shadow transition-shadow">
+          <CardHeader>
+            <CardTitle>Bookmark Collections</CardTitle>
+            <CardDescription>Sources for your newsletters</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {bookmarkCollections.map((collection, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+                    <Bookmark size={14} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{collection.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{collection.count} bookmarks</span>
+                      <span>•</span>
+                      <span>Updated {collection.lastUpdated}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button 
+                variant="outline" 
+                className="w-full mt-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              >
+                Sync Bookmarks
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Newsletter Performance */}
+      <Card className="border-none shadow-sm hover:shadow transition-shadow">
+        <CardHeader>
+          <CardTitle>Newsletter Performance</CardTitle>
+          <CardDescription>Last 6 months engagement metrics</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EngagementChart />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const DashboardHome = () => {
+  const { authState } = useAuth();
+  const profile = authState.profile;
+  
+  // Determine which dashboard to show based on profile settings
+  const isNewsletterPlatform = profile?.is_newsletter_platform;
+  const isCreatorPlatform = profile?.is_creator_platform;
+
+  // If neither platform is set, show creator platform by default
+  if (!isNewsletterPlatform && !isCreatorPlatform) {
+    return <CreatorDashboard profile={profile} />;
+  }
+
+  // Show the appropriate platform dashboard
+  return (
+    <>
+      {isNewsletterPlatform ? (
+        <NewsletterDashboard profile={profile} />
+      ) : (
+        <CreatorDashboard profile={profile} />
+      )}
+    </>
   );
 };
 

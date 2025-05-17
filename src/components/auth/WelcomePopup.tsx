@@ -20,12 +20,36 @@ interface WelcomePopupProps {
 const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
   const [loading, setLoading] = useState<"newsletters" | "creator" | null>(null);
   const [hovered, setHovered] = useState<"newsletters" | "creator" | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   const handleSelect = async (option: "newsletters" | "creator") => {
     setLoading(option);
+    setLoadingMessage(`Taking you to the ${option === "newsletters" ? "Newsletters" : "Creator"} platform...`);
+    
     await onOptionSelect(option);
     setLoading(null);
+    setLoadingMessage("");
   };
+
+  // Show loading screen when a platform is being loaded
+  if (loading) {
+    return (
+      <Dialog open={true}>
+        <DialogContent
+          className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0 font-sans"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          hideCloseButton={true}
+        >
+          <div className="p-8 sm:p-10 lg:p-12 flex flex-col items-center justify-center min-h-[200px]">
+            <div className="w-12 h-12 mb-6 border-4 border-t-transparent border-[#0087C8] rounded-full animate-spin"></div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">{loadingMessage}</h3>
+            <p className="text-gray-600 text-center">Please wait while we set up your experience.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open}>

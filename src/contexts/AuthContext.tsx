@@ -78,17 +78,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Handle welcome popup option selection
   const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
     try {
-      const userPreference = option === "newsletters" ? "newsletters" : "creator";
-      
-      await updateProfile({
+      // Prepare updates based on selected option
+      const updates: Partial<Profile> = {
         is_new: false,
-      });
+      };
       
-      setShowWelcomePopup(false);
+      // Set the appropriate platform flag
+      if (option === "newsletters") {
+        updates.is_newsletter_platform = true;
+        updates.is_creator_platform = false;
+      } else {
+        updates.is_creator_platform = true;
+        updates.is_newsletter_platform = false;
+      }
       
-      toast.success(`Welcome to Chirpmetrics!`, {
-        description: `You've selected the ${option === "newsletters" ? "Auto Newsletters" : "Creator Platform"} option.`,
-      });
+      // Update the profile
+      await updateProfile(updates);
+      
+      // Close the welcome popup after a brief delay to allow the loading message to show
+      setTimeout(() => {
+        setShowWelcomePopup(false);
+      }, 1500);
+      
+      // Refresh the current page to reflect the new platform selection
+      setTimeout(() => {
+        if (window.location.pathname.includes('/dashboard')) {
+          // Force refresh the dashboard to load the right platform view
+          navigate(0);
+        }
+      }, 2000);
     } catch (error) {
       console.error("Error in handleWelcomeOptionSelect:", error);
       toast.error("Something went wrong. Please try again.");

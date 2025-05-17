@@ -16,7 +16,9 @@ export type Database = {
           follower_count: number | null
           following_count: number | null
           id: string
+          is_creator_platform: boolean | null
           is_new: boolean | null
+          is_newsletter_platform: boolean | null
           is_verified: boolean | null
           timezone: string | null
           twitter_handle: string | null
@@ -30,7 +32,9 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           id: string
+          is_creator_platform?: boolean | null
           is_new?: boolean | null
+          is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
           timezone?: string | null
           twitter_handle?: string | null
@@ -44,7 +48,9 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           id?: string
+          is_creator_platform?: boolean | null
           is_new?: boolean | null
+          is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
           timezone?: string | null
           twitter_handle?: string | null
