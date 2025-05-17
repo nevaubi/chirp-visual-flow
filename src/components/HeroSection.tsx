@@ -87,6 +87,15 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
+            
+            {/* Reviews image placed directly below the dashboard card */}
+            <div className="mt-16 flex justify-center">
+              <img 
+                src="/reviews1.png" 
+                alt="Reviews from creators" 
+                className="max-w-full"
+              />
+            </div>
           </div>
           
           {/* Right column with main message and bookmark card */}
