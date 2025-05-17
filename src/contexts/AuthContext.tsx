@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
@@ -25,7 +25,6 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Helper function to clear auth state
   const clearAuthState = () => {
@@ -78,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               });
               
               // Redirect to dashboard if not already there
-              if (!location.pathname.includes('/dashboard')) {
+              if (!window.location.pathname.includes('/dashboard')) {
                 navigate('/dashboard/home', { replace: true });
               }
             }, 0);
@@ -90,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           clearAuthState();
           
           // Redirect to home page if on a protected route
-          if (location.pathname.includes('/dashboard')) {
+          if (window.location.pathname.includes('/dashboard')) {
             navigate('/', { replace: true });
           }
         } else if (session) {
@@ -148,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
             
             // Redirect to dashboard if on auth or root page
-            if (location.pathname === '/' || location.pathname === '/auth') {
+            if (window.location.pathname === '/' || window.location.pathname === '/auth') {
               navigate('/dashboard/home', { replace: true });
             }
           }, 0);
@@ -174,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname]);
+  }, [navigate]);
 
   const signInWithTwitter = async () => {
     try {
