@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { code, verifier, userId } = await req.json();
+    const { code, verifier, userId, timezone } = await req.json();
     
     if (!code || !verifier || !userId) {
       return new Response(JSON.stringify({ success: false, message: 'Missing parameters' }), {
@@ -42,6 +42,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    
+    console.log("Received parameters:", { code: "REDACTED", verifier: "REDACTED", userId, timezone });
     
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -86,28 +88,40 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     const expiresAt = Math.floor(Date.now() / 1000) + (tokenData.expires_in || 0);
     
-    // Store tokens in the profiles table
+    // Prepare profile updates with the token information
+    const profileUpdates: Record<string, any> = {
+      twitter_bookmark_access_token: tokenData.access_token,
+      twitter_bookmark_refresh_token: tokenData.refresh_token,
+      twitter_bookmark_token_expires_at: expiresAt
+    };
+    
+    // Add timezone to updates if provided
+    if (timezone) {
+      console.log("Adding timezone to profile update:", timezone);
+      profileUpdates.timezone = timezone;
+    }
+    
+    // Store tokens and timezone (if provided) in the profiles table
     const { error } = await supabase
       .from('profiles')
-      .update({
-        twitter_bookmark_access_token: tokenData.access_token,
-        twitter_bookmark_refresh_token: tokenData.refresh_token,
-        twitter_bookmark_token_expires_at: expiresAt
-      })
+      .update(profileUpdates)
       .eq('id', userId);
 
     if (error) {
+      console.error("Error updating profile:", error);
       throw error;
     }
 
     return new Response(JSON.stringify({ 
       success: true,
-      expiresAt
+      expiresAt,
+      timezoneUpdated: !!timezone
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error("Error in edge function:", message);
     return new Response(JSON.stringify({ success: false, message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
