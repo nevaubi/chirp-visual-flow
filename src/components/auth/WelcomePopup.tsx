@@ -6,6 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Twitter } from "lucide-react";
@@ -29,7 +30,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
   return (
     <Dialog open={open}>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0"
+        className="max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95%] max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl shadow-xl p-0 font-sans"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
@@ -47,7 +48,7 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               </h1>
             </div>
             <div className="text-center w-full">
-              <DialogTitle className="text-lg sm:text-xl lg:text-2xl text-center font-extrabold tracking-tight mb-1">
+              <DialogTitle className="text-lg sm:text-xl lg:text-2xl text-center font-extrabold tracking-tight mb-1 font-heading">
                 Welcome!
               </DialogTitle>
               <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
@@ -65,26 +66,26 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               className={cn(
                 "h-auto p-2.5 flex items-start text-left",
                 "text-gray-800 border-2 rounded-xl",
-                "transition-all duration-300 w-full",
+                "transition-all duration-200 w-full",
                 loading === "newsletters" && "opacity-80",
                 hovered === "newsletters" || loading === "newsletters" 
-                  ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-400 shadow-md" 
+                  ? "bg-amber-50 border-amber-400 shadow-md" 
                   : "bg-white hover:bg-amber-50 border-amber-200 hover:border-amber-400"
               )}
               variant="outline"
             >
               <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-amber-700 line-clamp-1">
+                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-amber-700 line-clamp-1 font-heading">
                   Auto Newsletters
                 </span>
                 <span className="text-xs text-gray-600 font-normal block line-clamp-2">
-                  Use your Twitter bookmarks to create weekly newsletters automatically
+                  Auto generate based on your X bookmarks
                 </span>
               </div>
               <div className={cn(
-                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-300 self-center",
+                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-200 self-center",
                 hovered === "newsletters" || loading === "newsletters"
-                  ? "bg-gradient-to-r from-amber-400 to-orange-400 shadow-lg"
+                  ? "bg-amber-400 shadow"
                   : "bg-amber-100"
               )}>
                 <Bookmark 
@@ -103,26 +104,26 @@ const WelcomePopup = ({ open, onOptionSelect }: WelcomePopupProps) => {
               className={cn(
                 "h-auto p-2.5 flex items-start text-left",
                 "text-gray-800 border-2 rounded-xl",
-                "transition-all duration-300 w-full",
+                "transition-all duration-200 w-full",
                 loading === "creator" && "opacity-80",
                 hovered === "creator" || loading === "creator" 
-                  ? "bg-gradient-to-r from-blue-50 to-sky-50 border-blue-400 shadow-md" 
+                  ? "bg-blue-50 border-blue-400 shadow-md" 
                   : "bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-400"
               )}
               variant="outline"
             >
               <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-blue-700 line-clamp-1">
+                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-blue-700 line-clamp-1 font-heading">
                   X Creator Platform
                 </span>
                 <span className="text-xs text-gray-600 font-normal block line-clamp-2">
-                  Grow your Twitter with analytics and AI-generated content
+                  Growth and analytics platform for X users.
                 </span>
               </div>
               <div className={cn(
-                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-300 self-center",
+                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-200 self-center",
                 hovered === "creator" || loading === "creator"
-                  ? "bg-gradient-to-r from-blue-400 to-sky-400 shadow-lg"
+                  ? "bg-blue-400 shadow"
                   : "bg-blue-100"
               )}>
                 <Twitter 
