@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -49,7 +48,7 @@ const WalkthroughPopup = ({
           return {
             icon: <Twitter className="h-10 w-10 text-[#0087C8]" />,
             title: "Dashboard Overview",
-            description: "Your dashboard shows real-time Twitter analytics including follower growth, engagement rates, and impression counts.",
+            description: "Profile analysis? Yes, but also, so much more. Let's get started.",
           };
         case 2:
           return {
@@ -79,7 +78,7 @@ const WalkthroughPopup = ({
           return {
             icon: <BookOpen className="h-10 w-10 text-amber-500" />,
             title: "Newsletter Dashboard",
-            description: "Your dashboard displays key metrics like subscriber counts, open rates, and recently sent newsletters.",
+            description: "Personal use? Paying audience? We've got you. Meet the first auto-newsletter built from your X bookmarks.",
           };
         case 2:
           return {
