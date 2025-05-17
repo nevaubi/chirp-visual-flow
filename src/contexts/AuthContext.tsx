@@ -365,6 +365,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       <WelcomePopup 
         open={showWelcomePopup} 
         onOptionSelect={handleWelcomeOptionSelect}
+        profilePicUrl={authState.profile?.twitter_profilepic_url}
+        username={authState.profile?.twitter_username}
       />
     </AuthContext.Provider>
   );

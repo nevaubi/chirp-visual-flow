@@ -1,13 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Bookmark, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,17 +12,27 @@ interface WelcomePopupProps {
   onOptionSelect: (option: "newsletters" | "creator") => Promise<void>;
   disableClose?: boolean;
   fullscreen?: boolean;
+  profilePicUrl?: string | null;
+  username?: string | null;
 }
 
-const WelcomePopup = ({ 
-  open, 
-  onOptionSelect, 
+const WelcomePopup = ({
+  open,
+  onOptionSelect,
   disableClose = false,
-  fullscreen = false
+  fullscreen = false,
+  profilePicUrl = null,
+  username = null,
 }: WelcomePopupProps) => {
   const [loading, setLoading] = useState<"newsletters" | "creator" | null>(null);
-  const [hovered, setHovered] = useState<"newsletters" | "creator" | null>(null);
+  const [visible, setVisible] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>("");
+
+  useEffect(() => {
+    // Animate in after component mounts
+    const timer = setTimeout(() => setVisible(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSelect = async (option: "newsletters" | "creator") => {
     setLoading(option);
@@ -64,118 +70,112 @@ const WelcomePopup = ({
     <Dialog open={open}>
       <DialogContent
         className={cn(
-          "max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans",
+          "max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-2xl p-0 font-sans",
           fullscreen ? "w-[95%] max-w-2xl" : "w-[95%] max-w-md sm:max-w-lg lg:max-w-xl"
         )}
         onInteractOutside={(e) => disableClose && e.preventDefault()}
         onEscapeKeyDown={(e) => disableClose && e.preventDefault()}
         hideCloseButton={disableClose}
       >
-        <div className="p-4 sm:p-5 lg:p-6">
-          <DialogHeader className="flex flex-col items-center space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-                alt="Chirpmetrics Logo" 
-                className="h-8 w-8 sm:h-10 sm:w-10 drop-shadow-lg"
-              />
-              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#0087C8] to-[#00A3F5] bg-clip-text text-transparent ml-2">
-                chirpmetrics
-              </h1>
-            </div>
-            <div className="text-center w-full">
-              <DialogTitle className="text-lg sm:text-xl lg:text-2xl text-center font-extrabold tracking-tight mb-1 font-heading">
-                Welcome!
-              </DialogTitle>
-              <DialogDescription className="text-center text-xs sm:text-sm md:text-base max-w-xs sm:max-w-sm md:max-w-md mx-auto text-gray-600">
-                Which option best suits your needs?
-              </DialogDescription>
-            </div>
-          </DialogHeader>
+        <div 
+          className={`transform transition-all duration-500 ease-out ${
+            visible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'
+          }`}
+        >
+          <style jsx="true">{`
+            @keyframes subtle-bounce {
+              0%, 100% { 
+                transform: translateY(0); 
+              }
+              50% { 
+                transform: translateY(-3px); 
+              }
+            }
+            .animate-subtle-bounce {
+              animation: subtle-bounce 3s ease-in-out infinite;
+            }
+          `}</style>
           
-          <div className="flex flex-col gap-2 sm:gap-3 mt-3">
-            <Button
-              onClick={() => handleSelect("newsletters")}
-              disabled={loading !== null}
-              onMouseEnter={() => setHovered("newsletters")}
-              onMouseLeave={() => setHovered(null)}
-              className={cn(
-                "h-auto p-2.5 flex items-start text-left",
-                "text-gray-800 border-2 rounded-xl",
-                "transition-all duration-200 w-full",
-                loading === "newsletters" && "opacity-80",
-                hovered === "newsletters" || loading === "newsletters" 
-                  ? "bg-amber-50 border-amber-400 shadow-md" 
-                  : "bg-white hover:bg-amber-50 border-amber-200 hover:border-amber-400"
-              )}
-              variant="outline"
-            >
-              <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-amber-700 line-clamp-1 font-heading">
-                  Auto Newsletters
-                </span>
-                <span className="text-xs text-gray-600 font-normal block line-clamp-2">
-                  Auto generate based on your X bookmarks
-                </span>
+          <div className="text-center pt-10 pb-6">
+            <h1 className="text-4xl font-bold text-gray-800 mb-6">
+              Welcome{username ? `, ${username}` : ''}!
+            </h1>
+            
+            {/* Profile pic with sparkles and subtle bounce animation */}
+            <div className="relative inline-block mb-6">
+              {/* Profile pic with subtle bounce animation */}
+              <div className="animate-subtle-bounce h-24 w-24 rounded-full border-4 border-white shadow-lg flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 overflow-hidden">
+                {profilePicUrl ? (
+                  <img 
+                    src={profilePicUrl} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-12 h-12">
+                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
-              <div className={cn(
-                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-200 self-center",
-                hovered === "newsletters" || loading === "newsletters"
-                  ? "bg-amber-400 shadow"
-                  : "bg-amber-100"
-              )}>
-                <Bookmark 
-                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                    hovered === "newsletters" || loading === "newsletters" ? "text-white" : "text-amber-500"
-                  }`} 
-                />
+              
+              {/* Animated sparkles - positioned in front with z-index */}
+              <div className="absolute text-yellow-400 text-2xl z-10" style={{ top: "0px", left: "5px" }}>
+                <span className="animate-pulse inline-block">✨</span>
               </div>
-            </Button>
-
-            <Button
-              onClick={() => handleSelect("creator")}
-              disabled={loading !== null}
-              onMouseEnter={() => setHovered("creator")}
-              onMouseLeave={() => setHovered(null)}
-              className={cn(
-                "h-auto p-2.5 flex items-start text-left",
-                "text-gray-800 border-2 rounded-xl",
-                "transition-all duration-200 w-full",
-                loading === "creator" && "opacity-80",
-                hovered === "creator" || loading === "creator" 
-                  ? "bg-blue-50 border-blue-400 shadow-md" 
-                  : "bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-400"
-              )}
-              variant="outline"
-            >
-              <div className="flex-grow pr-2 min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-semibold block mb-1 text-blue-700 line-clamp-1 font-heading">
-                  X Creator Platform
-                </span>
-                <span className="text-xs text-gray-600 font-normal block line-clamp-2">
-                  Growth and analytics platform for X users.
-                </span>
+              <div className="absolute text-yellow-400 text-2xl z-10" style={{ top: "15px", right: "0px" }}>
+                <span className="animate-pulse inline-block" style={{ animationDelay: "0.5s" }}>✨</span>
               </div>
-              <div className={cn(
-                "rounded-full p-2 flex-shrink-0 ml-1 transition-all duration-200 self-center",
-                hovered === "creator" || loading === "creator"
-                  ? "bg-blue-400 shadow"
-                  : "bg-blue-100"
-              )}>
-                <Twitter 
-                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                    hovered === "creator" || loading === "creator" ? "text-white" : "text-blue-500"
-                  }`} 
-                />
+              <div className="absolute text-yellow-400 text-2xl z-10" style={{ bottom: "10px", left: "10px" }}>
+                <span className="animate-pulse inline-block" style={{ animationDelay: "0.7s" }}>✨</span>
               </div>
-            </Button>
+              <div className="absolute text-yellow-400 text-2xl z-10" style={{ bottom: "0px", right: "15px" }}>
+                <span className="animate-pulse inline-block" style={{ animationDelay: "0.2s" }}>✨</span>
+              </div>
+            </div>
+            
+            <p className="text-xl text-gray-600 mb-10">Let's get you set up! What are you here for?</p>
           </div>
-          
-          {!disableClose && (
-            <div className="text-xs text-center text-gray-500 mt-3">
-              You can change your preference later in settings
+
+          {/* Options - Side by side */}
+          <div className="px-8 pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Option 1 */}
+              <div 
+                className="bg-amber-50 hover:bg-amber-100 transition-all duration-300 rounded-2xl p-7 cursor-pointer group transform hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-amber-300"
+                onClick={() => handleSelect("newsletters")}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-2xl font-bold text-amber-800 mb-2">Auto Newsletters</h2>
+                  <div className="bg-amber-200 rounded-full p-3 group-hover:bg-amber-300 transition-colors">
+                    <Bookmark size={24} className="text-amber-700" />
+                  </div>
+                </div>
+                <p className="text-amber-700 text-lg">Auto generate based on your X bookmarks</p>
+              </div>
+
+              {/* Option 2 */}
+              <div 
+                className="bg-blue-50 hover:bg-blue-100 transition-all duration-300 rounded-2xl p-7 cursor-pointer group transform hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-blue-300"
+                onClick={() => handleSelect("creator")}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-2xl font-bold text-blue-800 mb-2">X Creator Platform</h2>
+                  <div className="bg-blue-200 rounded-full p-3 group-hover:bg-blue-300 transition-colors">
+                    <Twitter size={24} className="text-blue-700" />
+                  </div>
+                </div>
+                <p className="text-blue-700 text-lg">Growth and analytics platform for X users.</p>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Coming Soon Message */}
+          <div className="text-center py-4 mb-4">
+            <div className="text-xl font-bold text-indigo-600 mb-2">Both? Coming soon!</div>
+            {!disableClose && (
+              <div className="text-sm text-gray-500">You can always change later in settings</div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

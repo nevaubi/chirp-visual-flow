@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import WelcomePopup from "@/components/auth/WelcomePopup";
+import { Profile } from "@/types/auth";
 
 const NewUserDirect = () => {
   const { authState, updateProfile } = useAuth();
@@ -72,6 +73,8 @@ const NewUserDirect = () => {
           onOptionSelect={handleWelcomeOptionSelect}
           disableClose={true}
           fullscreen={true}
+          profilePicUrl={authState.profile?.twitter_profilepic_url}
+          username={authState.profile?.twitter_username}
         />
       </div>
     </div>
