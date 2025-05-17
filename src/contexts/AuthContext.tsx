@@ -5,6 +5,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { AuthState, Profile } from '@/types/auth';
+import WelcomePopup from '@/components/auth/WelcomePopup';
 
 const initialState: AuthState = {
   user: null,
@@ -18,12 +19,14 @@ interface AuthContextProps {
   authState: AuthState;
   signInWithTwitter: () => Promise<void>;
   signOut: (force?: boolean) => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(initialState);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const navigate = useNavigate();
 
   // Helper function to clear auth state
@@ -35,6 +38,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading: false,
       error: null,
     });
+  };
+
+  // Function to update user profile
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!authState.user) {
+      toast.error("Not authenticated");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', authState.user.id);
+
+      if (error) {
+        toast.error("Failed to update profile", {
+          description: error.message,
+        });
+        return;
+      }
+
+      // Update local state with the changes
+      setAuthState(prev => ({
+        ...prev,
+        profile: prev.profile ? { ...prev.profile, ...updates } : null,
+      }));
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      const err = error as Error;
+      toast.error("Error updating profile", {
+        description: err.message,
+      });
+    }
+  };
+
+  // Handle welcome popup option selection
+  const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
+    try {
+      const userPreference = option === "newsletters" ? "newsletters" : "creator";
+      
+      await updateProfile({
+        is_new: false,
+      });
+      
+      setShowWelcomePopup(false);
+      
+      toast.success(`Welcome to Chirpmetrics!`, {
+        description: `You've selected the ${option === "newsletters" ? "Auto Newsletters" : "Creator Platform"} option.`,
+      });
+    } catch (error) {
+      console.error("Error in handleWelcomeOptionSelect:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -49,6 +107,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error) {
           console.error('Error fetching profile:', error);
           return null;
+        }
+        
+        // Check if user is new and trigger welcome popup if needed
+        if (data.is_new === null) {
+          setShowWelcomePopup(true);
         }
         
         return data as Profile;
@@ -277,8 +340,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ authState, signInWithTwitter, signOut }}>
+    <AuthContext.Provider value={{ authState, signInWithTwitter, signOut, updateProfile }}>
       {children}
+      
+      {/* Render welcome popup when needed */}
+      <WelcomePopup 
+        open={showWelcomePopup} 
+        onOptionSelect={handleWelcomeOptionSelect}
+      />
     </AuthContext.Provider>
   );
 };

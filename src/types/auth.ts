@@ -13,6 +13,7 @@ export interface Profile {
   timezone: string | null;
   created_at: string;
   updated_at: string;
+  is_new: boolean | null;
 }
 
 export interface AuthState {
