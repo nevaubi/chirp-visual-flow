@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -483,8 +484,8 @@ const DashboardHome = () => {
   const handleWalkthroughComplete = async () => {
     try {
       // Set timezone to user's local timezone
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timezone;
-      await updateProfile({ timezone });
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      await updateProfile({ timezone: timeZone });
       setShowWalkthrough(false);
     } catch (error) {
       console.error("Error updating timezone:", error);
