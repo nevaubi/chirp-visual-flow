@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exchangeCodeForToken } from '@/integrations/twitterPkce';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const BookmarksCallback = () => {
@@ -29,11 +30,22 @@ const BookmarksCallback = () => {
       }
 
       try {
-        if (!authState.user?.id) {
+        let userId = authState.user?.id;
+
+        // If the auth context hasn't loaded a user yet, try fetching it
+        if (!userId) {
+          const { data, error } = await supabase.auth.getUser();
+          if (error) {
+            throw new Error(error.message);
+          }
+          userId = data.user?.id ?? null;
+        }
+
+        if (!userId) {
           throw new Error('User is not authenticated');
         }
 
-        const tokenData = await exchangeCodeForToken(code, authState.user.id);
+        await exchangeCodeForToken(code, userId);
         
         sessionStorage.setItem('twitter_bookmarks_authorized', 'true');
         toast({ title: 'Bookmarks connected' });
