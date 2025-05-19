@@ -23,6 +23,14 @@ export interface Profile {
   twitter_bookmark_access_token: string | null;
   twitter_bookmark_refresh_token: string | null;
   twitter_bookmark_token_expires_at: number | null;
+  // Stripe-related fields
+  stripe_customer_id: string | null;
+  subscribed: boolean | null;
+  subscription_tier: string | null;
+  subscription_id: string | null;
+  subscription_period_end: string | null;
+  cancel_at_period_end: boolean | null;
+  stripe_price_id: string | null;
 }
 
 export interface AuthState {
