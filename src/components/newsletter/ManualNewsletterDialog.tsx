@@ -1,6 +1,6 @@
 
-import React from "react";
-import { Check } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Loader2 } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -12,6 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 interface ManualNewsletterDialogProps {
   open: boolean;
@@ -53,11 +56,57 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
   remainingGenerations
 }) => {
   const [selectedCount, setSelectedCount] = React.useState<number>(10);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { authState } = useAuth();
 
-  const handleGenerate = () => {
-    // This will be implemented later
-    console.log(`Generating newsletter with ${selectedCount} tweets`);
-    onOpenChange(false);
+  const handleGenerate = async () => {
+    if (!authState.user) {
+      toast.error("You must be logged in to generate a newsletter");
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
+        body: {
+          tweetCount: selectedCount,
+          userId: authState.user.id
+        }
+      });
+      
+      if (error) {
+        console.error("Error invoking function:", error);
+        toast.error("Failed to generate newsletter", {
+          description: error.message || "Please try again later"
+        });
+        return;
+      }
+      
+      if (data.error) {
+        console.error("Function returned error:", data.error);
+        toast.error("Failed to generate newsletter", {
+          description: data.error || "Please try again later"
+        });
+        return;
+      }
+      
+      // Display success message
+      toast.success("Newsletter generated successfully", {
+        description: `A newsletter with ${selectedCount} tweets has been created and sent to your email`
+      });
+      
+      // Close the dialog
+      onOpenChange(false);
+      
+    } catch (error: any) {
+      console.error("Error generating newsletter:", error);
+      toast.error("An unexpected error occurred", {
+        description: error.message || "Please try again later"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -106,8 +155,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
             type="button" 
             className="bg-amber-500 hover:bg-amber-600 text-white"
             onClick={handleGenerate}
+            disabled={isGenerating}
           >
-            Generate Newsletter
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate Newsletter"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
