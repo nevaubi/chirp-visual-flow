@@ -190,6 +190,7 @@ serve(async (req) => {
       console.log(`Fetching ${selectedCount} bookmarks for user with numerical_id: ${numericalId}`);
       
       // Prepare Twitter API request
+      // We'll add expansions and tweet fields to get comprehensive tweet data
       const bookmarksUrl = `https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`;
       
       const bookmarksOptions = {
@@ -224,7 +225,7 @@ serve(async (req) => {
       const bookmarksData = await bookmarksResponse.json();
       
       // Log the full Twitter API response for debugging
-      console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2)); // Detailed logging of the entire response
+      console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2));
       
       // Validate bookmark data
       if (!bookmarksData || !bookmarksData.data) {
@@ -241,21 +242,10 @@ serve(async (req) => {
           );
         }
         
-        // If bookmarksData.data is still not present after the result_count check (e.g. API error not caught by status code)
-        if (!bookmarksData.data) {
-            throw new Error("Failed to retrieve bookmarks from Twitter: data field missing in response.");
-        }
+        throw new Error("Failed to retrieve bookmarks from Twitter");
       }
       
       console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks`);
-      
-      // ---- START OF NEW PARSING LOGIC ----
-      // Extract tweet IDs from the bookmarksData.data array
-      const parsedTweetIds = bookmarksData.data.map(tweet => tweet.id);
-      
-      // Log the parsed data for debugging
-      console.log("Parsed tweet IDs:", JSON.stringify(parsedTweetIds, null, 2));
-      // ---- END OF NEW PARSING LOGIC ----
       
       // At this point, the user is authenticated, has a valid subscription with a manual plan, has remaining generations,
       // and we've successfully fetched their bookmarks
@@ -268,30 +258,22 @@ serve(async (req) => {
             email: profile.sending_email,
             preferences: profile.newsletter_content_preferences,
             numerical_id: numericalId,
-            bookmarks: bookmarksData, // The full original bookmarks data from Twitter
-            tweet_ids: parsedTweetIds // The new array of extracted tweet IDs
+            bookmarks: bookmarksData
           }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
       
     } catch (error) {
-      console.error("Error fetching or parsing bookmarks:", error);
+      console.error("Error fetching bookmarks:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch or process your bookmarks. Please try again later." }),
+        JSON.stringify({ error: "Failed to fetch your bookmarks. Please try again later." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
   } catch (error) {
     console.error("Error in manual-newsletter-generation function:", error);
-    // Check if it's a SyntaxError from req.json() failing (e.g. empty body)
-    if (error instanceof SyntaxError) {
-        return new Response(
-            JSON.stringify({ error: "Invalid request body. Ensure it is valid JSON." }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-    }
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
