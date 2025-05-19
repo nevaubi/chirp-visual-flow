@@ -57,10 +57,10 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-[#0087C8] font-medium hover:text-[#0270A8] transition-colors">Home</Link>
-            <a href="#" className="text-[#64748b] font-medium hover:text-[#0087C8] transition-colors flex items-center gap-1.5">
+            <Link to="/free-tools" className="text-[#64748b] font-medium hover:text-[#0087C8] transition-colors flex items-center gap-1.5">
               <Wrench className="h-4 w-4" />
               <span>Free Tools</span>
-            </a>
+            </Link>
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
@@ -136,14 +136,14 @@ export default function Navbar() {
             >
               Home
             </Link>
-            <a 
-              href="#" 
+            <Link
+              to="/free-tools"
               className="text-[#64748b] font-medium py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors flex items-center gap-1.5"
               onClick={() => setIsOpen(false)}
             >
               <Wrench className="h-4 w-4" />
               <span>Free Tools</span>
-            </a>
+            </Link>
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-blue-100">
               {isAuthenticated ? (
                 <>
