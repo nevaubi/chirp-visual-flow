@@ -55,7 +55,7 @@ serve(async (req) => {
       response_type: 'code',
       client_id: TWITTER_CLIENT_ID,
       redirect_uri: TWITTER_REDIRECT_URI,
-      scope: 'tweet.read users.read bookmark.read offline.access',
+      scope: 'tweet.read users.read bookmark.read bookmark.write offline.access',
       state,
       code_challenge: challenge,
       code_challenge_method: 'S256'
