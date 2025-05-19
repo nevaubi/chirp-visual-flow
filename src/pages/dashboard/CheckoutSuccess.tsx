@@ -22,6 +22,7 @@ const formSchema = z.object({
 const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const sessionId = searchParams.get("session_id");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
@@ -39,9 +40,6 @@ const CheckoutSuccess = () => {
     const checkSubscriptionStatus = async () => {
       try {
         setIsLoading(true);
-        
-        // Get the session ID from the URL
-        const sessionId = searchParams.get("session_id");
         
         if (!sessionId) {
           toast.error("No session ID found in URL");
@@ -81,7 +79,7 @@ const CheckoutSuccess = () => {
     if (authState.user && !authState.loading) {
       checkSubscriptionStatus();
     }
-  }, [authState.user, authState.loading, navigate, searchParams, form, refreshProfile]);
+  }, [authState.user, authState.loading, navigate, sessionId, form, refreshProfile]);
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
