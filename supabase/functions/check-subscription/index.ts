@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -36,6 +37,19 @@ const extractCustomerId = (customer: string | any): string => {
   
   // If all else fails, convert to string
   return String(customer);
+};
+
+// Helper function to determine newsletter generation count based on newsletter_day_preference
+const determineNewsletterGenerationCount = (preference: string | null | undefined): number => {
+  if (!preference) return 0;
+  
+  if (preference.includes('Manual: 8')) {
+    return 8;
+  } else if (preference.includes('Manual: 4')) {
+    return 4;
+  }
+  
+  return 0;
 };
 
 serve(async (req) => {
@@ -117,6 +131,24 @@ serve(async (req) => {
         const newsletterDayPreference = session.metadata?.newsletter_day_preference;
         let newsletterContentPreferences = null;
         
+        // Extract remaining_newsletter_generations from metadata or derive from preference
+        let remainingNewsletterGenerations = null;
+        if (session.metadata?.remaining_newsletter_generations) {
+          try {
+            remainingNewsletterGenerations = parseInt(session.metadata.remaining_newsletter_generations, 10);
+            logStep("Found remaining_newsletter_generations in metadata", { remainingNewsletterGenerations });
+          } catch (error) {
+            logStep("Error parsing remaining_newsletter_generations", error);
+          }
+        }
+        
+        // If remaining_newsletter_generations wasn't in metadata or couldn't be parsed,
+        // determine it based on newsletter_day_preference
+        if (remainingNewsletterGenerations === null) {
+          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference);
+          logStep("Determined remaining_newsletter_generations from preference", { remainingNewsletterGenerations });
+        }
+        
         if (session.metadata?.newsletter_content_preferences) {
           try {
             newsletterContentPreferences = JSON.parse(session.metadata.newsletter_content_preferences);
@@ -137,6 +169,11 @@ serve(async (req) => {
           
           if (newsletterContentPreferences) {
             profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
+          }
+          
+          // Add remaining_newsletter_generations if available
+          if (remainingNewsletterGenerations !== null) {
+            profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
           }
           
           const { error: customerUpdateError } = await supabaseAdmin
@@ -208,7 +245,8 @@ serve(async (req) => {
                   subscription_id: subscription.id,
                   subscription_period_end: subscriptionPeriodEnd,
                   cancel_at_period_end: subscription.cancel_at_period_end,
-                  stripe_price_id: priceId
+                  stripe_price_id: priceId,
+                  remaining_newsletter_generations: remainingNewsletterGenerations
                 })
                 .eq('id', user.id);
                 
@@ -231,7 +269,8 @@ serve(async (req) => {
                 cancel_at_period_end: subscription.cancel_at_period_end,
                 stripe_price_id: priceId,
                 newsletter_day_preference: newsletterDayPreference,
-                newsletter_content_preferences: newsletterContentPreferences
+                newsletter_content_preferences: newsletterContentPreferences,
+                remaining_newsletter_generations: remainingNewsletterGenerations
               }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
@@ -249,7 +288,7 @@ serve(async (req) => {
     // Fetch user profile to check if they have a Stripe customer ID
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, newsletter_day_preference')
       .eq('id', user.id)
       .single();
       
@@ -369,6 +408,13 @@ serve(async (req) => {
     // Calculate subscription period end
     const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
     
+    // Determine remaining newsletter generations based on the user's preference
+    const remainingNewsletterGenerations = determineNewsletterGenerationCount(profileData.newsletter_day_preference);
+    logStep("Determined remaining newsletter generations", { 
+      newsletterDayPreference: profileData.newsletter_day_preference, 
+      remainingNewsletterGenerations 
+    });
+    
     // Update the user's profile with subscription details
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
@@ -378,7 +424,8 @@ serve(async (req) => {
         subscription_id: subscription.id,
         subscription_period_end: subscriptionPeriodEnd,
         cancel_at_period_end: subscription.cancel_at_period_end,
-        stripe_price_id: priceId
+        stripe_price_id: priceId,
+        remaining_newsletter_generations: remainingNewsletterGenerations
       })
       .eq('id', user.id);
       
@@ -399,7 +446,8 @@ serve(async (req) => {
       subscription_id: subscription.id,
       subscription_period_end: subscriptionPeriodEnd,
       cancel_at_period_end: subscription.cancel_at_period_end,
-      stripe_price_id: priceId
+      stripe_price_id: priceId,
+      remaining_newsletter_generations: remainingNewsletterGenerations
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
