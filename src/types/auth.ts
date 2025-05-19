@@ -31,6 +31,8 @@ export interface Profile {
   subscription_period_end: string | null;
   cancel_at_period_end: boolean | null;
   stripe_price_id: string | null;
+  // Email field
+  sending_email: string | null;
 }
 
 export interface AuthState {
