@@ -249,23 +249,92 @@ serve(async (req) => {
       const tweetIds = bookmarksData.data.map(tweet => tweet.id);
       console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks with IDs:`, JSON.stringify(tweetIds, null, 2));
       
-      // At this point, the user is authenticated, has a valid subscription with a manual plan, has remaining generations,
-      // and we've successfully fetched their bookmarks
-      return new Response(
-        JSON.stringify({
-          status: "success",
-          message: "Bookmarks retrieved successfully",
-          data: {
-            selectedCount,
-            email: profile.sending_email,
-            preferences: profile.newsletter_content_preferences,
-            numerical_id: numericalId,
-            bookmarks: bookmarksData,
-            tweetIds: tweetIds // Include the extracted IDs in the response
+      // Now make a call to the Apify API to get detailed tweet data
+      try {
+        // Get the Apify API key from environment variables
+        const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
+        if (!APIFY_API_KEY) {
+          throw new Error("Missing APIFY_API_KEY environment variable");
+        }
+        
+        console.log("Making Apify API call for detailed tweet data...");
+        
+        // Construct the request body with the filter parameters
+        const apifyRequestBody = {
+          "filter:blue_verified": false,
+          "filter:consumer_video": false,
+          "filter:has_engagement": false,
+          "filter:hashtags": false,
+          "filter:images": false,
+          "filter:links": false,
+          "filter:media": false,
+          "filter:mentions": false,
+          "filter:native_video": false,
+          "filter:nativeretweets": false,
+          "filter:news": false,
+          "filter:pro_video": false,
+          "filter:quote": false,
+          "filter:replies": false,
+          "filter:safe": false,
+          "filter:spaces": false,
+          "filter:twimg": false,
+          "filter:videos": false,
+          "filter:vine": false,
+          "include:nativeretweets": false,
+          "lang": "en",
+          "maxItems": selectedCount,
+          "tweetIDs": tweetIds
+        };
+        
+        // Make the API call to Apify
+        const apifyResponse = await fetch(
+          `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(apifyRequestBody)
           }
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        );
+        
+        if (!apifyResponse.ok) {
+          const errorText = await apifyResponse.text();
+          console.error(`Apify API error (${apifyResponse.status}):`, errorText);
+          throw new Error(`Apify API error: ${apifyResponse.status}`);
+        }
+        
+        const apifyData = await apifyResponse.json();
+        
+        // Log the Apify API response for debugging
+        console.log("Apify API response:", JSON.stringify(apifyData, null, 2));
+        
+        // At this point, the user is authenticated, has a valid subscription with a manual plan, 
+        // has remaining generations, and we've successfully fetched their bookmarks and detailed tweet data
+        return new Response(
+          JSON.stringify({
+            status: "success",
+            message: "Bookmarks retrieved successfully",
+            data: {
+              selectedCount,
+              email: profile.sending_email,
+              preferences: profile.newsletter_content_preferences,
+              numerical_id: numericalId,
+              bookmarks: bookmarksData,
+              tweetIds: tweetIds,
+              detailedTweetData: apifyData // Include the detailed tweet data from Apify
+            }
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+        
+      } catch (apifyError) {
+        console.error("Error fetching detailed tweet data from Apify:", apifyError);
+        return new Response(
+          JSON.stringify({ error: `Failed to fetch detailed tweet data: ${apifyError.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
