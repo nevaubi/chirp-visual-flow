@@ -166,29 +166,108 @@ serve(async (req) => {
           }
         } else {
           console.error("Could not extract user ID from API response:", apiResponse);
-          // Continue without the numerical_id, it's not critical for this operation
+          throw new Error("Could not retrieve your Twitter ID. Please try again later.");
         }
       } catch (error) {
         console.error("Error fetching numerical_id:", error);
-        // Continue without the numerical_id, it's not critical for this operation
+        return new Response(
+          JSON.stringify({ error: "Could not retrieve your Twitter ID. Please try again later." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
-    // At this point, the user is authenticated, has a valid subscription with a manual plan, and has remaining generations
-    // We've also attempted to get the numerical_id if it was missing
-    return new Response(
-      JSON.stringify({
-        status: "verified",
-        message: "User is authorized to generate newsletter",
-        data: {
-          selectedCount,
-          email: profile.sending_email,
-          preferences: profile.newsletter_content_preferences,
-          numerical_id: numericalId
+    // Check that we now have a numerical_id
+    if (!numericalId) {
+      return new Response(
+        JSON.stringify({ error: "Could not determine your Twitter ID. Please update your Twitter handle in settings." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Now fetch bookmarks from Twitter API
+    try {
+      console.log(`Fetching ${selectedCount} bookmarks for user with numerical_id: ${numericalId}`);
+      
+      // Prepare Twitter API request
+      // We'll add expansions and tweet fields to get comprehensive tweet data
+      const bookmarksUrl = `https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`;
+      
+      const bookmarksOptions = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${profile.twitter_bookmark_access_token}`,
+          'Content-Type': 'application/json'
         }
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      };
+      
+      const bookmarksResponse = await fetch(bookmarksUrl, bookmarksOptions);
+      
+      if (!bookmarksResponse.ok) {
+        const errorText = await bookmarksResponse.text();
+        console.error(`Twitter API error (${bookmarksResponse.status}):`, errorText);
+        
+        if (bookmarksResponse.status === 401) {
+          return new Response(
+            JSON.stringify({ error: "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks." }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else if (bookmarksResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Twitter API rate limit exceeded. Please try again later." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        throw new Error(`Twitter API error: ${bookmarksResponse.status}`);
+      }
+      
+      const bookmarksData = await bookmarksResponse.json();
+      
+      // Validate bookmark data
+      if (!bookmarksData || !bookmarksData.data) {
+        console.error("Invalid or empty bookmark data received:", bookmarksData);
+        
+        if (bookmarksData && bookmarksData.errors) {
+          console.error("Twitter API errors:", bookmarksData.errors);
+        }
+        
+        if (bookmarksData && bookmarksData.meta && bookmarksData.meta.result_count === 0) {
+          return new Response(
+            JSON.stringify({ error: "You don't have any bookmarks. Please save some tweets before generating a newsletter." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        throw new Error("Failed to retrieve bookmarks from Twitter");
+      }
+      
+      console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks`);
+      
+      // At this point, the user is authenticated, has a valid subscription with a manual plan, has remaining generations,
+      // and we've successfully fetched their bookmarks
+      return new Response(
+        JSON.stringify({
+          status: "success",
+          message: "Bookmarks retrieved successfully",
+          data: {
+            selectedCount,
+            email: profile.sending_email,
+            preferences: profile.newsletter_content_preferences,
+            numerical_id: numericalId,
+            bookmarks: bookmarksData
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+      
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch your bookmarks. Please try again later." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
   } catch (error) {
     console.error("Error in manual-newsletter-generation function:", error);
