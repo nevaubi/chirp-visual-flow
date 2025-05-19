@@ -45,6 +45,8 @@ export interface Profile {
     newsletter_name?: string;
     template?: string;
   } | null;
+  // Newsletter generation tracking
+  remaining_newsletter_generations: number | null;
 }
 
 export interface AuthState {

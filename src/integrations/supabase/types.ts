@@ -67,6 +67,7 @@ export type Database = {
           newsletter_content_preferences: Json | null
           newsletter_day_preference: string | null
           numerical_id: string | null
+          remaining_newsletter_generations: number | null
           sending_email: string | null
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -100,6 +101,7 @@ export type Database = {
           newsletter_content_preferences?: Json | null
           newsletter_day_preference?: string | null
           numerical_id?: string | null
+          remaining_newsletter_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -133,6 +135,7 @@ export type Database = {
           newsletter_content_preferences?: Json | null
           newsletter_day_preference?: string | null
           numerical_id?: string | null
+          remaining_newsletter_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null

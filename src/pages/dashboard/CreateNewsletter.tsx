@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,9 +59,9 @@ const CreateNewsletter = () => {
   // Get the day preference based on user selections
   const getDayPreference = (): string => {
     if (selectedFrequency === 'biweekly') {
-      return deliveryOption === 'manual' ? 'Manual' : 'Tuesday-Friday';
+      return deliveryOption === 'manual' ? 'Manual: 8' : 'Tuesday-Friday';
     } else if (selectedFrequency === 'weekly') {
-      return deliveryOption === 'manual' ? 'Manual' : weeklyDay || '';
+      return deliveryOption === 'manual' ? 'Manual: 4' : weeklyDay || '';
     }
     return '';
   };
@@ -98,6 +99,9 @@ const CreateNewsletter = () => {
       // Get day preference and content preferences
       const dayPreference = getDayPreference();
       const contentPreferences = getContentPreferences();
+      
+      // Set the initial number of remaining generations based on the manual preference
+      const remainingGenerations = dayPreference === 'Manual: 8' ? 8 : dayPreference === 'Manual: 4' ? 4 : null;
 
       // Call the create-checkout edge function with preferences included in metadata
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -106,7 +110,8 @@ const CreateNewsletter = () => {
           frequency: selectedFrequency,
           metadata: {
             newsletter_day_preference: dayPreference,
-            newsletter_content_preferences: JSON.stringify(contentPreferences)
+            newsletter_content_preferences: JSON.stringify(contentPreferences),
+            remaining_newsletter_generations: remainingGenerations
           }
         },
       });

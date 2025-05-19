@@ -59,11 +59,35 @@ export function NewsletterPreferences() {
         template: data.template,
       };
 
+      // Determine if this is a change to/from a manual preference
+      const isManualPreference = data.newsletter_day_preference === "Custom" || 
+                                data.newsletter_day_preference === "Bi" || 
+                                data.newsletter_day_preference.startsWith("Manual:");
+      
+      // Set the appropriate manual value if custom is selected
+      let dayPreference = data.newsletter_day_preference;
+      let remainingGenerations = profile.remaining_newsletter_generations;
+      
+      if (data.newsletter_day_preference === "Custom") {
+        // If frequency is weekly, use Manual: 4, otherwise use Manual: 8
+        const isWeekly = data.frequency === "Weekly - Automatic" || 
+                        data.frequency === "Weekly - Manual generation";
+        dayPreference = isWeekly ? "Manual: 4" : "Manual: 8";
+        remainingGenerations = isWeekly ? 4 : 8;
+      } else if (data.newsletter_day_preference === "Bi") {
+        dayPreference = "Manual: 8";
+        remainingGenerations = 8;
+      } else if (!isManualPreference) {
+        // If changing from manual to automatic, clear the remaining generations
+        remainingGenerations = null;
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
-          newsletter_day_preference: data.newsletter_day_preference,
+          newsletter_day_preference: dayPreference,
           newsletter_content_preferences: newsletterContentPreferences,
+          remaining_newsletter_generations: remainingGenerations
         })
         .eq("id", profile.id);
 
