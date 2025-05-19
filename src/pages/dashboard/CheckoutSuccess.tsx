@@ -25,9 +25,12 @@ const CheckoutSuccess = () => {
   const sessionId = searchParams.get("session_id");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const { authState, refreshProfile } = useAuth();
+  
+  // Use refs to prevent multiple executions
   const subscriptionCheckedRef = useRef(false);
+  const initialCheckDoneRef = useRef(false);
+  const timeoutIdRef = useRef<number | null>(null);
   
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -37,18 +40,48 @@ const CheckoutSuccess = () => {
     },
   });
 
+  // Ensure we release resources when component unmounts
   useEffect(() => {
-    // Pre-populate the email field with the user's email if available
+    return () => {
+      if (timeoutIdRef.current !== null) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
+  }, []);
+
+  // Pre-populate email field with user's email if available
+  useEffect(() => {
     if (authState.user?.email && !form.getValues("email")) {
       form.setValue("email", authState.user.email);
     }
   }, [authState.user, form]);
 
+  // Force end loading state after a timeout to prevent infinite loading
+  useEffect(() => {
+    if (isLoading && !initialCheckDoneRef.current) {
+      timeoutIdRef.current = window.setTimeout(() => {
+        setIsLoading(false);
+        initialCheckDoneRef.current = true;
+        
+        if (!subscriptionCheckedRef.current && sessionId) {
+          toast.warning("Loading took longer than expected. Please proceed with saving your email.");
+        }
+      }, 5000); // 5-second timeout
+    }
+    
+    return () => {
+      if (timeoutIdRef.current !== null) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
+  }, [isLoading, sessionId]);
+
+  // Handle subscription check
   useEffect(() => {
     let isMounted = true;
     
     const checkSubscriptionStatus = async () => {
-      // Only check subscription once per sessionId
+      // Only check subscription once per session ID and only if we have all required data
       if (subscriptionCheckedRef.current || !sessionId || !authState.user || authState.loading) {
         return;
       }
@@ -62,35 +95,36 @@ const CheckoutSuccess = () => {
           body: { session_id: sessionId }
         });
         
-        if (error) {
+        if (error && isMounted) {
           console.error("Error checking subscription:", error);
-          if (isMounted) {
-            toast.error("Error checking subscription status");
-          }
-        } else {
-          if (isMounted) {
-            toast.success("Subscription activated successfully!");
-            setIsSubscriptionActive(true);
-            
-            // After successful subscription check, refresh the user's profile to get updated preferences
-            await refreshProfile();
-          }
+          toast.error("Error checking subscription status");
+          setIsLoading(false);
+        } else if (isMounted) {
+          toast.success("Subscription activated successfully!");
+          
+          // After successful subscription check, refresh the user's profile to get updated preferences
+          await refreshProfile();
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error in checkout success:", error);
         if (isMounted) {
           toast.error("Something went wrong");
-        }
-      } finally {
-        if (isMounted) {
           setIsLoading(false);
         }
       }
     };
 
-    if (authState.user && !authState.loading && sessionId) {
-      checkSubscriptionStatus();
-    } else if (!authState.loading) {
+    // Only run the subscription check if we have the required data
+    if (authState.user && !authState.loading && sessionId && !subscriptionCheckedRef.current) {
+      // Add slight delay to avoid potential race conditions
+      setTimeout(() => {
+        if (isMounted) {
+          checkSubscriptionStatus();
+        }
+      }, 500);
+    } else if (!authState.loading && !sessionId) {
+      // If no sessionId is present, we don't need to check subscription
       setIsLoading(false);
     }
 
@@ -162,7 +196,7 @@ const CheckoutSuccess = () => {
                       placeholder="your@email.com" 
                       type="email"
                       {...field} 
-                      disabled={isSubmitting || isLoading}
+                      disabled={isSubmitting}
                       className="text-base"
                     />
                   </FormControl>
@@ -173,9 +207,9 @@ const CheckoutSuccess = () => {
             <Button 
               type="submit" 
               className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
-              disabled={isSubmitting || isLoading}
+              disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : isLoading ? "Loading..." : "Save Email & Continue"}
+              {isSubmitting ? "Saving..." : "Save Email & Continue"}
             </Button>
           </form>
         </Form>
