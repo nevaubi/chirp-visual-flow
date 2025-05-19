@@ -95,10 +95,11 @@ serve(async (req) => {
     }
 
     // Retrieve active subscriptions for the customer
+    // FIX: Removed excessive nesting in expansion to avoid the 4-level limit error
     const subscriptions = await stripe.subscriptions.list({
       customer: profileData.stripe_customer_id,
       status: "active",
-      expand: ["data.default_payment_method", "data.items.data.price.product"]
+      expand: ["data.items.data.price"]
     });
 
     // If no active subscriptions, update profile and return
@@ -125,8 +126,28 @@ serve(async (req) => {
     // Get the active subscription
     const subscription = subscriptions.data[0];
     
-    // Determine subscription tier based on price ID
+    // Get price info
     const priceId = subscription.items.data[0].price.id;
+    
+    // Fetch product information in a separate call to avoid excessive nesting
+    const price = subscription.items.data[0].price;
+    let productId = null;
+    
+    try {
+      // Check if price has product data, if not fetch it separately
+      if (price.product && typeof price.product === 'string') {
+        const product = await stripe.products.retrieve(price.product);
+        productId = product.id;
+        logStep("Retrieved product info", { productId });
+      } else if (price.product && typeof price.product === 'object') {
+        productId = price.product.id;
+      }
+    } catch (error) {
+      logStep("Error retrieving product", error);
+      // Continue despite product error
+    }
+    
+    // Determine subscription tier based on price ID
     let subscriptionTier = null;
     
     // Map price IDs to subscription tiers
@@ -146,7 +167,7 @@ serve(async (req) => {
     const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
     
     // Update the user's profile with subscription details
-    await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         subscribed: true,
@@ -157,6 +178,14 @@ serve(async (req) => {
         stripe_price_id: priceId
       })
       .eq('id', user.id);
+      
+    if (updateError) {
+      logStep("Error updating profile", updateError);
+      return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
     logStep("Profile updated with subscription details");
 
