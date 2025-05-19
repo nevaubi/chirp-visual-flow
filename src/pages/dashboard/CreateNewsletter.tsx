@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 
 const CreateNewsletter = () => {
   const navigate = useNavigate();
-  // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = next
+  // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = media & signature, 6 = name & style, 7 = review
   const [step, setStep] = useState<number>(0);
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience' | null>(null);
   const [selectedFrequency, setSelectedFrequency] = useState<'daily' | 'biweekly' | 'weekly' | null>(null);
@@ -25,6 +25,10 @@ const CreateNewsletter = () => {
   const [topics, setTopics] = useState<string>('');
   const [writingStyle, setWritingStyle] = useState<'first' | 'third' | 'emulate' | null>(null);
   const [styleExample, setStyleExample] = useState<string>('');
+  const [includeMedia, setIncludeMedia] = useState<boolean | null>(null);
+  const [includeSignature, setIncludeSignature] = useState<boolean | null>(null);
+  const [newsletterName, setNewsletterName] = useState<string>("" );
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   const handleCreateClick = () => {
     setStep(1);
@@ -316,8 +320,226 @@ const CreateNewsletter = () => {
             </div>
           )}
         </div>
-      ) : step === 5 ? (
-        <div className="text-center">Next step coming soon...</div>
+        ) : step === 5 ? (
+        // Include media and signature step
+        <div className="w-full max-w-2xl space-y-8 animate-fade-in">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">
+              Include media (tweets/pictures/videos)?
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card
+              onClick={() => setIncludeMedia(true)}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                includeMedia === true ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="text-center pb-2">
+                <CardTitle>Yes, include media📸</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card
+              onClick={() => setIncludeMedia(false)}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                includeMedia === false ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="text-center pb-2">
+                <CardTitle>No, text only</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          <div className="text-center mt-8 mb-4">
+            <h3 className="text-xl font-semibold">
+              Include your X (twitter) handle or signature?
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card
+              onClick={() => setIncludeSignature(true)}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                includeSignature === true ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="text-center pb-2">
+                <CardTitle>Yes, Add My Signature</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card
+              onClick={() => setIncludeSignature(false)}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                includeSignature === false ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="text-center pb-2">
+                <CardTitle>No thanks 🙅‍♂️</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          {includeMedia !== null && includeSignature !== null && (
+            <div className="text-center mt-6">
+              <Button
+                onClick={() => setStep(6)}
+                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
+              >
+                Continue
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : step === 6 ? (
+        // Name and visual style step
+        <div className="w-full max-w-3xl space-y-8 animate-fade-in">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">
+              Give your newsletter a name?
+            </h2>
+          </div>
+          <div className="flex justify-center">
+            <Input
+              value={newsletterName}
+              onChange={(e) => setNewsletterName(e.target.value)}
+              placeholder="Newsletter name"
+              className="max-w-md"
+            />
+          </div>
+          <div className="text-center mt-8">
+            <h3 className="text-2xl md:text-3xl font-bold mb-3">
+              Choose a visual style for your newsletter
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <Card
+              onClick={() => setSelectedTemplate('template1')}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                selectedTemplate === 'template1' ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="p-0">
+                <img
+                  src="/placeholder.svg"
+                  alt="Template 1"
+                  className="w-full h-32 object-cover rounded-t-lg"
+                />
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription>Template 1</CardDescription>
+              </CardContent>
+            </Card>
+            <Card
+              onClick={() => setSelectedTemplate('template2')}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                selectedTemplate === 'template2' ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="p-0">
+                <img
+                  src="/placeholder.svg"
+                  alt="Template 2"
+                  className="w-full h-32 object-cover rounded-t-lg"
+                />
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription>Template 2</CardDescription>
+              </CardContent>
+            </Card>
+            <Card
+              onClick={() => setSelectedTemplate('template3')}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                selectedTemplate === 'template3' ? 'border-primary' : ''
+              }`}
+            >
+              <CardHeader className="p-0">
+                <img
+                  src="/placeholder.svg"
+                  alt="Template 3"
+                  className="w-full h-32 object-cover rounded-t-lg"
+                />
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription>Template 3</CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+          {newsletterName.trim().length > 0 && selectedTemplate && (
+            <div className="text-center mt-6">
+              <Button
+                onClick={() => setStep(7)}
+                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
+              >
+                Continue
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : step === 7 ? (
+        // Review and confirmation step
+        <div className="w-full max-w-2xl space-y-8 animate-fade-in">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">Review your selections</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Audience:</span>
+              <span>{selectedAudience === 'personal' ? 'Personal' : 'For an audience'}</span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Frequency:</span>
+              <span>{selectedFrequency}</span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Content approach:</span>
+              <span>
+                {contentApproach === 'everything'
+                  ? 'Everything from bookmarks'
+                  : `Topics - ${topics}`}
+              </span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Writing style:</span>
+              <span>
+                {writingStyle === 'emulate'
+                  ? `Emulate style`
+                  : writingStyle}
+              </span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Include media:</span>
+              <span>{includeMedia ? 'Yes' : 'No'}</span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Add signature:</span>
+              <span>{includeSignature ? 'Yes' : 'No'}</span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Newsletter name:</span>
+              <span>{newsletterName}</span>
+            </div>
+            <div className="flex justify-between border rounded-lg p-4">
+              <span className="font-semibold">Template:</span>
+              <span>{selectedTemplate}</span>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <Button
+              variant="outline"
+              onClick={() => setStep(6)}
+              className="flex-1"
+            >
+              <div className="flex flex-col">
+                <span>Go back</span>
+                <span className="text-xs text-muted-foreground">I need to change something</span>
+              </div>
+            </Button>
+            <Button className="flex-1 bg-amber-500 text-white hover:bg-amber-600">
+              <div className="flex flex-col">
+                <span>Confirm</span>
+                <span className="text-xs">Proceed to Stripe payment and lock in your automated newsletter!</span>
+              </div>
+            </Button>
+          </div>
+        </div>
       ) : null}
     </div>
   );
