@@ -78,8 +78,8 @@ const HandleIdConverter = () => {
           setIsLoading(false);
           return;
         }
-        payload = { id };
-        functionName = "id-to-twitter-handle";
+        payload = { id: id.trim(), conversionType: "id2handle" };
+        functionName = "twitter-handle-to-id";
       }
 
       const { data, error: functionError } = await supabase.functions.invoke(
