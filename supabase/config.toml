@@ -1,15 +1,18 @@
 
+# A string used to distinguish different Supabase projects on the same host. Defaults to the working
+# directory name when running `supabase init`.
 project_id = "xuntjnqljyorysqxlker"
 
 [api]
 # Port to use for the API URL.
 port = 54321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
-# endpoints. public and storage are always included.
-schemas = ["public", "storage"]
+# endpoints. Public and storage are always included.
+schemas = ["public", "storage", "extensions"]
 # Extra schemas to add to the search_path of every request. public is always included.
-extra_search_path = ["extensions"]
-# Maximum rows returns in a single response. Default is 1000.
+extra_search_path = ["public", "extensions"]
+# Maximum rows to return from a view, table, or stored procedure. Limits payload size for accidental
+# or malicious requests.
 max_rows = 1000
 
 [db]
@@ -45,10 +48,6 @@ additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
 enable_signup = true
-
-[auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -68,37 +67,126 @@ redirect_uri = ""
 # or any other third-party OIDC providers.
 url = ""
 
-[analytics]
+[auth.external.azure]
 enabled = false
-port = 54327
-vector_port = 54328
-# Setup BigQuery project to enable log viewer on local development stack.
-# See: https://supabase.com/docs/guides/getting-started/local-development#enabling-local-logging
-gcp_project_id = ""
-gcp_project_number = ""
-gcp_jwt_path = "supabase/gcloud.json"
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
 
-# Functions config from this point on supports HTTP and RPC functions
-[functions.twitter-handle-to-id]
-verify_jwt = false
+[auth.external.bitbucket]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
 
-[functions.id-to-twitter-handle]
-verify_jwt = false
+[auth.external.discord]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
 
-[functions.create-checkout]
+[auth.external.facebook]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.github]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.gitlab]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.keycloak]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.linkedin]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.notion]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.twitch]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.twitter]
+enabled = true
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.slack]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.spotify]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.workos]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[auth.external.zoom]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[functions]
+# Port to use for the Functions server.
+port = 54321
+
+# Allow/disallow public access to the Functions server.
+[functions.serve]
+port = 54321
 verify_jwt = true
 
-[functions.check-subscription]
+[functions.manual-newsletter-generation]
 verify_jwt = true
-
-[functions.customer-portal]
-verify_jwt = true
-
-[functions.populate-newsletter-queue]
-verify_jwt = false
-
-[functions.process-newsletter-queue]
-verify_jwt = false
-
-[functions.cleanup-newsletter-queue]
-verify_jwt = false
