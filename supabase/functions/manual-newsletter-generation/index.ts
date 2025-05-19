@@ -224,6 +224,9 @@ serve(async (req) => {
       
       const bookmarksData = await bookmarksResponse.json();
       
+      // Log the full Twitter API response for debugging
+      console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2));
+      
       // Validate bookmark data
       if (!bookmarksData || !bookmarksData.data) {
         console.error("Invalid or empty bookmark data received:", bookmarksData);
