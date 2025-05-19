@@ -245,7 +245,9 @@ serve(async (req) => {
         throw new Error("Failed to retrieve bookmarks from Twitter");
       }
       
-      console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks`);
+      // Extract all tweet IDs from the bookmarks data and log them
+      const tweetIds = bookmarksData.data.map(tweet => tweet.id);
+      console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks with IDs:`, JSON.stringify(tweetIds, null, 2));
       
       // At this point, the user is authenticated, has a valid subscription with a manual plan, has remaining generations,
       // and we've successfully fetched their bookmarks
@@ -258,7 +260,8 @@ serve(async (req) => {
             email: profile.sending_email,
             preferences: profile.newsletter_content_preferences,
             numerical_id: numericalId,
-            bookmarks: bookmarksData
+            bookmarks: bookmarksData,
+            tweetIds: tweetIds // Include the extracted IDs in the response
           }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
