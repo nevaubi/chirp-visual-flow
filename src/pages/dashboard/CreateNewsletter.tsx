@@ -19,7 +19,8 @@ const CreateNewsletter = () => {
   // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = media & signature, 6 = name & style, 7 = review
   const [step, setStep] = useState<number>(0);
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience' | null>(null);
-  const [selectedFrequency, setSelectedFrequency] = useState<'daily' | 'biweekly' | 'weekly' | null>(null);
+  const [selectedFrequency, setSelectedFrequency] = useState<'biweekly' | 'weekly' | null>(null);
+  const [weeklyDay, setWeeklyDay] = useState<'Tuesday' | 'Friday' | null>(null);
 
   const [contentApproach, setContentApproach] = useState<'everything' | 'topics' | null>(null);
   const [topics, setTopics] = useState<string>('');
@@ -40,7 +41,7 @@ const CreateNewsletter = () => {
     console.log(`Selected newsletter type: ${type}`);
   };
 
-  const handleFrequencySelect = (freq: 'daily' | 'biweekly' | 'weekly') => {
+  const handleFrequencySelect = (freq: 'biweekly' | 'weekly') => {
     setSelectedFrequency(freq);
     console.log(`Selected frequency: ${freq}`);
   };
@@ -142,21 +143,6 @@ const CreateNewsletter = () => {
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Daily */}
-            <Card
-              onClick={() => handleFrequencySelect('daily')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedFrequency === 'daily' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Daily</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-1">
-                <CardDescription>10 most recent daily bookmarks</CardDescription>
-                <div className="font-semibold">$49 / month</div>
-              </CardContent>
-            </Card>
             {/* Biweekly */}
             <Card
               onClick={() => handleFrequencySelect('biweekly')}
@@ -188,7 +174,40 @@ const CreateNewsletter = () => {
               </CardContent>
             </Card>
           </div>
-          {selectedFrequency && (
+          {selectedFrequency === 'biweekly' && (
+            <p className="md:col-span-3 text-center text-sm text-muted-foreground mt-2">
+              Newsletters will be delivered every Tuesday and Friday to your inbox
+            </p>
+          )}
+          {selectedFrequency === 'weekly' && (
+            <div className="md:col-span-3 mt-4 space-y-2">
+              <p className="text-center font-medium">Which day?</p>
+              <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+                <Card
+                  onClick={() => setWeeklyDay('Tuesday')}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                    weeklyDay === 'Tuesday' ? 'border-primary' : ''
+                  }`}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle>Tuesday</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card
+                  onClick={() => setWeeklyDay('Friday')}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                    weeklyDay === 'Friday' ? 'border-primary' : ''
+                  }`}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle>Friday</CardTitle>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
+          )}
+          {(selectedFrequency === 'biweekly' ||
+            (selectedFrequency === 'weekly' && weeklyDay)) && (
             <div className="text-center mt-6">
               <Button
                 onClick={() => setStep(3)}
@@ -446,7 +465,13 @@ const CreateNewsletter = () => {
             </div>
             <div className="flex justify-between border rounded-lg p-4">
               <span className="font-semibold">Frequency:</span>
-              <span>{selectedFrequency}</span>
+              <span>
+                {selectedFrequency === 'biweekly'
+                  ? 'Biweekly (Tuesday & Friday)'
+                  : selectedFrequency === 'weekly' && weeklyDay
+                  ? `Weekly on ${weeklyDay}`
+                  : selectedFrequency}
+              </span>
             </div>
             <div className="flex justify-between border rounded-lg p-4">
               <span className="font-semibold">Content approach:</span>
