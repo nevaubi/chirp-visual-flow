@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
+import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 // Chart component - we'll create a simple placeholder
 const EngagementChart = () => (
@@ -314,6 +314,9 @@ const CreatorDashboard = ({ profile }) => {
 
 // Newsletter Platform Dashboard
 const NewsletterDashboard = ({ profile }) => {
+  // State for manual newsletter generation dialog
+  const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
+
   // Sample newsletter data
   const recentNewsletters = [
     { title: "Weekly Tech Roundup", date: "May 10, 2025", subscribers: 542 },
@@ -377,6 +380,7 @@ const NewsletterDashboard = ({ profile }) => {
                       !isGenerationEnabled && "opacity-50 cursor-not-allowed"
                     )}
                     disabled={!isGenerationEnabled}
+                    onClick={() => isGenerationEnabled && setIsManualGenerationOpen(true)}
                   >
                     Manual Newsletter Generation
                   </Button>
@@ -393,6 +397,13 @@ const NewsletterDashboard = ({ profile }) => {
           </div>
         </div>
       </div>
+
+      {/* Manual Newsletter Generation Dialog */}
+      <ManualNewsletterDialog
+        open={isManualGenerationOpen}
+        onOpenChange={setIsManualGenerationOpen}
+        remainingGenerations={getRemainingGenerations()}
+      />
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
