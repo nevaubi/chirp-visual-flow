@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -12,6 +11,31 @@ const corsHeaders = {
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
+};
+
+// Helper function to extract customer ID from either a string or object
+const extractCustomerId = (customer: string | any): string => {
+  if (!customer) return '';
+  
+  // If it's already a string, just return it
+  if (typeof customer === 'string') return customer;
+  
+  // If it's an object and has an id property, return that
+  if (typeof customer === 'object' && customer.id) return customer.id;
+  
+  // Otherwise try to parse if it's a JSON string
+  if (typeof customer === 'string') {
+    try {
+      const parsed = JSON.parse(customer);
+      if (parsed && parsed.id) return parsed.id;
+    } catch (e) {
+      // Not valid JSON, return as is
+      return customer;
+    }
+  }
+  
+  // If all else fails, convert to string
+  return String(customer);
 };
 
 serve(async (req) => {
@@ -85,7 +109,8 @@ serve(async (req) => {
           });
         }
         
-        const customerId = session.customer as string;
+        // Extract proper customer ID, handling both string and object cases
+        const customerId = extractCustomerId(session.customer);
         logStep("Found customer from session", { customerId });
         
         // Update profile with customer ID before checking subscriptions
@@ -210,8 +235,23 @@ serve(async (req) => {
       });
     }
 
+    // Check if stripe_customer_id is an object instead of a string and extract the ID
+    let customerId = null;
+    if (profileData.stripe_customer_id) {
+      customerId = extractCustomerId(profileData.stripe_customer_id);
+      
+      // If the extracted ID is different from what's stored, update it
+      if (customerId !== profileData.stripe_customer_id) {
+        logStep("Converting object customer_id to string ID", { from: profileData.stripe_customer_id, to: customerId });
+        await supabaseAdmin
+          .from('profiles')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', user.id);
+      }
+    }
+
     // If no Stripe customer ID, user has no subscription
-    if (!profileData.stripe_customer_id) {
+    if (!customerId) {
       logStep("No Stripe customer ID found for user");
       await supabaseAdmin
         .from('profiles')
@@ -234,7 +274,7 @@ serve(async (req) => {
     // Retrieve active subscriptions for the customer
     // FIX: Removed excessive nesting in expansion to avoid the 4-level limit error
     const subscriptions = await stripe.subscriptions.list({
-      customer: profileData.stripe_customer_id,
+      customer: customerId,
       status: "active",
       expand: ["data.items.data.price"]
     });
