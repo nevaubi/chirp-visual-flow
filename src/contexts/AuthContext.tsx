@@ -21,6 +21,7 @@ interface AuthContextProps {
   signOut: (force?: boolean) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   checkSubscription: () => Promise<void>;
+  refreshProfile: () => Promise<void>; // Add refreshProfile method
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -39,6 +40,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading: false,
       error: null,
     });
+  };
+
+  // Function to refresh the user profile
+  const refreshProfile = async () => {
+    if (!authState.user) {
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authState.user.id)
+        .single();
+        
+      if (error) {
+        console.error('Error refreshing profile:', error);
+        return;
+      }
+      
+      setAuthState(prev => ({
+        ...prev,
+        profile: data as Profile,
+      }));
+    } catch (error) {
+      console.error('Error in refreshProfile:', error);
+    }
   };
 
   // Function to check subscription status
@@ -419,7 +447,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ authState, signInWithTwitter, signOut, updateProfile, checkSubscription }}>
+    <AuthContext.Provider value={{ 
+      authState, 
+      signInWithTwitter, 
+      signOut, 
+      updateProfile, 
+      checkSubscription,
+      refreshProfile // Add refreshProfile to the context value
+    }}>
       {children}
       
       {/* Render welcome popup when needed (for in-app settings changes) */}
