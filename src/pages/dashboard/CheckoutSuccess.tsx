@@ -122,6 +122,11 @@ const CheckoutSuccess = () => {
         
         // Refresh the profile to ensure we have the latest data
         await refreshProfile();
+        
+        // Automatically redirect to dashboard after successful email submission
+        setTimeout(() => {
+          navigate("/dashboard/home");
+        }, 2000);
       }
     } catch (error) {
       console.error("Error saving email:", error);
@@ -140,82 +145,58 @@ const CheckoutSuccess = () => {
         
         <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
         
-        {isLoading ? (
-          <p className="text-muted-foreground mb-6">
-            We're activating your subscription...
-          </p>
-        ) : (
-          <>
-            <p className="text-muted-foreground mb-6">
-              Your newsletter subscription's activated! Add the email to receive your newsletters below and you're all set.
-            </p>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mb-6">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Receiving Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="your@email.com" 
-                          type="email"
-                          {...field} 
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full bg-green-500 hover:bg-green-600"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Saving..." : "Submit"}
-                </Button>
-              </form>
-            </Form>
-            
-            {authState.profile?.newsletter_day_preference && (
-              <div className="mb-6 p-4 bg-amber-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
-                <p className="text-sm text-muted-foreground">
-                  Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
-                </p>
-                {authState.profile.newsletter_content_preferences && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Type: <span className="font-medium">
-                      {authState.profile.newsletter_content_preferences.audience === 'personal' 
-                        ? 'Personal Newsletter' 
-                        : 'Audience Newsletter'}
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
-          </>
-        )}
+        <p className="text-muted-foreground mb-6">
+          Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
+        </p>
         
-        <div className="space-y-4">
-          <Button 
-            onClick={() => navigate("/dashboard/home")} 
-            className="w-full bg-amber-500 hover:bg-amber-600"
-          >
-            Go to Dashboard
-          </Button>
-          
-          <Button 
-            onClick={() => navigate("/dashboard/newsletter/create")} 
-            variant="outline" 
-            className="w-full"
-          >
-            Create a Newsletter
-          </Button>
-        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mb-6">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email for Newsletter Delivery</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="your@email.com" 
+                      type="email"
+                      {...field} 
+                      disabled={isSubmitting || isLoading}
+                      className="text-base"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button 
+              type="submit" 
+              className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
+              disabled={isSubmitting || isLoading}
+            >
+              {isSubmitting ? "Saving..." : isLoading ? "Loading..." : "Save Email & Continue"}
+            </Button>
+          </form>
+        </Form>
+        
+        {authState.profile?.newsletter_day_preference && (
+          <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
+            <p className="text-sm text-muted-foreground">
+              Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
+            </p>
+            {authState.profile.newsletter_content_preferences && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Type: <span className="font-medium">
+                  {authState.profile.newsletter_content_preferences.audience === 'personal' 
+                    ? 'Personal Newsletter' 
+                    : 'Audience Newsletter'}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
