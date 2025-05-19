@@ -27,8 +27,10 @@ const CheckoutSuccess = () => {
           return;
         }
         
-        // Call the check-subscription function to update the subscription status
-        const { error } = await supabase.functions.invoke("check-subscription");
+        // Call the check-subscription function and pass the session ID
+        const { data, error } = await supabase.functions.invoke("check-subscription", {
+          body: { session_id: sessionId }
+        });
         
         if (error) {
           console.error("Error checking subscription:", error);

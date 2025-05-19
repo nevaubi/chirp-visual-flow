@@ -23,6 +23,16 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Parse request body if present to get session_id
+    let sessionId = null;
+    if (req.method === "POST") {
+      const requestBody = await req.json();
+      sessionId = requestBody.session_id;
+      if (sessionId) {
+        logStep("Received session ID", { sessionId });
+      }
+    }
+
     // Initialize Supabase client with service role key to update profiles
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -57,6 +67,133 @@ serve(async (req) => {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
+
+    // First, check if we have a session ID from a checkout success
+    if (sessionId) {
+      try {
+        // Retrieve the checkout session to get customer info
+        logStep("Retrieving checkout session", { sessionId });
+        const session = await stripe.checkout.sessions.retrieve(sessionId, {
+          expand: ['customer', 'subscription']
+        });
+        
+        if (!session) {
+          logStep("No session found with provided ID");
+          return new Response(JSON.stringify({ error: "Session not found" }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        
+        const customerId = session.customer as string;
+        logStep("Found customer from session", { customerId });
+        
+        // Update profile with customer ID before checking subscriptions
+        if (customerId) {
+          const { error: customerUpdateError } = await supabaseAdmin
+            .from('profiles')
+            .update({ stripe_customer_id: customerId })
+            .eq('id', user.id);
+            
+          if (customerUpdateError) {
+            logStep("Error updating profile with customer ID", customerUpdateError);
+            // Continue despite error - we want to try retrieving subscription info
+          } else {
+            logStep("Profile updated with customer ID");
+          }
+          
+          // If we have a subscription in the session, we can use it directly
+          if (session.subscription) {
+            const subscriptionId = typeof session.subscription === 'string' 
+              ? session.subscription 
+              : session.subscription.id;
+            
+            logStep("Found subscription in session", { subscriptionId });
+            
+            // Retrieve the full subscription with expanded data
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+              expand: ['items.data.price']
+            });
+            
+            if (subscription && subscription.status === 'active') {
+              // Get price info
+              const priceId = subscription.items.data[0].price.id;
+              
+              // Fetch product information in a separate call to avoid excessive nesting
+              const price = subscription.items.data[0].price;
+              let productId = null;
+              
+              try {
+                // Check if price has product data, if not fetch it separately
+                if (price.product && typeof price.product === 'string') {
+                  const product = await stripe.products.retrieve(price.product);
+                  productId = product.id;
+                  logStep("Retrieved product info", { productId });
+                } else if (price.product && typeof price.product === 'object') {
+                  productId = price.product.id;
+                }
+              } catch (error) {
+                logStep("Error retrieving product", error);
+                // Continue despite product error
+              }
+              
+              // Determine subscription tier based on price ID
+              let subscriptionTier = null;
+              
+              // Map price IDs to subscription tiers
+              if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+                subscriptionTier = "Newsletter Standard";
+              } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+                subscriptionTier = "Newsletter Premium";
+              }
+              
+              // Calculate subscription period end
+              const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+              
+              // Update the user's profile with subscription details
+              const { error: updateError } = await supabaseAdmin
+                .from('profiles')
+                .update({
+                  subscribed: true,
+                  subscription_tier: subscriptionTier,
+                  subscription_id: subscription.id,
+                  subscription_period_end: subscriptionPeriodEnd,
+                  cancel_at_period_end: subscription.cancel_at_period_end,
+                  stripe_price_id: priceId
+                })
+                .eq('id', user.id);
+                
+              if (updateError) {
+                logStep("Error updating profile with subscription details", updateError);
+                return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
+                  headers: { ...corsHeaders, "Content-Type": "application/json" },
+                  status: 500,
+                });
+              }
+              
+              logStep("Profile updated with subscription details from session");
+              
+              // Return subscription details
+              return new Response(JSON.stringify({
+                subscribed: true,
+                subscription_tier: subscriptionTier,
+                subscription_id: subscription.id,
+                subscription_period_end: subscriptionPeriodEnd,
+                cancel_at_period_end: subscription.cancel_at_period_end,
+                stripe_price_id: priceId
+              }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 200,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logStep("Error processing checkout session", { message: errorMessage });
+        // We'll continue with the regular flow below, don't return error response here
+      }
+    }
 
     // Fetch user profile to check if they have a Stripe customer ID
     const { data: profileData, error: profileError } = await supabaseAdmin
