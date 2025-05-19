@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      newsletter_queue: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          error_message: string | null
+          id: string
+          is_newsletter_sent: Database["public"]["Enums"]["newsletter_status"]
+          scheduled_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_newsletter_sent?: Database["public"]["Enums"]["newsletter_status"]
+          scheduled_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_newsletter_sent?: Database["public"]["Enums"]["newsletter_status"]
+          scheduled_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_creation_date: string | null
@@ -113,7 +154,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      newsletter_status: "false" | "pending" | "true"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -228,6 +269,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      newsletter_status: ["false", "pending", "true"],
+    },
   },
 } as const
