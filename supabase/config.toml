@@ -80,8 +80,7 @@ gcp_jwt_path = "supabase/gcloud.json"
 
 # Functions config from this point on supports HTTP and RPC functions
 [functions.twitter-handle-to-id]
-# Imports are not available in edge functions currently
-# Check out the docs on adding packages or local dependencies:
-# https://supabase.com/docs/guides/functions/import-maps
-# https://supabase.com/docs/guides/functions/local-development#adding-packages-and-local-dependencies
+verify_jwt = false
+
+[functions.id-to-twitter-handle]
 verify_jwt = false

@@ -62,23 +62,28 @@ const HandleIdConverter = () => {
 
     try {
       let payload = {};
+      let functionName = "";
       
       if (activeTab === "handle2id") {
         if (!handle.trim()) {
           setError("Please enter a valid X handle");
+          setIsLoading(false);
           return;
         }
         payload = { handle, conversionType: "handle2id" };
+        functionName = "twitter-handle-to-id";
       } else {
         if (!id.trim()) {
           setError("Please enter a valid user ID");
+          setIsLoading(false);
           return;
         }
-        payload = { id, conversionType: "id2handle" };
+        payload = { id };
+        functionName = "id-to-twitter-handle";
       }
 
       const { data, error: functionError } = await supabase.functions.invoke(
-        "twitter-handle-to-id",
+        functionName,
         { body: payload }
       );
 
