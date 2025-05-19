@@ -1,6 +1,3 @@
-<think>
-
-</think>
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
@@ -28,7 +25,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
-import NewsletterGenerationDialog from '@/components/newsletter/NewsletterGenerationDialog';
 
 // Chart component - we'll create a simple placeholder
 const EngagementChart = () => (
@@ -318,9 +314,6 @@ const CreatorDashboard = ({ profile }) => {
 
 // Newsletter Platform Dashboard
 const NewsletterDashboard = ({ profile }) => {
-  // State for manual newsletter generation dialog
-  const [isGeneratingDialogOpen, setIsGeneratingDialogOpen] = useState(false);
-
   // Sample newsletter data
   const recentNewsletters = [
     { title: "Weekly Tech Roundup", date: "May 10, 2025", subscribers: 542 },
@@ -384,7 +377,6 @@ const NewsletterDashboard = ({ profile }) => {
                       !isGenerationEnabled && "opacity-50 cursor-not-allowed"
                     )}
                     disabled={!isGenerationEnabled}
-                    onClick={() => setIsGeneratingDialogOpen(true)}
                   >
                     Manual Newsletter Generation
                   </Button>
@@ -401,13 +393,6 @@ const NewsletterDashboard = ({ profile }) => {
           </div>
         </div>
       </div>
-
-      {/* Newsletter Generation Dialog */}
-      <NewsletterGenerationDialog 
-        open={isGeneratingDialogOpen}
-        onOpenChange={setIsGeneratingDialogOpen}
-        remainingGenerations={getRemainingGenerations()}
-      />
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
