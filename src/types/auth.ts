@@ -33,6 +33,18 @@ export interface Profile {
   stripe_price_id: string | null;
   // Email field
   sending_email: string | null;
+  // Newsletter preference fields
+  newsletter_day_preference: string | null;
+  newsletter_content_preferences: {
+    audience?: string;
+    frequency?: string;
+    content_approach?: string;
+    writing_style?: string;
+    include_media?: string;
+    add_signature?: string;
+    newsletter_name?: string;
+    template?: string;
+  } | null;
 }
 
 export interface AuthState {

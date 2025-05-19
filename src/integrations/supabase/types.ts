@@ -64,6 +64,8 @@ export type Database = {
           is_newsletter_platform: boolean | null
           is_verified: boolean | null
           location: string | null
+          newsletter_content_preferences: Json | null
+          newsletter_day_preference: string | null
           numerical_id: string | null
           sending_email: string | null
           stripe_customer_id: string | null
@@ -95,6 +97,8 @@ export type Database = {
           is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
           location?: string | null
+          newsletter_content_preferences?: Json | null
+          newsletter_day_preference?: string | null
           numerical_id?: string | null
           sending_email?: string | null
           stripe_customer_id?: string | null
@@ -126,6 +130,8 @@ export type Database = {
           is_newsletter_platform?: boolean | null
           is_verified?: boolean | null
           location?: string | null
+          newsletter_content_preferences?: Json | null
+          newsletter_day_preference?: string | null
           numerical_id?: string | null
           sending_email?: string | null
           stripe_customer_id?: string | null

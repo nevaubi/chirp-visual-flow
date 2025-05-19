@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatusCard } from "@/components/subscription/SubscriptionStatusCard";
+import { NewsletterPreferences } from "@/components/settings/NewsletterPreferences";
 import { useEffect } from "react";
 
 const Settings = () => {
@@ -76,19 +77,7 @@ const Settings = () => {
         </TabsContent>
         
         <TabsContent value="preferences" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-              <CardDescription>
-                Customize your experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Preference settings will be available soon.
-              </p>
-            </CardContent>
-          </Card>
+          <NewsletterPreferences />
         </TabsContent>
       </Tabs>
     </div>
