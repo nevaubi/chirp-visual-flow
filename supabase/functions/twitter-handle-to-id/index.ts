@@ -94,7 +94,10 @@ serve(async (req) => {
     } 
     // ID to handle conversion  
     else if (conversionType === "id2handle" && id) {
-      const url = `https://twitter293.p.rapidapi.com/user/by/id/${encodeURIComponent(id)}`;
+      // Use the original `/user/{id}` endpoint which reliably returns user
+      // details for a given ID. The newer `/user/by/id` path was returning 404s
+      // for valid IDs in production.
+      const url = `https://twitter293.p.rapidapi.com/user/${encodeURIComponent(id)}`;
       const options = {
         method: "GET",
         headers: {

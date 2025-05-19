@@ -39,7 +39,10 @@ serve(async (req) => {
     }
 
     // Build the request to the RapidAPI endpoint with the ID
-    const url = `https://twitter293.p.rapidapi.com/user/by/id/${encodeURIComponent(id)}`;
+    // Older working version used the `/user/{id}` endpoint which correctly returns
+    // user details when provided with a numerical ID. The `/user/by/id` path
+    // returned 404 even for valid IDs.
+    const url = `https://twitter293.p.rapidapi.com/user/${encodeURIComponent(id)}`;
     const options = {
       method: "GET",
       headers: {
