@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -20,8 +19,6 @@ interface AuthContextProps {
   signInWithTwitter: () => Promise<void>;
   signOut: (force?: boolean) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
-  checkSubscription: () => Promise<void>;
-  openCustomerPortal: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -40,65 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading: false,
       error: null,
     });
-  };
-
-  // Function to check subscription status
-  const checkSubscription = async () => {
-    if (!authState.user) {
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) {
-        console.error('Error checking subscription:', error);
-        return;
-      }
-      
-      // Update profile in state with subscription data
-      setAuthState(prev => ({
-        ...prev,
-        profile: prev.profile ? { 
-          ...prev.profile, 
-          subscribed: data.subscribed,
-          subscription_tier: data.subscription_tier,
-          subscription_id: data.subscription_id,
-          subscription_period_end: data.subscription_period_end,
-          cancel_at_period_end: data.cancel_at_period_end,
-          stripe_customer_id: data.stripe_customer_id,
-          stripe_price_id: data.stripe_price_id
-        } : null,
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error in checkSubscription:', error);
-    }
-  };
-
-  // Function to open Stripe Customer Portal
-  const openCustomerPortal = async () => {
-    if (!authState.user) {
-      toast.error("Not authenticated");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error || !data.url) {
-        throw new Error(error?.message || "Failed to create customer portal session");
-      }
-      
-      // Redirect to Stripe Customer Portal
-      window.location.href = data.url;
-    } catch (error) {
-      console.error('Error opening customer portal:', error);
-      toast.error("Something went wrong", {
-        description: "We couldn't open the customer portal. Please try again later."
-      });
-    }
   };
 
   // Function to update user profile
@@ -222,9 +160,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 error: null,
               });
               
-              // Check subscription status after signing in
-              await checkSubscription();
-              
               // Redirect to dashboard if not already there
               if (!window.location.pathname.includes('/dashboard')) {
                 navigate('/dashboard/home', { replace: true });
@@ -253,9 +188,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 loading: false,
                 error: null,
               });
-              
-              // Check subscription status when session updates
-              await checkSubscription();
             }, 0);
           } catch (error) {
             console.error('Error handling session update:', error);
@@ -297,9 +229,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               loading: false,
               error: null,
             });
-            
-            // Check subscription status on initialization
-            await checkSubscription();
             
             // Redirect to dashboard if on auth or root page
             if (window.location.pathname === '/' || window.location.pathname === '/auth') {
@@ -432,14 +361,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      authState, 
-      signInWithTwitter, 
-      signOut, 
-      updateProfile,
-      checkSubscription,
-      openCustomerPortal
-    }}>
+    <AuthContext.Provider value={{ authState, signInWithTwitter, signOut, updateProfile }}>
       {children}
       
       {/* Render welcome popup when needed (for in-app settings changes) */}

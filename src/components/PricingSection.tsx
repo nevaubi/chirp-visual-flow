@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
 
 interface PricingCardProps {
   title: string;
@@ -18,10 +15,6 @@ interface PricingCardProps {
   popular?: boolean;
   className?: string;
   buttonClassName?: string;
-  priceId?: string;
-  disabled?: boolean;
-  isCurrentPlan?: boolean;
-  onSelectPlan?: () => void;
 }
 
 const PricingCard = ({
@@ -33,25 +26,15 @@ const PricingCard = ({
   popular = false,
   className,
   buttonClassName,
-  priceId,
-  disabled = false,
-  isCurrentPlan = false,
-  onSelectPlan
 }: PricingCardProps) => (
   <Card className={cn(
     "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg",
     popular && "relative border-primary/30 shadow-lg hover:shadow-xl",
-    isCurrentPlan && "border-2 border-green-500",
     className
   )}>
     {popular && (
       <div className="absolute -top-3 left-0 right-0 mx-auto w-fit rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
         Most Popular
-      </div>
-    )}
-    {isCurrentPlan && (
-      <div className="absolute -top-3 left-0 right-0 mx-auto w-fit rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">
-        Your Plan
       </div>
     )}
     <CardHeader>
@@ -73,12 +56,8 @@ const PricingCard = ({
       </ul>
     </CardContent>
     <CardFooter>
-      <Button 
-        className={cn("w-full", buttonClassName)} 
-        onClick={onSelectPlan}
-        disabled={disabled || isCurrentPlan}
-      >
-        {isCurrentPlan ? "Current Plan" : ctaText}
+      <Button className={cn("w-full", buttonClassName)}>
+        {ctaText}
       </Button>
     </CardFooter>
   </Card>
@@ -86,53 +65,6 @@ const PricingCard = ({
 
 const PricingSection = () => {
   const [activeTab, setActiveTab] = useState("creator");
-  const [isLoading, setIsLoading] = useState(false);
-  const { authState, signInWithTwitter } = useAuth();
-  
-  const isAuthenticated = !!authState.user;
-  const { subscription_tier: currentPlan = null } = authState.profile || {};
-
-  const handlePlanSelection = async (priceId: string, platformType: string) => {
-    if (!isAuthenticated) {
-      toast.info("Please sign in to continue", {
-        description: "You need to be signed in to subscribe to a plan.",
-        action: {
-          label: "Sign in",
-          onClick: signInWithTwitter
-        }
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId, platformType }
-      });
-
-      if (error || !data.url) {
-        throw new Error(error || "Failed to create checkout session");
-      }
-
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      toast.error("Something went wrong", {
-        description: "We couldn't process your request. Please try again later."
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Define Stripe price IDs (these would come from your Stripe dashboard)
-  // Replace these with your actual Stripe price IDs
-  const CREATOR_BASIC_PRICE_ID = "price_1OthghK3YXUQbpkVoZdpvRH1"; 
-  const CREATOR_PRO_PRICE_ID = "price_1OthiPK3YXUQbpkVf1qHULpj";
-  const NEWSLETTER_STANDARD_PRICE_ID = "price_1OthsaK3YXUQbpkVkKcIpQrL";
-  const NEWSLETTER_PREMIUM_PRICE_ID = "price_1OthtLK3YXUQbpkVqqP3FKp0";
 
   const creatorCards = [
     {
@@ -148,9 +80,7 @@ const PricingSection = () => {
       ],
       ctaText: "Get Started",
       popular: false,
-      buttonClassName: "bg-[#0087C8] hover:bg-[#0077B5] text-white",
-      priceId: CREATOR_BASIC_PRICE_ID,
-      isCurrentPlan: currentPlan === "Creator Basic"
+      buttonClassName: "bg-[#0087C8] hover:bg-[#0077B5] text-white"
     },
     {
       title: "Creator Pro",
@@ -166,9 +96,7 @@ const PricingSection = () => {
       ],
       ctaText: "Get Started",
       popular: true,
-      buttonClassName: "bg-[#0087C8] hover:bg-[#0077B5] text-white",
-      priceId: CREATOR_PRO_PRICE_ID,
-      isCurrentPlan: currentPlan === "Creator Pro"
+      buttonClassName: "bg-[#0087C8] hover:bg-[#0077B5] text-white"
     }
   ];
 
@@ -186,9 +114,7 @@ const PricingSection = () => {
       ],
       ctaText: "Get Started",
       popular: false,
-      buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
-      priceId: NEWSLETTER_STANDARD_PRICE_ID,
-      isCurrentPlan: currentPlan === "Newsletter Standard"
+      buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white"
     },
     {
       title: "Newsletter Premium",
@@ -204,9 +130,7 @@ const PricingSection = () => {
       ],
       ctaText: "Get Started",
       popular: true,
-      buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
-      priceId: NEWSLETTER_PREMIUM_PRICE_ID,
-      isCurrentPlan: currentPlan === "Newsletter Premium"
+      buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white"
     }
   ];
 
@@ -253,12 +177,7 @@ const PricingSection = () => {
             <TabsContent value="creator" className="animate-fade-in">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
                 {creatorCards.map((card, i) => (
-                  <PricingCard 
-                    key={i} 
-                    {...card} 
-                    disabled={isLoading}
-                    onSelectPlan={() => handlePlanSelection(card.priceId!, "creator")} 
-                  />
+                  <PricingCard key={i} {...card} />
                 ))}
               </div>
             </TabsContent>
@@ -266,12 +185,7 @@ const PricingSection = () => {
             <TabsContent value="newsletter" className="animate-fade-in">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
                 {newsletterCards.map((card, i) => (
-                  <PricingCard 
-                    key={i} 
-                    {...card} 
-                    disabled={isLoading}
-                    onSelectPlan={() => handlePlanSelection(card.priceId!, "newsletter")} 
-                  />
+                  <PricingCard key={i} {...card} />
                 ))}
               </div>
             </TabsContent>
