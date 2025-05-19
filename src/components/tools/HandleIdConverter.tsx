@@ -70,7 +70,7 @@ const HandleIdConverter = () => {
           setIsLoading(false);
           return;
         }
-        payload = { handle, conversionType: "handle2id" };
+        payload = { handle: handle.trim() };
         functionName = "twitter-handle-to-id";
       } else {
         if (!id.trim()) {
@@ -78,7 +78,7 @@ const HandleIdConverter = () => {
           setIsLoading(false);
           return;
         }
-        payload = { id };
+        payload = { id: id.trim() };
         functionName = "id-to-twitter-handle";
       }
 

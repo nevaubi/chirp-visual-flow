@@ -39,7 +39,7 @@ serve(async (req) => {
     }
 
     // Build the request to the RapidAPI endpoint with the ID
-    const url = `https://twitter293.p.rapidapi.com/user/by/id/${encodeURIComponent(id)}`;
+    const url = `https://twitter293.p.rapidapi.com/user/${encodeURIComponent(id)}`;
     const options = {
       method: "GET",
       headers: {
