@@ -27,7 +27,7 @@ const CreateNewsletter = () => {
   const [styleExample, setStyleExample] = useState<string>('');
   const [includeMedia, setIncludeMedia] = useState<boolean | null>(null);
   const [includeSignature, setIncludeSignature] = useState<boolean | null>(null);
-  const [newsletterName, setNewsletterName] = useState<string>("" );
+  const [newsletterName, setNewsletterName] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   const handleCreateClick = () => {
@@ -54,8 +54,7 @@ const CreateNewsletter = () => {
             Create Your Next Newsletter
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Craft engaging newsletters that connect with your audience. 
-            Simple, powerful, and ready to deliver your message.
+            Craft engaging newsletters that connect with your audience. Simple, powerful, and ready to deliver your message.
           </p>
           <Button
             onClick={handleCreateClick}
@@ -214,9 +213,7 @@ const CreateNewsletter = () => {
             <div className="flex items-start gap-3">
               <RadioGroupItem value="everything" id="everything" />
               <div>
-                <label htmlFor="everything" className="font-medium">
-                  Everything from my bookmarks
-                </label>
+                <label htmlFor="everything" className="font-medium">Everything from my bookmarks</label>
                 <p className="text-sm text-muted-foreground">
                   Use every bookmarked tweet since my last newsletter
                 </p>
@@ -226,9 +223,7 @@ const CreateNewsletter = () => {
               <div className="flex items-start gap-3">
                 <RadioGroupItem value="topics" id="topics" />
                 <div>
-                  <label htmlFor="topics" className="font-medium">
-                    General topics only
-                  </label>
+                  <label htmlFor="topics" className="font-medium">General topics only</label>
                   <p className="text-sm text-muted-foreground">
                     Stick with only these general topics (type your desired main topics and we'll do the rest!)
                   </p>
@@ -257,44 +252,35 @@ const CreateNewsletter = () => {
           )}
         </div>
       ) : step === 4 ? (
-        // Writing style selection view
+        // Writing style selection
         <div className="w-full max-w-4xl space-y-8 animate-fade-in">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">Choose your writing style</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* First Person */}
             <Card
               onClick={() => setWritingStyle('first')}
               className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
                 writingStyle === 'first' ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>First Person</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>First Person</CardTitle></CardHeader>
             </Card>
-            {/* Third Person */}
             <Card
               onClick={() => setWritingStyle('third')}
               className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
                 writingStyle === 'third' ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Third Person</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>Third Person</CardTitle></CardHeader>
             </Card>
-            {/* Emulate style */}
             <Card
               onClick={() => setWritingStyle('emulate')}
               className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
                 writingStyle === 'emulate' ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Emulate a writing style</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>Emulate a writing style</CardTitle></CardHeader>
               {writingStyle === 'emulate' && (
                 <CardContent className="space-y-2">
                   <Textarea
@@ -320,8 +306,8 @@ const CreateNewsletter = () => {
             </div>
           )}
         </div>
-        ) : step === 5 ? (
-        // Include media and signature step
+      ) : step === 5 ? (
+        // Media & signature
         <div className="w-full max-w-2xl space-y-8 animate-fade-in">
           <div className="text-center mb-6">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -335,9 +321,7 @@ const CreateNewsletter = () => {
                 includeMedia === true ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Yes, include media📸</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>Yes, include media📸</CardTitle></CardHeader>
             </Card>
             <Card
               onClick={() => setIncludeMedia(false)}
@@ -345,15 +329,11 @@ const CreateNewsletter = () => {
                 includeMedia === false ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>No, text only</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>No, text only</CardTitle></CardHeader>
             </Card>
           </div>
           <div className="text-center mt-8 mb-4">
-            <h3 className="text-xl font-semibold">
-              Include your X (twitter) handle or signature?
-            </h3>
+            <h3 className="text-xl font-semibold">Include your X handle or signature?</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card
@@ -362,9 +342,7 @@ const CreateNewsletter = () => {
                 includeSignature === true ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Yes, Add My Signature</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>Yes, add my signature</CardTitle></CardHeader>
             </Card>
             <Card
               onClick={() => setIncludeSignature(false)}
@@ -372,9 +350,7 @@ const CreateNewsletter = () => {
                 includeSignature === false ? 'border-primary' : ''
               }`}
             >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>No thanks 🙅‍♂️</CardTitle>
-              </CardHeader>
+              <CardHeader className="text-center pb-2"><CardTitle>No thanks 🙅‍♂️</CardTitle></CardHeader>
             </Card>
           </div>
           {includeMedia !== null && includeSignature !== null && (
@@ -389,12 +365,10 @@ const CreateNewsletter = () => {
           )}
         </div>
       ) : step === 6 ? (
-        // Name and visual style step
+        // Name & visual style
         <div className="w-full max-w-3xl space-y-8 animate-fade-in">
           <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Give your newsletter a name?
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">Give your newsletter a name?</h2>
           </div>
           <div className="flex justify-center">
             <Input
@@ -405,9 +379,7 @@ const CreateNewsletter = () => {
             />
           </div>
           <div className="text-center mt-8">
-            <h3 className="text-2xl md:text-3xl font-bold mb-3">
-              Choose a visual style for your newsletter
-            </h3>
+            <h3 className="text-2xl md:text-3xl font-bold mb-3">Choose a visual style for your newsletter</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <Card
@@ -417,11 +389,7 @@ const CreateNewsletter = () => {
               }`}
             >
               <CardHeader className="p-0">
-                <img
-                  src="/placeholder.svg"
-                  alt="Template 1"
-                  className="w-full h-32 object-cover rounded-t-lg"
-                />
+                <img src="/placeholder.svg" alt="Template 1" className="w-full h-32 object-cover rounded-t-lg" />
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>Template 1</CardDescription>
@@ -434,11 +402,7 @@ const CreateNewsletter = () => {
               }`}
             >
               <CardHeader className="p-0">
-                <img
-                  src="/placeholder.svg"
-                  alt="Template 2"
-                  className="w-full h-32 object-cover rounded-t-lg"
-                />
+                <img src="/placeholder.svg" alt="Template 2" className="w-full h-32 object-cover rounded-t-lg" />
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>Template 2</CardDescription>
@@ -451,11 +415,7 @@ const CreateNewsletter = () => {
               }`}
             >
               <CardHeader className="p-0">
-                <img
-                  src="/placeholder.svg"
-                  alt="Template 3"
-                  className="w-full h-32 object-cover rounded-t-lg"
-                />
+                <img src="/placeholder.svg" alt="Template 3" className="w-full h-32 object-cover rounded-t-lg" />
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription>Template 3</CardDescription>
@@ -474,7 +434,7 @@ const CreateNewsletter = () => {
           )}
         </div>
       ) : step === 7 ? (
-        // Review and confirmation step
+        // Review and confirmation
         <div className="w-full max-w-2xl space-y-8 animate-fade-in">
           <div className="text-center mb-6">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">Review your selections</h2>
@@ -493,15 +453,17 @@ const CreateNewsletter = () => {
               <span>
                 {contentApproach === 'everything'
                   ? 'Everything from bookmarks'
-                  : `Topics - ${topics}`}
+                  : `Topics – ${topics}`}
               </span>
             </div>
             <div className="flex justify-between border rounded-lg p-4">
               <span className="font-semibold">Writing style:</span>
               <span>
                 {writingStyle === 'emulate'
-                  ? `Emulate style`
-                  : writingStyle}
+                  ? 'Emulate a custom style'
+                  : writingStyle === 'first'
+                  ? 'First person'
+                  : 'Third person'}
               </span>
             </div>
             <div className="flex justify-between border rounded-lg p-4">

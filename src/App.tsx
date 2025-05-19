@@ -11,6 +11,8 @@ import AuthCallback from "./pages/AuthCallback";
 import BookmarksCallback from "./pages/BookmarksCallback";
 import NewUserDirect from "./pages/NewUserDirect";
 import FreeTools from "./pages/FreeTools";
+import TweetIdConverter from "./pages/tools/TweetIdConverter";
+import TweetScreenshot from "./pages/tools/TweetScreenshot";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
@@ -68,6 +70,10 @@ const App = () => (
             <Route path="/bookmarks/callback" element={<BookmarksCallback />} />
             <Route path="/newuser-direct" element={<NewUserDirect />} />
             <Route path="/free-tools" element={<FreeTools />} />
+            
+            {/* New routes for individual tools */}
+            <Route path="/tools/tweet-id-converter" element={<TweetIdConverter />} />
+            <Route path="/tools/tweet-screenshot" element={<TweetScreenshot />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute />}>
