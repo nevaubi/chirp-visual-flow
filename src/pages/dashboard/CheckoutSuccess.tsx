@@ -25,7 +25,7 @@ const CheckoutSuccess = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
-  const { authState } = useAuth();
+  const { authState, refreshProfile } = useAuth();
   
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,6 +61,9 @@ const CheckoutSuccess = () => {
           toast.success("Subscription activated successfully!");
           setIsSubscriptionActive(true);
           
+          // After successful subscription check, refresh the user's profile to get updated preferences
+          await refreshProfile();
+          
           // Pre-populate the email field with the user's email if available
           if (authState.user?.email) {
             form.setValue("email", authState.user.email);
@@ -78,7 +81,7 @@ const CheckoutSuccess = () => {
     if (authState.user && !authState.loading) {
       checkSubscriptionStatus();
     }
-  }, [authState.user, authState.loading, navigate, searchParams, form]);
+  }, [authState.user, authState.loading, navigate, searchParams, form, refreshProfile]);
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -100,6 +103,9 @@ const CheckoutSuccess = () => {
         toast.error("Failed to save email address");
       } else {
         toast.success("Email saved successfully!");
+        
+        // Refresh the profile to ensure we have the latest data
+        await refreshProfile();
       }
     } catch (error) {
       console.error("Error saving email:", error);
@@ -157,6 +163,24 @@ const CheckoutSuccess = () => {
                 </Button>
               </form>
             </Form>
+            
+            {authState.profile?.newsletter_day_preference && (
+              <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
+                <p className="text-sm text-muted-foreground">
+                  Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
+                </p>
+                {authState.profile.newsletter_content_preferences && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Type: <span className="font-medium">
+                      {authState.profile.newsletter_content_preferences.audience === 'personal' 
+                        ? 'Personal Newsletter' 
+                        : 'Audience Newsletter'}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
           </>
         )}
         

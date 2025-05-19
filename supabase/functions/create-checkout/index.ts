@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // Parse request body
     const requestData = await req.json();
-    const { priceId, frequency } = requestData;
+    const { priceId, frequency, metadata } = requestData;
     
     if (!priceId) {
       return new Response(JSON.stringify({ error: "Price ID is required" }), {
@@ -42,7 +42,7 @@ serve(async (req) => {
       });
     }
     
-    logStep("Request data", { priceId, frequency });
+    logStep("Request data", { priceId, frequency, metadata });
 
     // Initialize Supabase client using anon key (for authentication only)
     const supabaseClient = createClient(
@@ -119,6 +119,24 @@ serve(async (req) => {
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
+    // Prepare session metadata
+    const sessionMetadata = {
+      user_id: user.id,
+      frequency: frequency || "weekly", // Default to weekly if not specified
+    };
+
+    // Add newsletter preferences to metadata if provided
+    if (metadata) {
+      if (metadata.newsletter_day_preference) {
+        sessionMetadata.newsletter_day_preference = metadata.newsletter_day_preference;
+      }
+      if (metadata.newsletter_content_preferences) {
+        sessionMetadata.newsletter_content_preferences = metadata.newsletter_content_preferences;
+      }
+    }
+
+    logStep("Creating checkout session with metadata", sessionMetadata);
+
     // Create a subscription checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -127,10 +145,7 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/dashboard/checkout-cancel`,
-      metadata: {
-        user_id: user.id,
-        frequency: frequency || "weekly", // Default to weekly if not specified
-      },
+      metadata: sessionMetadata,
     });
 
     logStep("Checkout session created", { sessionId: session.id });

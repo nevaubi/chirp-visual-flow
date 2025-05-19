@@ -113,18 +113,42 @@ serve(async (req) => {
         const customerId = extractCustomerId(session.customer);
         logStep("Found customer from session", { customerId });
         
+        // Get newsletter preferences from session metadata
+        const newsletterDayPreference = session.metadata?.newsletter_day_preference;
+        let newsletterContentPreferences = null;
+        
+        if (session.metadata?.newsletter_content_preferences) {
+          try {
+            newsletterContentPreferences = JSON.parse(session.metadata.newsletter_content_preferences);
+            logStep("Parsed newsletter content preferences", { newsletterContentPreferences });
+          } catch (error) {
+            logStep("Error parsing newsletter content preferences", error);
+          }
+        }
+        
         // Update profile with customer ID before checking subscriptions
         if (customerId) {
+          const profileUpdates: any = { stripe_customer_id: customerId };
+          
+          // Add newsletter preferences if available
+          if (newsletterDayPreference) {
+            profileUpdates.newsletter_day_preference = newsletterDayPreference;
+          }
+          
+          if (newsletterContentPreferences) {
+            profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
+          }
+          
           const { error: customerUpdateError } = await supabaseAdmin
             .from('profiles')
-            .update({ stripe_customer_id: customerId })
+            .update(profileUpdates)
             .eq('id', user.id);
             
           if (customerUpdateError) {
-            logStep("Error updating profile with customer ID", customerUpdateError);
+            logStep("Error updating profile with customer ID and preferences", customerUpdateError);
             // Continue despite error - we want to try retrieving subscription info
           } else {
-            logStep("Profile updated with customer ID");
+            logStep("Profile updated with customer ID and preferences");
           }
           
           // If we have a subscription in the session, we can use it directly
@@ -205,7 +229,9 @@ serve(async (req) => {
                 subscription_id: subscription.id,
                 subscription_period_end: subscriptionPeriodEnd,
                 cancel_at_period_end: subscription.cancel_at_period_end,
-                stripe_price_id: priceId
+                stripe_price_id: priceId,
+                newsletter_day_preference: newsletterDayPreference,
+                newsletter_content_preferences: newsletterContentPreferences
               }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,

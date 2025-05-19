@@ -55,6 +55,32 @@ const CreateNewsletter = () => {
     console.log(`Selected frequency: ${freq}`);
   };
 
+  // Get the day preference based on user selections
+  const getDayPreference = (): string => {
+    if (selectedFrequency === 'biweekly') {
+      return deliveryOption === 'manual' ? 'Manual' : 'Tuesday-Friday';
+    } else if (selectedFrequency === 'weekly') {
+      return deliveryOption === 'manual' ? 'Manual' : weeklyDay || '';
+    }
+    return '';
+  };
+
+  // Prepare newsletter content preferences as JSON
+  const getContentPreferences = () => {
+    return {
+      audience: selectedAudience,
+      frequency: selectedFrequency,
+      content_approach: contentApproach,
+      topics: contentApproach === 'topics' ? topics : undefined,
+      writing_style: writingStyle,
+      style_example: writingStyle === 'emulate' ? styleExample : undefined,
+      include_media: includeMedia,
+      add_signature: includeSignature,
+      newsletter_name: newsletterName,
+      template: selectedTemplate
+    };
+  };
+
   const handleCheckout = async () => {
     try {
       if (!authState.user) {
@@ -69,11 +95,19 @@ const CreateNewsletter = () => {
         ? 'price_1RQUm7DBIslKIY5sNlWTFrQH'  // Newsletter Standard
         : 'price_1RQUmRDBIslKIY5seHRZm8Gr';  // Newsletter Premium
 
-      // Call the create-checkout edge function
+      // Get day preference and content preferences
+      const dayPreference = getDayPreference();
+      const contentPreferences = getContentPreferences();
+
+      // Call the create-checkout edge function with preferences included in metadata
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId,
           frequency: selectedFrequency,
+          metadata: {
+            newsletter_day_preference: dayPreference,
+            newsletter_content_preferences: JSON.stringify(contentPreferences)
+          }
         },
       });
 
