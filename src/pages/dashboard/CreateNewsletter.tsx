@@ -23,8 +23,10 @@ const CreateNewsletter = () => {
   // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = media & signature, 6 = name & style, 7 = review
   const [step, setStep] = useState<number>(0);
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience' | null>(null);
-  const [selectedFrequency, setSelectedFrequency] = useState<'biweekly' | 'weekly' | null>(null);
+  const [selectedFrequency, setSelectedFrequency] =
+    useState<'biweekly' | 'weekly' | null>(null);
   const [weeklyDay, setWeeklyDay] = useState<'Tuesday' | 'Friday' | null>(null);
+  const [deliveryOption, setDeliveryOption] = useState<'scheduled' | 'manual' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [contentApproach, setContentApproach] = useState<'everything' | 'topics' | null>(null);
@@ -48,6 +50,8 @@ const CreateNewsletter = () => {
 
   const handleFrequencySelect = (freq: 'biweekly' | 'weekly') => {
     setSelectedFrequency(freq);
+    setWeeklyDay(null);
+    setDeliveryOption(null);
     console.log(`Selected frequency: ${freq}`);
   };
 
@@ -223,18 +227,51 @@ const CreateNewsletter = () => {
             </Card>
           </div>
           {selectedFrequency === 'biweekly' && (
-            <p className="md:col-span-3 text-center text-sm text-muted-foreground mt-2">
-              Newsletters will be delivered every Tuesday and Friday to your inbox
-            </p>
+            <div className="md:col-span-3 mt-4 space-y-2">
+              <p className="text-center font-medium">Delivery preference</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+                <Card
+                  onClick={() => setDeliveryOption('scheduled')}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                    deliveryOption === 'scheduled' ? 'border-primary' : ''
+                  }`}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle>Every Tuesday and Friday</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card
+                  onClick={() => {
+                    setDeliveryOption('manual');
+                    setWeeklyDay(null);
+                  }}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                    deliveryOption === 'manual' ? 'border-primary' : ''
+                  }`}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle>Manual</CardTitle>
+                    <CardDescription>
+                      Generate manually from your dashboard, 8 credits a month
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
           )}
           {selectedFrequency === 'weekly' && (
             <div className="md:col-span-3 mt-4 space-y-2">
               <p className="text-center font-medium">Which day?</p>
-              <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+              <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
                 <Card
-                  onClick={() => setWeeklyDay('Tuesday')}
+                  onClick={() => {
+                    setWeeklyDay('Tuesday');
+                    setDeliveryOption('scheduled');
+                  }}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    weeklyDay === 'Tuesday' ? 'border-primary' : ''
+                    deliveryOption === 'scheduled' && weeklyDay === 'Tuesday'
+                      ? 'border-primary'
+                      : ''
                   }`}
                 >
                   <CardHeader className="text-center pb-2">
@@ -242,20 +279,43 @@ const CreateNewsletter = () => {
                   </CardHeader>
                 </Card>
                 <Card
-                  onClick={() => setWeeklyDay('Friday')}
+                  onClick={() => {
+                    setWeeklyDay('Friday');
+                    setDeliveryOption('scheduled');
+                  }}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    weeklyDay === 'Friday' ? 'border-primary' : ''
+                    deliveryOption === 'scheduled' && weeklyDay === 'Friday'
+                      ? 'border-primary'
+                      : ''
                   }`}
                 >
                   <CardHeader className="text-center pb-2">
                     <CardTitle>Friday</CardTitle>
                   </CardHeader>
                 </Card>
+                <Card
+                  onClick={() => {
+                    setWeeklyDay(null);
+                    setDeliveryOption('manual');
+                  }}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                    deliveryOption === 'manual' ? 'border-primary' : ''
+                  }`}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle>Manual</CardTitle>
+                    <CardDescription>
+                      Generate manually from your dashboard, 4 credits a month
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
               </div>
             </div>
           )}
-          {(selectedFrequency === 'biweekly' ||
-            (selectedFrequency === 'weekly' && weeklyDay)) && (
+          {((selectedFrequency === 'biweekly' && deliveryOption) ||
+            (selectedFrequency === 'weekly' &&
+              deliveryOption &&
+              (deliveryOption === 'manual' || weeklyDay))) && (
             <div className="text-center mt-6">
               <Button
                 onClick={() => setStep(3)}
@@ -515,9 +575,15 @@ const CreateNewsletter = () => {
               <span className="font-semibold">Frequency:</span>
               <span>
                 {selectedFrequency === 'biweekly'
-                  ? 'Biweekly (Tuesday & Friday)'
-                  : selectedFrequency === 'weekly' && weeklyDay
-                  ? `Weekly on ${weeklyDay}`
+                  ? deliveryOption === 'manual'
+                    ? 'Biweekly - Manual generation'
+                    : 'Biweekly (Tuesday & Friday)'
+                  : selectedFrequency === 'weekly'
+                  ? deliveryOption === 'manual'
+                    ? 'Weekly - Manual generation'
+                    : weeklyDay
+                    ? `Weekly on ${weeklyDay}`
+                    : 'Weekly'
                   : selectedFrequency}
               </span>
             </div>
