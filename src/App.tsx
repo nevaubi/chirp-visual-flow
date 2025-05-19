@@ -17,6 +17,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/Home";
 import CreateNewsletter from "./pages/dashboard/CreateNewsletter";
+import CheckoutSuccess from "./pages/dashboard/CheckoutSuccess";
+import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
 
 // Create placeholder components for other dashboard pages
@@ -81,6 +83,8 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="home" element={<DashboardHome />} />
                 <Route path="newsletter/create" element={<CreateNewsletter />} />
+                <Route path="checkout-success" element={<CheckoutSuccess />} />
+                <Route path="checkout-cancel" element={<CheckoutCancel />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="community" element={<Community />} />
                 <Route path="settings" element={<Settings />} />

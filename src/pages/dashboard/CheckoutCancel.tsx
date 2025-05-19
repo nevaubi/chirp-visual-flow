@@ -28,7 +28,7 @@ const CheckoutCancel = () => {
           </Button>
           
           <Button 
-            onClick={() => navigate("/dashboard/create-newsletter")} 
+            onClick={() => navigate("/dashboard/newsletter/create")} 
             variant="outline" 
             className="w-full"
           >
