@@ -48,12 +48,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      console.log('Checking subscription status...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Error checking subscription:', error);
         return;
       }
+      
+      console.log('Subscription check response:', data);
       
       if (data) {
         // Update profile with subscription details

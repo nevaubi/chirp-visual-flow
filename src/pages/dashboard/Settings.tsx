@@ -3,10 +3,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatusCard } from "@/components/subscription/SubscriptionStatusCard";
+import { useEffect } from "react";
 
 const Settings = () => {
-  const { authState } = useAuth();
+  const { authState, checkSubscription } = useAuth();
   const { profile } = authState;
+
+  // Check subscription status when the component mounts
+  useEffect(() => {
+    checkSubscription();
+  }, [checkSubscription]);
 
   return (
     <div className="space-y-6">

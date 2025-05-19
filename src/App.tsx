@@ -20,6 +20,7 @@ import CreateNewsletter from "./pages/dashboard/CreateNewsletter";
 import CheckoutSuccess from "./pages/dashboard/CheckoutSuccess";
 import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
+import Settings from "./pages/dashboard/Settings"; // Import the proper Settings component
 
 // Create placeholder components for other dashboard pages
 const Analytics = () => (
@@ -40,14 +41,7 @@ const Community = () => (
   </div>
 );
 
-const Settings = () => (
-  <div className="space-y-4">
-    <h1 className="text-2xl font-bold">Settings</h1>
-    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-      <p className="text-gray-500">Settings configuration will appear here</p>
-    </div>
-  </div>
-);
+// Remove the placeholder Settings component since we're importing the real one
 
 const queryClient = new QueryClient({
   defaultOptions: {
