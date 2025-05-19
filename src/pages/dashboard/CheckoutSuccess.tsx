@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const CheckoutSuccess = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const { authState, refreshProfile } = useAuth();
+  const subscriptionCheckedRef = useRef(false);
   
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -37,15 +38,24 @@ const CheckoutSuccess = () => {
   });
 
   useEffect(() => {
+    // Pre-populate the email field with the user's email if available
+    if (authState.user?.email && !form.getValues("email")) {
+      form.setValue("email", authState.user.email);
+    }
+  }, [authState.user, form]);
+
+  useEffect(() => {
+    let isMounted = true;
+    
     const checkSubscriptionStatus = async () => {
+      // Only check subscription once per sessionId
+      if (subscriptionCheckedRef.current || !sessionId || !authState.user || authState.loading) {
+        return;
+      }
+      
       try {
         setIsLoading(true);
-        
-        if (!sessionId) {
-          toast.error("No session ID found in URL");
-          navigate("/dashboard/home");
-          return;
-        }
+        subscriptionCheckedRef.current = true;
         
         // Call the check-subscription function and pass the session ID
         const { data, error } = await supabase.functions.invoke("check-subscription", {
@@ -54,32 +64,40 @@ const CheckoutSuccess = () => {
         
         if (error) {
           console.error("Error checking subscription:", error);
-          toast.error("Error checking subscription status");
+          if (isMounted) {
+            toast.error("Error checking subscription status");
+          }
         } else {
-          toast.success("Subscription activated successfully!");
-          setIsSubscriptionActive(true);
-          
-          // After successful subscription check, refresh the user's profile to get updated preferences
-          await refreshProfile();
-          
-          // Pre-populate the email field with the user's email if available
-          if (authState.user?.email) {
-            form.setValue("email", authState.user.email);
+          if (isMounted) {
+            toast.success("Subscription activated successfully!");
+            setIsSubscriptionActive(true);
+            
+            // After successful subscription check, refresh the user's profile to get updated preferences
+            await refreshProfile();
           }
         }
       } catch (error) {
         console.error("Error in checkout success:", error);
-        toast.error("Something went wrong");
+        if (isMounted) {
+          toast.error("Something went wrong");
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    // Only run if user is authenticated
-    if (authState.user && !authState.loading) {
+    if (authState.user && !authState.loading && sessionId) {
       checkSubscriptionStatus();
+    } else if (!authState.loading) {
+      setIsLoading(false);
     }
-  }, [authState.user, authState.loading, navigate, sessionId, form, refreshProfile]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sessionId, authState.user, authState.loading, refreshProfile]);
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
