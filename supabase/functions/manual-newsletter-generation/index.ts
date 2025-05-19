@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -223,7 +224,7 @@ serve(async (req) => {
       const bookmarksData = await bookmarksResponse.json();
       
       // Log the full Twitter API response for debugging
-      // console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2)); // You can keep or remove this detailed log as needed
+      console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2)); // Detailed logging of the entire response
       
       // Validate bookmark data
       if (!bookmarksData || !bookmarksData.data) {
@@ -250,9 +251,10 @@ serve(async (req) => {
       
       // ---- START OF NEW PARSING LOGIC ----
       // Extract tweet IDs from the bookmarksData.data array
-      // We assume bookmarksData.data is an array of tweet objects, each having an 'id' property.
-      // If bookmarksData.data is an empty array, parsedTweetIds will be an empty array.
       const parsedTweetIds = bookmarksData.data.map(tweet => tweet.id);
+      
+      // Log the parsed data for debugging
+      console.log("Parsed tweet IDs:", JSON.stringify(parsedTweetIds, null, 2));
       // ---- END OF NEW PARSING LOGIC ----
       
       // At this point, the user is authenticated, has a valid subscription with a manual plan, has remaining generations,
