@@ -24,6 +24,7 @@ export type Database = {
           is_verified: boolean | null
           location: string | null
           numerical_id: string | null
+          sending_email: string | null
           stripe_customer_id: string | null
           stripe_price_id: string | null
           subscribed: boolean
@@ -54,6 +55,7 @@ export type Database = {
           is_verified?: boolean | null
           location?: string | null
           numerical_id?: string | null
+          sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           subscribed?: boolean
@@ -84,6 +86,7 @@ export type Database = {
           is_verified?: boolean | null
           location?: string | null
           numerical_id?: string | null
+          sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           subscribed?: boolean
