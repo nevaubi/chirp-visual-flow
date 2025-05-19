@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           account_creation_date: string | null
           bio: string | null
+          cancel_at_period_end: boolean | null
           created_at: string | null
           follower_count: number | null
           following_count: number | null
@@ -23,6 +24,12 @@ export type Database = {
           is_verified: boolean | null
           location: string | null
           numerical_id: string | null
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          subscribed: boolean
+          subscription_id: string | null
+          subscription_period_end: string | null
+          subscription_tier: string | null
           timezone: string | null
           total_posts: number | null
           twitter_bookmark_access_token: string | null
@@ -36,6 +43,7 @@ export type Database = {
         Insert: {
           account_creation_date?: string | null
           bio?: string | null
+          cancel_at_period_end?: boolean | null
           created_at?: string | null
           follower_count?: number | null
           following_count?: number | null
@@ -46,6 +54,12 @@ export type Database = {
           is_verified?: boolean | null
           location?: string | null
           numerical_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          subscribed?: boolean
+          subscription_id?: string | null
+          subscription_period_end?: string | null
+          subscription_tier?: string | null
           timezone?: string | null
           total_posts?: number | null
           twitter_bookmark_access_token?: string | null
@@ -59,6 +73,7 @@ export type Database = {
         Update: {
           account_creation_date?: string | null
           bio?: string | null
+          cancel_at_period_end?: boolean | null
           created_at?: string | null
           follower_count?: number | null
           following_count?: number | null
@@ -69,6 +84,12 @@ export type Database = {
           is_verified?: boolean | null
           location?: string | null
           numerical_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          subscribed?: boolean
+          subscription_id?: string | null
+          subscription_period_end?: string | null
+          subscription_tier?: string | null
           timezone?: string | null
           total_posts?: number | null
           twitter_bookmark_access_token?: string | null

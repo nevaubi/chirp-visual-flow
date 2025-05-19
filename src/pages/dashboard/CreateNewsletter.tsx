@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,15 +14,18 @@ import { BookmarkIcon, User, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CreateNewsletter = () => {
   const navigate = useNavigate();
+  const { authState } = useAuth();
   // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = media & signature, 6 = name & style, 7 = review
   const [step, setStep] = useState<number>(0);
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience' | null>(null);
   const [selectedFrequency, setSelectedFrequency] = useState<'biweekly' | 'weekly' | null>(null);
   const [weeklyDay, setWeeklyDay] = useState<'Tuesday' | 'Friday' | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [contentApproach, setContentApproach] = useState<'everything' | 'topics' | null>(null);
   const [topics, setTopics] = useState<string>('');
@@ -44,6 +49,49 @@ const CreateNewsletter = () => {
   const handleFrequencySelect = (freq: 'biweekly' | 'weekly') => {
     setSelectedFrequency(freq);
     console.log(`Selected frequency: ${freq}`);
+  };
+
+  const handleCheckout = async () => {
+    try {
+      if (!authState.user) {
+        toast.error("You must be logged in to subscribe");
+        return;
+      }
+
+      setIsSubmitting(true);
+      
+      // Determine which price ID to use based on frequency
+      const priceId = selectedFrequency === 'weekly' 
+        ? 'price_1RQUm7DBIslKIY5sNlWTFrQH'  // Newsletter Standard
+        : 'price_1RQUmRDBIslKIY5seHRZm8Gr';  // Newsletter Premium
+
+      // Call the create-checkout edge function
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId,
+          frequency: selectedFrequency,
+        },
+      });
+
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        toast.error('Failed to create checkout session');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Redirect to Stripe checkout
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error('No checkout URL returned');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error in handleCheckout:', error);
+      toast.error('An error occurred while processing your request');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -453,7 +501,7 @@ const CreateNewsletter = () => {
           )}
         </div>
       ) : step === 7 ? (
-        // Review and confirmation
+        // Updated Review and confirmation
         <div className="w-full max-w-2xl space-y-8 animate-fade-in">
           <div className="text-center mb-6">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">Review your selections</h2>
@@ -507,21 +555,32 @@ const CreateNewsletter = () => {
               <span className="font-semibold">Template:</span>
               <span>{selectedTemplate}</span>
             </div>
+            <div className="flex justify-between border rounded-lg p-4 bg-amber-50">
+              <span className="font-semibold">Price:</span>
+              <span className="font-semibold">
+                {selectedFrequency === 'weekly' ? '$10/month' : '$19/month'}
+              </span>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <Button
               variant="outline"
               onClick={() => setStep(6)}
               className="flex-1"
+              disabled={isSubmitting}
             >
               <div className="flex flex-col">
                 <span>Go back</span>
                 <span className="text-xs text-muted-foreground">I need to change something</span>
               </div>
             </Button>
-            <Button className="flex-1 bg-amber-500 text-white hover:bg-amber-600">
+            <Button 
+              className="flex-1 bg-amber-500 text-white hover:bg-amber-600"
+              onClick={handleCheckout}
+              disabled={isSubmitting}
+            >
               <div className="flex flex-col">
-                <span>Confirm</span>
+                <span>{isSubmitting ? 'Processing...' : 'Confirm'}</span>
                 <span className="text-xs">Proceed to Stripe payment and lock in your automated newsletter!</span>
               </div>
             </Button>
