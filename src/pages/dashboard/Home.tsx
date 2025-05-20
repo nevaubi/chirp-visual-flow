@@ -361,30 +361,6 @@ const NewsletterDashboard = ({ profile }) => {
       setIsLoading(false);
     }
   };
-  
-  // Function to handle subscription management via Stripe portal
-  const handleManageSubscription = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      
-      if (error) {
-        console.error("Error opening customer portal:", error);
-        toast.error("Could not open subscription management portal");
-        return;
-      }
-      
-      if (data?.url) {
-        // Open the customer portal in a new tab
-        window.open(data.url, "_blank");
-      }
-    } catch (error) {
-      console.error("Error in handleManageSubscription:", error);
-      toast.error("Something went wrong");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Steps for how the newsletter generation works
   const steps = [
@@ -443,21 +419,6 @@ const NewsletterDashboard = ({ profile }) => {
               </div>
             ))}
           </div>
-          
-          <div className="mt-8 bg-amber-50 p-4 rounded-lg border border-amber-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-full bg-amber-100 text-amber-600 mt-1">
-                <Info size={16} />
-              </div>
-              <div>
-                <h4 className="font-medium text-amber-800 mb-1">Pro Tip</h4>
-                <p className="text-sm text-amber-700">
-                  Organize your bookmarks by topic to create more focused newsletters. 
-                  We'll automatically group related content together for better readability.
-                </p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -512,18 +473,8 @@ const NewsletterDashboard = ({ profile }) => {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 p-4">
-          {isPremium ? (
-            <Button 
-              variant="outline" 
-              className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50"
-              onClick={handleManageSubscription}
-              disabled={isLoading}
-            >
-              <CreditCard size={16} />
-              Manage Subscription
-            </Button>
-          ) : (
+        {!isPremium && (
+          <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 p-4">
             <Button 
               className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
               onClick={handleUpgradeSubscription}
@@ -532,8 +483,8 @@ const NewsletterDashboard = ({ profile }) => {
               <CreditCard size={16} />
               Upgrade to Premium
             </Button>
-          )}
-        </CardFooter>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
