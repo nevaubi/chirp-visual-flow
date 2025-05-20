@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -367,6 +368,7 @@ ${formattedTweets}`;
     console.log("OpenAI Analysis Result:\n", analysisResult);
 
     // 10) Fetch & log top 5 replies for 7 random tweet IDs
+    let replyAnalysisData = "";
     try {
       // build main-text map
       const arrTweets = Array.isArray(apifyData)
@@ -424,6 +426,94 @@ ${formattedTweets}`;
         });
 
         console.log(outLogs.join("\n"));
+        
+        // Store the reply data for the additional OpenAI call
+        replyAnalysisData = outLogs.join("\n");
+        
+        // 11) Call OpenAI with reply data for discourse analysis
+        const discourseSystemPrompt = `You are an advanced social media discourse analyzer specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
+
+CORE CAPABILITIES:
+- Analyze the relationship between original tweets and their replies to identify discourse patterns
+- Detect sentiment shifts, contradictions, and consensus within conversation threads
+- Recognize implicit biases, unstated assumptions, and community values
+- Identify emerging trends, evolving opinions, and changing public sentiment
+- Extract meaningful insights that reveal deeper societal or community perspectives
+
+ANALYTICAL METHODOLOGY:
+1. Parse relationships between original tweets and reply patterns
+2. Identify tonal shifts, rhetorical patterns, and response clusters
+3. Detect conversation dynamics including agreement/disagreement ratios, humor markers, and emotional intensity
+4. Analyze linguistic patterns revealing unspoken community norms and values
+5. Prioritize insights based on their revelatory value, counter-intuitiveness, and uniqueness
+
+Your analysis should focus on discovering:
+- Underlying assumptions shared within the community
+- Implicit biases or frameworks revealed through response patterns
+- Emerging consensus or division points that aren't explicitly stated
+- Hidden values or priorities revealed through collective reactions
+- Unexpected patterns that challenge surface-level interpretations
+
+OUTPUT FRAMEWORK:
+You are to output 4 high quality insights. For each insight, provide:
+1. A concise, compelling header (5-8 words)
+2. A 200-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance`;
+
+        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
+
+Go beyond surface-level topic identification to discover:
+- Hidden assumptions or implicit values revealed in conversation patterns
+- Unexpected consensus or division points across different tweets
+- Emerging attitudes or shifts in sentiment not explicitly stated
+- Rhetorical patterns that reveal deeper community perspectives
+
+For each of the 4 insights:
+1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
+2. Write a 200-word explanation that:
+   - Articulates the underlying trend or sentiment
+   - Provides specific evidence from multiple tweet conversations
+   - Explains why this insight is significant
+   - Addresses both what is said and what remains unsaid
+   - Connects the insight to broader social or technological contexts when relevant
+
+Analysis criteria:
+- Prioritize insights that reveal something unexpected or non-obvious
+- Focus on patterns across singular tweets as well as multiple tweets if applicable rather than isolated opinions
+- Consider the relationship between original tweets and the nature of responses
+- Pay attention to linguistic patterns, emotional markers, and conversational dynamics
+- Look for contradictions between stated positions and implicit values
+
+Please format your response with clear numbered headers and well-structured explanations.
+
+Here is the tweet collection to analyze:
+
+${replyAnalysisData}`;
+
+        const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-2025-04-14",
+            messages: [
+              { role: "system", content: discourseSystemPrompt },
+              { role: "user", content: discourseUserPrompt },
+            ],
+            temperature: 0.4,
+            max_tokens: 4000,
+          }),
+        });
+        
+        if (discourseOpenaiRes.ok) {
+          const discourseJson = await discourseOpenaiRes.json();
+          const discourseAnalysis = discourseJson.choices[0].message.content;
+          console.log("Discourse Analysis Result:\n", discourseAnalysis);
+        } else {
+          const errorText = await discourseOpenaiRes.text();
+          console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
+        }
       } else {
         console.error(
           `Apify Reply API error (${repliesRes.status}):`,
@@ -434,7 +524,7 @@ ${formattedTweets}`;
       console.error("Error fetching/parsing tweet replies:", err);
     }
 
-    // 11) Final log & response
+    // 12) Final log & response
     const timestamp = new Date().toISOString();
     console.log("Newsletter generation successful:", {
       userId: user.id,
