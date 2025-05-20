@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -367,188 +366,75 @@ ${formattedTweets}`;
     const analysisResult = openaiJson.choices[0].message.content;
     console.log("OpenAI Analysis Result:\n", analysisResult);
 
-    // 10) Extract top tweets and fetch their replies for discourse analysis
-    function extractTopEngagementTweets(data: any, limit: number) {
-      const tweets = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
-      return tweets
-        .filter((t: any) => !t.isReply)
-        .sort((a: any, b: any) => (b.replyCount || 0) - (a.replyCount || 0))
-        .slice(0, limit)
-        .map((t: any) => t.id);
-    }
-
-    // Get top 5 tweets by reply count
-    const topTweetsByEngagement = extractTopEngagementTweets(apifyData, 5);
-    console.log("Top 5 tweets by reply count:", topTweetsByEngagement);
-      
-    // Fetch replies for top engagement tweets
+    // 10) Fetch & log top 5 replies for 7 random tweet IDs
     try {
-      // Fetch replies using the Apify Twitter Reply API
+      // build main-text map
+      const arrTweets = Array.isArray(apifyData)
+        ? apifyData
+        : Array.isArray(apifyData.items)
+        ? apifyData.items
+        : [];
+      const mainMap: Record<string, string> = {};
+      arrTweets.forEach((t) => {
+        if (t.isReply === false) {
+          mainMap[t.id] = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+        }
+      });
+
+      // pick 7 random IDs
+      const idsToQuery =
+        tweetIds.length <= 7
+          ? tweetIds
+          : [...tweetIds].sort(() => Math.random() - 0.5).slice(0, 7);
+      console.log("Using random tweet IDs for replies:", idsToQuery);
+
       const repliesRes = await fetch(
         `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-reply/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            conversation_ids: topTweetsByEngagement,
+            conversation_ids: idsToQuery,
             max_items_per_conversation: 20,
           }),
         }
       );
-      
-      if (!repliesRes.ok) {
+      if (repliesRes.ok) {
+        const repliesData = await repliesRes.json();
+        // group only isReply==true
+        const grouped = repliesData
+          .filter((r: any) => r.isReply)
+          .reduce((acc: Record<string, any[]>, r: any) => {
+            (acc[r.conversationId] ||= []).push(r);
+            return acc;
+          }, {});
+
+        const outLogs: string[] = [];
+        idsToQuery.forEach((mainId, idx) => {
+          outLogs.push(`Tweet ${idx + 1} text: ${mainMap[mainId] || "N/A"}`);
+          const reps = grouped[mainId] || [];
+          reps
+            .sort((a, b) => Number(b.likeCount || 0) - Number(a.likeCount || 0))
+            .slice(0, 5)
+            .forEach((r, i) => {
+              const txt = (r.text || "").replace(/https?:\/\/\S+/g, "").trim();
+              outLogs.push(`Top reply ${i + 1}: ${txt}`);
+            });
+          outLogs.push("---");
+        });
+
+        console.log(outLogs.join("\n"));
+      } else {
         console.error(
           `Apify Reply API error (${repliesRes.status}):`,
           await repliesRes.text()
         );
-        throw new Error(`Apify Reply API error: ${repliesRes.status}`);
       }
-      
-      const repliesData = await repliesRes.json();
-      
-      // build main-text map for original tweets
-      const arrTweets = Array.isArray(apifyData) ? apifyData : Array.isArray(apifyData.items) ? apifyData.items : [];
-      const mainMap: Record<string, string> = {};
-      arrTweets.forEach((t: any) => {
-        if (t.isReply === false) {
-          mainMap[t.id] = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-        }
-      });
-      
-      // Format the tweets and replies for the discourse analysis
-      const formattedReplies = formatTweetsAndRepliesForAnalysis(topTweetsByEngagement, repliesData, mainMap);
-      console.log("Formatted tweets and replies for discourse analysis:\n", formattedReplies);
-      
-      // 11) Call OpenAI for discourse analysis
-      const discourseSystemPrompt = `You are an advanced social media discourse analyzer specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
-
-CORE CAPABILITIES:
-- Analyze the relationship between original tweets and their replies to identify discourse patterns
-- Detect sentiment shifts, contradictions, and consensus within conversation threads
-- Recognize implicit biases, unstated assumptions, and community values
-- Identify emerging trends, evolving opinions, and changing public sentiment
-- Extract meaningful insights that reveal deeper societal or community perspectives
-
-ANALYTICAL METHODOLOGY:
-1. Parse relationships between original tweets and reply patterns
-2. Identify tonal shifts, rhetorical patterns, and response clusters
-3. Detect conversation dynamics including agreement/disagreement ratios, humor markers, and emotional intensity
-4. Analyze linguistic patterns revealing unspoken community norms and values
-5. Prioritize insights based on their revelatory value, counter-intuitiveness, and uniqueness
-
-Your analysis should focus on discovering:
-- Underlying assumptions shared within the community
-- Implicit biases or frameworks revealed through response patterns
-- Emerging consensus or division points that aren't explicitly stated
-- Hidden values or priorities revealed through collective reactions
-- Unexpected patterns that challenge surface-level interpretations
-
-OUTPUT FRAMEWORK:
-You are to output 4 high quality insights. For each insight, provide:
-1. A concise, compelling header (5-8 words)
-2. A 200-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance`;
-
-      const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
-
-Go beyond surface-level topic identification to discover:
-- Hidden assumptions or implicit values revealed in conversation patterns
-- Unexpected consensus or division points across different tweets
-- Emerging attitudes or shifts in sentiment not explicitly stated
-- Rhetorical patterns that reveal deeper community perspectives
-
-For each of the 4 insights:
-1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
-2. Write a 200-word explanation that:
-   - Articulates the underlying trend or sentiment
-   - Provides specific evidence from multiple tweet conversations
-   - Explains why this insight is significant
-   - Addresses both what is said and what remains unsaid
-   - Connects the insight to broader social or technological contexts when relevant
-
-Analysis criteria:
-- Prioritize insights that reveal something unexpected or non-obvious
-- Focus on patterns across singular tweets as well as multiple tweets if applicable rather than isolated opinions
-- Consider the relationship between original tweets and the nature of responses
-- Pay attention to linguistic patterns, emotional markers, and conversational dynamics
-- Look for contradictions between stated positions and implicit values
-
-Please format your response with clear numbered headers and well-structured explanations.
-
-Here is the tweet collection to analyze:
-
-${formattedReplies}`;
-
-      const discourseAnalysisRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
-          messages: [
-            { role: "system", content: discourseSystemPrompt },
-            { role: "user", content: discourseUserPrompt },
-          ],
-          temperature: 0.4,
-          max_tokens: 4000,
-        }),
-      });
-      
-      if (!discourseAnalysisRes.ok) {
-        const txt = await discourseAnalysisRes.text();
-        console.error(`Discourse Analysis OpenAI API error (${discourseAnalysisRes.status}):`, txt);
-        throw new Error(`Discourse Analysis OpenAI API error: ${discourseAnalysisRes.status}`);
-      }
-      
-      const discourseAnalysisJson = await discourseAnalysisRes.json();
-      const discourseAnalysisResult = discourseAnalysisJson.choices[0].message.content;
-      console.log("Discourse Analysis Result:\n", discourseAnalysisResult);
     } catch (err) {
-      console.error("Error in discourse analysis:", err);
-      // Continue execution even if discourse analysis fails
+      console.error("Error fetching/parsing tweet replies:", err);
     }
 
-    // Helper function to format tweets and replies for discourse analysis
-    function formatTweetsAndRepliesForAnalysis(tweetIds: string[], repliesData: any[], mainMap: Record<string, string>): string {
-      // Group replies by conversation ID
-      const grouped = repliesData
-        .filter((r: any) => r.isReply)
-        .reduce((acc: Record<string, any[]>, r: any) => {
-          (acc[r.conversationId] ||= []).push(r);
-          return acc;
-        }, {});
-      
-      let formattedOutput = "";
-      
-      tweetIds.forEach((tweetId: string, idx: number) => {
-        formattedOutput += `TWEET ${idx + 1}\n`;
-        formattedOutput += `Original Tweet: ${mainMap[tweetId] || "N/A"}\n\n`;
-        
-        const replies = grouped[tweetId] || [];
-        if (replies.length > 0) {
-          formattedOutput += "TOP REPLIES:\n";
-          replies
-            .sort((a: any, b: any) => Number(b.likeCount || 0) - Number(a.likeCount || 0))
-            .slice(0, 5)
-            .forEach((r: any, i: number) => {
-              const txt = (r.text || "").replace(/https?:\/\/\S+/g, "").trim();
-              formattedOutput += `Reply ${i + 1}: ${txt}\n`;
-              formattedOutput += `Like Count: ${r.likeCount || 0}\n`;
-            });
-        } else {
-          formattedOutput += "No replies found.\n";
-        }
-        
-        if (idx < tweetIds.length - 1) {
-          formattedOutput += "\n----------------------------\n\n";
-        }
-      });
-      
-      return formattedOutput;
-    }
-
-    // 12) Final log & response
+    // 11) Final log & response
     const timestamp = new Date().toISOString();
     console.log("Newsletter generation successful:", {
       userId: user.id,
