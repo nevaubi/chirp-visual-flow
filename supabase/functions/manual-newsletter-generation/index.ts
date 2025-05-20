@@ -440,42 +440,104 @@ ${formattedTweets}`;
         console.log(outLogs.join("\n"));
         const replyAnalysisData = outLogs.join("\n");
         // 11) Call OpenAI with reply data for discourse analysis
-        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style casual english...`; // same as above
-        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments...`; // same as above
-        const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              {
-                role: "system",
-                content: discourseSystemPrompt
-              },
-              {
-                role: "user",
-                content: `${discourseUserPrompt}\n\n${replyAnalysisData}`
-              }
-            ],
-            temperature: 0.4,
-            max_tokens: 2000
-          })
-        });
-        if (discourseOpenaiRes.ok) {
-          const discourseJson = await discourseOpenaiRes.json();
-          discourseAnalysis = discourseJson.choices[0].message.content.trim();
-          console.log("Discourse Analysis Result:\n", discourseAnalysis);
-        } else {
-          const errTxt = await discourseOpenaiRes.text();
-          console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errTxt);
-          discourseAnalysis = "Error: Unable to generate discourse analysis. Please try again later.";
+        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style casual english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
+
+CORE CAPABILITIES:
+- Analyze the relationship between original tweets and their replies to identify discourse patterns
+- Detect sentiment shifts, contradictions, and consensus within conversation threads
+- Recognize implicit biases, unstated assumptions, and community values
+- Identify emerging trends, evolving opinions, and changing public sentiment
+- Extract meaningful insights that reveal deeper societal or community perspectives
+
+ANALYTICAL METHODOLOGY:
+1. Parse relationships between original tweets and reply patterns
+2. Identify tonal shifts, rhetorical patterns, and response clusters
+3. Detect conversation dynamics including agreement/disagreement ratios, humor markers, and emotional intensity
+4. Analyze linguistic patterns revealing unspoken community norms and values
+5. Prioritize insights based on their revelatory value, counter-intuitiveness, and uniqueness
+
+Your analysis should focus on discovering:
+- Underlying assumptions shared within the community
+- Implicit biases or frameworks revealed through response patterns
+- Emerging consensus or division points that aren't explicitly stated
+- Hidden values or priorities revealed through collective reactions
+- Unexpected patterns that challenge surface-level interpretations
+
+OUTPUT FRAMEWORK:
+You are to output 4 high quality insights. For each insight, provide:
+1. A concise, compelling header (5-8 words)
+2. A 50-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
+
+        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
+
+Go beyond surface-level topic identification to discover:
+- Hidden assumptions or implicit values revealed in conversation patterns
+- Unexpected consensus or division points across different tweets
+- Emerging attitudes or shifts in sentiment not explicitly stated
+- Rhetorical patterns that reveal deeper community perspectives
+
+For each of the 4 insights:
+1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
+2. Write a 50-word explanation that:
+   - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
+   - Provides specific evidence from multiple tweet conversations
+   - Explains why this insight is significant
+   - Addresses both what is said and what remains unsaid
+   - Connects the insight to broader social or technological contexts when relevant
+   - It is IMPORTANT that you deliver your output in natural normal wording spoken at an 8th grade writing level.
+
+Analysis criteria:
+- Prioritize insights that reveal something unexpected or non-obvious
+- Focus on patterns across singular tweets as well as multiple tweets if applicable rather than isolated opinions
+- Consider the relationship between original tweets and the nature of responses
+- Pay attention to linguistic patterns, emotional markers, and conversational dynamics
+- Look for contradictions between stated positions and implicit values
+
+Please format your response with clear numbered headers and well-structured explanations spoken in an 8th grade writing level.
+
+DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CONCEPTS, AND SENTIMENTS. 
+
+Here is the tweet collection to analyze:
+
+${replyAnalysisData}`;
+
+        try {
+          const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14",
+              messages: [
+                { role: "system", content: discourseSystemPrompt },
+                { role: "user", content: discourseUserPrompt },
+              ],
+              temperature: 0.4,
+              max_tokens: 2000,
+            }),
+          });
+          
+          if (discourseOpenaiRes.ok) {
+            const discourseJson = await discourseOpenaiRes.json();
+            discourseAnalysis = discourseJson.choices[0].message.content;
+            console.log("Discourse Analysis Result:\n", discourseAnalysis);
+          } else {
+            const errorText = await discourseOpenaiRes.text();
+            console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
+            // Set a fallback value for discourseAnalysis if the API call fails
+            discourseAnalysis = "Error: Unable to generate discourse analysis. Please try again later.";
+          }
+        } catch (discourseError) {
+          console.error("Error in discourse analysis API call:", discourseError);
+          discourseAnalysis = "Error: Unable to generate discourse analysis due to API error.";
         }
       } else {
-        const errTxt = await repliesRes.text();
-        console.error(`Apify Reply API error (${repliesRes.status}):`, errTxt);
+        console.error(
+          `Apify Reply API error (${repliesRes.status}):`,
+          await repliesRes.text()
+        );
         discourseAnalysis = "Error: Unable to fetch tweet replies for analysis.";
       }
     } catch (err) {
@@ -486,97 +548,180 @@ ${formattedTweets}`;
     let markdownNewsletter = "";
     try {
       console.log("Starting step 12: Markdown newsletter formatting");
-      const markdownSystemPrompt = `You are a professional newsletter editor who formats content...
-`; // same as above
-      const markdownUserPrompt = `I have two pieces of analysis content that need to be...
       
+      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read.
+
+FORMAT GUIDELINES:
+- Use proper Markdown syntax for headings, subheadings, bullet points, columns, dividers, colors, and horizontal rules
+- Use headings (#, ##, ###) appropriately for hierarchy
+- Use bullet points (-) for lists
+- Use horizontal rules (---) to separate sections
+- Ensure proper spacing between sections
+- Maintain the original content and meaning while improving formatting
+- Use bold and italic formatting where appropriate for emphasis
+- Include photo URLs where they were provided in the original content
+- Create a visually appealing newsletter format and reword the content to retain meaning but in more accessible language and wording style
+- Use proper Markdown for links if needed
+- Reword the content as if you were a professional newsletter who communicated to her loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
+
+CONTENT STRUCTURE:
+1. Top section contains Main Topic 1 (most important topic)
+2. After a divider, include the Sub-Topic
+3. After another divider, present Main Topic 2
+4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes and format it as a 2x2 grid section
+5. Add proper spacing and formatting throughout
+
+OUTPUT:
+Provide ONLY the formatted Markdown content, reworded and slightly shortened if needed to be more accessible, without any explanations or comments.`;
+
+      const markdownUserPrompt = `I have two pieces of analysis content that need to be worded better, shortened 'trim all the fat', and then combined and formatted as a beautiful visually appealing Markdown newsletter:
+
 1. MAIN ANALYSIS CONTENT:
 ${analysisResult}
 
 2. DISCOURSE ANALYSIS:
 ${discourseAnalysis}
 
-Please format these into a single, well-structured visually appealing Markdown newsletter...
-`; // same as above
-      const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
-          messages: [
-            {
-              role: "system",
-              content: markdownSystemPrompt
-            },
-            {
-              role: "user",
-              content: markdownUserPrompt
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 4000
-        })
-      });
-      if (markdownOpenaiRes.ok) {
-        const markdownJson = await markdownOpenaiRes.json();
-        markdownNewsletter = markdownJson.choices[0].message.content.trim();
-        console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
-      } else {
-        const errorText = await markdownOpenaiRes.text();
-        console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-        markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
+Please format these into a single, well-structured visually appealing Markdown newsletter with the following layout:
+
+1. Start with Main Topic 1 at the top (first main topic from the analysis)
+2. Add a horizontal rule divider
+3. Then present the Sub-Topic (from the analysis)
+4. Add another horizontal rule divider
+5. Present Main Topic 2 (second main topic from the analysis)
+6. Add a final horizontal rule divider
+7. Include the Discourse Analysis content but rename it Hot Takes and format it as a 2x2 grid section
+
+Use proper Markdown formatting throughout:
+- # for main headings
+- ## for subheadings
+- - for bullet points
+- --- for horizontal dividers
+- Appropriate spacing between sections
+- Include any image URLs that were in the original content
+- Format quotes properly with >
+- Use bold and italic formatting where it enhances readability
+
+Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it.`;
+
+      try {
+        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-2025-04-14",
+            messages: [
+              { role: "system", content: markdownSystemPrompt },
+              { role: "user", content: markdownUserPrompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 4000,
+          }),
+        });
+        
+        if (markdownOpenaiRes.ok) {
+          const markdownJson = await markdownOpenaiRes.json();
+          markdownNewsletter = markdownJson.choices[0].message.content;
+          console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
+        } else {
+          const errorText = await markdownOpenaiRes.text();
+          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+          // If this fails, we'll continue with the original content - this step is optional
+          markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
+        }
+      } catch (markdownError) {
+        console.error("Error in markdown formatting API call:", markdownError);
+        markdownNewsletter = "Error: Unable to generate markdown newsletter format due to API error.";
       }
     } catch (err) {
       console.error("Error generating Markdown newsletter:", err);
+      // If there's an error, we'll continue with the original content - this is a non-blocking step
       markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
-    // 13) Generate Enhanced Markdown with UI/UX improvements
-    let enhancedMarkdown = "";
+    // 13) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
+    let enhancedMarkdownNewsletter = "";
     try {
       console.log("Starting step 13: Enhanced UI/UX Markdown formatting");
+      
       const enhancedSystemPrompt = `
-You are a newsletter UI/UX specialist and markdown designer...`; // same as above
+You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
+
+1. **Section headers** (H2/H3) use inline styles or HTML spans for colored accents (e.g., \`<span style="color:#0073e6">\`).  
+2. **Spacing & layout**  
+   - One blank line before and after headings, lists, tables, and callout boxes.  
+   - Use padded \`<div style="background:#f0f4f6;padding:12px;border-radius:4px">\` blocks for key callouts.  
+3. **Lists & tables**  
+   - Convert any dense list into bullet points with bolded lead-ins.  
+   - Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
+4. **Color scheme hints**  
+   - Headings in a consistent color shade of your choice
+   - Callout backgrounds in visually appealing color schemes
+   - Table headers shaded lightly for readability.  
+5. **Tone & writing**  
+   - Conversational, active voice, no em-dashes, 10th-grade reading level.  
+   - Bold key phrases for scannability.  
+6. **Exclusions**  
+   - No images, no table of contents, no page breaks or "Page X" footers.  
+
+Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
+`;
+
       const enhancedUserPrompt = `
-I'm sharing my raw markdown newsletter below. Please transform it into a visually enhanced...
+I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
+
+- **No page breaks or "Page X" sections**—just a smooth scroll.  
+- **Color accents:** use inline HTML/CSS spans or blocks to hint at a color scheme (headers in blue, callouts in light gray, etc.).  
+- **Better spacing:** extra blank lines around headings, lists, and callout boxes.  
+- **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
+- **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
+- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no images, no TOC.  
+
+Here is my markdown draft—please output one cohesive, styled markdown document.  
+
+<current newsletter>
 ${markdownNewsletter}
-`; // same as above
-      const enhancedOpenaiRes2 = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: enhancedSystemPrompt
-            },
-            {
-              role: "user",
-              content: enhancedUserPrompt
-            }
-          ],
-          temperature: 0.4,
-          max_tokens: 4000
-        })
-      });
-      if (enhancedOpenaiRes2.ok) {
-        const enhancedJson2 = await enhancedOpenaiRes2.json();
-        enhancedMarkdown = enhancedJson2.choices[0].message.content.trim();
-        console.log("Enhanced Markdown Newsletter Generated:\n", enhancedMarkdown);
-      } else {
-        const errTxt = await enhancedOpenaiRes2.text();
-        console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes2.status}):`, errTxt);
-        enhancedMarkdown = "Error: Unable to generate enhanced UI/UX markdown. Using regular markdown instead.";
+</current newsletter>
+`;
+
+      try {
+        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-latest", // Using the model specified in the request
+            messages: [
+              { role: "system", content: enhancedSystemPrompt },
+              { role: "user", content: enhancedUserPrompt },
+            ],
+            temperature: 0.4, // Setting temperature as specified
+            max_tokens: 4000,
+          }),
+        });
+        
+        if (enhancedOpenaiRes.ok) {
+          const enhancedJson = await enhancedOpenaiRes.json();
+          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
+          console.log("Enhanced UI/UX Markdown Newsletter Generated:\n", enhancedMarkdownNewsletter);
+        } else {
+          const errorText = await enhancedOpenaiRes.text();
+          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+          // If this fails, we'll continue with the previous markdown - this step is optional
+          enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown. Using regular markdown instead.";
+        }
+      } catch (enhancedError) {
+        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
+        enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown due to API error.";
       }
     } catch (err) {
-      console.error("Error generating Enhanced UI/UX Markdown:", err);
-      enhancedMarkdown = "Error: Failed to generate enhanced UI/UX markdown. Using regular markdown instead.";
+      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
+      // If there's an error, we'll continue with the regular markdown - this is a non-blocking step
+      enhancedMarkdownNewsletter = "Error: Failed to generate enhanced UI/UX markdown. Using regular markdown instead.";
     }
     // 14) Clean up stray text around enhanced Markdown
     function cleanMarkdown(md) {
