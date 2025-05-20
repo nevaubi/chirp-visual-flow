@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +12,7 @@ import {
   LogOut,
   Menu,
   Bookmark,
+  Book,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ const DashboardLayout = () => {
 
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
-    { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
+    { icon: Book, label: 'Library', path: '/dashboard/analytics' },
     { icon: Users, label: 'Community', path: '/dashboard/community' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];

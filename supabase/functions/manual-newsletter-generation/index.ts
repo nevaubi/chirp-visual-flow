@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
@@ -338,7 +337,16 @@ ONE SUB-TOPIC (third most relevant discussion):
 - Three bullet points highlighting the most significant aspects (20 words max each)
 - 100-word explanation providing comprehensive context and analysis
 - A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
-- Up to two relevant photo URLs`;
+- Up to two relevant photo URLs that best represent this topic (if available)
+
+Organization criteria:
+- Prioritize topics based on frequency of mention, engagement metrics, and recency
+- When selecting the most significant aspects for bullet points, consider uniqueness, engagement, and informational value
+- When selecting photo URLs, prioritize images with higher engagement on relevant tweets
+
+Here is the tweet collection to analyze:
+
+${formattedTweets}`;
     const userPrompt = `Analyze the following collection of tweets to identify the two most prevalent main topics and one sub-topic. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
 
 For each MAIN TOPIC (2):
@@ -496,7 +504,7 @@ Analysis criteria:
 
 Please format your response with clear numbered headers and well-structured explanations spoken in an 8th grade writing level.
 
-DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CONCEPTS, AND SENTIMENTS. 
+DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CONCEPTS AND SENTIMENTS. 
 
 Here is the tweet collection to analyze:
 
@@ -764,8 +772,27 @@ ${markdownNewsletter}
       console.log("Email sent successfully with Resend:", emailData);
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
-    // Continue execution even if email fails - we'll still return the newsletter content
+      // Continue execution even if email fails - we'll still return the newsletter content
     }
+    // 16.5) NEW STEP: Save the newsletter to newsletter_storage table
+    try {
+      const { error: storageError } = await supabase
+        .from('newsletter_storage')
+        .insert({
+          user_id: user.id,
+          markdown_text: finalMarkdown
+        });
+
+      if (storageError) {
+        console.error("Failed to save newsletter to storage:", storageError);
+      } else {
+        console.log("Newsletter successfully saved to storage");
+      }
+    } catch (storageErr) {
+      console.error("Error saving newsletter to storage:", storageErr);
+      // Continue execution even if storage fails
+    }
+    
     // Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
