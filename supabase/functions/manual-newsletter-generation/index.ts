@@ -353,7 +353,7 @@ ${formattedTweets}`;
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
+        temperature: 0.4,
         max_tokens: 4000,
       }),
     });
@@ -366,7 +366,7 @@ ${formattedTweets}`;
     const analysisResult = openaiJson.choices[0].message.content;
     console.log("OpenAI Analysis Result:\n", analysisResult);
 
-    // 10) Fetch & log top 5 replies per main tweet by true likeCount
+    // 10) Fetch & log top 5 replies for 7 random tweet IDs
     try {
       // build main-text map
       const arrTweets = Array.isArray(apifyData)
@@ -381,17 +381,22 @@ ${formattedTweets}`;
         }
       });
 
-      // get all replies
-      const repliesReq = {
-        conversation_ids: tweetIds,
-        max_items_per_conversation: 50,
-      };
+      // pick 7 random IDs
+      const idsToQuery =
+        tweetIds.length <= 7
+          ? tweetIds
+          : [...tweetIds].sort(() => Math.random() - 0.5).slice(0, 7);
+      console.log("Using random tweet IDs for replies:", idsToQuery);
+
       const repliesRes = await fetch(
         `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-reply/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(repliesReq),
+          body: JSON.stringify({
+            conversation_ids: idsToQuery,
+            max_items_per_conversation: 20,
+          }),
         }
       );
       if (repliesRes.ok) {
@@ -405,10 +410,9 @@ ${formattedTweets}`;
           }, {});
 
         const outLogs: string[] = [];
-        Object.entries(mainMap).forEach(([mainId, mainText], idx) => {
-          outLogs.push(`Tweet ${idx + 1} text: ${mainText}`);
+        idsToQuery.forEach((mainId, idx) => {
+          outLogs.push(`Tweet ${idx + 1} text: ${mainMap[mainId] || "N/A"}`);
           const reps = grouped[mainId] || [];
-          // sort numerically by likeCount desc
           reps
             .sort((a, b) => Number(b.likeCount || 0) - Number(a.likeCount || 0))
             .slice(0, 5)
