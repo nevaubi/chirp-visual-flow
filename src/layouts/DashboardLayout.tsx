@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +7,6 @@ import {
   Home,
   Users,
   Settings,
-  Search,
   Bell,
   LogOut,
   Menu,
@@ -16,7 +14,6 @@ import {
   Book,
   CreditCard,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -280,15 +277,8 @@ const DashboardLayout = () => {
           "flex-1 flex flex-col overflow-y-auto bg-gray-50 transition-all duration-300 relative",
           isMobile && mobileMenuOpen && "filter blur-sm"
         )}>
-          {/* Desktop Header */}
-          <header className="hidden lg:flex items-center justify-between p-4 bg-white border-b gap-4">
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input 
-                placeholder="Search..." 
-                className="pl-9 pr-4 py-2 rounded-full bg-gray-100 border-none w-full"
-              />
-            </div>
+          {/* Desktop Header - search bar removed */}
+          <header className="hidden lg:flex items-center justify-end p-4 bg-white border-b gap-4">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" className="text-gray-600">
                 <Bell size={20} />
