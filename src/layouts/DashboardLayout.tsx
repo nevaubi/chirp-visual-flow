@@ -34,6 +34,10 @@ const DashboardLayout = () => {
     ? profile.twitter_username.substring(0, 2).toUpperCase()
     : 'CM';
   const isNewsletterPlatform = profile?.is_newsletter_platform;
+  
+  // Check if user has the required subscription tier
+  const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                          profile?.subscription_tier === "Newsletter Premium";
 
   // Check if the current device is mobile
   useEffect(() => {
@@ -59,11 +63,19 @@ const DashboardLayout = () => {
   };
 
   const handleCreateNewsletter = () => {
+    // Check if user has required subscription tier
+    if (!hasRequiredTier) {
+      toast.error("Subscription Required", {
+        description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
+      });
+      return;
+    }
+    
     // Check if manual generation is available for the user
     if (profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0) {
       setIsManualGenerationOpen(true);
     } else {
-      toast("No Generations Available", {
+      toast.error("No Generations Available", {
         description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
       });
     }
@@ -139,10 +151,14 @@ const DashboardLayout = () => {
             {isNewsletterPlatform && (
               <Button
                 className={cn(
-                  "w-full mb-4 bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-3 justify-start px-3",
-                  !expanded && "justify-center px-0"
+                  "w-full mb-4 flex items-center gap-3 justify-start px-3",
+                  !expanded && "justify-center px-0",
+                  hasRequiredTier 
+                    ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                    : "bg-amber-500/40 text-white/70 cursor-not-allowed"
                 )}
                 onClick={handleCreateNewsletter}
+                disabled={!hasRequiredTier}
               >
                 <Bookmark size={20} />
                 {expanded && (
