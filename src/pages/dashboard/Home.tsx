@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { 
   BarChart2, 
   Users, 
@@ -16,7 +16,10 @@ import {
   ArrowDown,
   BookOpen,
   Bookmark,
-  Info
+  Info,
+  Check,
+  CreditCard,
+  Zap
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -24,6 +27,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Chart component - we'll create a simple placeholder
 const EngagementChart = () => (
@@ -311,11 +316,98 @@ const CreatorDashboard = ({ profile }) => {
   );
 };
 
-// Newsletter Platform Dashboard - simplified version
+// Newsletter Platform Dashboard - enhanced version
 const NewsletterDashboard = ({ profile }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { refreshProfile } = useAuth();
+
+  // Check if user has a subscription
+  const isSubscribed = profile?.subscribed;
+  const subscriptionTier = profile?.subscription_tier;
+  const isPremium = subscriptionTier === "Newsletter Premium";
+  
+  // Number of remaining manual generations
+  const remainingGenerations = profile?.remaining_newsletter_generations || 0;
+  
+  // Function to handle subscription checkout
+  const handleUpgradeSubscription = async () => {
+    setIsLoading(true);
+    try {
+      // Use the create-checkout edge function with the Newsletter Premium price
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { 
+          priceId: "price_newsletter_premium", // This should be replaced with your actual Stripe price ID
+          frequency: "monthly",
+          metadata: {
+            newsletter_day_preference: "Friday",
+          }
+        }
+      });
+      
+      if (error) {
+        console.error("Error creating checkout session:", error);
+        toast.error("Could not start checkout process");
+        return;
+      }
+      
+      if (data?.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error("Error in handleUpgradeSubscription:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Function to handle subscription management via Stripe portal
+  const handleManageSubscription = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      
+      if (error) {
+        console.error("Error opening customer portal:", error);
+        toast.error("Could not open subscription management portal");
+        return;
+      }
+      
+      if (data?.url) {
+        // Open the customer portal in a new tab
+        window.open(data.url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error in handleManageSubscription:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Steps for how the newsletter generation works
+  const steps = [
+    {
+      title: "Bookmark tweets",
+      description: "Save tweets you find valuable by bookmarking them on X (Twitter).",
+      icon: Bookmark
+    },
+    {
+      title: "Connect your X account",
+      description: "Allow us to access your bookmarks securely.",
+      icon: Twitter
+    },
+    {
+      title: "Generate newsletters",
+      description: "We'll transform your bookmarks into a well-formatted newsletter.",
+      icon: Zap
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Welcome header - keeping only this section */}
+      {/* Welcome header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
@@ -327,6 +419,122 @@ const NewsletterDashboard = ({ profile }) => {
           </p>
         </div>
       </div>
+
+      {/* How It Works Section */}
+      <Card className="border-none shadow-sm hover:shadow transition-shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Info size={18} className="text-[#0087C8]" />
+            How It Works
+          </CardTitle>
+          <CardDescription>
+            Turn your X (Twitter) bookmarks into beautiful newsletters in just a few steps
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((step, index) => (
+              <div key={index} className="flex flex-col items-center text-center p-4 rounded-lg border border-gray-100 hover:border-[#0087C8]/20 hover:bg-blue-50/30 transition-colors">
+                <div className="p-3 rounded-full bg-[#0087C8]/10 mb-4">
+                  <step.icon size={24} className="text-[#0087C8]" />
+                </div>
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-8 bg-amber-50 p-4 rounded-lg border border-amber-100">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-amber-100 text-amber-600 mt-1">
+                <Info size={16} />
+              </div>
+              <div>
+                <h4 className="font-medium text-amber-800 mb-1">Pro Tip</h4>
+                <p className="text-sm text-amber-700">
+                  Organize your bookmarks by topic to create more focused newsletters. 
+                  We'll automatically group related content together for better readability.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Subscription Card */}
+      <Card className="border-none shadow-sm hover:shadow transition-shadow overflow-hidden">
+        <CardHeader className={cn(
+          "relative pb-8",
+          isPremium ? "bg-gradient-to-r from-amber-100 to-amber-50" : "bg-gray-50"
+        )}>
+          {isPremium && (
+            <div className="absolute top-0 right-0 bg-amber-500 text-white px-4 py-1 transform translate-x-8 translate-y-5 -rotate-45 shadow-md">
+              Premium
+            </div>
+          )}
+          <CardTitle>{isPremium ? "Premium Plan" : "Free Plan"}</CardTitle>
+          <CardDescription>
+            {isPremium 
+              ? "You're currently on the Newsletter Premium plan" 
+              : "Upgrade to Premium for additional features"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <h3 className="font-medium text-lg">Current Features:</h3>
+            
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
+                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
+                  <strong>{isPremium ? "30" : "0"}</strong> manual newsletter generations
+                  {isPremium && remainingGenerations > 0 && (
+                    <span className="ml-2 text-sm text-amber-600">
+                      ({remainingGenerations} remaining)
+                    </span>
+                  )}
+                </span>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
+                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
+                  Customizable newsletter templates
+                </span>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
+                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
+                  Save and edit newsletters
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 p-4">
+          {isPremium ? (
+            <Button 
+              variant="outline" 
+              className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              onClick={handleManageSubscription}
+              disabled={isLoading}
+            >
+              <CreditCard size={16} />
+              Manage Subscription
+            </Button>
+          ) : (
+            <Button 
+              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={handleUpgradeSubscription}
+              disabled={isLoading}
+            >
+              <CreditCard size={16} />
+              Upgrade to Premium
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 };
