@@ -1,11 +1,22 @@
 
 import { useEffect, useState } from "react";
-import { Book } from "lucide-react";
+import { Book, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { marked } from "marked";
+import { toast } from "sonner";
 
 // Define the newsletter structure
 interface Newsletter {
@@ -16,6 +27,8 @@ interface Newsletter {
 
 const Library = () => {
   const { authState } = useAuth();
+  const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Fetch newsletters from Supabase
   const { data: newsletters, isLoading, error } = useQuery({
@@ -61,6 +74,25 @@ const Library = () => {
       : plainText;
   };
 
+  // Render markdown to HTML
+  const renderMarkdown = (markdown: string | null) => {
+    if (!markdown) return "<p>No content available</p>";
+    
+    try {
+      // Set sanitize: true for security
+      return marked(markdown, { sanitize: true });
+    } catch (err) {
+      console.error("Error rendering markdown:", err);
+      return "<p>Error rendering content</p>";
+    }
+  };
+
+  // View newsletter in dialog
+  const viewNewsletter = (newsletter: Newsletter) => {
+    setSelectedNewsletter(newsletter);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -99,7 +131,7 @@ const Library = () => {
         // Display newsletters in grid
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {newsletters.map((newsletter) => (
-            <Card key={newsletter.id} className="overflow-hidden h-full flex flex-col">
+            <Card key={newsletter.id} className="overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow">
               <CardContent className="p-6 flex-grow">
                 <div className="text-sm text-muted-foreground mb-2">
                   {formatDate(newsletter.created_at)}
@@ -108,13 +140,59 @@ const Library = () => {
                   {createPreview(newsletter.markdown_text)}
                 </div>
               </CardContent>
-              <CardFooter className="bg-muted/50 px-6 py-3 text-xs text-muted-foreground">
-                Newsletter #{newsletter.id.substring(0, 8)}
+              <CardFooter className="bg-muted/50 px-6 py-3 flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">
+                  Newsletter #{newsletter.id.substring(0, 8)}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs"
+                  onClick={() => viewNewsletter(newsletter)}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                  View Newsletter
+                </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Newsletter Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedNewsletter && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Newsletter from {formatDate(selectedNewsletter.created_at)}</DialogTitle>
+                <DialogDescription>
+                  Generated on {new Date(selectedNewsletter.created_at).toLocaleString()}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div 
+                className="prose dark:prose-invert max-w-none my-6" 
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedNewsletter.markdown_text || "")
+                      .then(() => toast.success("Newsletter content copied to clipboard"))
+                      .catch(() => toast.error("Failed to copy to clipboard"));
+                  }}
+                >
+                  Copy Content
+                </Button>
+                <Button onClick={() => setDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
