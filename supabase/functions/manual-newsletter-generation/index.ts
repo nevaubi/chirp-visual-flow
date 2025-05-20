@@ -694,7 +694,7 @@ ${markdownNewsletter}
             Authorization: `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4o-latest", // Using the model specified in the request
+            model: "chatgpt-4o-latest", // Using the model specified in the request
             messages: [
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt },
