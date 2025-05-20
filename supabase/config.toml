@@ -190,3 +190,6 @@ verify_jwt = true
 
 [functions.manual-newsletter-generation]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
