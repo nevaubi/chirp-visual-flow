@@ -328,16 +328,16 @@ For each analysis, you will produce a structured report containing:
 
 TWO MAIN TOPICS (highest priority discussions):
 - Each with a concise header (5-10 words)
-- Four bullet points highlighting the most significant aspects (20 words max each)
-- 200-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
-- Up to two relevant photo URLs per topic
+- Four bullet points highlighting the most significant aspects (30 words max each)
+- 300-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
+- The best photo url per topic
 
 ONE SUB-TOPIC (third most relevant discussion):
 - Concise header (5-10 words)
 - Three bullet points highlighting the most significant aspects (20 words max each)
-- 100-word explanation providing comprehensive context and analysis
+- 200-word explanation providing comprehensive context and analysis
 - A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
-- Up to two relevant photo URLs that best represent this topic (if available)
+- The best photo url that best represents this topic (if available)
 
 Organization criteria:
 - Prioritize topics based on frequency of mention, engagement metrics, and recency
@@ -351,21 +351,21 @@ ${formattedTweets}`;
 
 For each MAIN TOPIC (2):
 1. Create a concise header (5-10 words) that captures the essence of the topic
-2. Provide 4 bullet points highlighting the most significant data points or aspects (20 words max each)
-3. Using an accessible and naturally communicating casual tone of voice, write a 200-word explanation that thoroughly describes the topic, including:
+2. Provide 4 bullet points highlighting the most significant data points or aspects (30 words max each)
+3. Using an accessible and naturally communicating casual tone of voice, write a 300-word explanation that thoroughly describes the topic, including:
    - Overall context and background
    - Predominant sentiment (positive, negative, mixed, neutral)
    - Key discussions and perspectives
    - Notable trends or patterns
    - Implications or significance
-4. Include up to 2 photo URLs that best represent this topic (if available)
+4. Include the best photo url that best represents this topic (if available)
 
 For the SUB-TOPIC (1):
 1. Create a concise header (5-10 words)
 2. Provide 3 bullet points highlighting the most significant aspects (20 words max each)
-3. Write a 100-word explanation that thoroughly describes the sub-topic using accessible naturally human sounding casual language
+3. Write a 200-word explanation that thoroughly describes the sub-topic using accessible naturally human sounding casual language
 4. Extract or reference a notable quote or statement related to this sub-topic
-5. Include up to 2 photo URLs that best represent this topic (if available)
+5. Include the best photo url that best represents this topic (if available)
 
 Organization criteria:
 - Prioritize topics based on frequency of mention, engagement metrics, and recency
@@ -473,9 +473,9 @@ Your analysis should focus on discovering:
 - Unexpected patterns that challenge surface-level interpretations
 
 OUTPUT FRAMEWORK:
-You are to output 4 high quality insights. For each insight, provide:
+You are to output 5 high quality insights. For each insight, provide:
 1. A concise, compelling header (5-8 words)
-2. A 50-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
+2. A 100-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
 
         const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
 
@@ -485,9 +485,9 @@ Go beyond surface-level topic identification to discover:
 - Emerging attitudes or shifts in sentiment not explicitly stated
 - Rhetorical patterns that reveal deeper community perspectives
 
-For each of the 4 insights:
+For each of the 5 insights:
 1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
-2. Write a 50-word explanation that:
+2. Write a 100-word explanation that:
    - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
    - Provides specific evidence from multiple tweet conversations
    - Explains why this insight is significant
@@ -571,13 +571,13 @@ FORMAT GUIDELINES:
 - Include photo URLs where they were provided in the original content
 - Create a visually appealing newsletter format and reword the content to retain meaning but in more accessible language and wording style
 - Use proper Markdown for links if needed
-- Reword the content as if you were a professional newsletter who communicated to her loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
+- Reword the content as if you were a professional newsletter who communicated to their loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
 
 CONTENT STRUCTURE:
 1. Top section contains Main Topic 1 (most important topic)
 2. After a divider, include the Sub-Topic
-3. After another divider, present Main Topic 2
-4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes and format it as a 2x2 grid section
+3. After another divider, present Main Topic 2 and after Main topic 3 if applicable
+4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
 5. Add proper spacing and formatting throughout
 
 OUTPUT:
@@ -597,9 +597,9 @@ Please format these into a single, well-structured visually appealing Markdown n
 2. Add a horizontal rule divider
 3. Then present the Sub-Topic (from the analysis)
 4. Add another horizontal rule divider
-5. Present Main Topic 2 (second main topic from the analysis)
+5. Present Main Topic 2 (second main topic from the analysis) and main topic 3 after if applicable
 6. Add a final horizontal rule divider
-7. Include the Discourse Analysis content but rename it Hot Takes and format it as a 2x2 grid section
+7. Include the Discourse Analysis content but rename it Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
 
 Use proper Markdown formatting throughout:
 - # for main headings
@@ -672,7 +672,7 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
    - Table headers shaded lightly for readability.  
 5. **Tone & writing**  
    - Conversational, active voice, no em-dashes, 10th-grade reading level.  
-   - Bold key phrases for scannability.  
+   - Bold key phrases for scannability. No unnatural pauses
 6. **Exclusions**  
    - No table of contents, no page breaks or "Page X" footers.  
 
@@ -687,7 +687,7 @@ I'm sharing my raw markdown newsletter below. Please transform it into a **visua
 - **Better spacing:** extra blank lines around headings, lists, and callout boxes.  
 - **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
 - **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
-- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no images, no TOC.  
+- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no TOC.  
 
 Here is my markdown draft—please output one cohesive, styled markdown document.  
 
