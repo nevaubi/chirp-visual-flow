@@ -2,14 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
 import juice from "https://esm.sh/juice@11.0.0";
-import sgMail from "https://esm.sh/@sendgrid/mail@7.7.0";
+import { Resend } from "https://esm.sh/resend@1.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-sgMail.setApiKey(Deno.env.get("SENDGRID_API_KEY")!);
+// Initialize Resend client
+const resend = new Resend(Deno.env.get("RESEND_API_KEY")!);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -585,18 +586,40 @@ ${markdownNewsletter}
       </body>
     `);
 
-    // 16) Send email via SendGrid
+    // 16) Send email via Resend
     try {
-      await sgMail.send({
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@bookmarker.app";
+      
+      const { data: emailData, error: emailError } = await resend.emails.send({
+        from: fromEmail,
         to: profile.sending_email,
-        from: Deno.env.get("FROM_EMAIL")!,
         subject: "Your Newsletter is Here",
         html: emailHtml,
         text: finalMarkdown,
       });
-      console.log("Email sent to", profile.sending_email);
+      
+      if (emailError) {
+        console.error("Error sending email with Resend:", emailError);
+        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+      }
+      
+      console.log("Email sent successfully with Resend:", emailData);
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
+      // Continue execution even if email fails - we'll still return the newsletter content
+    }
+
+    // Update remaining generations count
+    if (profile.remaining_newsletter_generations > 0) {
+      const newCount = profile.remaining_newsletter_generations - 1;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ remaining_newsletter_generations: newCount })
+        .eq("id", user.id);
+      
+      if (updateError) {
+        console.error("Failed to update remaining generations:", updateError);
+      }
     }
 
     // Final log & response
@@ -605,14 +628,14 @@ ${markdownNewsletter}
       userId: user.id,
       timestamp,
       tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations,
+      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
     });
 
     return new Response(
       JSON.stringify({
         status: "success",
         message: "Newsletter generated and emailed successfully",
-        remainingGenerations: profile.remaining_newsletter_generations,
+        remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
         data: {
           analysisResult,
           discourseAnalysis,
