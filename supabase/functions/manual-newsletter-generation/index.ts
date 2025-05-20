@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -54,7 +53,7 @@ serve(async (req) => {
       );
     }
 
-    // Get user profile with additional fields needed for numerical_id check
+    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
@@ -69,7 +68,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify subscription status
+    // Verify subscription & manual plan & remaining generations
     if (!profile.subscription_tier) {
       return new Response(
         JSON.stringify({ error: "You must have an active subscription to generate newsletters" }),
@@ -77,7 +76,6 @@ serve(async (req) => {
       );
     }
 
-    // Check if user has a manual plan
     const hasManualPlan = profile.newsletter_day_preference === 'Manual: 4' || profile.newsletter_day_preference === 'Manual: 8';
     if (!hasManualPlan) {
       return new Response(
@@ -86,7 +84,6 @@ serve(async (req) => {
       );
     }
 
-    // Check remaining generations
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
       return new Response(
         JSON.stringify({ error: "You have no remaining newsletter generations" }),
@@ -94,7 +91,6 @@ serve(async (req) => {
       );
     }
 
-    // Check if Twitter bookmark tokens exist
     if (!profile.twitter_bookmark_access_token) {
       return new Response(
         JSON.stringify({ error: "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings." }),
@@ -102,8 +98,8 @@ serve(async (req) => {
       );
     }
 
-    // Check if tokens are expired
-    const now = Math.floor(Date.now() / 1000); // Current time in seconds
+    // Check token expiry
+    const now = Math.floor(Date.now() / 1000);
     if (profile.twitter_bookmark_token_expires_at && profile.twitter_bookmark_token_expires_at < now) {
       return new Response(
         JSON.stringify({ error: "Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks." }),
@@ -111,25 +107,14 @@ serve(async (req) => {
       );
     }
 
-    // If numerical_id is missing, we need to generate it using the twitter handle
+    // Ensure numerical_id
     let numericalId = profile.numerical_id;
-    
     if (!numericalId && profile.twitter_handle) {
       try {
-        // Get RapidAPI key from environment
         const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-        if (!RAPIDAPI_KEY) {
-          console.error("Missing RAPIDAPI_KEY in environment");
-          return new Response(
-            JSON.stringify({ error: "Server configuration error. Please contact support." }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
 
-        // Clean the handle (remove @ if present)
         const cleanHandle = profile.twitter_handle.trim().replace('@', '');
-        
-        // Build the request to the RapidAPI endpoint
         const url = `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`;
         const options = {
           method: "GET",
@@ -139,33 +124,18 @@ serve(async (req) => {
           }
         };
 
-        console.log(`Fetching numerical ID for handle: ${cleanHandle}`);
         const response = await fetch(url, options);
-        
-        if (!response.ok) {
-          throw new Error(`RapidAPI returned ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`RapidAPI returned ${response.status}`);
         const apiResponse = await response.json();
-        
-        // Extract the user ID from the nested structure
-        if (apiResponse && apiResponse.user && apiResponse.user.result && apiResponse.user.result.rest_id) {
+
+        if (apiResponse?.user?.result?.rest_id) {
           numericalId = apiResponse.user.result.rest_id;
-          
-          // Update the user's profile with the numerical_id
           const { error: updateError } = await supabase
             .from("profiles")
             .update({ numerical_id: numericalId })
             .eq("id", user.id);
-          
-          if (updateError) {
-            console.error("Error updating numerical_id:", updateError);
-            // We'll continue even if the update fails since we have the ID for this session
-          } else {
-            console.log(`Successfully updated numerical_id to ${numericalId} for user ${user.id}`);
-          }
+          if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
-          console.error("Could not extract user ID from API response:", apiResponse);
           throw new Error("Could not retrieve your Twitter ID. Please try again later.");
         }
       } catch (error) {
@@ -177,7 +147,6 @@ serve(async (req) => {
       }
     }
 
-    // Check that we now have a numerical_id
     if (!numericalId) {
       return new Response(
         JSON.stringify({ error: "Could not determine your Twitter ID. Please update your Twitter handle in settings." }),
@@ -185,14 +154,9 @@ serve(async (req) => {
       );
     }
 
-    // Now fetch bookmarks from Twitter API
+    // Fetch bookmarks
     try {
-      console.log(`Fetching ${selectedCount} bookmarks for user with numerical_id: ${numericalId}`);
-      
-      // Prepare Twitter API request
-      // We'll add expansions and tweet fields to get comprehensive tweet data
       const bookmarksUrl = `https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`;
-      
       const bookmarksOptions = {
         method: 'GET',
         headers: {
@@ -200,13 +164,10 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         }
       };
-      
       const bookmarksResponse = await fetch(bookmarksUrl, bookmarksOptions);
-      
       if (!bookmarksResponse.ok) {
         const errorText = await bookmarksResponse.text();
         console.error(`Twitter API error (${bookmarksResponse.status}):`, errorText);
-        
         if (bookmarksResponse.status === 401) {
           return new Response(
             JSON.stringify({ error: "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks." }),
@@ -218,48 +179,26 @@ serve(async (req) => {
             { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        
         throw new Error(`Twitter API error: ${bookmarksResponse.status}`);
       }
-      
       const bookmarksData = await bookmarksResponse.json();
-      
-      // Log the full Twitter API response for debugging
-      console.log("Full Twitter API response:", JSON.stringify(bookmarksData, null, 2));
-      
-      // Validate bookmark data
-      if (!bookmarksData || !bookmarksData.data) {
+      if (!bookmarksData?.data) {
         console.error("Invalid or empty bookmark data received:", bookmarksData);
-        
-        if (bookmarksData && bookmarksData.errors) {
-          console.error("Twitter API errors:", bookmarksData.errors);
-        }
-        
-        if (bookmarksData && bookmarksData.meta && bookmarksData.meta.result_count === 0) {
+        if (bookmarksData?.meta?.result_count === 0) {
           return new Response(
             JSON.stringify({ error: "You don't have any bookmarks. Please save some tweets before generating a newsletter." }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        
         throw new Error("Failed to retrieve bookmarks from Twitter");
       }
-      
-      // Extract all tweet IDs from the bookmarks data and log them
       const tweetIds = bookmarksData.data.map(tweet => tweet.id);
-      console.log(`Successfully retrieved ${bookmarksData.data.length} bookmarks with IDs:`, JSON.stringify(tweetIds, null, 2));
-      
-      // Now make a call to the Apify API to get detailed tweet data
+
+      // Call Apify for detailed tweet data
       try {
-        // Get the Apify API key from environment variables
         const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-        if (!APIFY_API_KEY) {
-          throw new Error("Missing APIFY_API_KEY environment variable");
-        }
-        
-        console.log("Making Apify API call for detailed tweet data...");
-        
-        // Construct the request body with the filter parameters
+        if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
+
         const apifyRequestBody = {
           "filter:blue_verified": false,
           "filter:consumer_video": false,
@@ -285,32 +224,73 @@ serve(async (req) => {
           "maxItems": selectedCount,
           "tweetIDs": tweetIds
         };
-        
-        // Make the API call to Apify
+
         const apifyResponse = await fetch(
           `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(apifyRequestBody)
           }
         );
-        
         if (!apifyResponse.ok) {
           const errorText = await apifyResponse.text();
           console.error(`Apify API error (${apifyResponse.status}):`, errorText);
           throw new Error(`Apify API error: ${apifyResponse.status}`);
         }
-        
+
         const apifyData = await apifyResponse.json();
-        
-        // Log the Apify API response for debugging
+
+        // Log the raw Apify response
         console.log("Apify API response:", JSON.stringify(apifyData, null, 2));
-        
-        // At this point, the user is authenticated, has a valid subscription with a manual plan, 
-        // has remaining generations, and we've successfully fetched their bookmarks and detailed tweet data
+
+        // ——— New parsing & logging logic ———
+        if (Array.isArray(apifyData)) {
+          console.log("Parsing Apify tweet data:");
+          const parsedTweets = apifyData.map(tweet => {
+            // strip out URLs from text
+            const textWithoutUrls = tweet.text.replace(/https?:\/\/\S+/g, "").trim();
+            // find first photo in extendedEntities
+            const photoMedia = tweet.extendedEntities?.media?.find(m => m.type === "photo");
+            return {
+              text: textWithoutUrls,
+              retweets: tweet.retweetCount,
+              replies: tweet.replyCount,
+              likes: tweet.likeCount,
+              quotes: tweet.quoteCount,
+              impressions: tweet.viewCount,
+              date: tweet.createdAt,
+              isReply: tweet.isReply,
+              inReplyTo: tweet.inReplyToUsername,
+              authorName: tweet.author.name,
+              authorHandle: tweet.author.userName,
+              verified: tweet.author.isBlueVerified,
+              profilePic: tweet.author.profilePicture,
+              photoUrl: photoMedia?.media_url_https ?? null
+            };
+          });
+
+          parsedTweets.forEach((pt, i) => {
+            console.log(`Tweet ${i + 1}`);
+            console.log(`Tweet text: ${pt.text}`);
+            console.log(`Retweets: ${pt.retweets}`);
+            console.log(`ReplyAmount: ${pt.replies}`);
+            console.log(`LikesAmount: ${pt.likes}`);
+            console.log(`QuotesAmount: ${pt.quotes}`);
+            console.log(`Impressions: ${pt.impressions}`);
+            console.log(`Date: ${pt.date}`);
+            console.log(`Reply?: ${pt.isReply}`);
+            console.log(`Replying to: ${pt.inReplyTo}`);
+            console.log(`TweetAuthor: ${pt.authorName}`);
+            console.log(`TweetAuthorHandle: ${pt.authorHandle}`);
+            console.log(`Verified: ${pt.verified}`);
+            console.log(`ProfilePic: ${pt.profilePic}`);
+            console.log(`PhotoUrl: ${pt.photoUrl}`);
+          });
+        }
+        // ——————————————————————————————————
+
+        // Return the original full dataset plus other info
         return new Response(
           JSON.stringify({
             status: "success",
@@ -321,13 +301,13 @@ serve(async (req) => {
               preferences: profile.newsletter_content_preferences,
               numerical_id: numericalId,
               bookmarks: bookmarksData,
-              tweetIds: tweetIds,
-              detailedTweetData: apifyData // Include the detailed tweet data from Apify
+              tweetIds,
+              detailedTweetData: apifyData
             }
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-        
+
       } catch (apifyError) {
         console.error("Error fetching detailed tweet data from Apify:", apifyError);
         return new Response(
@@ -335,7 +315,7 @@ serve(async (req) => {
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
       return new Response(
