@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,10 +82,12 @@ const DashboardLayout = () => {
     }
   };
 
+  // Create sidebar items array conditionally based on platform type
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
     { icon: Book, label: 'Library', path: '/dashboard/analytics' },
-    { icon: Users, label: 'Community', path: '/dashboard/community' },
+    // Only show Community tab for non-newsletter platforms
+    ...(isNewsletterPlatform ? [] : [{ icon: Users, label: 'Community', path: '/dashboard/community' }]),
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 
