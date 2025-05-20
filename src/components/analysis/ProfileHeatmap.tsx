@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 
 interface ProfileHeatmapProps {
   data: Record<string, number>;
+  timezone?: string | null;
 }
 
-const ProfileHeatmap = ({ data }: ProfileHeatmapProps) => {
+const ProfileHeatmap = ({ data, timezone }: ProfileHeatmapProps) => {
   const [maxCount, setMaxCount] = useState(0);
   
   useEffect(() => {
@@ -36,9 +37,35 @@ const ProfileHeatmap = ({ data }: ProfileHeatmapProps) => {
     return hourNum < 12 ? `${hourNum}am` : `${hourNum - 12}pm`;
   };
   
+  // Format timezone for display
+  const formatTimezone = (tz: string | null | undefined) => {
+    if (!tz) return 'UTC';
+    
+    // Convert technical timezone format to user-friendly name
+    try {
+      // Extract continent/city format to just city or region
+      const parts = tz.split('/');
+      if (parts.length > 1) {
+        // Replace underscores with spaces and format the name
+        return parts[parts.length - 1].replace(/_/g, ' ');
+      }
+      return tz;
+    } catch (error) {
+      return tz;
+    }
+  };
+  
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-[600px]">
+        {timezone && (
+          <div className="mb-2 flex justify-end">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-flex items-center">
+              <Clock className="h-3 w-3 mr-1" /> {formatTimezone(timezone)} timezone
+            </span>
+          </div>
+        )}
+        
         <div className="flex items-end mb-1">
           <div className="w-16"></div>
           <div className="flex-1 flex justify-between px-1">

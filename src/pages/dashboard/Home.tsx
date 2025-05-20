@@ -260,7 +260,10 @@ const CreatorDashboard = ({ profile }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileHeatmap data={analysisResults?.circadian_rhythm || {}} />
+          <ProfileHeatmap 
+            data={analysisResults?.circadian_rhythm || {}} 
+            timezone={localProfile?.timezone}
+          />
         </CardContent>
       </Card>
 
