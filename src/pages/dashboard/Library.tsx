@@ -57,21 +57,39 @@ const Library = () => {
     });
   };
 
-  // Create a truncated preview of the newsletter content
+  // Create a cleaner preview of the newsletter content
   const createPreview = (markdown: string | null) => {
     if (!markdown) return "No content available";
     
-    // Remove markdown formatting and truncate
-    const plainText = markdown
-      .replace(/#{1,6}\s+/g, '') // Remove headers
-      .replace(/\*\*/g, '') // Remove bold
-      .replace(/\*/g, '') // Remove italics
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with just the text
-      .replace(/!\[[^\]]*\]\([^)]*\)/g, '[Image]'); // Replace images
-    
-    return plainText.length > 150 
-      ? plainText.substring(0, 150) + '...' 
-      : plainText;
+    try {
+      // Extract the first heading if it exists
+      const headingMatch = markdown.match(/^#\s+(.+)$/m);
+      const firstHeading = headingMatch ? headingMatch[1] : "";
+      
+      // Extract the first paragraph that's not a heading
+      const paragraphMatch = markdown.match(/^(?!\s*#)(.+)/m);
+      let firstParagraph = paragraphMatch ? paragraphMatch[1] : "";
+      
+      // Clean up the paragraph
+      firstParagraph = firstParagraph
+        .replace(/\*\*/g, '') // Remove bold
+        .replace(/\*/g, '') // Remove italics
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with just the text
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, ''); // Remove images
+      
+      // If we have a heading, use it as the preview with the first few words of text
+      if (firstHeading) {
+        return firstHeading + (firstParagraph ? ` - ${firstParagraph.substring(0, 50)}...` : "");
+      }
+      
+      // If no heading, just use the first paragraph
+      return firstParagraph.length > 150 
+        ? firstParagraph.substring(0, 150) + '...' 
+        : firstParagraph;
+    } catch (err) {
+      console.error("Error creating preview:", err);
+      return "Preview not available";
+    }
   };
 
   // Render markdown to HTML
@@ -135,8 +153,10 @@ const Library = () => {
                 <div className="text-sm text-muted-foreground mb-2">
                   {formatDate(newsletter.created_at)}
                 </div>
-                <div className="text-sm line-clamp-6">
-                  {createPreview(newsletter.markdown_text)}
+                <div className="prose-sm line-clamp-4">
+                  <h3 className="font-medium text-base mb-1">
+                    {createPreview(newsletter.markdown_text)}
+                  </h3>
                 </div>
               </CardContent>
               <CardFooter className="bg-muted/50 px-6 py-3 flex justify-between items-center">
