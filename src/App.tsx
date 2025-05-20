@@ -19,18 +19,10 @@ import DashboardHome from "./pages/dashboard/Home";
 import CheckoutSuccess from "./pages/dashboard/CheckoutSuccess";
 import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
-import Settings from "./pages/dashboard/Settings"; // Import the proper Settings component
+import Settings from "./pages/dashboard/Settings";
+import Library from "./pages/dashboard/Library"; // Import the new Library component
 
-// Create placeholder components for other dashboard pages
-const Analytics = () => (
-  <div className="space-y-4">
-    <h1 className="text-2xl font-bold">Analytics</h1>
-    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-      <p className="text-gray-500">Analytics dashboard content will appear here</p>
-    </div>
-  </div>
-);
-
+// Create placeholder component for Community
 const Community = () => (
   <div className="space-y-4">
     <h1 className="text-2xl font-bold">Community</h1>
@@ -39,8 +31,6 @@ const Community = () => (
     </div>
   </div>
 );
-
-// Remove the placeholder Settings component since we're importing the real one
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,11 +65,9 @@ const App = () => (
               <Route element={<DashboardLayout />}>
                 <Route index element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="home" element={<DashboardHome />} />
-                {/* The following route has been removed:
-                <Route path="newsletter/create" element={<CreateNewsletter />} /> */}
                 <Route path="checkout-success" element={<CheckoutSuccess />} />
                 <Route path="checkout-cancel" element={<CheckoutCancel />} />
-                <Route path="analytics" element={<Analytics />} />
+                <Route path="library" element={<Library />} /> {/* Changed from analytics to library */}
                 <Route path="community" element={<Community />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
