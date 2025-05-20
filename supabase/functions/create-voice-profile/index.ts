@@ -13,14 +13,15 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) console.error("Missing Redis configuration");
 if (!OPENAI_API_KEY) console.error("Missing OpenAI API key");
 
-async function fetchFromRedis(key: string): Promise<string[]> {
-  const url = `${UPSTASH_REDIS_REST_URL}/lrange/${encodeURIComponent(key)}/0/149`;
+async function fetchFromRedis(userId: string): Promise<string | null> {
+  const key = `twitter_data:user:${userId}:tweets`;
+  const url = `${UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` }
   });
   if (!res.ok) throw new Error(`Redis error: ${res.status}`);
   const json = await res.json();
-  return json.result || [];
+  return json.result ?? null;
 }
 
 async function analyzeWithOpenAI(tweets: string[]): Promise<string> {
@@ -176,24 +177,20 @@ serve(async (req) => {
     }
 
     const twitterUsername = profile.twitter_username;
-    const raw = await fetchFromRedis(`${twitterUsername} - Tweet History`);
-    if (!raw.length) {
+    const raw = await fetchFromRedis(userId);
+    if (!raw) {
       return new Response(JSON.stringify({
         success: false, error: 'No tweets in Redis'
       }), { status: 404, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
     }
 
     // —— PARSING / FILTERING / RANKING ——
-    const tweets = raw.map(item => {
-      try {
-        const wrapper = JSON.parse(item);
-        return wrapper.elements?.[0]
-          ? JSON.parse(wrapper.elements[0])
-          : wrapper;
-      } catch {
-        return null;
-      }
-    }).filter(t => t);
+    let tweets: any[];
+    try {
+      tweets = JSON.parse(raw);
+    } catch {
+      tweets = [];
+    }
 
     const nonReplies = tweets.filter(t => t['IsReply?'] === false);
     nonReplies.sort((a, b) => (b['Likes'] || 0) - (a['Likes'] || 0));
@@ -246,7 +243,7 @@ serve(async (req) => {
       userId,
       style_analysis: styleAnalysis,
       debug: {
-        raw_count: raw.length,
+        raw_count: tweets.length,
         parsed_count: tweets.length,
         non_replies_count: nonReplies.length,
         top30_count: texts.length
