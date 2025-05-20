@@ -21,16 +21,7 @@ import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
 import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
-
-// Create placeholder components for other dashboard pages
-const Community = () => (
-  <div className="space-y-4">
-    <h1 className="text-2xl font-bold">Community</h1>
-    <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-      <p className="text-gray-500">Community management features will appear here</p>
-    </div>
-  </div>
-);
+import GenerateTweets from "./pages/dashboard/GenerateTweets";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,7 +59,7 @@ const App = () => (
                 <Route path="checkout-success" element={<CheckoutSuccess />} />
                 <Route path="checkout-cancel" element={<CheckoutCancel />} />
                 <Route path="analytics" element={<Library />} />
-                <Route path="community" element={<Community />} />
+                <Route path="community" element={<GenerateTweets />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
             </Route>

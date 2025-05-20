@@ -91,6 +91,7 @@ export type Database = {
           newsletter_content_preferences: Json | null
           newsletter_day_preference: string | null
           numerical_id: string | null
+          personal_tweet_dataset: string | null
           remaining_newsletter_generations: number | null
           sending_email: string | null
           stripe_customer_id: string | null
@@ -108,6 +109,7 @@ export type Database = {
           twitter_profilepic_url: string | null
           twitter_username: string | null
           updated_at: string | null
+          voice_profile_analysis: string | null
         }
         Insert: {
           account_creation_date?: string | null
@@ -125,6 +127,7 @@ export type Database = {
           newsletter_content_preferences?: Json | null
           newsletter_day_preference?: string | null
           numerical_id?: string | null
+          personal_tweet_dataset?: string | null
           remaining_newsletter_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
@@ -142,6 +145,7 @@ export type Database = {
           twitter_profilepic_url?: string | null
           twitter_username?: string | null
           updated_at?: string | null
+          voice_profile_analysis?: string | null
         }
         Update: {
           account_creation_date?: string | null
@@ -159,6 +163,7 @@ export type Database = {
           newsletter_content_preferences?: Json | null
           newsletter_day_preference?: string | null
           numerical_id?: string | null
+          personal_tweet_dataset?: string | null
           remaining_newsletter_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
@@ -176,6 +181,7 @@ export type Database = {
           twitter_profilepic_url?: string | null
           twitter_username?: string | null
           updated_at?: string | null
+          voice_profile_analysis?: string | null
         }
         Relationships: []
       }

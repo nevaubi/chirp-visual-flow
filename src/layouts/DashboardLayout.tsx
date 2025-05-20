@@ -13,6 +13,7 @@ import {
   Bookmark,
   Book,
   CreditCard,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const DashboardLayout = () => {
     ? profile.twitter_username.substring(0, 2).toUpperCase()
     : 'CM';
   const isNewsletterPlatform = profile?.is_newsletter_platform;
+  const isCreatorPlatform = profile?.is_creator_platform;
   const isSubscribed = profile?.subscribed;
   
   // Check if user has the required subscription tier
@@ -111,8 +113,12 @@ const DashboardLayout = () => {
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
     { icon: Book, label: 'Library', path: '/dashboard/analytics' },
-    // Only show Community tab for non-newsletter platforms
-    ...(isNewsletterPlatform ? [] : [{ icon: Users, label: 'Community', path: '/dashboard/community' }]),
+    // For Creator platform, show "Generate Tweets" instead of "Community"
+    ...(isCreatorPlatform 
+        ? [{ icon: Sparkles, label: 'Generate Tweets', path: '/dashboard/community' }] 
+        : !isNewsletterPlatform 
+          ? [{ icon: Users, label: 'Community', path: '/dashboard/community' }]
+          : []),
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 

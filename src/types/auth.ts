@@ -47,6 +47,9 @@ export interface Profile {
   } | null;
   // Newsletter generation tracking
   remaining_newsletter_generations: number | null;
+  // Voice profile and tweet dataset
+  voice_profile_analysis: string | null;
+  personal_tweet_dataset: string | null;
 }
 
 export interface AuthState {
