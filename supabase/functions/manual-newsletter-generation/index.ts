@@ -358,7 +358,7 @@ ${formattedTweets}`;
           "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-4o", // Using gpt-4o as fallback since gpt-4.1-2025-04-14 might not be available yet
+          model: "gpt-4.1-2025-04-14",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
@@ -379,18 +379,6 @@ ${formattedTweets}`;
       
       console.log("OpenAI Analysis Result:\n", analysisResult);
       
-      // Decrement remaining newsletter generations
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ 
-          remaining_newsletter_generations: (profile.remaining_newsletter_generations - 1)
-        })
-        .eq("id", user.id);
-        
-      if (updateError) {
-        console.error("Error updating remaining_newsletter_generations:", updateError);
-      }
-      
       // Store the newsletter content in the database for future reference
       // This could be expanded in the future
       const timestamp = new Date().toISOString();
@@ -406,14 +394,14 @@ ${formattedTweets}`;
         userId: user.id, 
         timestamp: timestamp,
         tweetCount: selectedCount,
-        remainingGenerations: profile.remaining_newsletter_generations - 1
+        remainingGenerations: profile.remaining_newsletter_generations
       });
       
       return new Response(
         JSON.stringify({
           status: "success",
           message: "Newsletter generated successfully",
-          remainingGenerations: profile.remaining_newsletter_generations - 1,
+          remainingGenerations: profile.remaining_newsletter_generations,
           data: {
             analysisResult: analysisResult,
             timestamp: timestamp
