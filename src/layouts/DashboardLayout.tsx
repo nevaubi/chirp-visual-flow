@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,12 +18,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -56,10 +59,14 @@ const DashboardLayout = () => {
   };
 
   const handleCreateNewsletter = () => {
-    // Fixed toast implementation
-    toast("Coming Soon", {
-      description: "The newsletter creation feature is being redesigned. Check back soon!",
-    });
+    // Check if manual generation is available for the user
+    if (profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0) {
+      setIsManualGenerationOpen(true);
+    } else {
+      toast("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+      });
+    }
   };
 
   const sidebarItems = [
@@ -71,6 +78,13 @@ const DashboardLayout = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
+      {/* Manual Newsletter Generation Dialog */}
+      <ManualNewsletterDialog
+        open={isManualGenerationOpen}
+        onOpenChange={setIsManualGenerationOpen}
+        remainingGenerations={profile?.remaining_newsletter_generations || 0}
+      />
+      
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
         <div className="flex items-center gap-2">

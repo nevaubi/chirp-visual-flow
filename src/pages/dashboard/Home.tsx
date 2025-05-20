@@ -24,7 +24,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
-import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 // Chart component - we'll create a simple placeholder
 const EngagementChart = () => (
@@ -314,9 +313,6 @@ const CreatorDashboard = ({ profile }) => {
 
 // Newsletter Platform Dashboard
 const NewsletterDashboard = ({ profile }) => {
-  // State for manual newsletter generation dialog
-  const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
-
   // Sample newsletter data
   const recentNewsletters = [
     { title: "Weekly Tech Roundup", date: "May 10, 2025", subscribers: 542 },
@@ -330,37 +326,6 @@ const NewsletterDashboard = ({ profile }) => {
     { name: "AI & ML", count: 19, lastUpdated: "3 days ago" },
   ];
 
-  // Function to check if the user has a manual generation plan
-  const hasManualGenerationPlan = () => {
-    if (!profile) return false;
-    
-    // Check for manual plans (Manual: 4 or Manual: 8)
-    const dayPreference = profile.newsletter_day_preference;
-    return dayPreference === 'Manual: 4' || dayPreference === 'Manual: 8';
-  };
-  
-  // Function to get remaining generations
-  const getRemainingGenerations = () => {
-    return profile?.remaining_newsletter_generations || 0;
-  };
-  
-  // Check if the button should be enabled
-  const isGenerationEnabled = hasManualGenerationPlan() && getRemainingGenerations() > 0;
-  
-  // Get tooltip message based on status
-  const getTooltipMessage = () => {
-    if (!profile?.subscription_tier) {
-      return "Available with paid plans only";
-    }
-    if (!hasManualGenerationPlan()) {
-      return "Available with manual generation plans only";
-    }
-    if (getRemainingGenerations() <= 0) {
-      return "No remaining generations available";
-    }
-    return `${getRemainingGenerations()} generation${getRemainingGenerations() !== 1 ? 's' : ''} remaining`;
-  };
-
   return (
     <div className="space-y-6">
       {/* Welcome header */}
@@ -370,40 +335,11 @@ const NewsletterDashboard = ({ profile }) => {
           <p className="text-gray-600">Generate newsletters from your X bookmarks</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button 
-                    className={cn(
-                      "bg-amber-500 hover:bg-amber-600",
-                      !isGenerationEnabled && "opacity-50 cursor-not-allowed"
-                    )}
-                    disabled={!isGenerationEnabled}
-                    onClick={() => isGenerationEnabled && setIsManualGenerationOpen(true)}
-                  >
-                    Manual Newsletter Generation
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{getTooltipMessage()}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="flex items-center text-xs text-gray-500">
-            <Info size={12} className="mr-1" />
-            <span>For plans with manual generation options</span>
-          </div>
+          <p className="text-sm text-gray-600">
+            Use the "Create Newsletter" button in the sidebar to generate a newsletter
+          </p>
         </div>
       </div>
-
-      {/* Manual Newsletter Generation Dialog */}
-      <ManualNewsletterDialog
-        open={isManualGenerationOpen}
-        onOpenChange={setIsManualGenerationOpen}
-        remainingGenerations={getRemainingGenerations()}
-      />
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
