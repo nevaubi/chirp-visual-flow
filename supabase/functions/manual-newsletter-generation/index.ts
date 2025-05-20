@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -257,6 +256,7 @@ serve(async (req) => {
         
         // Add tweet to formatted output
         formattedOutput += `Tweet ${index + 1}\n`;
+        formattedOutput += `Tweet ID: ${tweet.id}\n`;
         formattedOutput += `Tweet text: ${text}\n`;
         formattedOutput += `ReplyAmount: ${tweet.replyCount || 0}\n`;
         formattedOutput += `LikesAmount: ${tweet.likeCount || 0}\n`;
