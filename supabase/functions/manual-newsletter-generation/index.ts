@@ -3,12 +3,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
 import juice from "https://esm.sh/juice@11.0.0";
 import { Resend } from "npm:resend@2.0.0";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
+
 // Initialize Resend client
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
 serve(async (req)=>{
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -33,6 +36,7 @@ serve(async (req)=>{
         }
       });
     }
+
     // 2) Authenticate
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -63,6 +67,7 @@ serve(async (req)=>{
         }
       });
     }
+
     // 3) Load profile
     const { data: profile, error: profileError } = await supabase.from("profiles").select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle").eq("id", user.id).single();
     if (profileError || !profile) {
@@ -77,6 +82,7 @@ serve(async (req)=>{
         }
       });
     }
+
     // 4) Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
       return new Response(JSON.stringify({
@@ -135,6 +141,7 @@ serve(async (req)=>{
         }
       });
     }
+
     // 5) Ensure numerical_id
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
@@ -184,6 +191,7 @@ serve(async (req)=>{
         }
       });
     }
+
     // 6) Fetch bookmarks
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -236,6 +244,7 @@ serve(async (req)=>{
       throw new Error("Failed to retrieve bookmarks from Twitter");
     }
     const tweetIds = bookmarksData.data.map((t)=>t.id);
+
     // 7) Fetch detailed tweets via Apify
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -276,6 +285,7 @@ serve(async (req)=>{
     }
     const apifyData = await apifyResp.json();
     console.log("Raw Apify response:", JSON.stringify(apifyData, null, 2));
+
     // 8) Format tweets for OpenAI
     function parseToOpenAI(data) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
@@ -302,6 +312,7 @@ serve(async (req)=>{
     }
     const formattedTweets = parseToOpenAI(apifyData);
     console.log("Formatted tweets for OpenAI:\n", formattedTweets);
+
     // 9) Call OpenAI for main analysis
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
@@ -312,7 +323,7 @@ CAPABILITIES:
 - Recognize patterns, themes, and trending discussions across seemingly unrelated tweets
 - Extract sentiment, contextual meaning, and significant data points
 - Identify the most relevant visual content from available photo URLs
-- Synthesize information into concise summaries while preserving important details and ensure accessible natural dialogue and wording
+- Synthesize information into comprehensive summaries while preserving important details and ensure accessible natural dialogue and wording
 - Format output in a consistent, structured manner that highlights key insights and communicates them at a 10th grade casual speaking level
 
 ANALYSIS METHODOLOGY:
@@ -321,7 +332,7 @@ ANALYSIS METHODOLOGY:
 3. Prioritize topics based on frequency, engagement metrics, and recency
 4. Extract notable quotes that best represent each identified topic
 5. Select the most relevant images based on engagement and topical relevance
-6. Generate comprehensive yet concise explanations that capture the essence of each topic
+6. Generate comprehensive and detailed explanations that capture the essence of each topic
 
 OUTPUT REQUIREMENTS:
 For each analysis, you will produce a structured report containing:
@@ -329,13 +340,13 @@ For each analysis, you will produce a structured report containing:
 TWO MAIN TOPICS (highest priority discussions):
 - Each with a concise header (5-10 words)
 - Four bullet points highlighting the most significant aspects (30 words max each)
-- 300-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
+- A detailed explanation of approximately 500-700 words covering context, sentiment, key discussions, and notable perspectives
 - The best photo url per topic
 
 ONE SUB-TOPIC (third most relevant discussion):
 - Concise header (5-10 words)
 - Three bullet points highlighting the most significant aspects (20 words max each)
-- 200-word explanation providing comprehensive context and analysis
+- A comprehensive explanation of approximately 300-400 words providing context and analysis
 - A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
 - The best photo url that best represents this topic (if available)
 
@@ -352,7 +363,7 @@ ${formattedTweets}`;
 For each MAIN TOPIC (2):
 1. Create a concise header (5-10 words) that captures the essence of the topic
 2. Provide 4 bullet points highlighting the most significant data points or aspects (30 words max each)
-3. Using an accessible and naturally communicating casual tone of voice, write a 300-word explanation that thoroughly describes the topic, including:
+3. Using an accessible and naturally communicating casual tone of voice, write a detailed explanation of approximately 500-700 words that thoroughly describes the topic, including:
    - Overall context and background
    - Predominant sentiment (positive, negative, mixed, neutral)
    - Key discussions and perspectives
@@ -363,7 +374,7 @@ For each MAIN TOPIC (2):
 For the SUB-TOPIC (1):
 1. Create a concise header (5-10 words)
 2. Provide 3 bullet points highlighting the most significant aspects (20 words max each)
-3. Write a 200-word explanation that thoroughly describes the sub-topic using accessible naturally human sounding casual language
+3. Write a comprehensive explanation of approximately 300-400 words that thoroughly describes the sub-topic using accessible naturally human sounding casual language
 4. Extract or reference a notable quote or statement related to this sub-topic
 5. Include the best photo url that best represents this topic (if available)
 
@@ -394,7 +405,7 @@ ${formattedTweets}`;
           }
         ],
         temperature: 0.4,
-        max_tokens: 1000
+        max_tokens: 3000 // Increased from 1000
       })
     });
     if (!openaiRes.ok) {
@@ -405,10 +416,10 @@ ${formattedTweets}`;
     const openaiJson = await openaiRes.json();
     const analysisResult = openaiJson.choices[0].message.content.trim();
     console.log("OpenAI Analysis Result:\n", analysisResult);
+
     // 10) Fetch & log top 5 replies for 7 random tweet IDs
     let discourseAnalysis = "";
     try {
-      // build main-text map
       const arrTweets = Array.isArray(apifyData) ? apifyData : Array.isArray(apifyData.items) ? apifyData.items : [];
       const mainMap = {};
       arrTweets.forEach((t)=>{
@@ -448,6 +459,7 @@ ${formattedTweets}`;
         });
         console.log(outLogs.join("\n"));
         const replyAnalysisData = outLogs.join("\n");
+
         // 11) Call OpenAI with reply data for discourse analysis
         const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style casual english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
 
@@ -475,9 +487,8 @@ Your analysis should focus on discovering:
 OUTPUT FRAMEWORK:
 You are to output 5 high quality insights. For each insight, provide:
 1. A concise, compelling header (5-8 words)
-2. A 100-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
-
-        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
+2. A detailed explanation of approximately 150-200 words that unpacks the insight with nuance, specific evidence, and contextual significance, delivered in natural, normal flowing wording spoken at an 8th grade writing level.`;
+        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 5 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
 
 Go beyond surface-level topic identification to discover:
 - Hidden assumptions or implicit values revealed in conversation patterns
@@ -487,7 +498,7 @@ Go beyond surface-level topic identification to discover:
 
 For each of the 5 insights:
 1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
-2. Write a 100-word explanation that:
+2. Write a detailed explanation of approximately 150-200 words that:
    - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
    - Provides specific evidence from multiple tweet conversations
    - Explains why this insight is significant
@@ -509,25 +520,29 @@ DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CO
 Here is the tweet collection to analyze:
 
 ${replyAnalysisData}`;
-
         try {
           const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              Authorization: `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
               model: "gpt-4.1-2025-04-14",
               messages: [
-                { role: "system", content: discourseSystemPrompt },
-                { role: "user", content: discourseUserPrompt },
+                {
+                  role: "system",
+                  content: discourseSystemPrompt
+                },
+                {
+                  role: "user",
+                  content: discourseUserPrompt
+                }
               ],
               temperature: 0.4,
-              max_tokens: 2000,
-            }),
+              max_tokens: 2000 // Sufficient for 5 * 200 words + headers
+            })
           });
-          
           if (discourseOpenaiRes.ok) {
             const discourseJson = await discourseOpenaiRes.json();
             discourseAnalysis = discourseJson.choices[0].message.content;
@@ -535,7 +550,6 @@ ${replyAnalysisData}`;
           } else {
             const errorText = await discourseOpenaiRes.text();
             console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
-            // Set a fallback value for discourseAnalysis if the API call fails
             discourseAnalysis = "Error: Unable to generate discourse analysis. Please try again later.";
           }
         } catch (discourseError) {
@@ -543,22 +557,19 @@ ${replyAnalysisData}`;
           discourseAnalysis = "Error: Unable to generate discourse analysis due to API error.";
         }
       } else {
-        console.error(
-          `Apify Reply API error (${repliesRes.status}):`,
-          await repliesRes.text()
-        );
+        console.error(`Apify Reply API error (${repliesRes.status}):`, await repliesRes.text());
         discourseAnalysis = "Error: Unable to fetch tweet replies for analysis.";
       }
     } catch (err) {
       console.error("Error fetching/parsing tweet replies:", err);
       discourseAnalysis = "Error: Unable to process tweet replies for analysis.";
     }
+
     // 12) Generate Markdown formatted newsletter
     let markdownNewsletter = "";
     try {
       console.log("Starting step 12: Markdown newsletter formatting");
-      
-      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read.
+      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
 
 FORMAT GUIDELINES:
 - Use proper Markdown syntax for headings, subheadings, bullet points, columns, dividers, colors, and horizontal rules
@@ -581,9 +592,8 @@ CONTENT STRUCTURE:
 5. Add proper spacing and formatting throughout
 
 OUTPUT:
-Provide ONLY the formatted Markdown content, reworded and slightly shortened if needed to be more accessible, without any explanations or comments.`;
-
-      const markdownUserPrompt = `I have two pieces of analysis content that need to be worded better, shortened 'trim all the fat', and then combined and formatted as a beautiful visually appealing Markdown newsletter:
+Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
+      const markdownUserPrompt = `I have two pieces of analysis content that need to be worded for better flow and accessibility, and then combined and formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat these analyses into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
 
 1. MAIN ANALYSIS CONTENT:
 ${analysisResult}
@@ -611,26 +621,30 @@ Use proper Markdown formatting throughout:
 - Format quotes properly with >
 - Use bold and italic formatting where it enhances readability
 
-Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it.`;
-
+Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analyses is included.`;
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            Authorization: `Bearer ${OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: "gpt-4.1-2025-04-14",
             messages: [
-              { role: "system", content: markdownSystemPrompt },
-              { role: "user", content: markdownUserPrompt },
+              {
+                role: "system",
+                content: markdownSystemPrompt
+              },
+              {
+                role: "user",
+                content: markdownUserPrompt
+              }
             ],
             temperature: 0.2,
-            max_tokens: 4000,
-          }),
+            max_tokens: 4000
+          })
         });
-        
         if (markdownOpenaiRes.ok) {
           const markdownJson = await markdownOpenaiRes.json();
           markdownNewsletter = markdownJson.choices[0].message.content;
@@ -638,7 +652,6 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
         } else {
           const errorText = await markdownOpenaiRes.text();
           console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          // If this fails, we'll continue with the original content - this step is optional
           markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
         }
       } catch (markdownError) {
@@ -647,14 +660,13 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
       }
     } catch (err) {
       console.error("Error generating Markdown newsletter:", err);
-      // If there's an error, we'll continue with the original content - this is a non-blocking step
       markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
+
     // 13) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
     let enhancedMarkdownNewsletter = "";
     try {
       console.log("Starting step 13: Enhanced UI/UX Markdown formatting");
-      
       const enhancedSystemPrompt = `
 You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
 
@@ -672,13 +684,13 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
    - Table headers shaded lightly for readability.  
 5. **Tone & writing**  
    - Conversational, active voice, no em-dashes, 10th-grade reading level.  
-   - Bold key phrases for scannability. No unnatural pauses
+   - Bold key phrases for scannability. No unnatural pauses.
+   - The primary goal is visual enhancement and readability; do not shorten the substantive content of the newsletter.
 6. **Exclusions**  
    - No table of contents, no page breaks or "Page X" footers.  
 
 Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
 `;
-
       const enhancedUserPrompt = `
 I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
 
@@ -687,7 +699,7 @@ I'm sharing my raw markdown newsletter below. Please transform it into a **visua
 - **Better spacing:** extra blank lines around headings, lists, and callout boxes.  
 - **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
 - **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
-- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no TOC.  
+- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no TOC. Ensure all original content is preserved.
 
 Here is my markdown draft—please output one cohesive, styled markdown document.  
 
@@ -695,25 +707,29 @@ Here is my markdown draft—please output one cohesive, styled markdown document
 ${markdownNewsletter}
 </current newsletter>
 `;
-
       try {
         const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            Authorization: `Bearer ${OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "chatgpt-4o-latest", // Using a proper model instead of the non-existent chatgpt-4o-latest
+            model: "chatgpt-4o-latest", // As per original code
             messages: [
-              { role: "system", content: enhancedSystemPrompt },
-              { role: "user", content: enhancedUserPrompt },
+              {
+                role: "system",
+                content: enhancedSystemPrompt
+              },
+              {
+                role: "user",
+                content: enhancedUserPrompt
+              }
             ],
             temperature: 0.4,
-            max_tokens: 4000,
-          }),
+            max_tokens: 4000
+          })
         });
-        
         if (enhancedOpenaiRes.ok) {
           const enhancedJson = await enhancedOpenaiRes.json();
           enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
@@ -721,18 +737,17 @@ ${markdownNewsletter}
         } else {
           const errorText = await enhancedOpenaiRes.text();
           console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
-          // If this fails, we'll continue with the previous markdown - this step is optional
-          enhancedMarkdownNewsletter = markdownNewsletter;
+          enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
         }
       } catch (enhancedError) {
         console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
-        enhancedMarkdownNewsletter = markdownNewsletter;
+        enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
       }
     } catch (err) {
       console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-      // If there's an error, we'll continue with the regular markdown - this is a non-blocking step
-      enhancedMarkdownNewsletter = markdownNewsletter;
+      enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
     }
+
     // 14) Clean up stray text around enhanced Markdown
     function cleanMarkdown(md) {
       let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
@@ -744,6 +759,7 @@ ${markdownNewsletter}
       return cleaned;
     }
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
+
     // 15) Convert final Markdown to HTML & inline CSS
     const htmlBody = marked(finalMarkdown);
     const emailHtml = juice(`
@@ -755,6 +771,7 @@ ${markdownNewsletter}
         </div>
       </body>
     `);
+
     // 16) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com";
@@ -772,17 +789,14 @@ ${markdownNewsletter}
       console.log("Email sent successfully with Resend:", emailData);
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
-      // Continue execution even if email fails - we'll still return the newsletter content
     }
+
     // 16.5) NEW STEP: Save the newsletter to newsletter_storage table
     try {
-      const { error: storageError } = await supabase
-        .from('newsletter_storage')
-        .insert({
-          user_id: user.id,
-          markdown_text: finalMarkdown
-        });
-
+      const { error: storageError } = await supabase.from('newsletter_storage').insert({
+        user_id: user.id,
+        markdown_text: finalMarkdown
+      });
       if (storageError) {
         console.error("Failed to save newsletter to storage:", storageError);
       } else {
@@ -790,9 +804,8 @@ ${markdownNewsletter}
       }
     } catch (storageErr) {
       console.error("Error saving newsletter to storage:", storageErr);
-      // Continue execution even if storage fails
     }
-    
+
     // Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
@@ -803,6 +816,7 @@ ${markdownNewsletter}
         console.error("Failed to update remaining generations:", updateError);
       }
     }
+
     // Final log & response
     const timestamp = new Date().toISOString();
     console.log("Newsletter generation successful:", {
@@ -818,8 +832,8 @@ ${markdownNewsletter}
       data: {
         analysisResult,
         discourseAnalysis,
-        markdownNewsletter,
-        enhancedMarkdown: finalMarkdown,
+        markdownNewsletter, // Original markdown before UI/UX enhancements
+        enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
         timestamp
       }
     }), {
@@ -829,6 +843,7 @@ ${markdownNewsletter}
         "Content-Type": "application/json"
       }
     });
+
   } catch (error) {
     console.error("Error in manual-newsletter-generation function:", error);
     return new Response(JSON.stringify({
