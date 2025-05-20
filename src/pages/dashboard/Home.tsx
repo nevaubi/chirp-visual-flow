@@ -544,15 +544,20 @@ const DashboardHome = () => {
 
   // Check if we need to show the walkthrough popup
   useEffect(() => {
-    if (profile && profile.timezone === null) {
-      setShowWalkthrough(true);
+    if (profile) {
+      if (isNewsletterPlatform) {
+        // For newsletter platform: show walkthrough if twitter_bookmark_access_token is null
+        setShowWalkthrough(profile.twitter_bookmark_access_token === null);
+      } else {
+        // For creator platform: keep the original behavior checking timezone
+        setShowWalkthrough(profile.timezone === null);
+      }
     }
-  }, [profile]);
+  }, [profile, isNewsletterPlatform]);
 
   // Handle walkthrough completion
   const handleWalkthroughComplete = async () => {
     try {
-      // FIXED: No longer setting timezone - we'll keep the user-selected timezone from the dropdown
       // Simply close the walkthrough popup without modifying any profile data
       setShowWalkthrough(false);
     } catch (error) {
