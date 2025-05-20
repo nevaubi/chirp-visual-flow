@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
@@ -57,9 +56,8 @@ const DashboardLayout = () => {
   };
 
   const handleCreateNewsletter = () => {
-    // Temporary placeholder function
-    toast({
-      title: "Coming Soon",
+    // Fixed toast implementation
+    toast("Coming Soon", {
       description: "The newsletter creation feature is being redesigned. Check back soon!",
     });
   };
