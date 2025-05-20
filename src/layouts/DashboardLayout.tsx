@@ -4,7 +4,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  BookOpen,
+  BarChart2,
   Home,
   Users,
   Settings,
@@ -83,7 +83,7 @@ const DashboardLayout = () => {
 
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
-    { icon: BookOpen, label: 'Library', path: '/dashboard/library' },
+    { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
     { icon: Users, label: 'Community', path: '/dashboard/community' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];

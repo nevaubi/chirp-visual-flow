@@ -15,8 +15,6 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
-import { v4 as uuidv4 } from "uuid";
-import { storeNewsletter } from "@/integrations/upstash/client";
 
 interface ManualNewsletterDialogProps {
   open: boolean;
@@ -99,23 +97,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         setUpdatedRemainingGenerations(data.remainingGenerations);
       }
       
-      // Store the generated newsletter content in Redis
-      if (data.content && authState.user?.id) {
-        const newsletterId = uuidv4();
-        const success = await storeNewsletter({
-          id: newsletterId,
-          userId: authState.user.id,
-          content: data.content,
-          createdAt: new Date().toISOString(),
-          success: true
-        });
-        
-        if (!success) {
-          console.error('Failed to store newsletter in Redis');
-          // We'll still show success since the newsletter was generated
-        }
-      }
-      
+      // In a real implementation, we would now process the bookmarks and generate the newsletter
       console.log('Newsletter generated successfully:', data);
       
       toast.success('Newsletter generated successfully', {
