@@ -8,6 +8,51 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
+// Redis keys will be prefixed with this to avoid collisions
+const REDIS_PREFIX = 'twitter_data:';
+
+// Function to store data in Redis
+async function storeInRedis(key: string, data: unknown, expireInDays = 30): Promise<boolean> {
+  try {
+    const REDIS_URL = Deno.env.get('UPSTASH_REDIS_REST_URL');
+    const REDIS_TOKEN = Deno.env.get('UPSTASH_REDIS_REST_TOKEN');
+    
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.error('Redis credentials not found');
+      return false;
+    }
+
+    const fullKey = `${REDIS_PREFIX}${key}`;
+    console.log(`Storing data in Redis with key: ${fullKey}`);
+    
+    const url = `${REDIS_URL}/set/${fullKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        value: JSON.stringify(data),
+        ex: expireInDays * 24 * 60 * 60 // Expire time in seconds
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Redis storage error:', errorData);
+      return false;
+    }
+
+    const result = await response.json();
+    console.log('Redis storage result:', result);
+    return result.result === 'OK';
+  } catch (error) {
+    console.error('Error storing data in Redis:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -140,6 +185,25 @@ serve(async (req) => {
         total_posts: author.statusesCount,
         bio: author.profile_bio?.description ?? ""
       };
+      
+      // Store user profile info in Redis
+      try {
+        // Use waitUntil to run Redis storage in the background
+        const redisData = {
+          user_id: userId,
+          ...parsedFields,
+          verified_at: new Date().toISOString(),
+          twitter_data: author,
+        };
+        
+        const storagePromise = storeInRedis(`user:${userId}:profile`, redisData, 90);
+        EdgeRuntime.waitUntil(storagePromise);
+        
+        console.log('Redis storage task for user profile started in the background');
+      } catch (redisError) {
+        // Just log the error, don't fail the function
+        console.error('Error starting Redis profile storage task:', redisError);
+      }
     }
 
     // Verification step: Compare retrieved twitter username with user's stored username

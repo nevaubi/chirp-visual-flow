@@ -70,6 +70,9 @@ interface ProfileAnalysisResult {
   growth_opportunities: string[];
 }
 
+// Redis keys will be prefixed with this to avoid collisions
+const REDIS_PREFIX = 'twitter_data:';
+
 // Setup Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -77,6 +80,91 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Get Apify API key
 const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY') as string
+
+// Get Redis Upstash credentials
+const REDIS_URL = Deno.env.get('UPSTASH_REDIS_REST_URL') as string;
+const REDIS_TOKEN = Deno.env.get('UPSTASH_REDIS_REST_TOKEN') as string;
+
+// Function to store data in Redis
+async function storeInRedis(key: string, data: unknown, expireInDays = 30): Promise<boolean> {
+  try {
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.error('Redis credentials not found');
+      return false;
+    }
+
+    const fullKey = `${REDIS_PREFIX}${key}`;
+    console.log(`Storing data in Redis with key: ${fullKey}`);
+    
+    const url = `${REDIS_URL}/set/${fullKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        value: JSON.stringify(data),
+        ex: expireInDays * 24 * 60 * 60 // Expire time in seconds
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Redis storage error:', errorData);
+      return false;
+    }
+
+    const result = await response.json();
+    console.log('Redis storage result:', result);
+    return result.result === 'OK';
+  } catch (error) {
+    console.error('Error storing data in Redis:', error);
+    return false;
+  }
+}
+
+// Process and store tweet history in Redis
+async function processTweetHistory(tweets: Tweet[], userId: string) {
+  try {
+    // Skip if no Redis credentials
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.log('Skipping Redis storage: credentials not available');
+      return;
+    }
+
+    console.log(`Processing ${tweets.length} tweets for Redis storage`);
+    
+    // Store the full tweet history
+    const tweetHistory = tweets.map(tweet => ({
+      id: tweet.id,
+      text: tweet.text,
+      created_at: tweet.createdAt || tweet.created_at || new Date().toISOString(),
+      engagement: {
+        likes: tweet.likeCount || tweet.public_metrics?.like_count || 0,
+        retweets: tweet.retweetCount || tweet.public_metrics?.retweet_count || 0,
+        replies: tweet.replyCount || tweet.public_metrics?.reply_count || 0,
+        quotes: tweet.quoteCount || tweet.public_metrics?.quote_count || 0,
+        views: tweet.viewCount || tweet.public_metrics?.impression_count || 0
+      },
+      // Determine content type
+      has_image: !!(tweet.entities?.media?.some(m => m.type === 'photo') || 
+                    tweet.extendedEntities?.media?.some(m => m.type === 'photo')),
+      has_video: !!(tweet.entities?.media?.some(m => m.type === 'video') || 
+                    tweet.extendedEntities?.media?.some(m => m.type === 'video')),
+      has_link: !!(tweet.entities?.urls && tweet.entities.urls.length > 0)
+    }));
+
+    // Store in Redis with user ID as key
+    const storeResult = await storeInRedis(`user:${userId}:tweets`, tweetHistory, 90);
+    console.log(`Redis storage result for user ${userId}: ${storeResult ? 'Success' : 'Failed'}`);
+    
+    return storeResult;
+  } catch (error) {
+    console.error('Error processing tweet history for Redis:', error);
+    return false;
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS
@@ -124,6 +212,20 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Failed to update profile with analysis results' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
+    }
+    
+    // Process and store tweets in Redis in the background
+    // This way we don't block the response and can handle any Redis errors separately
+    try {
+      // Use waitUntil to run Redis storage in the background
+      const storagePromise = processTweetHistory(tweets, userId);
+      EdgeRuntime.waitUntil(storagePromise);
+      
+      console.log('Redis storage task started in the background');
+    } catch (redisError) {
+      // If there's an error setting up the background task, just log it
+      // We don't want to fail the whole function just because Redis has issues
+      console.error('Error starting Redis background task:', redisError);
     }
     
     return new Response(
