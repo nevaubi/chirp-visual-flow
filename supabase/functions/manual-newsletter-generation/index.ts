@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -511,7 +510,7 @@ ${replyAnalysisData}`;
         
         if (discourseOpenaiRes.ok) {
           const discourseJson = await discourseOpenaiRes.json();
-          const discourseAnalysis = discourseJson.choices[0].message.content;
+          discourseAnalysis = discourseJson.choices[0].message.content;
           console.log("Discourse Analysis Result:\n", discourseAnalysis);
         } else {
           const errorText = await discourseOpenaiRes.text();
@@ -527,7 +526,98 @@ ${replyAnalysisData}`;
       console.error("Error fetching/parsing tweet replies:", err);
     }
 
-    // 12) Final log & response
+    // 12) NEW STEP: Generate Markdown formatted newsletter
+    let markdownNewsletter = "";
+    try {
+      console.log("Starting step 12: Markdown newsletter formatting");
+      
+      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, well-structured Markdown. Your job is to take analysis content and format it into a beautiful newsletter that looks professional and is easy to read.
+
+FORMAT GUIDELINES:
+- Use proper Markdown syntax for headings, subheadings, bullet points, and horizontal rules
+- Use headings (#, ##, ###) appropriately for hierarchy
+- Use bullet points (-) for lists
+- Use horizontal rules (---) to separate sections
+- Ensure proper spacing between sections
+- Maintain the original content and meaning while improving formatting
+- Use bold and italic formatting where appropriate for emphasis
+- Include photo URLs where they were provided in the original content
+- Create a consistent, professional newsletter style
+- Use proper Markdown for links if needed
+- Keep all the original content intact, just format it better
+
+CONTENT STRUCTURE:
+1. Top section contains Main Topic 1 (most important topic)
+2. After a divider, include the Sub-Topic
+3. After another divider, present Main Topic 2
+4. After a final divider, include the Discourse Analysis section
+5. Add proper spacing and formatting throughout
+
+OUTPUT:
+Provide ONLY the formatted Markdown content, without any explanations or comments.`;
+
+      const markdownUserPrompt = `I have two pieces of analysis content that need to be combined and formatted as a professional Markdown newsletter:
+
+1. MAIN ANALYSIS CONTENT:
+${analysisResult}
+
+2. DISCOURSE ANALYSIS:
+${discourseAnalysis}
+
+Please format these into a single, well-structured Markdown newsletter with the following layout:
+
+1. Start with Main Topic 1 at the top (first main topic from the analysis)
+2. Add a horizontal rule divider
+3. Then present the Sub-Topic (from the analysis)
+4. Add another horizontal rule divider
+5. Present Main Topic 2 (second main topic from the analysis)
+6. Add a final horizontal rule divider
+7. Include the Discourse Analysis content
+
+Use proper Markdown formatting throughout:
+- # for main headings
+- ## for subheadings
+- - for bullet points
+- --- for horizontal dividers
+- Appropriate spacing between sections
+- Include any image URLs that were in the original content
+- Format quotes properly with >
+- Use bold and italic formatting where it enhances readability
+
+Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout.`;
+
+      const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14",
+          messages: [
+            { role: "system", content: markdownSystemPrompt },
+            { role: "user", content: markdownUserPrompt },
+          ],
+          temperature: 0.2,
+          max_tokens: 4000,
+        }),
+      });
+      
+      if (markdownOpenaiRes.ok) {
+        const markdownJson = await markdownOpenaiRes.json();
+        markdownNewsletter = markdownJson.choices[0].message.content;
+        console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
+      } else {
+        const errorText = await markdownOpenaiRes.text();
+        console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+        // If this fails, we'll continue with the original content - this step is optional
+      }
+    } catch (err) {
+      console.error("Error generating Markdown newsletter:", err);
+      // If there's an error, we'll continue with the original content - this is a non-blocking step
+    }
+
+    // 13) Final log & response
     const timestamp = new Date().toISOString();
     console.log("Newsletter generation successful:", {
       userId: user.id,
@@ -541,7 +631,11 @@ ${replyAnalysisData}`;
         status: "success",
         message: "Newsletter generated successfully",
         remainingGenerations: profile.remaining_newsletter_generations,
-        data: { analysisResult, timestamp },
+        data: { 
+          analysisResult, 
+          timestamp,
+          markdownNewsletter: markdownNewsletter || null // Include the markdown in the response if available
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
