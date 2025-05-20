@@ -57,7 +57,15 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
 }) => {
   const [selectedCount, setSelectedCount] = React.useState<number>(10);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [updatedRemainingGenerations, setUpdatedRemainingGenerations] = useState<number | null>(null);
   const { authState } = useAuth();
+
+  // Reset updatedRemainingGenerations when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      setUpdatedRemainingGenerations(null);
+    }
+  }, [open]);
 
   const handleGenerate = async () => {
     try {
@@ -84,13 +92,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         return;
       }
       
-      // Successfully fetched bookmarks and ready to proceed
-      console.log('Bookmarks retrieved successfully:', data);
+      // Success! Update local state with the new remaining generations count
+      if (data.remainingGenerations !== undefined) {
+        setUpdatedRemainingGenerations(data.remainingGenerations);
+      }
       
       // In a real implementation, we would now process the bookmarks and generate the newsletter
-      // For now, just show a success message
-      toast.success('Newsletter generation started', {
-        description: `Creating newsletter with ${selectedCount} tweets. You'll receive it by email soon.`,
+      console.log('Newsletter generated successfully:', data);
+      
+      toast.success('Newsletter generated successfully', {
+        description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
       });
       
       // Close the dialog
@@ -105,6 +116,11 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       setIsGenerating(false);
     }
   };
+
+  // Display either the updated count or the original count
+  const displayRemainingGenerations = updatedRemainingGenerations !== null 
+    ? updatedRemainingGenerations 
+    : remainingGenerations;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -146,13 +162,13 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
           <div className="text-sm text-gray-500">
-            {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
+            {displayRemainingGenerations} generation{displayRemainingGenerations !== 1 ? 's' : ''} remaining
           </div>
           <Button 
             type="button" 
             className="bg-amber-500 hover:bg-amber-600 text-white"
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isGenerating || displayRemainingGenerations <= 0}
           >
             {isGenerating ? 'Processing...' : 'Generate Newsletter'}
           </Button>

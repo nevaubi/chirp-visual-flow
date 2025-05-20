@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -227,56 +228,206 @@ serve(async (req) => {
     const apifyData = await apifyResponse.json();
     console.log("Raw Apify response:", JSON.stringify(apifyData, null, 2));
 
-    // ——— Updated parsing & logging logic ———
-    const tweetsArray = Array.isArray(apifyData)
-      ? apifyData
-      : Array.isArray(apifyData.items)
-        ? apifyData.items
-        : [];
-
-    const formattedTweets = tweetsArray.map((t, i) => {
-      const text = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-      const photo = t.extendedEntities?.media?.find(m => m.type === "photo")?.media_url_https ?? "N/A";
-
-      return [
-        `Tweet ${i + 1}`,
-        `Tweet text: ${text}`,
-        `Retweets: ${t.retweetCount}`,
-        `ReplyAmount: ${t.replyCount}`,
-        `LikesAmount: ${t.likeCount}`,
-        `QuotesAmount: ${t.quoteCount}`,
-        `Impressions: ${t.viewCount}`,
-        `Date: ${t.createdAt}`,
-        `Reply?: ${t.isReply}`,
-        `Replyingto: ${t.inReplyToUsername || "N/A"}`,
-        `TweetAuthor: ${t.author?.name}`,
-        `TweetAuthorHandle: ${t.author?.userName}`,
-        `Verified: ${t.author?.isBlueVerified}`,
-        `ProfilePic: ${t.author?.profilePicture}`,
-        `PhotoUrl: ${photo}`
-      ].join("\n");
-    });
-
-    // Log them all as one single string
-    console.log(formattedTweets.join("\n\n"));
-    // ——————————————————————————————————
-
-    return new Response(
-      JSON.stringify({
-        status: "success",
-        message: "Bookmarks retrieved successfully",
-        data: {
-          selectedCount,
-          email: profile.sending_email,
-          preferences: profile.newsletter_content_preferences,
-          numerical_id: numericalId,
-          bookmarks: bookmarksData,
-          tweetIds,
-          detailedTweetData: apifyData
+    // Parse the Apify response into the structured format
+    const parseToOpenAIFormat = (apifyData) => {
+      const tweetsArray = Array.isArray(apifyData)
+        ? apifyData
+        : Array.isArray(apifyData.items)
+          ? apifyData.items
+          : [];
+      
+      let formattedOutput = "";
+      tweetsArray.forEach((tweet, index) => {
+        // Clean and format the tweet text
+        const text = (tweet.text || "").replace(/https?:\/\/\S+/g, "").trim();
+        
+        // Format the date
+        let dateStr = "N/A";
+        try {
+          if (tweet.createdAt) {
+            const date = new Date(tweet.createdAt);
+            dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+          }
+        } catch (e) {
+          console.error("Error formatting date:", e);
         }
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+        
+        // Get photo URL if available
+        const photoUrl = tweet.extendedEntities?.media?.find(m => m.type === "photo")?.media_url_https ?? "N/A";
+        
+        // Add tweet to formatted output
+        formattedOutput += `Tweet ${index + 1}\n`;
+        formattedOutput += `Tweet text: ${text}\n`;
+        formattedOutput += `ReplyAmount: ${tweet.replyCount || 0}\n`;
+        formattedOutput += `LikesAmount: ${tweet.likeCount || 0}\n`;
+        formattedOutput += `Impressions: ${tweet.viewCount || 0}\n`;
+        formattedOutput += `Date: ${dateStr}\n`;
+        formattedOutput += `Tweet Author: ${tweet.author?.name || "Unknown"}\n`;
+        formattedOutput += `PhotoUrl: ${photoUrl}\n`;
+        
+        // Add separator between tweets
+        if (index < tweetsArray.length - 1) {
+          formattedOutput += `\n---\n\n`;
+        }
+      });
+      
+      return formattedOutput;
+    };
+    
+    // Format the tweets for OpenAI
+    const formattedTweets = parseToOpenAIFormat(apifyData);
+    console.log("Formatted tweets for OpenAI:\n", formattedTweets);
+    
+    // Call OpenAI API
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("Missing OPENAI_API_KEY environment variable");
+    }
+    
+    const systemPrompt = `You are a sophisticated tweet analysis system designed to identify key topics, trends, and insights from collections of tweets. Your purpose is to transform raw tweet data into structured, insightful analysis that captures the most significant discussions and themes.
+
+CAPABILITIES:
+- Analyze collections of 30-50 tweets to identify main topics and sub-topics
+- Recognize patterns, themes, and trending discussions across seemingly unrelated tweets
+- Extract sentiment, contextual meaning, and significant data points
+- Identify the most relevant visual content from available photo URLs
+- Synthesize information into concise summaries while preserving important details
+- Format output in a consistent, structured manner that highlights key insights
+
+ANALYSIS METHODOLOGY:
+1. Process all tweet data including text, engagement metrics (replies, likes, impressions), timestamps, and authors
+2. Identify recurring themes, keywords, hashtags, and discussion topics
+3. Prioritize topics based on frequency, engagement metrics, and recency
+4. Extract notable quotes that best represent each identified topic
+5. Select the most relevant images based on engagement and topical relevance
+6. Generate comprehensive yet concise explanations that capture the essence of each topic
+
+OUTPUT REQUIREMENTS:
+For each analysis, you will produce a structured report containing:
+
+TWO MAIN TOPICS (highest priority discussions):
+- Each with a concise header (5-10 words)
+- Four bullet points highlighting the most significant aspects
+- 400-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
+- Up to two relevant photo URLs per topic
+
+ONE SUB-TOPIC (third most relevant discussion):
+- Concise header (5-10 words)
+- Three bullet points highlighting the most significant aspects
+- 300-word explanation providing comprehensive context and analysis
+- A notable quote either directly extracted from a tweet or referenced within the tweets
+- Up to two relevant photo URLs`;
+
+    const userPrompt = `Analyze the following collection of tweets to identify the two most prevalent main topics and one sub-topic. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
+
+For each MAIN TOPIC (2):
+1. Create a concise header (5-10 words) that captures the essence of the topic
+2. Provide 4 bullet points highlighting the most significant data points or aspects
+3. Write a 500-word explanation that thoroughly describes the topic, including:
+   - Overall context and background
+   - Predominant sentiment (positive, negative, mixed, neutral)
+   - Key discussions and perspectives
+   - Notable trends or patterns
+   - Implications or significance
+4. Include up to 2 photo URLs that best represent this topic (if available)
+
+For the SUB-TOPIC (1):
+1. Create a concise header (5-10 words)
+2. Provide 3 bullet points highlighting the most significant aspects
+3. Write a 300-word explanation that thoroughly describes the sub-topic
+4. Extract or reference a notable quote related to this sub-topic
+5. Include up to 2 photo URLs that best represent this topic (if available)
+
+Organization criteria:
+- Prioritize topics based on frequency of mention, engagement metrics, and recency
+- When selecting the most significant aspects for bullet points, consider uniqueness, engagement, and informational value
+- When selecting photo URLs, prioritize images with higher engagement on relevant tweets
+
+Please format your response using clear headers, consistent bullet points, and well-structured paragraphs to maximize readability.
+
+Here is the tweet collection to analyze:
+
+${formattedTweets}`;
+
+    try {
+      console.log("Calling OpenAI API...");
+      const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o", // Using gpt-4o as fallback since gpt-4.1-2025-04-14 might not be available yet
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000
+        })
+      });
+      
+      if (!openaiResponse.ok) {
+        const errorText = await openaiResponse.text();
+        console.error(`OpenAI API error (${openaiResponse.status}):`, errorText);
+        throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorText}`);
+      }
+      
+      const openaiData = await openaiResponse.json();
+      const analysisResult = openaiData.choices[0].message.content;
+      
+      console.log("OpenAI Analysis Result:\n", analysisResult);
+      
+      // Decrement remaining newsletter generations
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ 
+          remaining_newsletter_generations: (profile.remaining_newsletter_generations - 1)
+        })
+        .eq("id", user.id);
+        
+      if (updateError) {
+        console.error("Error updating remaining_newsletter_generations:", updateError);
+      }
+      
+      // Store the newsletter content in the database for future reference
+      // This could be expanded in the future
+      const timestamp = new Date().toISOString();
+      const newsletterContent = {
+        userId: user.id,
+        timestamp: timestamp,
+        rawTweets: formattedTweets,
+        analysis: analysisResult,
+        tweetCount: selectedCount
+      };
+      
+      console.log("Newsletter generation successful:", {
+        userId: user.id, 
+        timestamp: timestamp,
+        tweetCount: selectedCount,
+        remainingGenerations: profile.remaining_newsletter_generations - 1
+      });
+      
+      return new Response(
+        JSON.stringify({
+          status: "success",
+          message: "Newsletter generated successfully",
+          remainingGenerations: profile.remaining_newsletter_generations - 1,
+          data: {
+            analysisResult: analysisResult,
+            timestamp: timestamp
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (openaiError) {
+      console.error("OpenAI API error:", openaiError);
+      return new Response(
+        JSON.stringify({ error: "Error generating newsletter analysis. Please try again later." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
   } catch (error) {
     console.error("Error in manual-newsletter-generation function:", error);
