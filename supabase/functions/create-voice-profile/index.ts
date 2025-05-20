@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.4.0';
 
@@ -177,95 +176,125 @@ serve(async (req) => {
     }
 
     const twitterUsername = profile.twitter_username;
-    const raw = await fetchFromRedis(userId);
-    if (!raw) {
+    const rawResult = await fetchFromRedis(userId);
+    if (!rawResult) {
       return new Response(JSON.stringify({
         success: false, error: 'No tweets in Redis'
       }), { status: 404, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
     }
 
-    // —— PARSING / FILTERING / RANKING ——
-    // Improved parsing with proper error handling and type checking
-    let tweetData: any;
+    // —— IMPROVED REDIS RESPONSE PARSING ——
+    console.log('Raw Redis result structure type:', typeof rawResult);
+    
+    // Parse the Redis response which may contain a value field
+    let redisData: any;
+    try {
+      // If it's already an object from the previous JSON parsing, use it
+      if (typeof rawResult === 'object' && rawResult !== null) {
+        redisData = rawResult;
+        console.log('Redis result is already an object');
+      } else {
+        // Otherwise try to parse it as JSON
+        redisData = JSON.parse(rawResult);
+        console.log('Redis result parsed from string to object');
+      }
+    } catch (e) {
+      console.error('Error parsing Redis result:', e);
+      redisData = { value: rawResult }; // Fallback treating the entire result as a value
+    }
+    
+    // Extract tweets from the redis data
     let tweets: any[] = [];
     
-    try {
-      tweetData = JSON.parse(raw);
-      
-      // Log the structure to debug
-      console.log('Raw tweet data structure:', 
-        typeof tweetData, 
-        Array.isArray(tweetData) ? 'is array' : 'not array',
-        tweetData && typeof tweetData === 'object' ? 'has keys: ' + Object.keys(tweetData).join(', ') : ''
-      );
-      
-      // Check if tweetData is directly an array
-      if (Array.isArray(tweetData)) {
-        tweets = tweetData;
-      } 
-      // Check if tweets might be nested in a property
-      else if (tweetData && typeof tweetData === 'object') {
-        // Try common properties where tweets might be stored
-        if (Array.isArray(tweetData.tweets)) {
-          tweets = tweetData.tweets;
-        } else if (Array.isArray(tweetData.data)) {
-          tweets = tweetData.data;
-        } else if (Array.isArray(tweetData.items)) {
-          tweets = tweetData.items;
-        } else if (Array.isArray(tweetData.results)) {
-          tweets = tweetData.results;
+    // If the Redis response contains a 'value' field that's a string, parse it
+    if (redisData && typeof redisData.value === 'string') {
+      try {
+        console.log('Redis data has a "value" field that is a string, parsing it');
+        const parsedValue = JSON.parse(redisData.value);
+        if (Array.isArray(parsedValue)) {
+          tweets = parsedValue;
+          console.log(`Successfully parsed ${tweets.length} tweets from value field`);
         } else {
-          // Last resort: find any array property
-          for (const key in tweetData) {
-            if (Array.isArray(tweetData[key]) && tweetData[key].length > 0) {
-              tweets = tweetData[key];
-              console.log(`Found tweets array in property: ${key}`);
-              break;
-            }
-          }
+          console.error('Parsed value is not an array:', typeof parsedValue);
+        }
+      } catch (e) {
+        console.error('Error parsing tweets from value field:', e);
+      }
+    }
+    // If redisData is already an array, use it directly
+    else if (Array.isArray(redisData)) {
+      tweets = redisData;
+      console.log(`Using redisData directly as it's already an array with ${tweets.length} items`);
+    }
+    // Try to find the tweets in common container fields
+    else if (redisData && typeof redisData === 'object') {
+      // Check for common container fields
+      const possibleFields = ['tweets', 'data', 'items', 'results'];
+      for (const field of possibleFields) {
+        if (Array.isArray(redisData[field])) {
+          tweets = redisData[field];
+          console.log(`Found tweets in "${field}" field: ${tweets.length} items`);
+          break;
         }
       }
       
-      // If we still don't have an array, create an empty one
-      if (!Array.isArray(tweets)) {
-        console.error('Unable to extract tweets array from data, defaulting to empty array');
-        tweets = [];
+      // If no tweets found in common fields, check all fields for an array
+      if (tweets.length === 0) {
+        for (const key in redisData) {
+          if (Array.isArray(redisData[key]) && redisData[key].length > 0) {
+            tweets = redisData[key];
+            console.log(`Found tweets in "${key}" field: ${tweets.length} items`);
+            break;
+          }
+        }
       }
-      
-      console.log(`Extracted ${tweets.length} tweets from data`);
-    } catch (e) {
-      console.error('Error parsing tweet data:', e);
-      tweets = [];
-    }
-
-    // Ensure tweets is a valid array before filtering
-    if (!Array.isArray(tweets)) {
-      console.error('Tweets is not an array after parsing, defaulting to empty array');
-      tweets = [];
-    }
-
-    // Safe filtering now that we're sure tweets is an array
-    const nonReplies = tweets.filter(t => t && typeof t === 'object' && t['IsReply?'] === false);
-    
-    // Sort tweets - check if Likes property exists
-    if (nonReplies.length > 0 && typeof nonReplies[0]['Likes'] !== 'undefined') {
-      nonReplies.sort((a, b) => (b['Likes'] || 0) - (a['Likes'] || 0));
-    } else {
-      console.log('No Likes property found for sorting, using original order');
     }
     
-    // Get the text safely
-    const originalTexts = nonReplies.slice(0, 30).map(t => {
-      if (t && typeof t === 'object' && typeof t['text of tweet'] === 'string') {
-        return t['text of tweet'];
-      } else if (t && typeof t === 'object' && typeof t.text === 'string') {
-        return t.text;
-      } else {
-        console.log('Tweet missing text property:', t);
-        return '';
+    // If we still don't have tweets, log error and use empty array
+    if (tweets.length === 0) {
+      console.error('No tweets found in Redis data. Redis raw result:', 
+        typeof rawResult === 'string' ? rawResult.substring(0, 200) + '...' : JSON.stringify(rawResult).substring(0, 200) + '...');
+    }
+    
+    console.log(`Total tweets extracted: ${tweets.length}`);
+    
+    // —— FILTERING & RANKING ——
+    // Verify tweets structure by looking at first item
+    if (tweets.length > 0) {
+      console.log('First tweet structure:', JSON.stringify(tweets[0]).substring(0, 200) + '...');
+    }
+    
+    // Filter non-replies based on the actual structure - check if it's a reply by looking at text
+    const nonReplies = tweets.filter(t => 
+      t && typeof t === 'object' && 
+      typeof t.text === 'string' && 
+      !t.text.startsWith('RT @') && 
+      // Check if it doesn't start with @ (indicating a reply) or if engagement exists (safer approach)
+      (!t.text.startsWith('@') || (t.engagement && Object.keys(t.engagement).length > 0))
+    );
+    
+    console.log(`After filtering replies: ${nonReplies.length} tweets remain`);
+    
+    // Sort by engagement - Using the structure from the sample data
+    nonReplies.sort((a, b) => {
+      // First check if engagement.likes exists
+      if (a.engagement?.likes !== undefined && b.engagement?.likes !== undefined) {
+        return (b.engagement.likes || 0) - (a.engagement.likes || 0);
       }
-    }).filter(Boolean); // Remove empty strings
-
+      // Fall back to other possible engagement fields
+      else if (a.likes !== undefined && b.likes !== undefined) {
+        return (b.likes || 0) - (a.likes || 0);
+      }
+      // If no engagement metrics found, don't change order
+      return 0;
+    });
+    
+    // Get the top 30 tweets and extract their text
+    const topTweets = nonReplies.slice(0, 30);
+    const originalTexts = topTweets.map(t => t.text || '').filter(Boolean);
+    
+    console.log(`Selected ${originalTexts.length} top tweets for analysis`);
+    
     // —— STRIP OUT LINKS FROM EACH TWEET ——
     const texts = originalTexts.map(t =>
       t.replace(/https?:\/\/\S+/g, '').trim()
