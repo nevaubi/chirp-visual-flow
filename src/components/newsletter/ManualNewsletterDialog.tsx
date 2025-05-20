@@ -419,10 +419,19 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                 />
               </div>
               
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-gray-600 mb-2">
                 {progress >= 100 
                   ? "Newsletter generated successfully!" 
                   : "Analyzing your bookmarks and generating newsletter..."}
+              </p>
+
+              {/* New message that appears after 40% progress */}
+              <p 
+                className={`text-xs text-gray-400 transition-opacity duration-1000 ${
+                  progress > 40 && progress < 100 ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                You can close this window while the newsletter generates
               </p>
             </div>
           )}
