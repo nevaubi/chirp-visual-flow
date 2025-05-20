@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -379,51 +378,15 @@ ${formattedTweets}`;
       const analysisResult = openaiData.choices[0].message.content;
       
       console.log("OpenAI Analysis Result:\n", analysisResult);
-      
-      // Extract top 5 tweets by reply count
-      const extractTopTweetsByReplyCount = (apifyData, count = 5) => {
-        const tweetsArray = Array.isArray(apifyData)
-          ? apifyData
-          : Array.isArray(apifyData.items)
-            ? apifyData.items
-            : [];
-        
-        // Sort tweets by reply count in descending order
-        const sortedTweets = [...tweetsArray].sort((a, b) => {
-          const replyCountA = a.replyCount || 0;
-          const replyCountB = b.replyCount || 0;
-          return replyCountB - replyCountA;
-        });
-        
-        // Take the top 'count' tweets
-        const topTweets = sortedTweets.slice(0, count);
-        
-        // Log the top tweets for debugging
-        console.log("Top tweets by reply count:", 
-          topTweets.map(t => ({ 
-            id: t.id, 
-            replyCount: t.replyCount || 0,
-            text: (t.text || "").substring(0, 50) + "..."
-          }))
-        );
-        
-        // Return just the IDs
-        return topTweets.map(t => t.id);
-      };
-      
-      // Get top 5 tweet IDs by reply count
-      const topTweetIds = extractTopTweetsByReplyCount(apifyData, 5);
-      console.log("Top 5 tweet IDs by reply count:", topTweetIds);
-      
-      // Call the Twitter reply API to fetch replies for the top 5 tweets
+
+      // —— New: extract top 5 replies per main tweet and log them —— 
       try {
         const repliesRequestBody = {
-          "conversation_ids": topTweetIds,
-          "max_items_per_conversation": 20
+          conversation_ids: tweetIds,
+          max_items_per_conversation: 20
         };
-        
         console.log("Calling Apify Twitter Reply API with body:", JSON.stringify(repliesRequestBody, null, 2));
-        
+
         const repliesResponse = await fetch(
           `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-reply/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
           {
@@ -432,24 +395,41 @@ ${formattedTweets}`;
             body: JSON.stringify(repliesRequestBody)
           }
         );
-        
-        if (!repliesResponse.ok) {
-          const errorText = await repliesResponse.text();
-          console.error(`Apify Reply API error (${repliesResponse.status}):`, errorText);
-          // Continue with the function even if this call fails
-          console.log("Continuing despite Reply API error");
-        } else {
+
+        if (repliesResponse.ok) {
           const repliesData = await repliesResponse.json();
-          console.log("Twitter Reply API Response:", JSON.stringify(repliesData, null, 2));
+          // Group replies by conversationId
+          const byConversation: Record<string, any[]> = {};
+          repliesData.forEach((r: any) => {
+            const cid = r.conversationId;
+            if (!byConversation[cid]) byConversation[cid] = [];
+            byConversation[cid].push(r);
+          });
+
+          // Build and log formatted top-5 replies for each main tweet
+          const replyLogs: string[] = [];
+          tweetIds.forEach((tid, idx) => {
+            const replies = byConversation[tid] || [];
+            // sort by likeCount desc
+            replies.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+            const top5 = replies.slice(0, 5);
+            replyLogs.push(`Tweet ${idx + 1} text: ${formattedTweets.split('\n')[idx * 2 + 1]}`); 
+            top5.forEach((r, i) => {
+              const cleanText = (r.text || "").replace(/https?:\/\/\S+/g, "").trim();
+              replyLogs.push(`Top reply ${i + 1}: ${cleanText}`);
+            });
+            replyLogs.push('---');
+          });
+          console.log(replyLogs.join('\n'));
+        } else {
+          console.error(`Apify Reply API error (${repliesResponse.status}):`, await repliesResponse.text());
         }
-      } catch (repliesError) {
-        // Log the error but continue with the function
-        console.error("Error fetching tweet replies:", repliesError);
-        console.log("Continuing despite Reply API error");
+      } catch (err) {
+        console.error("Error fetching/parsing tweet replies:", err);
       }
-      
+      // ————————————————————————————————————————————————
+
       // Store the newsletter content in the database for future reference
-      // This could be expanded in the future
       const timestamp = new Date().toISOString();
       const newsletterContent = {
         userId: user.id,
