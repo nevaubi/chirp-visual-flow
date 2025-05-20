@@ -79,8 +79,7 @@ const Library = () => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      // Set sanitize: true for security
-      return marked(markdown, { sanitize: true });
+      return marked.parse(markdown);
     } catch (err) {
       console.error("Error rendering markdown:", err);
       return "<p>Error rendering content</p>";
