@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Sparkles, Zap, FileText, Loader2 } from 'lucide-react';
+import { Mic, Sparkles, Zap, FileText, Loader2, Send, RefreshCw, Twitter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
@@ -182,23 +185,218 @@ const CreateVoiceProfileView = () => {
   );
 };
 
+interface TweetVariation {
+  text: string;
+  charCount: number;
+}
+
 const TweetGenerationView = () => {
+  const { authState } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([]);
+  const form = useForm({
+    defaultValues: {
+      prompt: '',
+    },
+  });
+
+  const handleGenerateTweets = async (values: { prompt: string }) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('generate-tweets', {
+        body: { 
+          prompt: values.prompt,
+          userId: authState.user?.id
+        }
+      });
+      
+      if (error) {
+        console.error("Error invoking function:", error);
+        throw new Error(error.message);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate tweets');
+      }
+
+      // Format the tweets with character count
+      const formattedTweets = data.tweets.map((tweet: string) => ({
+        text: tweet,
+        charCount: tweet.length
+      }));
+      
+      setGeneratedTweets(formattedTweets);
+      
+    } catch (error: any) {
+      console.error("Error generating tweets:", error);
+      toast({
+        title: "Error generating tweets",
+        description: error.message || "Something went wrong. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate New Tweets</CardTitle>
-          <CardDescription>
-            Your voice profile is ready. Generate tweets that match your style.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-50 p-6 rounded-md text-center">
-            <p className="text-gray-500">Tweet generation functionality will be implemented soon.</p>
+    <div className="grid gap-6 md:grid-cols-3">
+      <div className="col-span-full md:col-span-1">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Create Tweet</CardTitle>
+            <CardDescription>
+              Enter a topic to generate tweets in your style
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="prompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="What would you like to tweet about?"
+                          className="min-h-32 resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#0087C8] hover:bg-[#0076b2]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Generate Tweets
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="col-span-full md:col-span-2">
+        {!generatedTweets.length ? (
+          <Card className="h-full flex flex-col justify-center items-center py-12">
+            <div className="text-center px-4 max-w-md">
+              <Twitter className="w-12 h-12 text-twitter-blue mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No tweets generated yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enter a topic or prompt on the left and click "Generate Tweets" to create tweets that match your writing style.
+              </p>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium">Generated Tweets</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => form.handleSubmit(handleGenerateTweets)()}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Regenerate
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {generatedTweets.map((tweet, index) => (
+                <TwitterCard key={index} tweet={tweet} profile={authState.profile} index={index} />
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
+  );
+};
+
+interface TwitterCardProps {
+  tweet: TweetVariation;
+  profile: any;
+  index: number;
+}
+
+const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(tweet.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    
+    toast({
+      title: "Tweet copied!",
+      description: "Tweet text copied to clipboard",
+    });
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="flex-shrink-0">
+            {profile?.twitter_profilepic_url ? (
+              <img 
+                src={profile.twitter_profilepic_url} 
+                alt={profile.twitter_username || 'Profile'} 
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <Twitter className="w-5 h-5 text-gray-500" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between items-start w-full">
+              <div>
+                <p className="font-semibold text-gray-900">{profile?.twitter_username || 'Your Name'}</p>
+                <p className="text-sm text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
+              </div>
+              <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
+                Option {index + 1}
+              </div>
+            </div>
+            <div className="mt-2 text-gray-800">
+              {tweet.text}
+            </div>
+            <div className="mt-3 flex justify-between items-center">
+              <div className="text-xs text-gray-500">
+                {tweet.charCount} / 280 characters
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-500 hover:text-gray-700"
+                onClick={copyToClipboard}
+              >
+                {copied ? 'Copied!' : 'Copy text'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
