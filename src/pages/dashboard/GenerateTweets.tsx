@@ -237,7 +237,7 @@ const TweetGenerationView = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-md ml-0 mr-auto">
       <div className="space-y-6">
         <Card>
           <CardContent className="pt-6">
