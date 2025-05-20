@@ -3,19 +3,16 @@ import { useState, useEffect } from "react";
 import { getUserNewsletters, NewsletterData } from "@/integrations/upstash/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Search, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from 'react-markdown';
 
 const Library = () => {
   const { authState } = useAuth();
   const [newsletters, setNewsletters] = useState<NewsletterData[]>([]);
-  const [filteredNewsletters, setFilteredNewsletters] = useState<NewsletterData[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedNewsletter, setSelectedNewsletter] = useState<NewsletterData | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -27,7 +24,6 @@ const Library = () => {
         try {
           const data = await getUserNewsletters(authState.user.id);
           setNewsletters(data);
-          setFilteredNewsletters(data);
         } catch (error) {
           console.error("Error fetching newsletters:", error);
         } finally {
@@ -38,17 +34,6 @@ const Library = () => {
 
     fetchNewsletters();
   }, [authState.user?.id]);
-
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredNewsletters(newsletters);
-    } else {
-      const filtered = newsletters.filter(newsletter => 
-        newsletter.content.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredNewsletters(filtered);
-    }
-  }, [searchTerm, newsletters]);
 
   const handleViewNewsletter = (newsletter: NewsletterData) => {
     setSelectedNewsletter(newsletter);
@@ -69,9 +54,6 @@ const Library = () => {
       <div className="space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Newsletter Library</h1>
-          <div className="w-64 relative">
-            <Skeleton className="h-10 w-64" />
-          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -95,38 +77,19 @@ const Library = () => {
   }
 
   // Empty state
-  if (!loading && filteredNewsletters.length === 0) {
+  if (!loading && newsletters.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Newsletter Library</h1>
-          <div className="relative w-64">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <Input
-              placeholder="Search newsletters..."
-              className="pl-9 pr-4 py-2 rounded-full bg-gray-100 border-none w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
         </div>
         
         <Card className="w-full flex flex-col items-center justify-center p-12 text-center">
           <BookOpen className="h-12 w-12 text-gray-400 mb-4" />
           <h2 className="text-xl font-semibold mb-2">No newsletters yet</h2>
           <p className="text-gray-500 mb-6 max-w-md">
-            {searchTerm ? 
-              "No newsletters match your search query. Try a different search term." : 
-              "Start generating newsletters to build your library."}
+            Start generating newsletters to build your library.
           </p>
-          {!searchTerm && (
-            <Button 
-              className="bg-amber-500 hover:bg-amber-600 text-white" 
-              onClick={() => setSearchTerm("")}
-            >
-              Generate Your First Newsletter
-            </Button>
-          )}
         </Card>
       </div>
     );
@@ -136,19 +99,10 @@ const Library = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Newsletter Library</h1>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            placeholder="Search newsletters..."
-            className="pl-9 pr-4 py-2 rounded-full bg-gray-100 border-none w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredNewsletters.map((newsletter) => (
+        {newsletters.map((newsletter) => (
           <Card key={newsletter.id} className="overflow-hidden hover:shadow-md transition-shadow">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg">Newsletter</CardTitle>
