@@ -14,22 +14,35 @@ import {
 import { BookmarkIcon, User, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useForm } from 'react-hook-form';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
 
 const CreateNewsletter = () => {
   const navigate = useNavigate();
   const { authState } = useAuth();
-  // step: 0 = intro, 1 = audience, 2 = frequency, 3 = content approach, 4 = writing style, 5 = media & signature, 6 = name & style, 7 = review
-  const [step, setStep] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+
+  // Define all the state variables we need
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience' | null>(null);
   const [selectedFrequency, setSelectedFrequency] =
     useState<'biweekly' | 'weekly' | null>(null);
   const [weeklyDay, setWeeklyDay] = useState<'Tuesday' | 'Friday' | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<'scheduled' | 'manual' | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [contentApproach, setContentApproach] = useState<'everything' | 'topics' | null>(null);
   const [topics, setTopics] = useState<string>('');
   const [writingStyle, setWritingStyle] = useState<'first' | 'third' | 'emulate' | null>(null);
@@ -39,8 +52,28 @@ const CreateNewsletter = () => {
   const [newsletterName, setNewsletterName] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
+  // Determine if the form is valid for submission
+  const isFormValid = () => {
+    return (
+      selectedAudience &&
+      selectedFrequency &&
+      ((selectedFrequency === 'biweekly' && deliveryOption) ||
+        (selectedFrequency === 'weekly' &&
+          (deliveryOption === 'manual' || weeklyDay))) &&
+      (contentApproach === 'everything' ||
+        (contentApproach === 'topics' && topics.trim().length > 0)) &&
+      (writingStyle === 'first' ||
+        writingStyle === 'third' ||
+        (writingStyle === 'emulate' && styleExample.trim().length > 0)) &&
+      includeMedia !== null &&
+      includeSignature !== null &&
+      newsletterName.trim().length > 0 &&
+      selectedTemplate
+    );
+  };
+
   const handleCreateClick = () => {
-    setStep(1);
+    setShowIntro(false);
     console.log('Create newsletter workflow started');
   };
 
@@ -139,7 +172,7 @@ const CreateNewsletter = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] p-4 md:p-8">
-      {step === 0 ? (
+      {showIntro ? (
         // Initial view
         <div className="max-w-3xl w-full text-center space-y-8 animate-fade-in">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -157,541 +190,470 @@ const CreateNewsletter = () => {
             Begin Creating
           </Button>
         </div>
-      ) : step === 1 ? (
-        // Audience selection view
-        <div className="w-full max-w-4xl animate-fade-in space-y-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Who's this newsletter for?</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Choose the target audience for your newsletter to tailor the creation experience.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card
-              onClick={() => handleAudienceSelect('personal')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedAudience === 'personal' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto bg-blue-100 rounded-full p-3 mb-3">
-                  <User className="h-8 w-8 text-primary" />
+      ) : (
+        <div className="w-full max-w-4xl animate-fade-in">
+          <Card className="shadow-md">
+            <CardHeader className="text-center border-b pb-6">
+              <CardTitle className="text-2xl md:text-3xl">Create Your Newsletter</CardTitle>
+              <CardDescription>
+                Fill out the form below to set up your customized newsletter.
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="p-0">
+              <ScrollArea className="h-[calc(100vh-18rem)] p-6">
+                <div className="space-y-8">
+                  {/* Audience Section */}
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Who's this newsletter for?</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card
+                        onClick={() => handleAudienceSelect('personal')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          selectedAudience === 'personal' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center pb-2">
+                          <div className="mx-auto bg-blue-100 rounded-full p-3 mb-3">
+                            <User className="h-6 w-6 text-primary" />
+                          </div>
+                          <CardTitle className="text-lg">Personal</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center pb-4">
+                          <p className="text-sm text-muted-foreground">
+                            A private newsletter for your own use, notes, or personal content.
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        onClick={() => handleAudienceSelect('audience')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          selectedAudience === 'audience' ? 'border-amber-500' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center pb-2">
+                          <div className="mx-auto bg-amber-100 rounded-full p-3 mb-3">
+                            <Users className="h-6 w-6 text-amber-500" />
+                          </div>
+                          <CardTitle className="text-lg">For an audience</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center pb-4">
+                          <p className="text-sm text-muted-foreground">
+                            Create newsletters to share with subscribers, followers, or customers.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Frequency Section */}
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">How often do you want your newsletter?</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Biweekly */}
+                      <Card
+                        onClick={() => handleFrequencySelect('biweekly')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          selectedFrequency === 'biweekly' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center pb-2">
+                          <CardTitle className="text-lg">Biweekly</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center space-y-1 pb-4">
+                          <p className="text-sm text-muted-foreground">up to 30 tweets</p>
+                          <div className="font-semibold">$19 / month</div>
+                        </CardContent>
+                      </Card>
+                      {/* Weekly */}
+                      <Card
+                        onClick={() => handleFrequencySelect('weekly')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          selectedFrequency === 'weekly' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center pb-2">
+                          <CardTitle className="text-lg">Weekly</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center space-y-1 pb-4">
+                          <p className="text-sm text-muted-foreground">up to 50 tweets</p>
+                          <div className="font-semibold">$10 / month</div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {selectedFrequency && (
+                      <div className="mt-4 pt-2 border-t">
+                        <h3 className="text-lg font-medium mb-3">Delivery preference</h3>
+                        
+                        {selectedFrequency === 'biweekly' && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Card
+                              onClick={() => setDeliveryOption('scheduled')}
+                              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                                deliveryOption === 'scheduled' ? 'border-primary' : ''
+                              }`}
+                            >
+                              <CardHeader className="text-center p-4">
+                                <CardTitle className="text-lg">Every Tuesday and Friday</CardTitle>
+                              </CardHeader>
+                            </Card>
+                            <Card
+                              onClick={() => {
+                                setDeliveryOption('manual');
+                                setWeeklyDay(null);
+                              }}
+                              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                                deliveryOption === 'manual' ? 'border-primary' : ''
+                              }`}
+                            >
+                              <CardHeader className="text-center p-4">
+                                <CardTitle className="text-lg">Manual</CardTitle>
+                                <CardDescription>
+                                  Generate manually, 8 credits a month
+                                </CardDescription>
+                              </CardHeader>
+                            </Card>
+                          </div>
+                        )}
+                        
+                        {selectedFrequency === 'weekly' && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Card
+                              onClick={() => {
+                                setWeeklyDay('Tuesday');
+                                setDeliveryOption('scheduled');
+                              }}
+                              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                                deliveryOption === 'scheduled' && weeklyDay === 'Tuesday'
+                                  ? 'border-primary'
+                                  : ''
+                              }`}
+                            >
+                              <CardHeader className="text-center p-4">
+                                <CardTitle className="text-lg">Tuesday</CardTitle>
+                              </CardHeader>
+                            </Card>
+                            <Card
+                              onClick={() => {
+                                setWeeklyDay('Friday');
+                                setDeliveryOption('scheduled');
+                              }}
+                              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                                deliveryOption === 'scheduled' && weeklyDay === 'Friday'
+                                  ? 'border-primary'
+                                  : ''
+                              }`}
+                            >
+                              <CardHeader className="text-center p-4">
+                                <CardTitle className="text-lg">Friday</CardTitle>
+                              </CardHeader>
+                            </Card>
+                            <Card
+                              onClick={() => {
+                                setWeeklyDay(null);
+                                setDeliveryOption('manual');
+                              }}
+                              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                                deliveryOption === 'manual' ? 'border-primary' : ''
+                              }`}
+                            >
+                              <CardHeader className="text-center p-4">
+                                <CardTitle className="text-lg">Manual</CardTitle>
+                                <CardDescription>
+                                  Generate manually, 4 credits a month
+                                </CardDescription>
+                              </CardHeader>
+                            </Card>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Content Approach Section */}
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Content approach</h2>
+                    <div className="space-y-3">
+                      <Card
+                        onClick={() => setContentApproach('everything')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 ${
+                          contentApproach === 'everything' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="py-3 px-4">
+                          <div className="flex items-center">
+                            <div className={`w-4 h-4 rounded-full mr-2 ${contentApproach === 'everything' ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                            <div>
+                              <CardTitle className="text-base">Everything from my bookmarks</CardTitle>
+                              <CardDescription>Use every bookmarked tweet since my last newsletter</CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+
+                      <Collapsible
+                        open={contentApproach === 'topics'}
+                        onOpenChange={(open) => {
+                          if (open) setContentApproach('topics');
+                        }}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Card
+                            className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 ${
+                              contentApproach === 'topics' ? 'border-primary' : ''
+                            }`}
+                          >
+                            <CardHeader className="py-3 px-4">
+                              <div className="flex items-center">
+                                <div className={`w-4 h-4 rounded-full mr-2 ${contentApproach === 'topics' ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                                <div>
+                                  <CardTitle className="text-base">General topics only</CardTitle>
+                                  <CardDescription>Stick with only these general topics</CardDescription>
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </Card>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="p-4 pt-0 pl-10">
+                            <Input
+                              value={topics}
+                              onChange={(e) => setTopics(e.target.value)}
+                              placeholder="Type topics here..."
+                              className="mt-2"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Type your desired main topics and we'll do the rest!
+                            </p>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Writing Style Section */}
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Choose your writing style</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card
+                        onClick={() => setWritingStyle('first')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          writingStyle === 'first' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center p-4">
+                          <CardTitle className="text-lg">First Person</CardTitle>
+                        </CardHeader>
+                      </Card>
+                      <Card
+                        onClick={() => setWritingStyle('third')}
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                          writingStyle === 'third' ? 'border-primary' : ''
+                        }`}
+                      >
+                        <CardHeader className="text-center p-4">
+                          <CardTitle className="text-lg">Third Person</CardTitle>
+                        </CardHeader>
+                      </Card>
+                      
+                      <Collapsible
+                        open={writingStyle === 'emulate'}
+                        onOpenChange={(open) => {
+                          if (open) setWritingStyle('emulate');
+                        }}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Card
+                            className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                              writingStyle === 'emulate' ? 'border-primary' : ''
+                            }`}
+                          >
+                            <CardHeader className="text-center p-4">
+                              <CardTitle className="text-lg">Emulate a writing style</CardTitle>
+                            </CardHeader>
+                          </Card>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="p-4 pt-0">
+                            <Textarea
+                              value={styleExample}
+                              onChange={(e) => setStyleExample(e.target.value)}
+                              placeholder="Paste text examples of your desired writing style (max 1000 chars)"
+                              maxLength={1000}
+                              className="mt-2"
+                            />
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Media & Signature Section */}
+                  <div className="space-y-5">
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold">Include media (tweets/pictures/videos)?</h2>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div 
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${
+                            includeMedia === true ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'
+                          }`}
+                          onClick={() => setIncludeMedia(true)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">Yes, include media📸</div>
+                            <div className={`w-4 h-4 rounded-full ${includeMedia === true ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                          </div>
+                        </div>
+                        <div 
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${
+                            includeMedia === false ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'
+                          }`}
+                          onClick={() => setIncludeMedia(false)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">No, text only</div>
+                            <div className={`w-4 h-4 rounded-full ${includeMedia === false ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold">Include your X handle or signature?</h2>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div 
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${
+                            includeSignature === true ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'
+                          }`}
+                          onClick={() => setIncludeSignature(true)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">Yes, add my signature</div>
+                            <div className={`w-4 h-4 rounded-full ${includeSignature === true ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                          </div>
+                        </div>
+                        <div 
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${
+                            includeSignature === false ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'
+                          }`}
+                          onClick={() => setIncludeSignature(false)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">No thanks 🙅‍♂️</div>
+                            <div className={`w-4 h-4 rounded-full ${includeSignature === false ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Newsletter Name & Template Section */}
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold">Give your newsletter a name</h2>
+                      <Input
+                        value={newsletterName}
+                        onChange={(e) => setNewsletterName(e.target.value)}
+                        placeholder="Newsletter name"
+                        className="max-w-lg"
+                      />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold">Choose a visual style for your newsletter</h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <Card
+                          onClick={() => setSelectedTemplate('template1')}
+                          className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                            selectedTemplate === 'template1' ? 'border-primary' : ''
+                          }`}
+                        >
+                          <CardHeader className="p-0">
+                            <img src="/placeholder.svg" alt="Template 1" className="w-full h-32 object-cover rounded-t-lg" />
+                          </CardHeader>
+                          <CardContent className="text-center p-3">
+                            <p className="text-sm text-muted-foreground">Template 1</p>
+                          </CardContent>
+                        </Card>
+                        <Card
+                          onClick={() => setSelectedTemplate('template2')}
+                          className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                            selectedTemplate === 'template2' ? 'border-primary' : ''
+                          }`}
+                        >
+                          <CardHeader className="p-0">
+                            <img src="/placeholder.svg" alt="Template 2" className="w-full h-32 object-cover rounded-t-lg" />
+                          </CardHeader>
+                          <CardContent className="text-center p-3">
+                            <p className="text-sm text-muted-foreground">Template 2</p>
+                          </CardContent>
+                        </Card>
+                        <Card
+                          onClick={() => setSelectedTemplate('template3')}
+                          className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
+                            selectedTemplate === 'template3' ? 'border-primary' : ''
+                          }`}
+                        >
+                          <CardHeader className="p-0">
+                            <img src="/placeholder.svg" alt="Template 3" className="w-full h-32 object-cover rounded-t-lg" />
+                          </CardHeader>
+                          <CardContent className="text-center p-3">
+                            <p className="text-sm text-muted-foreground">Template 3</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Pricing summary */}
+                  <div className="bg-amber-50 rounded-lg p-4 mt-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-semibold">Your subscription:</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedFrequency === 'weekly' 
+                            ? 'Weekly Newsletter' 
+                            : selectedFrequency === 'biweekly' 
+                              ? 'Biweekly Newsletter' 
+                              : 'Select a frequency'}
+                        </p>
+                      </div>
+                      <div className="text-xl font-bold">
+                        {selectedFrequency === 'weekly' 
+                          ? '$10/month' 
+                          : selectedFrequency === 'biweekly' 
+                            ? '$19/month' 
+                            : '—'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <CardTitle>Personal</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardDescription className="text-sm md:text-base">
-                  A private newsletter for your own use, notes, or personal content.
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="justify-center pt-0">
-                <Button variant="ghost" size="sm" className="text-primary">
-                  Select Personal
-                </Button>
-              </CardFooter>
-            </Card>
-            <Card
-              onClick={() => handleAudienceSelect('audience')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedAudience === 'audience' ? 'border-amber-500' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto bg-amber-100 rounded-full p-3 mb-3">
-                  <Users className="h-8 w-8 text-amber-500" />
-                </div>
-                <CardTitle>For an audience</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardDescription className="text-sm md:text-base">
-                  Create newsletters to share with subscribers, followers, or customers.
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="justify-center pt-0">
-                <Button variant="ghost" size="sm" className="text-amber-500">
-                  Select Audience
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-          {selectedAudience && (
-            <div className="text-center mt-6">
+              </ScrollArea>
+            </CardContent>
+            
+            <CardFooter className="border-t p-6 flex justify-end">
               <Button
-                onClick={() => setStep(2)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
+                onClick={handleCheckout}
+                disabled={!isFormValid() || isSubmitting}
+                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600 h-auto"
               >
-                Continue
+                {isSubmitting ? 'Processing...' : 'Subscribe Now'}
               </Button>
-            </div>
-          )}
+            </CardFooter>
+          </Card>
         </div>
-      ) : step === 2 ? (
-        // Frequency selection view
-        <div className="w-full max-w-4xl space-y-8 animate-fade-in">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              How often do you want your newsletter?
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Biweekly */}
-            <Card
-              onClick={() => handleFrequencySelect('biweekly')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedFrequency === 'biweekly' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Biweekly</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-1">
-                <CardDescription>up to 30 tweets</CardDescription>
-                <div className="font-semibold">$19 / month</div>
-              </CardContent>
-            </Card>
-            {/* Weekly */}
-            <Card
-              onClick={() => handleFrequencySelect('weekly')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedFrequency === 'weekly' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2">
-                <CardTitle>Weekly</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-1">
-                <CardDescription>up to 50 tweets</CardDescription>
-                <div className="font-semibold">$10 / month</div>
-              </CardContent>
-            </Card>
-          </div>
-          {selectedFrequency === 'biweekly' && (
-            <div className="md:col-span-3 mt-4 space-y-2">
-              <p className="text-center font-medium">Delivery preference</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
-                <Card
-                  onClick={() => setDeliveryOption('scheduled')}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    deliveryOption === 'scheduled' ? 'border-primary' : ''
-                  }`}
-                >
-                  <CardHeader className="text-center pb-2">
-                    <CardTitle>Every Tuesday and Friday</CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card
-                  onClick={() => {
-                    setDeliveryOption('manual');
-                    setWeeklyDay(null);
-                  }}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    deliveryOption === 'manual' ? 'border-primary' : ''
-                  }`}
-                >
-                  <CardHeader className="text-center pb-2">
-                    <CardTitle>Manual</CardTitle>
-                    <CardDescription>
-                      Generate manually from your dashboard, 8 credits a month
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </div>
-          )}
-          {selectedFrequency === 'weekly' && (
-            <div className="md:col-span-3 mt-4 space-y-2">
-              <p className="text-center font-medium">Which day?</p>
-              <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
-                <Card
-                  onClick={() => {
-                    setWeeklyDay('Tuesday');
-                    setDeliveryOption('scheduled');
-                  }}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    deliveryOption === 'scheduled' && weeklyDay === 'Tuesday'
-                      ? 'border-primary'
-                      : ''
-                  }`}
-                >
-                  <CardHeader className="text-center pb-2">
-                    <CardTitle>Tuesday</CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card
-                  onClick={() => {
-                    setWeeklyDay('Friday');
-                    setDeliveryOption('scheduled');
-                  }}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    deliveryOption === 'scheduled' && weeklyDay === 'Friday'
-                      ? 'border-primary'
-                      : ''
-                  }`}
-                >
-                  <CardHeader className="text-center pb-2">
-                    <CardTitle>Friday</CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card
-                  onClick={() => {
-                    setWeeklyDay(null);
-                    setDeliveryOption('manual');
-                  }}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                    deliveryOption === 'manual' ? 'border-primary' : ''
-                  }`}
-                >
-                  <CardHeader className="text-center pb-2">
-                    <CardTitle>Manual</CardTitle>
-                    <CardDescription>
-                      Generate manually from your dashboard, 4 credits a month
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </div>
-          )}
-          {((selectedFrequency === 'biweekly' && deliveryOption) ||
-            (selectedFrequency === 'weekly' &&
-              deliveryOption &&
-              (deliveryOption === 'manual' || weeklyDay))) && (
-            <div className="text-center mt-6">
-              <Button
-                onClick={() => setStep(3)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : step === 3 ? (
-        // Content approach view
-        <div className="w-full max-w-2xl space-y-8 animate-fade-in">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Content approach:</h2>
-          </div>
-          <RadioGroup
-            value={contentApproach ?? ''}
-            onValueChange={(v) => setContentApproach(v as 'everything' | 'topics')}
-            className="space-y-4"
-          >
-            <div className="flex items-start gap-3">
-              <RadioGroupItem value="everything" id="everything" />
-              <div>
-                <label htmlFor="everything" className="font-medium">Everything from my bookmarks</label>
-                <p className="text-sm text-muted-foreground">
-                  Use every bookmarked tweet since my last newsletter
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-3">
-                <RadioGroupItem value="topics" id="topics" />
-                <div>
-                  <label htmlFor="topics" className="font-medium">General topics only</label>
-                  <p className="text-sm text-muted-foreground">
-                    Stick with only these general topics (type your desired main topics and we'll do the rest!)
-                  </p>
-                </div>
-              </div>
-              {contentApproach === 'topics' && (
-                <Input
-                  value={topics}
-                  onChange={(e) => setTopics(e.target.value)}
-                  placeholder="Type topics here..."
-                  className="ml-7"
-                />
-              )}
-            </div>
-          </RadioGroup>
-          {(contentApproach === 'everything' ||
-            (contentApproach === 'topics' && topics.trim().length > 0)) && (
-            <div className="text-center mt-6">
-              <Button
-                onClick={() => setStep(4)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : step === 4 ? (
-        // Writing style selection
-        <div className="w-full max-w-4xl space-y-8 animate-fade-in">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Choose your writing style</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card
-              onClick={() => setWritingStyle('first')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                writingStyle === 'first' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>First Person</CardTitle></CardHeader>
-            </Card>
-            <Card
-              onClick={() => setWritingStyle('third')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                writingStyle === 'third' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>Third Person</CardTitle></CardHeader>
-            </Card>
-            <Card
-              onClick={() => setWritingStyle('emulate')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                writingStyle === 'emulate' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>Emulate a writing style</CardTitle></CardHeader>
-              {writingStyle === 'emulate' && (
-                <CardContent className="space-y-2">
-                  <Textarea
-                    value={styleExample}
-                    onChange={(e) => setStyleExample(e.target.value)}
-                    placeholder="Paste text examples of your desired writing style (max 1000 chars)"
-                    maxLength={1000}
-                  />
-                </CardContent>
-              )}
-            </Card>
-          </div>
-          {(writingStyle === 'first' ||
-            writingStyle === 'third' ||
-            (writingStyle === 'emulate' && styleExample.trim().length > 0)) && (
-            <div className="text-center mt-6">
-              <Button
-                onClick={() => setStep(5)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : step === 5 ? (
-        // Media & signature
-        <div className="w-full max-w-2xl space-y-8 animate-fade-in">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Include media (tweets/pictures/videos)?
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card
-              onClick={() => setIncludeMedia(true)}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                includeMedia === true ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>Yes, include media📸</CardTitle></CardHeader>
-            </Card>
-            <Card
-              onClick={() => setIncludeMedia(false)}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                includeMedia === false ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>No, text only</CardTitle></CardHeader>
-            </Card>
-          </div>
-          <div className="text-center mt-8 mb-4">
-            <h3 className="text-xl font-semibold">Include your X handle or signature?</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card
-              onClick={() => setIncludeSignature(true)}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                includeSignature === true ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>Yes, add my signature</CardTitle></CardHeader>
-            </Card>
-            <Card
-              onClick={() => setIncludeSignature(false)}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                includeSignature === false ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="text-center pb-2"><CardTitle>No thanks 🙅‍♂️</CardTitle></CardHeader>
-            </Card>
-          </div>
-          {includeMedia !== null && includeSignature !== null && (
-            <div className="text-center mt-6">
-              <Button
-                onClick={() => setStep(6)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : step === 6 ? (
-        // Name & visual style
-        <div className="w-full max-w-3xl space-y-8 animate-fade-in">
-          <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Give your newsletter a name?</h2>
-          </div>
-          <div className="flex justify-center">
-            <Input
-              value={newsletterName}
-              onChange={(e) => setNewsletterName(e.target.value)}
-              placeholder="Newsletter name"
-              className="max-w-md"
-            />
-          </div>
-          <div className="text-center mt-8">
-            <h3 className="text-2xl md:text-3xl font-bold mb-3">Choose a visual style for your newsletter</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <Card
-              onClick={() => setSelectedTemplate('template1')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedTemplate === 'template1' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="p-0">
-                <img src="/placeholder.svg" alt="Template 1" className="w-full h-32 object-cover rounded-t-lg" />
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardDescription>Template 1</CardDescription>
-              </CardContent>
-            </Card>
-            <Card
-              onClick={() => setSelectedTemplate('template2')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedTemplate === 'template2' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="p-0">
-                <img src="/placeholder.svg" alt="Template 2" className="w-full h-32 object-cover rounded-t-lg" />
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardDescription>Template 2</CardDescription>
-              </CardContent>
-            </Card>
-            <Card
-              onClick={() => setSelectedTemplate('template3')}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/50 hover:scale-[1.02] ${
-                selectedTemplate === 'template3' ? 'border-primary' : ''
-              }`}
-            >
-              <CardHeader className="p-0">
-                <img src="/placeholder.svg" alt="Template 3" className="w-full h-32 object-cover rounded-t-lg" />
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardDescription>Template 3</CardDescription>
-              </CardContent>
-            </Card>
-          </div>
-          {newsletterName.trim().length > 0 && selectedTemplate && (
-            <div className="text-center mt-6">
-              <Button
-                onClick={() => setStep(7)}
-                className="bg-amber-500 text-white px-8 py-4 hover:bg-amber-600"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : step === 7 ? (
-        // Updated Review and confirmation
-        <div className="w-full max-w-2xl space-y-8 animate-fade-in">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Review your selections</h2>
-          </div>
-          <div className="space-y-4">
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Audience:</span>
-              <span>{selectedAudience === 'personal' ? 'Personal' : 'For an audience'}</span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Frequency:</span>
-              <span>
-                {selectedFrequency === 'biweekly'
-                  ? deliveryOption === 'manual'
-                    ? 'Biweekly - Manual generation'
-                    : 'Biweekly (Tuesday & Friday)'
-                  : selectedFrequency === 'weekly'
-                  ? deliveryOption === 'manual'
-                    ? 'Weekly - Manual generation'
-                    : weeklyDay
-                    ? `Weekly on ${weeklyDay}`
-                    : 'Weekly'
-                  : selectedFrequency}
-              </span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Content approach:</span>
-              <span>
-                {contentApproach === 'everything'
-                  ? 'Everything from bookmarks'
-                  : `Topics – ${topics}`}
-              </span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Writing style:</span>
-              <span>
-                {writingStyle === 'emulate'
-                  ? 'Emulate a custom style'
-                  : writingStyle === 'first'
-                  ? 'First person'
-                  : 'Third person'}
-              </span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Include media:</span>
-              <span>{includeMedia ? 'Yes' : 'No'}</span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Add signature:</span>
-              <span>{includeSignature ? 'Yes' : 'No'}</span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Newsletter name:</span>
-              <span>{newsletterName}</span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4">
-              <span className="font-semibold">Template:</span>
-              <span>{selectedTemplate}</span>
-            </div>
-            <div className="flex justify-between border rounded-lg p-4 bg-amber-50">
-              <span className="font-semibold">Price:</span>
-              <span className="font-semibold">
-                {selectedFrequency === 'weekly' ? '$10/month' : '$19/month'}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
-            <Button
-              variant="outline"
-              onClick={() => setStep(6)}
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              <div className="flex flex-col">
-                <span>Go back</span>
-                <span className="text-xs text-muted-foreground">I need to change something</span>
-              </div>
-            </Button>
-            <Button 
-              className="flex-1 bg-amber-500 text-white hover:bg-amber-600"
-              onClick={handleCheckout}
-              disabled={isSubmitting}
-            >
-              <div className="flex flex-col">
-                <span>{isSubmitting ? 'Processing...' : 'Confirm'}</span>
-                <span className="text-xs">Proceed to Stripe payment and lock in your automated newsletter!</span>
-              </div>
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      )}
     </div>
   );
 };
