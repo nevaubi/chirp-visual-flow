@@ -696,7 +696,7 @@ ${markdownNewsletter}
             Authorization: `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", // Using a proper model instead of the non-existent chatgpt-4o-latest
+            model: "chatgpt-4o-latest", // Using a proper model instead of the non-existent chatgpt-4o-latest
             messages: [
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt },
