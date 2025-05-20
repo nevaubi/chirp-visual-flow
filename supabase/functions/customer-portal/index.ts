@@ -57,16 +57,78 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Fetch user profile to get Stripe customer ID
+    // First try to fetch user profile to get Stripe customer ID
+    let stripeCustomerId: string | null = null;
     const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
       
-    if (profileError || !profileData.stripe_customer_id) {
-      logStep("Error fetching profile or no Stripe customer ID", profileError);
-      return new Response(JSON.stringify({ error: "No Stripe customer ID found for user" }), {
+    if (profileError) {
+      logStep("Error fetching profile", profileError);
+      // Don't return error here, try to find the customer ID from Stripe instead
+    } else if (profileData?.stripe_customer_id) {
+      stripeCustomerId = profileData.stripe_customer_id;
+      logStep("Found Stripe customer ID in profile", { stripeCustomerId });
+    }
+
+    // If we couldn't get the customer ID from the profile, try to look it up in Stripe
+    if (!stripeCustomerId && user.email) {
+      logStep("Looking up customer in Stripe by email", { email: user.email });
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      
+      if (customers.data.length > 0) {
+        stripeCustomerId = customers.data[0].id;
+        logStep("Found customer in Stripe", { stripeCustomerId });
+        
+        // Update the profile with the found customer ID
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({ stripe_customer_id: stripeCustomerId })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          logStep("Error updating profile with Stripe ID", updateError);
+          // Continue anyway since we found the ID
+        }
+      }
+    }
+
+    // If we still don't have a customer ID, create a new customer
+    if (!stripeCustomerId && user.email) {
+      logStep("No existing customer found, creating new customer", { email: user.email });
+      try {
+        const newCustomer = await stripe.customers.create({
+          email: user.email,
+          metadata: { user_id: user.id }
+        });
+        
+        stripeCustomerId = newCustomer.id;
+        logStep("Created new Stripe customer", { stripeCustomerId });
+        
+        // Update the profile with the new customer ID
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({ stripe_customer_id: stripeCustomerId })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          logStep("Error updating profile with new Stripe ID", updateError);
+          // Continue anyway since we have the ID
+        }
+      } catch (createError) {
+        logStep("Error creating Stripe customer", createError);
+        return new Response(JSON.stringify({ error: "Failed to create Stripe customer" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // If we still don't have a customer ID, return an error
+    if (!stripeCustomerId) {
+      return new Response(JSON.stringify({ error: "Could not find or create Stripe customer ID" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -77,7 +139,7 @@ serve(async (req) => {
     
     // Create a Stripe Customer Portal session
     const session = await stripe.billingPortal.sessions.create({
-      customer: profileData.stripe_customer_id,
+      customer: stripeCustomerId,
       return_url: `${origin}/dashboard/home`,
     });
 
