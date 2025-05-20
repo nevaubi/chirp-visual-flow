@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Sparkles, Zap, FileText, VoiceIcon } from 'lucide-react';
+import { Mic, Sparkles, Zap, FileText } from 'lucide-react';
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
