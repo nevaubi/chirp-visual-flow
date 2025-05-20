@@ -34,7 +34,7 @@ async function analyzeWithOpenAI(tweets: string[]): Promise<string> {
       'Authorization': `Bearer ${OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-2025-04-14",
       temperature: 0.6,
       messages: [
         {
