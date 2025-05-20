@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Zap, Bookmark, Twitter, Info, Check, CreditCard } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 // Empty Creator Platform Dashboard
 const CreatorDashboard = ({ profile }) => {
