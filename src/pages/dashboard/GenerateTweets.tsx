@@ -32,7 +32,7 @@ const GenerateTweets = () => {
 
 const CreateVoiceProfileView = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { authState } = useAuth();
+  const { authState, refreshProfile } = useAuth();
   
   const handleCreateVoiceProfile = async () => {
     try {
@@ -47,10 +47,12 @@ const CreateVoiceProfileView = () => {
       });
       
       if (error) {
+        console.error("Supabase function error:", error);
         throw new Error(error.message || 'Failed to create voice profile');
       }
       
       if (!data.success) {
+        console.error("Function returned error:", data.error);
         throw new Error(data.error || 'Failed to create voice profile');
       }
       
@@ -60,7 +62,6 @@ const CreateVoiceProfileView = () => {
       });
       
       // Refresh user profile to get updated voice_profile_analysis
-      const { authState: auth, refreshProfile } = useAuth();
       await refreshProfile();
       
     } catch (error: any) {

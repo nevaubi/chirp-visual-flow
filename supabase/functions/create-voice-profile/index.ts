@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.4.0';
 
@@ -34,7 +35,7 @@ async function analyzeWithOpenAI(tweets: string[]): Promise<string> {
       'Authorization': `Bearer ${OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-4.1-2025-04-14",
+      model: "gpt-4-1106-preview",
       temperature: 0.6,
       messages: [
         {
@@ -102,24 +103,63 @@ serve(async (req) => {
   }
 
   try {
-    // —— AUTH WORKFLOW (UNCHANGED) ——
+    // —— IMPROVED AUTH WORKFLOW ——
     const authHeader = req.headers.get('Authorization');
-    if (authHeader) console.log('Auth header prefix:', authHeader.substring(0,15)+'…');
-    console.log('Auth object present:', !!req.auth);
-
-    let userId = req.auth?.uid;
-    let requestBody: any;
-    try { requestBody = await req.json(); }
-    catch { requestBody = {}; }
-
-    if (!userId && requestBody.userId) userId = requestBody.userId;
+    let userId: string | undefined = undefined;
+    
+    // Extract the token from the Authorization header
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      console.log('Token received:', token.substring(0, 15) + '…');
+      
+      // Setup Supabase client to validate JWT
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing Supabase configuration');
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Verify JWT token
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (error) {
+          console.error('JWT verification error:', error);
+          throw new Error(`Authentication error: ${error.message}`);
+        }
+        
+        if (user) {
+          userId = user.id;
+          console.log('Successfully authenticated user:', userId);
+        }
+      } catch (authError) {
+        console.error('Error during token verification:', authError);
+        throw new Error('Authentication failed');
+      }
+    }
+    
+    // Fallback to body parameter if header auth failed
     if (!userId) {
-      return new Response(JSON.stringify({
-        success: false, error: 'Authentication required'
-      }), { status: 401, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
+      try {
+        const requestBody = await req.json();
+        userId = requestBody.userId;
+        
+        if (!userId) {
+          return new Response(JSON.stringify({
+            success: false, error: 'Authentication required - no valid auth token or userId provided'
+          }), { status: 401, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
+        }
+      } catch (e) {
+        return new Response(JSON.stringify({
+          success: false, error: 'Invalid request body format'
+        }), { status: 400, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
+      }
     }
 
-    // —— SUPABASE INIT (UNCHANGED) ——
+    // —— SUPABASE INIT ——
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase config');
@@ -159,12 +199,12 @@ serve(async (req) => {
     nonReplies.sort((a, b) => (b['Likes'] || 0) - (a['Likes'] || 0));
     const originalTexts = nonReplies.slice(0, 30).map(t => t['text of tweet']);
 
-    // —— NEW: STRIP OUT LINKS FROM EACH TWEET ——
+    // —— STRIP OUT LINKS FROM EACH TWEET ——
     const texts = originalTexts.map(t =>
       t.replace(/https?:\/\/\S+/g, '').trim()
     );
 
-    // —— LOG TOP 30 (UNCHANGED) ——
+    // —— LOG TOP 30 ——
     const formatted = texts
       .map((t, i) => `Tweet ${i+1} text:\n${t}`)
       .join('\n\n---\n\n');
@@ -197,7 +237,7 @@ serve(async (req) => {
       styleAnalysis = `Analysis error: ${e.message}`;
     }
 
-    // —— FINAL RESPONSE (UNCHANGED) ——
+    // —— FINAL RESPONSE ——
     return new Response(JSON.stringify({
       success: true,
       count: texts.length,
