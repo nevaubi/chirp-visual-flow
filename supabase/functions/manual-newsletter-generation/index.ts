@@ -431,7 +431,7 @@ ${formattedTweets}`;
         replyAnalysisData = outLogs.join("\n");
         
         // 11) Call OpenAI with reply data for discourse analysis
-        const discourseSystemPrompt = `You are an advanced social media discourse analyzer specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
+        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
 
 CORE CAPABILITIES:
 - Analyze the relationship between original tweets and their replies to identify discourse patterns
@@ -457,7 +457,7 @@ Your analysis should focus on discovering:
 OUTPUT FRAMEWORK:
 You are to output 4 high quality insights. For each insight, provide:
 1. A concise, compelling header (5-8 words)
-2. A 200-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at a 10th grade writing level.`;
+2. A 100-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
 
         const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
 
@@ -469,13 +469,13 @@ Go beyond surface-level topic identification to discover:
 
 For each of the 4 insights:
 1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
-2. Write a 200-word explanation that:
-   - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday casual speaking style
+2. Write a 100-word explanation that:
+   - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
    - Provides specific evidence from multiple tweet conversations
    - Explains why this insight is significant
    - Addresses both what is said and what remains unsaid
    - Connects the insight to broader social or technological contexts when relevant
-   - It is IMPORTANT that you deliver your output in natural normal wording spoken at a 10th grade writing level.
+   - It is IMPORTANT that you deliver your output in natural normal wording spoken at an 8th grade writing level.
 
 Analysis criteria:
 - Prioritize insights that reveal something unexpected or non-obvious
@@ -484,7 +484,7 @@ Analysis criteria:
 - Pay attention to linguistic patterns, emotional markers, and conversational dynamics
 - Look for contradictions between stated positions and implicit values
 
-Please format your response with clear numbered headers and well-structured explanations spoken in a 10th grade writing level.
+Please format your response with clear numbered headers and well-structured explanations spoken in an 8th grade writing level.
 
 DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CONCEPTS, AND SENTIMENTS. 
 
@@ -505,7 +505,7 @@ ${replyAnalysisData}`;
               { role: "user", content: discourseUserPrompt },
             ],
             temperature: 0.4,
-            max_tokens: 4000,
+            max_tokens: 2000,
           }),
         });
         
