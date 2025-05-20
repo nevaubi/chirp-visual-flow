@@ -84,13 +84,12 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         return;
       }
       
-      // Successfully fetched bookmarks and ready to proceed
-      console.log('Bookmarks retrieved successfully:', data);
+      // Successfully generated newsletter
+      console.log('Newsletter generated successfully:', data);
       
-      // In a real implementation, we would now process the bookmarks and generate the newsletter
-      // For now, just show a success message
-      toast.success('Newsletter generation started', {
-        description: `Creating newsletter with ${selectedCount} tweets. You'll receive it by email soon.`,
+      // Show success message
+      toast.success('Newsletter generated successfully', {
+        description: `Created newsletter with ${data.data.newsletter.tweets.length} tweets. The newsletter is ready to view.`,
       });
       
       // Close the dialog

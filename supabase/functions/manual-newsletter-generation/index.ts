@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -227,52 +228,112 @@ serve(async (req) => {
     const apifyData = await apifyResponse.json();
     console.log("Raw Apify response:", JSON.stringify(apifyData, null, 2));
 
-    // ——— Updated parsing & logging logic ———
+    // Process the tweets from Apify into a better format
     const tweetsArray = Array.isArray(apifyData)
       ? apifyData
       : Array.isArray(apifyData.items)
         ? apifyData.items
         : [];
 
-    const formattedTweets = tweetsArray.map((t, i) => {
-      const text = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-      const photo = t.extendedEntities?.media?.find(m => m.type === "photo")?.media_url_https ?? "N/A";
+    // Create a more structured format for the newsletter
+    const processedTweets = tweetsArray.map(tweet => {
+      // Extract main image if available
+      const mainImage = tweet.extendedEntities?.media?.find(m => m.type === "photo")?.media_url_https || null;
+      
+      // Format date
+      let tweetDate = "Unknown date";
+      try {
+        if (tweet.createdAt) {
+          const date = new Date(tweet.createdAt);
+          tweetDate = date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        }
+      } catch (e) {
+        console.error("Date parsing error:", e);
+      }
 
-      return [
-        `Tweet ${i + 1}`,
-        `Tweet text: ${text}`,
-        `Retweets: ${t.retweetCount}`,
-        `ReplyAmount: ${t.replyCount}`,
-        `LikesAmount: ${t.likeCount}`,
-        `QuotesAmount: ${t.quoteCount}`,
-        `Impressions: ${t.viewCount}`,
-        `Date: ${t.createdAt}`,
-        `Reply?: ${t.isReply}`,
-        `Replyingto: ${t.inReplyToUsername || "N/A"}`,
-        `TweetAuthor: ${t.author?.name}`,
-        `TweetAuthorHandle: ${t.author?.userName}`,
-        `Verified: ${t.author?.isBlueVerified}`,
-        `ProfilePic: ${t.author?.profilePicture}`,
-        `PhotoUrl: ${photo}`
-      ].join("\n");
+      // Clean up tweet text (remove URLs)
+      const cleanText = (tweet.text || "").replace(/https?:\/\/\S+/g, "").trim();
+      
+      return {
+        id: tweet.id,
+        text: cleanText,
+        authorName: tweet.author?.name || "Unknown Author",
+        authorUsername: tweet.author?.userName || "unknown",
+        authorProfilePic: tweet.author?.profilePicture || null,
+        date: tweetDate,
+        stats: {
+          likes: tweet.likeCount || 0,
+          retweets: tweet.retweetCount || 0,
+          replies: tweet.replyCount || 0,
+          quotes: tweet.quoteCount || 0,
+          impressions: tweet.viewCount || 0,
+        },
+        isReply: tweet.isReply || false,
+        replyingTo: tweet.inReplyToUsername || null,
+        mainImage: mainImage,
+        isVerified: tweet.author?.isBlueVerified || false,
+        originalUrl: `https://twitter.com/${tweet.author?.userName || 'user'}/status/${tweet.id}`,
+      };
     });
 
-    // Log them all as one single string
-    console.log(formattedTweets.join("\n\n"));
-    // ——————————————————————————————————
+    // Generate a formatted newsletter content
+    const timestamp = new Date().toISOString();
+    const newsletterContent = {
+      title: `Your Twitter Bookmarks Newsletter - ${new Date().toLocaleDateString()}`,
+      intro: "Here are the top tweets from your bookmarks:",
+      timestamp: timestamp,
+      tweets: processedTweets,
+    };
+
+    // Log and return the processed tweets
+    console.log("Processed tweets:", JSON.stringify(newsletterContent, null, 2));
+
+    // Now update the profile to decrement the remaining generations
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ 
+        remaining_newsletter_generations: profile.remaining_newsletter_generations - 1,
+        last_newsletter_generation: timestamp 
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error("Error updating profile:", updateError);
+      // Continue anyway as this shouldn't block the newsletter generation
+    }
+
+    // Create a record in a newsletters table if one exists
+    try {
+      const { error: insertError } = await supabase
+        .from("newsletters")
+        .insert({
+          user_id: user.id,
+          content: newsletterContent,
+          status: "generated",
+          tweet_count: processedTweets.length,
+          generation_type: "manual"
+        });
+
+      if (insertError) {
+        console.error("Error inserting newsletter record:", insertError);
+        // Continue anyway as this shouldn't block the response
+      }
+    } catch (error) {
+      // If the table doesn't exist, just log and continue
+      console.log("Could not save newsletter to database (table may not exist):", error);
+    }
 
     return new Response(
       JSON.stringify({
         status: "success",
-        message: "Bookmarks retrieved successfully",
+        message: "Newsletter generated successfully",
         data: {
-          selectedCount,
-          email: profile.sending_email,
-          preferences: profile.newsletter_content_preferences,
-          numerical_id: numericalId,
-          bookmarks: bookmarksData,
-          tweetIds,
-          detailedTweetData: apifyData
+          newsletter: newsletterContent,
+          remainingGenerations: profile.remaining_newsletter_generations - 1
         }
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
