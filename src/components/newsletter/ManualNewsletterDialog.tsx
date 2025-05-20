@@ -204,16 +204,6 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         .animate-pulse-bookmark {
           animation: pulse-bookmark 1.5s infinite ease-in-out;
         }
-        @keyframes checkmark {
-          0% { transform: scale(0); opacity: 0; }
-          40% { transform: scale(1.2); opacity: 1; }
-          60% { transform: scale(0.95); opacity: 1; }
-          80% { transform: scale(1.05); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-checkmark {
-          animation: checkmark 1s ease-out forwards;
-        }
         @keyframes confetti-right {
           0% { transform: translateY(0) rotate(0); opacity: 1; }
           80% { opacity: 0.7; }
@@ -275,17 +265,6 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                         <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full transition-all duration-700 ease-out delay-800 transform ${progress > 90 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                       </div>
                     </div>
-                    
-                    {/* Checkmark overlay that appears when complete */}
-                    {progress >= 100 && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-white bg-opacity-70 rounded-full p-3 animate-checkmark shadow-lg">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
                     
                     {/* Confetti animation when complete */}
                     {progress >= 100 && (
