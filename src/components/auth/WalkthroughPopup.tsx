@@ -41,7 +41,9 @@ const WalkthroughPopup = ({
 }: WalkthroughPopupProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>("Processing...");
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const totalSteps = 4;
   const { toast } = useToast();
   const { authState, updateProfile } = useAuth();
@@ -58,6 +60,7 @@ const WalkthroughPopup = ({
       setUsername("");
       setPermission(false);
       setVerificationError(null);
+      setAnalysisError(null);
     }
   }, [open]);
 
@@ -81,7 +84,9 @@ const WalkthroughPopup = ({
         }
 
         setIsLoading(true);
+        setLoadingMessage("Verifying username...");
         setVerificationError(null);
+        setAnalysisError(null);
         
         try {
           // Add console.log to check if authState.user?.id exists
@@ -115,6 +120,45 @@ const WalkthroughPopup = ({
             title: "Username verified",
             description: "Your profile has been updated with your Twitter information",
           });
+          
+          // Now that username is verified, start the profile analysis
+          setLoadingMessage("Analyzing your Twitter profile...");
+          
+          try {
+            // Call the initial profile analysis edge function
+            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('initial-profile-analysis', {
+              body: {
+                userId: authState.user.id,
+                twitterUsername: username,
+                timezone
+              }
+            });
+            
+            if (analysisError) {
+              throw new Error(analysisError.message);
+            }
+            
+            if (!analysisData.success) {
+              throw new Error(analysisData.error || "Profile analysis failed");
+            }
+            
+            // Analysis completed successfully
+            toast({
+              title: "Analysis complete",
+              description: "Your profile has been analyzed and insights are ready",
+            });
+            
+          } catch (error) {
+            console.error("Error during profile analysis:", error);
+            setAnalysisError(error.message || "An error occurred during profile analysis. Your profile is still set up, but we couldn't complete the analysis.");
+            
+            // We'll continue with onComplete even if analysis fails
+            toast({
+              title: "Profile setup complete",
+              description: "Your profile was set up, but we encountered an issue during analysis. You can try again later.",
+              variant: "default",
+            });
+          }
           
           // Continue with onComplete
           await onComplete();
@@ -366,11 +410,20 @@ const WalkthroughPopup = ({
           <div className="p-4 sm:p-6 flex flex-col items-center justify-center min-h-[150px] sm:min-h-[200px]">
             <div className="w-8 h-8 sm:w-10 sm:h-10 mb-4 border-4 border-t-transparent border-[#0087C8] rounded-full animate-spin"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 text-center">
-              {isCreatorPlatform ? "Verifying username..." : "Finalizing your setup..."}
+              {loadingMessage}
             </h3>
             <p className="text-sm sm:text-base text-gray-600 text-center">
-              {isCreatorPlatform ? "Please wait while we verify your account and update your profile." : "Please wait while we save your preferences."}
+              {isCreatorPlatform 
+                ? "Please wait while we verify your account and analyze your profile." 
+                : "Please wait while we save your preferences."}
             </p>
+            {analysisError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                <p className="font-medium mb-1">There was an issue with the analysis:</p>
+                <p>{analysisError}</p>
+                <p className="mt-2">Don't worry, your profile is set up and you can continue.</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
