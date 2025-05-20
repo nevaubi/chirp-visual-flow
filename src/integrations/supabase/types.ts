@@ -50,6 +50,30 @@ export type Database = {
           },
         ]
       }
+      newsletter_storage: {
+        Row: {
+          created_at: string
+          id: string
+          markdown_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          markdown_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          markdown_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_creation_date: string | null
