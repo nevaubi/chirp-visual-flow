@@ -185,16 +185,86 @@ serve(async (req) => {
     }
 
     // —— PARSING / FILTERING / RANKING ——
-    let tweets: any[];
+    // Improved parsing with proper error handling and type checking
+    let tweetData: any;
+    let tweets: any[] = [];
+    
     try {
-      tweets = JSON.parse(raw);
-    } catch {
+      tweetData = JSON.parse(raw);
+      
+      // Log the structure to debug
+      console.log('Raw tweet data structure:', 
+        typeof tweetData, 
+        Array.isArray(tweetData) ? 'is array' : 'not array',
+        tweetData && typeof tweetData === 'object' ? 'has keys: ' + Object.keys(tweetData).join(', ') : ''
+      );
+      
+      // Check if tweetData is directly an array
+      if (Array.isArray(tweetData)) {
+        tweets = tweetData;
+      } 
+      // Check if tweets might be nested in a property
+      else if (tweetData && typeof tweetData === 'object') {
+        // Try common properties where tweets might be stored
+        if (Array.isArray(tweetData.tweets)) {
+          tweets = tweetData.tweets;
+        } else if (Array.isArray(tweetData.data)) {
+          tweets = tweetData.data;
+        } else if (Array.isArray(tweetData.items)) {
+          tweets = tweetData.items;
+        } else if (Array.isArray(tweetData.results)) {
+          tweets = tweetData.results;
+        } else {
+          // Last resort: find any array property
+          for (const key in tweetData) {
+            if (Array.isArray(tweetData[key]) && tweetData[key].length > 0) {
+              tweets = tweetData[key];
+              console.log(`Found tweets array in property: ${key}`);
+              break;
+            }
+          }
+        }
+      }
+      
+      // If we still don't have an array, create an empty one
+      if (!Array.isArray(tweets)) {
+        console.error('Unable to extract tweets array from data, defaulting to empty array');
+        tweets = [];
+      }
+      
+      console.log(`Extracted ${tweets.length} tweets from data`);
+    } catch (e) {
+      console.error('Error parsing tweet data:', e);
       tweets = [];
     }
 
-    const nonReplies = tweets.filter(t => t['IsReply?'] === false);
-    nonReplies.sort((a, b) => (b['Likes'] || 0) - (a['Likes'] || 0));
-    const originalTexts = nonReplies.slice(0, 30).map(t => t['text of tweet']);
+    // Ensure tweets is a valid array before filtering
+    if (!Array.isArray(tweets)) {
+      console.error('Tweets is not an array after parsing, defaulting to empty array');
+      tweets = [];
+    }
+
+    // Safe filtering now that we're sure tweets is an array
+    const nonReplies = tweets.filter(t => t && typeof t === 'object' && t['IsReply?'] === false);
+    
+    // Sort tweets - check if Likes property exists
+    if (nonReplies.length > 0 && typeof nonReplies[0]['Likes'] !== 'undefined') {
+      nonReplies.sort((a, b) => (b['Likes'] || 0) - (a['Likes'] || 0));
+    } else {
+      console.log('No Likes property found for sorting, using original order');
+    }
+    
+    // Get the text safely
+    const originalTexts = nonReplies.slice(0, 30).map(t => {
+      if (t && typeof t === 'object' && typeof t['text of tweet'] === 'string') {
+        return t['text of tweet'];
+      } else if (t && typeof t === 'object' && typeof t.text === 'string') {
+        return t.text;
+      } else {
+        console.log('Tweet missing text property:', t);
+        return '';
+      }
+    }).filter(Boolean); // Remove empty strings
 
     // —— STRIP OUT LINKS FROM EACH TWEET ——
     const texts = originalTexts.map(t =>
