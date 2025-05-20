@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Sparkles, Zap, FileText, Loader2, Send, RefreshCw, Twitter } from 'lucide-react';
+import { Mic, Loader2, Send, RefreshCw, Twitter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,13 +16,6 @@ const GenerateTweets = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Generate Tweets</h1>
-          <p className="text-muted-foreground mt-1">Create tweets that sound exactly like you</p>
-        </div>
-      </div>
-
       {!hasVoiceProfile ? (
         <CreateVoiceProfileView />
       ) : (
@@ -193,7 +185,11 @@ interface TweetVariation {
 const TweetGenerationView = () => {
   const { authState } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([]);
+  const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([
+    { text: '', charCount: 0 },
+    { text: '', charCount: 0 },
+    { text: '', charCount: 0 }
+  ]);
   const form = useForm({
     defaultValues: {
       prompt: '',
@@ -241,16 +237,10 @@ const TweetGenerationView = () => {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      <div className="col-span-full md:col-span-1">
+    <div className="max-w-3xl mx-auto">
+      <div className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Create Tweet</CardTitle>
-            <CardDescription>
-              Enter a topic to generate tweets in your style
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
                 <FormField
@@ -261,7 +251,7 @@ const TweetGenerationView = () => {
                       <FormControl>
                         <Textarea 
                           placeholder="What would you like to tweet about?"
-                          className="min-h-32 resize-none"
+                          className="min-h-24 resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -290,41 +280,12 @@ const TweetGenerationView = () => {
             </Form>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="col-span-full md:col-span-2">
-        {!generatedTweets.length ? (
-          <Card className="h-full flex flex-col justify-center items-center py-12">
-            <div className="text-center px-4 max-w-md">
-              <Twitter className="w-12 h-12 text-twitter-blue mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">No tweets generated yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Enter a topic or prompt on the left and click "Generate Tweets" to create tweets that match your writing style.
-              </p>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium">Generated Tweets</h2>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => form.handleSubmit(handleGenerateTweets)()}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Regenerate
-              </Button>
-            </div>
             
-            <div className="space-y-4">
-              {generatedTweets.map((tweet, index) => (
-                <TwitterCard key={index} tweet={tweet} profile={authState.profile} index={index} />
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="space-y-4">
+          {generatedTweets.map((tweet, index) => (
+            <TwitterCard key={index} tweet={tweet} profile={authState.profile} index={index} />
+          ))}
+        </div>
       </div>
     </div>
   );
