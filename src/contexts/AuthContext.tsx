@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -21,7 +20,7 @@ interface AuthContextProps {
   signOut: (force?: boolean) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   checkSubscription: () => Promise<void>;
-  refreshProfile: () => Promise<void>; // Add refreshProfile method
+  refreshProfile: () => Promise<Profile | null>; // Modified to return the updated profile
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -42,10 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Function to refresh the user profile
+  // Function to refresh the user profile - now returns the updated profile
   const refreshProfile = async () => {
     if (!authState.user) {
-      return;
+      return null;
     }
     
     try {
@@ -57,15 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
       if (error) {
         console.error('Error refreshing profile:', error);
-        return;
+        return null;
       }
+      
+      const updatedProfile = data as Profile;
       
       setAuthState(prev => ({
         ...prev,
-        profile: data as Profile,
+        profile: updatedProfile,
       }));
+      
+      return updatedProfile;
     } catch (error) {
       console.error('Error in refreshProfile:', error);
+      return null;
     }
   };
 

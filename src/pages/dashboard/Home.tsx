@@ -17,15 +17,21 @@ import InsightCard from '@/components/analysis/InsightCard';
 const CreatorDashboard = ({ profile }) => {
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [localProfile, setLocalProfile] = useState(profile);
   const { refreshProfile } = useAuth();
   
-  // Extract profile analysis results
-  const analysisResults = profile?.profile_analysis_results;
+  // Update local profile when the parent profile changes
+  useEffect(() => {
+    setLocalProfile(profile);
+  }, [profile]);
+  
+  // Extract profile analysis results from local state
+  const analysisResults = localProfile?.profile_analysis_results;
   const hasAnalysisResults = !!analysisResults;
   
   // Trigger a new analysis if needed
   const handleRefreshAnalysis = async () => {
-    if (!profile?.twitter_username || !profile?.timezone) {
+    if (!localProfile?.twitter_username || !localProfile?.timezone) {
       toast.error("Missing Twitter username or timezone. Please update your profile settings.");
       return;
     }
@@ -36,9 +42,9 @@ const CreatorDashboard = ({ profile }) => {
     try {
       const { data, error } = await supabase.functions.invoke('initial-profile-analysis', {
         body: {
-          userId: profile.id,
-          twitterUsername: profile.twitter_username,
-          timezone: profile.timezone
+          userId: localProfile.id,
+          twitterUsername: localProfile.twitter_username,
+          timezone: localProfile.timezone
         }
       });
       
@@ -51,7 +57,10 @@ const CreatorDashboard = ({ profile }) => {
       }
       
       // Refresh profile to get the updated analysis results
-      await refreshProfile();
+      const updatedProfile = await refreshProfile();
+      
+      // Force component update with the new profile data
+      setLocalProfile(updatedProfile);
       
       toast.success("Profile analysis refreshed successfully");
     } catch (error) {
@@ -170,7 +179,7 @@ const CreatorDashboard = ({ profile }) => {
       {/* Welcome header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {profile?.twitter_username || 'User'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome, {localProfile?.twitter_username || 'User'}</h1>
           <p className="text-gray-600">Your personalized insights are ready</p>
         </div>
         <div className="flex items-center gap-2">
@@ -305,7 +314,7 @@ const CreatorDashboard = ({ profile }) => {
                   <Twitter size={16} />
                 </div>
                 <div>
-                  <div className="font-medium mb-1">{profile?.twitter_username}</div>
+                  <div className="font-medium mb-1">{localProfile?.twitter_username}</div>
                   <p className="text-gray-700">{analysisResults.best_performing_tweet.text}</p>
                   <p className="text-sm text-gray-500 mt-2">
                     {new Date(analysisResults.best_performing_tweet.date).toLocaleDateString()}
@@ -495,7 +504,7 @@ const NewsletterDashboard = ({ profile }) => {
 };
 
 const DashboardHome = () => {
-  const { authState, updateProfile } = useAuth();
+  const { authState, updateProfile, refreshProfile } = useAuth();
   const profile = authState.profile;
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   
