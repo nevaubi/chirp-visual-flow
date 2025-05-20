@@ -599,7 +599,7 @@ Use proper Markdown formatting throughout:
 - - for bullet points
 - --- for horizontal dividers
 - Appropriate spacing between sections
-- Include any image URLs that were in the original content
+- Include any image URLs that were in the original content be sure to size them properly to avoid oversized images this is important
 - Format quotes properly with >
 - Use bold and italic formatting where it enhances readability
 
@@ -654,6 +654,7 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
 2. **Spacing & layout**  
    - One blank line before and after headings, lists, tables, and callout boxes.  
    - Use padded \`<div style="background:#f0f4f6;padding:12px;border-radius:4px">\` blocks for key callouts.  
+   - If adding images make sure to size accordingly to keep sizes proportional and correct
 3. **Lists & tables**  
    - Convert any dense list into bullet points with bolded lead-ins.  
    - Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
@@ -665,7 +666,7 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
    - Conversational, active voice, no em-dashes, 10th-grade reading level.  
    - Bold key phrases for scannability.  
 6. **Exclusions**  
-   - No images, no table of contents, no page breaks or "Page X" footers.  
+   - No table of contents, no page breaks or "Page X" footers.  
 
 Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
 `;
