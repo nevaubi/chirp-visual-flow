@@ -284,8 +284,8 @@ CAPABILITIES:
 - Recognize patterns, themes, and trending discussions across seemingly unrelated tweets
 - Extract sentiment, contextual meaning, and significant data points
 - Identify the most relevant visual content from available photo URLs
-- Synthesize information into concise summaries while preserving important details
-- Format output in a consistent, structured manner that highlights key insights
+- Synthesize information into concise summaries while preserving important details and ensure accessible natural dialogue and wording
+- Format output in a consistent, structured manner that highlights key insights and communicates them at a 10th grade casual speaking level
 
 ANALYSIS METHODOLOGY:
 1. Process all tweet data including text, engagement metrics (replies, likes, impressions), timestamps, and authors
@@ -300,23 +300,23 @@ For each analysis, you will produce a structured report containing:
 
 TWO MAIN TOPICS (highest priority discussions):
 - Each with a concise header (5-10 words)
-- Four bullet points highlighting the most significant aspects
-- 400-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
+- Four bullet points highlighting the most significant aspects (20 words max each)
+- 200-word detailed explanation covering context, sentiment, key discussions, and notable perspectives
 - Up to two relevant photo URLs per topic
 
 ONE SUB-TOPIC (third most relevant discussion):
 - Concise header (5-10 words)
-- Three bullet points highlighting the most significant aspects
-- 300-word explanation providing comprehensive context and analysis
-- A notable quote either directly extracted from a tweet or referenced within the tweets
+- Three bullet points highlighting the most significant aspects (20 words max each)
+- 100-word explanation providing comprehensive context and analysis
+- A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
 - Up to two relevant photo URLs`;
 
     const userPrompt = `Analyze the following collection of tweets to identify the two most prevalent main topics and one sub-topic. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
 
 For each MAIN TOPIC (2):
 1. Create a concise header (5-10 words) that captures the essence of the topic
-2. Provide 4 bullet points highlighting the most significant data points or aspects
-3. Write a 500-word explanation that thoroughly describes the topic, including:
+2. Provide 4 bullet points highlighting the most significant data points or aspects (20 words max each)
+3. Using an accessible and naturally communicating casual tone of voice, write a 200-word explanation that thoroughly describes the topic, including:
    - Overall context and background
    - Predominant sentiment (positive, negative, mixed, neutral)
    - Key discussions and perspectives
@@ -326,9 +326,9 @@ For each MAIN TOPIC (2):
 
 For the SUB-TOPIC (1):
 1. Create a concise header (5-10 words)
-2. Provide 3 bullet points highlighting the most significant aspects
-3. Write a 300-word explanation that thoroughly describes the sub-topic
-4. Extract or reference a notable quote related to this sub-topic
+2. Provide 3 bullet points highlighting the most significant aspects (20 words max each)
+3. Write a 100-word explanation that thoroughly describes the sub-topic using accessible naturally human sounding casual language
+4. Extract or reference a notable quote or statement related to this sub-topic
 5. Include up to 2 photo URLs that best represent this topic (if available)
 
 Organization criteria:
@@ -336,7 +336,7 @@ Organization criteria:
 - When selecting the most significant aspects for bullet points, consider uniqueness, engagement, and informational value
 - When selecting photo URLs, prioritize images with higher engagement on relevant tweets
 
-Please format your response using clear headers, consistent bullet points, and well-structured paragraphs to maximize readability.
+Please format your response using clear headers, consistent bullet points, and well-structured paragraphs to maximize readability using a naturally conversational and accessible tone of voice as if writing how real peaple talk.
 
 Here is the tweet collection to analyze:
 
@@ -355,7 +355,7 @@ ${formattedTweets}`;
           { role: "user", content: userPrompt },
         ],
         temperature: 0.4,
-        max_tokens: 4000,
+        max_tokens: 1000,
       }),
     });
     if (!openaiRes.ok) {
@@ -434,7 +434,7 @@ ${formattedTweets}`;
         replyAnalysisData = outLogs.join("\n");
         
         // 11) Call OpenAI with reply data for discourse analysis
-        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
+        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style casual english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
 
 CORE CAPABILITIES:
 - Analyze the relationship between original tweets and their replies to identify discourse patterns
@@ -460,7 +460,7 @@ Your analysis should focus on discovering:
 OUTPUT FRAMEWORK:
 You are to output 4 high quality insights. For each insight, provide:
 1. A concise, compelling header (5-8 words)
-2. A 100-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
+2. A 50-word explanation that unpacks the insight with nuance, specific evidence, and contextual significance but however delivers the analysis in natural normal flowing wording spoken at an 8th grade writing level.`;
 
         const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 4 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
 
@@ -472,7 +472,7 @@ Go beyond surface-level topic identification to discover:
 
 For each of the 4 insights:
 1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
-2. Write a 100-word explanation that:
+2. Write a 50-word explanation that:
    - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
    - Provides specific evidence from multiple tweet conversations
    - Explains why this insight is significant
@@ -544,10 +544,10 @@ ${replyAnalysisData}`;
     try {
       console.log("Starting step 12: Markdown newsletter formatting");
       
-      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, well-structured Markdown. Your job is to take analysis content and format it into a beautiful newsletter that looks professional and is easy to read.
+      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read.
 
 FORMAT GUIDELINES:
-- Use proper Markdown syntax for headings, subheadings, bullet points, and horizontal rules
+- Use proper Markdown syntax for headings, subheadings, bullet points, columns, dividers, colors, and horizontal rules
 - Use headings (#, ##, ###) appropriately for hierarchy
 - Use bullet points (-) for lists
 - Use horizontal rules (---) to separate sections
@@ -555,21 +555,21 @@ FORMAT GUIDELINES:
 - Maintain the original content and meaning while improving formatting
 - Use bold and italic formatting where appropriate for emphasis
 - Include photo URLs where they were provided in the original content
-- Create a consistent, professional newsletter style
+- Create a visually appealing newsletter format and reword the content to retain meaning but in more accessible language and wording style
 - Use proper Markdown for links if needed
-- Keep all the original content intact, just format it better
+- Reword the content as if you were a professional newsletter who communicated to her loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
 
 CONTENT STRUCTURE:
 1. Top section contains Main Topic 1 (most important topic)
 2. After a divider, include the Sub-Topic
 3. After another divider, present Main Topic 2
-4. After a final divider, include the Discourse Analysis section
+4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes and format it as a 2x2 grid section
 5. Add proper spacing and formatting throughout
 
 OUTPUT:
-Provide ONLY the formatted Markdown content, without any explanations or comments.`;
+Provide ONLY the formatted Markdown content, reworded and slightly shortened if needed to be more accessible, without any explanations or comments.`;
 
-      const markdownUserPrompt = `I have two pieces of analysis content that need to be combined and formatted as a professional Markdown newsletter:
+      const markdownUserPrompt = `I have two pieces of analysis content that need to be worded better, shortened 'trim all the fat', and then combined and formatted as a beautiful visually appealing Markdown newsletter:
 
 1. MAIN ANALYSIS CONTENT:
 ${analysisResult}
@@ -577,7 +577,7 @@ ${analysisResult}
 2. DISCOURSE ANALYSIS:
 ${discourseAnalysis}
 
-Please format these into a single, well-structured Markdown newsletter with the following layout:
+Please format these into a single, well-structured visually appealing Markdown newsletter with the following layout:
 
 1. Start with Main Topic 1 at the top (first main topic from the analysis)
 2. Add a horizontal rule divider
@@ -585,7 +585,7 @@ Please format these into a single, well-structured Markdown newsletter with the 
 4. Add another horizontal rule divider
 5. Present Main Topic 2 (second main topic from the analysis)
 6. Add a final horizontal rule divider
-7. Include the Discourse Analysis content
+7. Include the Discourse Analysis content but rename it Hot Takes and format it as a 2x2 grid section
 
 Use proper Markdown formatting throughout:
 - # for main headings
@@ -597,7 +597,7 @@ Use proper Markdown formatting throughout:
 - Format quotes properly with >
 - Use bold and italic formatting where it enhances readability
 
-Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout.`;
+Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it.`;
 
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
