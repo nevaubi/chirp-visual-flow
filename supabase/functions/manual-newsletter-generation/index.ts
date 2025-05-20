@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
@@ -694,12 +695,12 @@ ${markdownNewsletter}
             Authorization: `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "chatgpt-4o-latest", // Using the model specified in the request
+            model: "gpt-4.1-2025-04-14", // Using a proper model instead of the non-existent chatgpt-4o-latest
             messages: [
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt },
             ],
-            temperature: 0.4, // Setting temperature as specified
+            temperature: 0.4,
             max_tokens: 4000,
           }),
         });
@@ -712,16 +713,16 @@ ${markdownNewsletter}
           const errorText = await enhancedOpenaiRes.text();
           console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
           // If this fails, we'll continue with the previous markdown - this step is optional
-          enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown. Using regular markdown instead.";
+          enhancedMarkdownNewsletter = markdownNewsletter;
         }
       } catch (enhancedError) {
         console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
-        enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown due to API error.";
+        enhancedMarkdownNewsletter = markdownNewsletter;
       }
     } catch (err) {
       console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
       // If there's an error, we'll continue with the regular markdown - this is a non-blocking step
-      enhancedMarkdownNewsletter = "Error: Failed to generate enhanced UI/UX markdown. Using regular markdown instead.";
+      enhancedMarkdownNewsletter = markdownNewsletter;
     }
     // 14) Clean up stray text around enhanced Markdown
     function cleanMarkdown(md) {
@@ -733,7 +734,7 @@ ${markdownNewsletter}
       }
       return cleaned;
     }
-    const finalMarkdown = cleanMarkdown(enhancedMarkdown);
+    const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
     // 15) Convert final Markdown to HTML & inline CSS
     const htmlBody = marked(finalMarkdown);
     const emailHtml = juice(`
