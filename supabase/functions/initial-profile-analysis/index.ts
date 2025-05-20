@@ -10,17 +10,37 @@ interface ApifyResponse {
 interface Tweet {
   id: string;
   text: string;
-  created_at: string;
-  public_metrics: {
+  created_at?: string;
+  createdAt?: string; // New format from kaitoeasyapi actor
+  public_metrics?: {
     retweet_count: number;
     reply_count: number;
     like_count: number;
     quote_count: number;
     impression_count?: number;
   };
+  retweetCount?: number; // New format
+  replyCount?: number;
+  likeCount?: number;
+  quoteCount?: number;
+  viewCount?: number;
   entities?: {
     urls?: { expanded_url: string }[];
     media?: { type: string }[];
+  };
+  extendedEntities?: {
+    media?: {
+      expanded_url?: string;
+      type?: string;
+    }[];
+  };
+  author?: {
+    userName?: string;
+    name?: string;
+    isBlueVerified?: boolean;
+    location?: string;
+    followers?: number;
+    following?: number;
   };
 }
 
@@ -126,29 +146,59 @@ Deno.serve(async (req) => {
 
 async function fetchTweets(username: string): Promise<Tweet[]> {
   try {
-    // Use Apify API to get user tweets
-    const apifyUrl = `https://api.apify.com/v2/acts/quacker~twitter-scraper/run-sync-get-dataset-items?token=${APIFY_API_KEY}`
+    // Use the kaitoeasyapi actor for Twitter scraping - matching the one used in the working function
+    const apifyUrl = `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`
+    
+    // Parameter structure matching the working code
+    const params = {
+      "filter:blue_verified": false,
+      "filter:consumer_video": false,
+      "filter:has_engagement": false,
+      "filter:hashtags": false,
+      "filter:images": false,
+      "filter:links": false,
+      "filter:media": false,
+      "filter:mentions": false,
+      "filter:native_video": false,
+      "filter:nativeretweets": false,
+      "filter:news": false,
+      "filter:pro_video": false,
+      "filter:quote": false,
+      "filter:replies": false,
+      "filter:safe": false,
+      "filter:spaces": false,
+      "filter:twimg": false,
+      "filter:verified": false,
+      "filter:videos": false,
+      "filter:vine": false,
+      "from": username,
+      "include:nativeretweets": false,
+      "lang": "en",
+      "maxItems": 100,
+      "queryType": "Latest"
+    }
+    
     const response = await fetch(apifyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        searchTerms: [`from:${username}`],
-        maxTweets: 100,
-        useTimelineApi: true
-      })
+      body: JSON.stringify(params)
     })
     
     if (!response.ok) {
       throw new Error(`Apify API error: ${response.statusText}`)
     }
     
-    const data = await response.json() as ApifyResponse
+    // The new actor returns an array directly, not wrapped in a 'tweets' property
+    const data = await response.json() as Tweet[]
     
-    if (data.error) {
-      throw new Error(`Apify returned error: ${data.error}`)
+    console.log(`Received ${data.length} tweets from Apify`)
+    
+    if (!Array.isArray(data)) {
+      console.error('Unexpected response format:', data)
+      throw new Error('Unexpected response format from Apify')
     }
     
-    return data.tweets || []
+    return data
   } catch (error) {
     console.error('Error fetching tweets:', error)
     return []
@@ -183,13 +233,13 @@ function analyzeUserTweets(tweets: Tweet[], timezone: string): ProfileAnalysisRe
   // Process each tweet
   tweets.forEach(tweet => {
     // Skip retweets
-    if (tweet.text.startsWith('RT @')) {
+    if ((tweet.text || '').startsWith('RT @')) {
       totalTweets--
       return
     }
     
-    // Parse tweet date
-    const tweetDate = new Date(tweet.created_at)
+    // Parse tweet date (handle both original and new format)
+    const tweetDate = new Date(tweet.createdAt || tweet.created_at || '')
     
     // Adjust for timezone if provided
     if (timezone) {
@@ -219,12 +269,12 @@ function analyzeUserTweets(tweets: Tweet[], timezone: string): ProfileAnalysisRe
       hourlyActivity[hour]++
     }
     
-    // Calculate engagement
+    // Calculate engagement (use both formats)
     const engagement = 
-      tweet.public_metrics.like_count + 
-      tweet.public_metrics.retweet_count * 2 + 
-      tweet.public_metrics.reply_count * 3 + 
-      tweet.public_metrics.quote_count * 3
+      (tweet.public_metrics?.like_count || tweet.likeCount || 0) + 
+      (tweet.public_metrics?.retweet_count || tweet.retweetCount || 0) * 2 + 
+      (tweet.public_metrics?.reply_count || tweet.replyCount || 0) * 3 + 
+      (tweet.public_metrics?.quote_count || tweet.quoteCount || 0) * 3
     
     totalEngagement += engagement
     
@@ -236,11 +286,23 @@ function analyzeUserTweets(tweets: Tweet[], timezone: string): ProfileAnalysisRe
     
     // Determine content type
     let contentType = 'text_only'
-    if (tweet.entities?.urls?.some(url => url.expanded_url.includes('video'))) {
+    
+    // Check for media in both old and new formats
+    const hasVideo = 
+      tweet.entities?.urls?.some(url => url.expanded_url.includes('video')) ||
+      tweet.extendedEntities?.media?.some(media => media.type === 'video' || media.expanded_url?.includes('video'))
+    
+    const hasImage = 
+      tweet.entities?.media?.some(media => media.type === 'photo') ||
+      tweet.extendedEntities?.media?.some(media => media.type === 'photo' || media.expanded_url?.includes('photo'))
+    
+    const hasLink = tweet.entities?.urls && tweet.entities.urls.length > 0
+    
+    if (hasVideo) {
       contentType = 'with_video'
-    } else if (tweet.entities?.media?.some(media => media.type === 'photo')) {
+    } else if (hasImage) {
       contentType = 'with_image'
-    } else if (tweet.entities?.urls && tweet.entities.urls.length > 0) {
+    } else if (hasLink) {
       contentType = 'with_link'
     }
     
@@ -296,7 +358,7 @@ function analyzeUserTweets(tweets: Tweet[], timezone: string): ProfileAnalysisRe
     best_performing_tweet: bestTweet ? {
       text: bestTweet.text.length > 100 ? bestTweet.text.substring(0, 97) + '...' : bestTweet.text,
       engagement: bestTweetEngagement,
-      date: bestTweet.created_at
+      date: bestTweet.createdAt || bestTweet.created_at || new Date().toISOString()
     } : { text: '', engagement: 0, date: '' },
     analysis_date: new Date().toISOString(),
     growth_opportunities: growthOpportunities
