@@ -240,57 +240,39 @@ serve(async (req) => {
         }
 
         const apifyData = await apifyResponse.json();
+        console.log("Raw Apify response:", JSON.stringify(apifyData, null, 2));
 
-        // Log the raw Apify response
-        console.log("Apify API response:", JSON.stringify(apifyData, null, 2));
+        // ——— Updated parsing & logging logic ———
+        const tweetsArray = Array.isArray(apifyData)
+          ? apifyData
+          : Array.isArray(apifyData.items)
+            ? apifyData.items
+            : [];
+        console.log(`Parsing ${tweetsArray.length} tweets from Apify data`);
 
-        // ——— New parsing & logging logic ———
-        if (Array.isArray(apifyData)) {
-          console.log("Parsing Apify tweet data:");
-          const parsedTweets = apifyData.map(tweet => {
-            // strip out URLs from text
-            const textWithoutUrls = tweet.text.replace(/https?:\/\/\S+/g, "").trim();
-            // find first photo in extendedEntities
-            const photoMedia = tweet.extendedEntities?.media?.find(m => m.type === "photo");
-            return {
-              text: textWithoutUrls,
-              retweets: tweet.retweetCount,
-              replies: tweet.replyCount,
-              likes: tweet.likeCount,
-              quotes: tweet.quoteCount,
-              impressions: tweet.viewCount,
-              date: tweet.createdAt,
-              isReply: tweet.isReply,
-              inReplyTo: tweet.inReplyToUsername,
-              authorName: tweet.author.name,
-              authorHandle: tweet.author.userName,
-              verified: tweet.author.isBlueVerified,
-              profilePic: tweet.author.profilePicture,
-              photoUrl: photoMedia?.media_url_https ?? null
-            };
-          });
+        for (let i = 0; i < tweetsArray.length; i++) {
+          const t = tweetsArray[i];
+          const text = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+          const photo = t.extendedEntities?.media?.find(m => m.type === "photo")?.media_url_https || null;
 
-          parsedTweets.forEach((pt, i) => {
-            console.log(`Tweet ${i + 1}`);
-            console.log(`Tweet text: ${pt.text}`);
-            console.log(`Retweets: ${pt.retweets}`);
-            console.log(`ReplyAmount: ${pt.replies}`);
-            console.log(`LikesAmount: ${pt.likes}`);
-            console.log(`QuotesAmount: ${pt.quotes}`);
-            console.log(`Impressions: ${pt.impressions}`);
-            console.log(`Date: ${pt.date}`);
-            console.log(`Reply?: ${pt.isReply}`);
-            console.log(`Replying to: ${pt.inReplyTo}`);
-            console.log(`TweetAuthor: ${pt.authorName}`);
-            console.log(`TweetAuthorHandle: ${pt.authorHandle}`);
-            console.log(`Verified: ${pt.verified}`);
-            console.log(`ProfilePic: ${pt.profilePic}`);
-            console.log(`PhotoUrl: ${pt.photoUrl}`);
-          });
+          console.log(`Tweet ${i + 1}`);
+          console.log(`Tweet text: ${text}`);
+          console.log(`Retweets: ${t.retweetCount}`);
+          console.log(`ReplyAmount: ${t.replyCount}`);
+          console.log(`LikesAmount: ${t.likeCount}`);
+          console.log(`QuotesAmount: ${t.quoteCount}`);
+          console.log(`Impressions: ${t.viewCount}`);
+          console.log(`Date: ${t.createdAt}`);
+          console.log(`Reply?: ${t.isReply}`);
+          console.log(`Replyingto: ${t.inReplyToUsername}`);
+          console.log(`TweetAuthor: ${t.author?.name}`);
+          console.log(`TweetAuthorHandle: ${t.author?.userName}`);
+          console.log(`Verified: ${t.author?.isBlueVerified}`);
+          console.log(`ProfilePic: ${t.author?.profilePicture}`);
+          console.log(`PhotoUrl: ${photo}`);
         }
-        // ——————————————————————————————————
+        // ——————————————————————————————————————
 
-        // Return the original full dataset plus other info
         return new Response(
           JSON.stringify({
             status: "success",
