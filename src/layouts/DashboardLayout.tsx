@@ -12,12 +12,12 @@ import {
   Bell,
   LogOut,
   Menu,
-  ChevronRight,
   Bookmark,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/sonner';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
@@ -54,6 +54,14 @@ const DashboardLayout = () => {
 
   const handleSignOut = () => {
     signOut();
+  };
+
+  const handleCreateNewsletter = () => {
+    // Temporary placeholder function
+    toast({
+      title: "Coming Soon",
+      description: "The newsletter creation feature is being redesigned. Check back soon!",
+    });
   };
 
   const sidebarItems = [
@@ -122,7 +130,7 @@ const DashboardLayout = () => {
                   "w-full mb-4 bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-3 justify-start px-3",
                   !expanded && "justify-center px-0"
                 )}
-                onClick={() => navigate('/dashboard/newsletter/create')}
+                onClick={handleCreateNewsletter}
               >
                 <Bookmark size={20} />
                 {expanded && (

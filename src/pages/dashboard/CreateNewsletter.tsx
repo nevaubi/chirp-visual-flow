@@ -1,4 +1,10 @@
 
+/*
+ * DEPRECATED: This component has been intentionally disconnected from the application.
+ * It's being preserved for reference as parts of it may be reused in a future implementation.
+ * The Stripe checkout workflow will be relocated and modified in a future update.
+ */
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
