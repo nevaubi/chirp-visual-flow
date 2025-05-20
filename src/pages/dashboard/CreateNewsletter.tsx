@@ -25,17 +25,18 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const CreateNewsletter = () => {
   const navigate = useNavigate();
   const { authState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const isMobile = useIsMobile();
 
-  // Define all the state variables we need with default values for hidden sections
+  // Define all the state variables with default values for hidden sections
   const [selectedAudience, setSelectedAudience] = useState<'personal' | 'audience'>('personal');
   const [selectedFrequency, setSelectedFrequency] = useState<'biweekly' | 'weekly' | null>(null);
   const [weeklyDay, setWeeklyDay] = useState<'Tuesday' | 'Friday' | null>(null);
@@ -176,213 +177,212 @@ const CreateNewsletter = () => {
         </div>
       ) : (
         <div className="w-full max-w-2xl animate-fade-in">
-          <Card className="shadow-md overflow-hidden">
-            <CardHeader className="border-b pb-4">
+          <Card className="shadow-md">
+            <CardHeader className="border-b p-4">
               <CardTitle className="text-xl">Create Your Newsletter</CardTitle>
               <CardDescription>
-                Set up your newsletter subscription in just a few steps
+                Set up your newsletter subscription
               </CardDescription>
             </CardHeader>
             
-            <div className="flex flex-col h-[calc(100vh-18rem)]">
-              <ScrollArea className="flex-grow px-6 py-4">
-                <div className="space-y-6">
-                  {/* Frequency Section */}
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold">How often do you want your newsletter?</h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Biweekly */}
-                      <Card
-                        onClick={() => handleFrequencySelect('biweekly')}
-                        className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                          selectedFrequency === 'biweekly' ? 'border-primary bg-primary/5' : ''
-                        }`}
-                      >
-                        <CardHeader className="p-3">
-                          <CardTitle className="text-base">Biweekly</CardTitle>
-                          <CardDescription className="text-xs">
-                            <div>up to 30 tweets</div>
-                            <div className="font-medium text-sm mt-1">$19 / month</div>
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                      {/* Weekly */}
-                      <Card
-                        onClick={() => handleFrequencySelect('weekly')}
-                        className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                          selectedFrequency === 'weekly' ? 'border-primary bg-primary/5' : ''
-                        }`}
-                      >
-                        <CardHeader className="p-3">
-                          <CardTitle className="text-base">Weekly</CardTitle>
-                          <CardDescription className="text-xs">
-                            <div>up to 50 tweets</div>
-                            <div className="font-medium text-sm mt-1">$10 / month</div>
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </div>
-
-                    {selectedFrequency && (
-                      <div className="mt-2 pt-2 border-t border-gray-100">
-                        <h3 className="text-sm font-medium mb-2">Delivery preference</h3>
-                        
-                        {selectedFrequency === 'biweekly' && (
-                          <div className="grid grid-cols-2 gap-3">
-                            <Card
-                              onClick={() => setDeliveryOption('scheduled')}
-                              className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                                deliveryOption === 'scheduled' ? 'border-primary bg-primary/5' : ''
-                              }`}
-                            >
-                              <CardHeader className="p-3">
-                                <CardTitle className="text-sm">Tuesday & Friday</CardTitle>
-                              </CardHeader>
-                            </Card>
-                            <Card
-                              onClick={() => {
-                                setDeliveryOption('manual');
-                                setWeeklyDay(null);
-                              }}
-                              className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                                deliveryOption === 'manual' ? 'border-primary bg-primary/5' : ''
-                              }`}
-                            >
-                              <CardHeader className="p-3">
-                                <CardTitle className="text-sm">Manual</CardTitle>
-                                <CardDescription className="text-xs">
-                                  8 credits/month
-                                </CardDescription>
-                              </CardHeader>
-                            </Card>
-                          </div>
-                        )}
-                        
-                        {selectedFrequency === 'weekly' && (
-                          <div className="grid grid-cols-3 gap-2">
-                            <Card
-                              onClick={() => {
-                                setWeeklyDay('Tuesday');
-                                setDeliveryOption('scheduled');
-                              }}
-                              className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                                deliveryOption === 'scheduled' && weeklyDay === 'Tuesday'
-                                  ? 'border-primary bg-primary/5'
-                                  : ''
-                              }`}
-                            >
-                              <CardHeader className="p-3">
-                                <CardTitle className="text-sm">Tuesday</CardTitle>
-                              </CardHeader>
-                            </Card>
-                            <Card
-                              onClick={() => {
-                                setWeeklyDay('Friday');
-                                setDeliveryOption('scheduled');
-                              }}
-                              className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                                deliveryOption === 'scheduled' && weeklyDay === 'Friday'
-                                  ? 'border-primary bg-primary/5'
-                                  : ''
-                              }`}
-                            >
-                              <CardHeader className="p-3">
-                                <CardTitle className="text-sm">Friday</CardTitle>
-                              </CardHeader>
-                            </Card>
-                            <Card
-                              onClick={() => {
-                                setWeeklyDay(null);
-                                setDeliveryOption('manual');
-                              }}
-                              className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                                deliveryOption === 'manual' ? 'border-primary bg-primary/5' : ''
-                              }`}
-                            >
-                              <CardHeader className="p-3">
-                                <CardTitle className="text-sm">Manual</CardTitle>
-                                <CardDescription className="text-xs">
-                                  4 credits/month
-                                </CardDescription>
-                              </CardHeader>
-                            </Card>
-                          </div>
-                        )}
-                      </div>
-                    )}
+            <div className="flex flex-col">
+              {/* Main content - No more ScrollArea */}
+              <div className={`px-4 py-2 ${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+                {/* Frequency Section - More compact */}
+                <div className="space-y-2">
+                  <h2 className="text-base font-semibold">How often do you want your newsletter?</h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Biweekly */}
+                    <Card
+                      onClick={() => handleFrequencySelect('biweekly')}
+                      className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                        selectedFrequency === 'biweekly' ? 'border-primary bg-primary/5' : ''
+                      }`}
+                    >
+                      <CardHeader className="p-2">
+                        <CardTitle className="text-sm">Biweekly</CardTitle>
+                        <CardDescription className="text-xs">
+                          <div>up to 30 tweets</div>
+                          <div className="font-medium text-sm mt-1">$19 / month</div>
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                    {/* Weekly */}
+                    <Card
+                      onClick={() => handleFrequencySelect('weekly')}
+                      className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                        selectedFrequency === 'weekly' ? 'border-primary bg-primary/5' : ''
+                      }`}
+                    >
+                      <CardHeader className="p-2">
+                        <CardTitle className="text-sm">Weekly</CardTitle>
+                        <CardDescription className="text-xs">
+                          <div>up to 50 tweets</div>
+                          <div className="font-medium text-sm mt-1">$10 / month</div>
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
                   </div>
 
-                  <Separator className="my-2" />
-
-                  {/* Content Approach Section */}
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold">Content approach</h2>
-                    <div className="space-y-2">
-                      <Card
-                        onClick={() => setContentApproach('everything')}
-                        className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                          contentApproach === 'everything' ? 'border-primary bg-primary/5' : ''
-                        }`}
-                      >
-                        <CardHeader className="py-2 px-4">
-                          <div className="flex items-center">
-                            <div className={`w-3 h-3 rounded-full mr-2 ${contentApproach === 'everything' ? 'bg-primary' : 'border border-gray-300'}`}></div>
-                            <div>
-                              <CardTitle className="text-sm">Everything from my bookmarks</CardTitle>
-                              <CardDescription className="text-xs">Use every bookmarked tweet since my last newsletter</CardDescription>
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-
-                      <Collapsible
-                        open={contentApproach === 'topics'}
-                        onOpenChange={(open) => {
-                          if (open) setContentApproach('topics');
-                        }}
-                      >
-                        <CollapsibleTrigger asChild>
+                  {selectedFrequency && (
+                    <div className="mt-1 pt-1 border-t border-gray-100">
+                      <h3 className="text-xs font-medium mb-1">Delivery preference</h3>
+                      
+                      {selectedFrequency === 'biweekly' && (
+                        <div className="grid grid-cols-2 gap-2">
                           <Card
+                            onClick={() => setDeliveryOption('scheduled')}
                             className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
-                              contentApproach === 'topics' ? 'border-primary bg-primary/5' : ''
+                              deliveryOption === 'scheduled' ? 'border-primary bg-primary/5' : ''
                             }`}
                           >
-                            <CardHeader className="py-2 px-4">
-                              <div className="flex items-center">
-                                <div className={`w-3 h-3 rounded-full mr-2 ${contentApproach === 'topics' ? 'bg-primary' : 'border border-gray-300'}`}></div>
-                                <div>
-                                  <CardTitle className="text-sm">General topics only</CardTitle>
-                                  <CardDescription className="text-xs">Stick with only these general topics</CardDescription>
-                                </div>
-                              </div>
+                            <CardHeader className="p-2">
+                              <CardTitle className="text-xs">Tuesday & Friday</CardTitle>
                             </CardHeader>
                           </Card>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="p-3 pt-0 pl-8">
-                            <Input
-                              value={topics}
-                              onChange={(e) => setTopics(e.target.value)}
-                              placeholder="Type topics here..."
-                              className="mt-2 text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Type your desired main topics and we'll do the rest!
-                            </p>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
+                          <Card
+                            onClick={() => {
+                              setDeliveryOption('manual');
+                              setWeeklyDay(null);
+                            }}
+                            className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                              deliveryOption === 'manual' ? 'border-primary bg-primary/5' : ''
+                            }`}
+                          >
+                            <CardHeader className="p-2">
+                              <CardTitle className="text-xs">Manual</CardTitle>
+                              <CardDescription className="text-xs">
+                                8 credits/month
+                              </CardDescription>
+                            </CardHeader>
+                          </Card>
+                        </div>
+                      )}
+                      
+                      {selectedFrequency === 'weekly' && (
+                        <div className="grid grid-cols-3 gap-1">
+                          <Card
+                            onClick={() => {
+                              setWeeklyDay('Tuesday');
+                              setDeliveryOption('scheduled');
+                            }}
+                            className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                              deliveryOption === 'scheduled' && weeklyDay === 'Tuesday'
+                                ? 'border-primary bg-primary/5'
+                                : ''
+                            }`}
+                          >
+                            <CardHeader className="p-2">
+                              <CardTitle className="text-xs">Tuesday</CardTitle>
+                            </CardHeader>
+                          </Card>
+                          <Card
+                            onClick={() => {
+                              setWeeklyDay('Friday');
+                              setDeliveryOption('scheduled');
+                            }}
+                            className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                              deliveryOption === 'scheduled' && weeklyDay === 'Friday'
+                                ? 'border-primary bg-primary/5'
+                                : ''
+                            }`}
+                          >
+                            <CardHeader className="p-2">
+                              <CardTitle className="text-xs">Friday</CardTitle>
+                            </CardHeader>
+                          </Card>
+                          <Card
+                            onClick={() => {
+                              setWeeklyDay(null);
+                              setDeliveryOption('manual');
+                            }}
+                            className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                              deliveryOption === 'manual' ? 'border-primary bg-primary/5' : ''
+                            }`}
+                          >
+                            <CardHeader className="p-2">
+                              <CardTitle className="text-xs">Manual</CardTitle>
+                              <CardDescription className="text-xs">
+                                4 credits/month
+                              </CardDescription>
+                            </CardHeader>
+                          </Card>
+                        </div>
+                      )}
                     </div>
+                  )}
+                </div>
+
+                <Separator className="my-1" />
+
+                {/* Content Approach Section - More compact */}
+                <div className="space-y-2">
+                  <h2 className="text-base font-semibold">Content approach</h2>
+                  <div className="space-y-1">
+                    <Card
+                      onClick={() => setContentApproach('everything')}
+                      className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                        contentApproach === 'everything' ? 'border-primary bg-primary/5' : ''
+                      }`}
+                    >
+                      <CardHeader className="py-2 px-3">
+                        <div className="flex items-center">
+                          <div className={`w-2 h-2 rounded-full mr-2 ${contentApproach === 'everything' ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                          <div>
+                            <CardTitle className="text-xs">All bookmarks</CardTitle>
+                            <CardDescription className="text-xs">Use all bookmarked tweets</CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+
+                    <Collapsible
+                      open={contentApproach === 'topics'}
+                      onOpenChange={(open) => {
+                        if (open) setContentApproach('topics');
+                      }}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Card
+                          className={`cursor-pointer transition-all hover:shadow-md border-2 hover:border-primary/50 ${
+                            contentApproach === 'topics' ? 'border-primary bg-primary/5' : ''
+                          }`}
+                        >
+                          <CardHeader className="py-2 px-3">
+                            <div className="flex items-center">
+                              <div className={`w-2 h-2 rounded-full mr-2 ${contentApproach === 'topics' ? 'bg-primary' : 'border border-gray-300'}`}></div>
+                              <div>
+                                <CardTitle className="text-xs">General topics only</CardTitle>
+                                <CardDescription className="text-xs">Stick with specific topics</CardDescription>
+                              </div>
+                            </div>
+                          </CardHeader>
+                        </Card>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-2 pt-0 pl-6">
+                          <Input
+                            value={topics}
+                            onChange={(e) => setTopics(e.target.value)}
+                            placeholder="Type topics here..."
+                            className="mt-1 text-xs py-1"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Type your desired main topics
+                          </p>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
               
-              {/* Pricing summary - Sticky at bottom */}
-              <div className="bg-muted/30 p-4 border-t">
+              {/* Pricing summary - Fixed at bottom */}
+              <div className="bg-muted/30 p-2 mt-2 border-t">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-sm">Your subscription:</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-semibold text-xs">Your subscription:</p>
+                    <p className="text-xs text-muted-foreground">
                       {selectedFrequency === 'weekly' 
                         ? 'Weekly Newsletter' 
                         : selectedFrequency === 'biweekly' 
@@ -390,7 +390,7 @@ const CreateNewsletter = () => {
                           : 'Select a frequency'}
                     </p>
                   </div>
-                  <div className="text-lg font-bold">
+                  <div className="text-base font-bold">
                     {selectedFrequency === 'weekly' 
                       ? '$10/month' 
                       : selectedFrequency === 'biweekly' 
@@ -401,11 +401,11 @@ const CreateNewsletter = () => {
               </div>
             </div>
             
-            <CardFooter className="border-t p-4 flex justify-end">
+            <CardFooter className="border-t p-3 flex justify-end">
               <Button
                 onClick={handleCheckout}
                 disabled={!isFormValid() || isSubmitting}
-                className="bg-amber-500 text-white px-6 py-2 hover:bg-amber-600 h-auto w-full sm:w-auto"
+                className="bg-amber-500 text-white px-5 py-1 hover:bg-amber-600 h-auto w-full sm:w-auto"
               >
                 {isSubmitting ? 'Processing...' : 'Subscribe Now'}
               </Button>
