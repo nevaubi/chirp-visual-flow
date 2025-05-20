@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Zap, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
+import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const CreatorDashboard = ({ profile }) => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [localProfile, setLocalProfile] = useState(profile);
   const { refreshProfile } = useAuth();
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   
   // Update local profile when the parent profile changes
   useEffect(() => {
@@ -61,6 +62,9 @@ const CreatorDashboard = ({ profile }) => {
       
       // Force component update with the new profile data
       setLocalProfile(updatedProfile);
+      
+      // Show the completion popup
+      setShowCompletionPopup(true);
       
       toast.success("Profile analysis refreshed successfully");
     } catch (error) {
@@ -169,6 +173,12 @@ const CreatorDashboard = ({ profile }) => {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Completion popup */}
+        <AnalysisCompletePopup 
+          open={showCompletionPopup} 
+          onClose={() => setShowCompletionPopup(false)} 
+        />
       </div>
     );
   }
@@ -325,6 +335,12 @@ const CreatorDashboard = ({ profile }) => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Completion popup */}
+      <AnalysisCompletePopup 
+        open={showCompletionPopup} 
+        onClose={() => setShowCompletionPopup(false)} 
+      />
     </div>
   );
 };
