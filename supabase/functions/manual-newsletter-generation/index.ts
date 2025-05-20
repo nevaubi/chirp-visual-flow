@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -368,6 +369,9 @@ ${formattedTweets}`;
 
     // 10) Fetch & log top 5 replies for 7 random tweet IDs
     let replyAnalysisData = "";
+    // Initialize discourseAnalysis variable with an empty string as default value
+    let discourseAnalysis = "";
+    
     try {
       // build main-text map
       const arrTweets = Array.isArray(apifyData)
@@ -491,39 +495,48 @@ Here is the tweet collection to analyze:
 
 ${replyAnalysisData}`;
 
-        const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              { role: "system", content: discourseSystemPrompt },
-              { role: "user", content: discourseUserPrompt },
-            ],
-            temperature: 0.4,
-            max_tokens: 2000,
-          }),
-        });
-        
-        if (discourseOpenaiRes.ok) {
-          const discourseJson = await discourseOpenaiRes.json();
-          discourseAnalysis = discourseJson.choices[0].message.content;
-          console.log("Discourse Analysis Result:\n", discourseAnalysis);
-        } else {
-          const errorText = await discourseOpenaiRes.text();
-          console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
+        try {
+          const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14",
+              messages: [
+                { role: "system", content: discourseSystemPrompt },
+                { role: "user", content: discourseUserPrompt },
+              ],
+              temperature: 0.4,
+              max_tokens: 2000,
+            }),
+          });
+          
+          if (discourseOpenaiRes.ok) {
+            const discourseJson = await discourseOpenaiRes.json();
+            discourseAnalysis = discourseJson.choices[0].message.content;
+            console.log("Discourse Analysis Result:\n", discourseAnalysis);
+          } else {
+            const errorText = await discourseOpenaiRes.text();
+            console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
+            // Set a fallback value for discourseAnalysis if the API call fails
+            discourseAnalysis = "Error: Unable to generate discourse analysis. Please try again later.";
+          }
+        } catch (discourseError) {
+          console.error("Error in discourse analysis API call:", discourseError);
+          discourseAnalysis = "Error: Unable to generate discourse analysis due to API error.";
         }
       } else {
         console.error(
           `Apify Reply API error (${repliesRes.status}):`,
           await repliesRes.text()
         );
+        discourseAnalysis = "Error: Unable to fetch tweet replies for analysis.";
       }
     } catch (err) {
       console.error("Error fetching/parsing tweet replies:", err);
+      discourseAnalysis = "Error: Unable to process tweet replies for analysis.";
     }
 
     // 12) NEW STEP: Generate Markdown formatted newsletter
@@ -586,35 +599,42 @@ Use proper Markdown formatting throughout:
 
 Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout.`;
 
-      const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
-          messages: [
-            { role: "system", content: markdownSystemPrompt },
-            { role: "user", content: markdownUserPrompt },
-          ],
-          temperature: 0.2,
-          max_tokens: 4000,
-        }),
-      });
-      
-      if (markdownOpenaiRes.ok) {
-        const markdownJson = await markdownOpenaiRes.json();
-        markdownNewsletter = markdownJson.choices[0].message.content;
-        console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
-      } else {
-        const errorText = await markdownOpenaiRes.text();
-        console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-        // If this fails, we'll continue with the original content - this step is optional
+      try {
+        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-2025-04-14",
+            messages: [
+              { role: "system", content: markdownSystemPrompt },
+              { role: "user", content: markdownUserPrompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 4000,
+          }),
+        });
+        
+        if (markdownOpenaiRes.ok) {
+          const markdownJson = await markdownOpenaiRes.json();
+          markdownNewsletter = markdownJson.choices[0].message.content;
+          console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
+        } else {
+          const errorText = await markdownOpenaiRes.text();
+          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+          // If this fails, we'll continue with the original content - this step is optional
+          markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
+        }
+      } catch (markdownError) {
+        console.error("Error in markdown formatting API call:", markdownError);
+        markdownNewsletter = "Error: Unable to generate markdown newsletter format due to API error.";
       }
     } catch (err) {
       console.error("Error generating Markdown newsletter:", err);
       // If there's an error, we'll continue with the original content - this is a non-blocking step
+      markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
 
     // 13) Final log & response
@@ -634,7 +654,8 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
         data: { 
           analysisResult, 
           timestamp,
-          markdownNewsletter: markdownNewsletter || null // Include the markdown in the response if available
+          markdownNewsletter: markdownNewsletter || null, // Include the markdown in the response if available
+          discourseAnalysis: discourseAnalysis || null // Include the discourse analysis in the response if available
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
