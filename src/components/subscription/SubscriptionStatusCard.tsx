@@ -1,8 +1,6 @@
-
 import { CalendarIcon, CheckCircle, Settings } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,26 +120,6 @@ export function SubscriptionStatusCard() {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col space-y-2">
-        {isSubscribed && (
-          <Button 
-            onClick={handleManageSubscription} 
-            className="w-full"
-            disabled={isPortalLoading}
-          >
-            {isPortalLoading ? "Loading..." : "Manage Subscription"}
-          </Button>
-        )}
-        
-        <Button 
-          variant="outline" 
-          onClick={handleCheckStatus}
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? "Updating..." : "Refresh Status"}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

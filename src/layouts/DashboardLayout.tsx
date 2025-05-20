@@ -14,11 +14,13 @@ import {
   Menu,
   Bookmark,
   Book,
+  CreditCard,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 const DashboardLayout = () => {
@@ -27,6 +29,7 @@ const DashboardLayout = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -35,6 +38,7 @@ const DashboardLayout = () => {
     ? profile.twitter_username.substring(0, 2).toUpperCase()
     : 'CM';
   const isNewsletterPlatform = profile?.is_newsletter_platform;
+  const isSubscribed = profile?.subscribed;
   
   // Check if user has the required subscription tier
   const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
@@ -79,6 +83,30 @@ const DashboardLayout = () => {
       toast.error("No Generations Available", {
         description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
       });
+    }
+  };
+  
+  // Function to handle subscription management via Stripe portal
+  const handleManageSubscription = async () => {
+    setIsPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      
+      if (error) {
+        console.error("Error opening customer portal:", error);
+        toast.error("Could not open subscription management portal");
+        return;
+      }
+      
+      if (data?.url) {
+        // Open the customer portal in a new tab
+        window.open(data.url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error in handleManageSubscription:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsPortalLoading(false);
     }
   };
 
@@ -195,8 +223,27 @@ const DashboardLayout = () => {
           {/* User Profile */}
           <div className={cn(
             "mt-auto border-t border-gray-700 p-4",
-            !expanded && "flex justify-center"
+            !expanded && "flex flex-col items-center"
           )}>
+            {/* Subscription management button */}
+            <Button 
+              variant="ghost" 
+              className={cn(
+                "w-full mb-4 justify-start text-white hover:bg-white/10",
+                !expanded && "justify-center px-0",
+                isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
+              )}
+              onClick={handleManageSubscription}
+              disabled={isPortalLoading}
+            >
+              <CreditCard size={16} className={cn("shrink-0", expanded && "mr-2")} />
+              {expanded && (
+                <span className="overflow-hidden whitespace-nowrap">
+                  {isSubscribed ? "Manage Subscription" : "Upgrade Subscription"}
+                </span>
+              )}
+            </Button>
+            
             {expanded ? (
               <div className="flex items-center gap-2 mb-4">
                 <Avatar className="h-9 w-9 border border-gray-700">
