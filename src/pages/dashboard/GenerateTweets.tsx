@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Sparkles, Zap, FileText } from 'lucide-react';
+import { Mic, Sparkles, Zap, FileText, Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
@@ -29,6 +31,50 @@ const GenerateTweets = () => {
 };
 
 const CreateVoiceProfileView = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { authState } = useAuth();
+  
+  const handleCreateVoiceProfile = async () => {
+    try {
+      setIsLoading(true);
+      toast({
+        title: "Starting analysis",
+        description: "We're analyzing your tweets to create your voice profile. This may take a few minutes.",
+      });
+      
+      const { data, error } = await supabase.functions.invoke('create-voice-profile', {
+        body: { userId: authState.user?.id }
+      });
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to create voice profile');
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create voice profile');
+      }
+      
+      toast({
+        title: "Voice profile created!",
+        description: "Your voice profile has been successfully created. You can now generate tweets.",
+      });
+      
+      // Refresh user profile to get updated voice_profile_analysis
+      const { authState: auth, refreshProfile } = useAuth();
+      await refreshProfile();
+      
+    } catch (error: any) {
+      console.error("Error creating voice profile:", error);
+      toast({
+        title: "Error creating voice profile",
+        description: error.message || "Something went wrong. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card className="col-span-full md:col-span-2 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
@@ -79,9 +125,22 @@ const CreateVoiceProfileView = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full sm:w-auto bg-[#0087C8] hover:bg-[#0076b2]">
-            <Mic className="mr-2 h-4 w-4" />
-            Create Voice Profile
+          <Button 
+            className="w-full sm:w-auto bg-[#0087C8] hover:bg-[#0076b2]"
+            onClick={handleCreateVoiceProfile}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Profile...
+              </>
+            ) : (
+              <>
+                <Mic className="mr-2 h-4 w-4" />
+                Create Voice Profile
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>
