@@ -539,7 +539,7 @@ ${replyAnalysisData}`;
       discourseAnalysis = "Error: Unable to process tweet replies for analysis.";
     }
 
-    // 12) NEW STEP: Generate Markdown formatted newsletter
+    // 12) Generate Markdown formatted newsletter
     let markdownNewsletter = "";
     try {
       console.log("Starting step 12: Markdown newsletter formatting");
@@ -637,7 +637,90 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
       markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
 
-    // 13) Final log & response
+    // 13) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
+    let enhancedMarkdownNewsletter = "";
+    try {
+      console.log("Starting step 13: Enhanced UI/UX Markdown formatting");
+      
+      const enhancedSystemPrompt = `
+You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
+
+1. **Section headers** (H2/H3) use inline styles or HTML spans for colored accents (e.g., \`<span style="color:#0073e6">\`).  
+2. **Spacing & layout**  
+   - One blank line before and after headings, lists, tables, and callout boxes.  
+   - Use padded \`<div style="background:#f0f4f6;padding:12px;border-radius:4px">\` blocks for key callouts.  
+3. **Lists & tables**  
+   - Convert any dense list into bullet points with bolded lead-ins.  
+   - Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
+4. **Color scheme hints**  
+   - Headings in a consistent color shade of your choice
+   - Callout backgrounds in visually appealing color schemes
+   - Table headers shaded lightly for readability.  
+5. **Tone & writing**  
+   - Conversational, active voice, no em-dashes, 10th-grade reading level.  
+   - Bold key phrases for scannability.  
+6. **Exclusions**  
+   - No images, no table of contents, no page breaks or "Page X" footers.  
+
+Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
+`;
+
+      const enhancedUserPrompt = `
+I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
+
+- **No page breaks or "Page X" sections**—just a smooth scroll.  
+- **Color accents:** use inline HTML/CSS spans or blocks to hint at a color scheme (headers in blue, callouts in light gray, etc.).  
+- **Better spacing:** extra blank lines around headings, lists, and callout boxes.  
+- **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
+- **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
+- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no images, no TOC.  
+
+Here is my markdown draft—please output one cohesive, styled markdown document.  
+
+<current newsletter>
+${markdownNewsletter}
+</current newsletter>
+`;
+
+      try {
+        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o", // Using the model specified in the request
+            messages: [
+              { role: "system", content: enhancedSystemPrompt },
+              { role: "user", content: enhancedUserPrompt },
+            ],
+            temperature: 0.4, // Setting temperature as specified
+            max_tokens: 4000,
+          }),
+        });
+        
+        if (enhancedOpenaiRes.ok) {
+          const enhancedJson = await enhancedOpenaiRes.json();
+          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
+          console.log("Enhanced UI/UX Markdown Newsletter Generated:\n", enhancedMarkdownNewsletter);
+        } else {
+          const errorText = await enhancedOpenaiRes.text();
+          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+          // If this fails, we'll continue with the previous markdown - this step is optional
+          enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown. Using regular markdown instead.";
+        }
+      } catch (enhancedError) {
+        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
+        enhancedMarkdownNewsletter = "Error: Unable to generate enhanced UI/UX markdown due to API error.";
+      }
+    } catch (err) {
+      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
+      // If there's an error, we'll continue with the regular markdown - this is a non-blocking step
+      enhancedMarkdownNewsletter = "Error: Failed to generate enhanced UI/UX markdown. Using regular markdown instead.";
+    }
+
+    // 14) Final log & response (previously step 13)
     const timestamp = new Date().toISOString();
     console.log("Newsletter generation successful:", {
       userId: user.id,
@@ -654,8 +737,9 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
         data: { 
           analysisResult, 
           timestamp,
-          markdownNewsletter: markdownNewsletter || null, // Include the markdown in the response if available
-          discourseAnalysis: discourseAnalysis || null // Include the discourse analysis in the response if available
+          markdownNewsletter: markdownNewsletter || null, // Include the regular markdown in the response
+          enhancedMarkdownNewsletter: enhancedMarkdownNewsletter || null, // Include the enhanced UI/UX markdown in the response
+          discourseAnalysis: discourseAnalysis || null // Include the discourse analysis in the response
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
