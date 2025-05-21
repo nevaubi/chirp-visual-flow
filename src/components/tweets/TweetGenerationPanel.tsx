@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Badge as BadgeIcon } from 'lucide-react';
 import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -372,10 +370,10 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-      {/* User info section */}
-      <div className="flex items-center space-x-3 mb-3">
-        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      {/* User info section - reduced height with smaller margins and padding */}
+      <div className="flex items-center space-x-3 mb-2">
+        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
           {profile?.twitter_profilepic_url ? (
             <img 
               src={profile.twitter_profilepic_url} 
@@ -383,7 +381,7 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-8 h-8 bg-gray-600 rounded-full"></div>
+            <div className="w-7 h-7 bg-gray-600 rounded-full"></div>
           )}
         </div>
         
@@ -403,22 +401,22 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
         </div>
       </div>
       
-      {/* Tweet content */}
-      <div className="mb-4">
+      {/* Tweet content - reduced height */}
+      <div className="mb-3">
         {tweet.text ? (
           <p className="text-base text-gray-800 leading-normal">{tweet.text}</p>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-4 min-h-20 flex items-center justify-center text-gray-500 italic border-2 border-dashed border-gray-200">
+          <div className="bg-gray-50 rounded-lg p-3 min-h-16 flex items-center justify-center text-gray-500 italic border-2 border-dashed border-gray-200">
             Generated post content will appear here
           </div>
         )}
       </div>
       
-      {/* Action buttons */}
+      {/* Action buttons - reduced height */}
       <div className="flex items-center justify-between text-sm text-gray-500">
         <span>{tweet.charCount} / 280</span>
         <button 
-          className="flex items-center space-x-1 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors"
+          className="flex items-center space-x-1 px-3 py-0.5 rounded-md hover:bg-gray-100 transition-colors"
           onClick={copyToClipboard}
         >
           {copied ? (
