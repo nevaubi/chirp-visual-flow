@@ -45,6 +45,12 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
     return name.charAt(0).toUpperCase();
   };
 
+  // Truncate tweet text after 250 characters
+  const truncateText = (text: string, maxLength: number = 250): string => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
       <div className="flex items-start gap-3">
@@ -70,7 +76,9 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
             <span className="text-gray-500 dark:text-gray-400">{formatTimestamp(profile.timestamp)}</span>
           </div>
           
-          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px]">{text}</p>
+          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px]">
+            {truncateText(text)}
+          </p>
         </div>
       </div>
     </div>

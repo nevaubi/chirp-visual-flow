@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -252,11 +251,11 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                     </div>
                   )}
                   
-                  {/* Example Tweets */}
+                  {/* Example Tweets - Changed to 2 columns on larger screens */}
                   {topic.exampleTweets.length > 0 && (
                     <div className="space-y-4">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {topic.exampleTweets.map((tweet, idx) => (
                           <ExampleTweetCard 
                             key={idx} 

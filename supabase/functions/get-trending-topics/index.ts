@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const REDIS_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
@@ -55,38 +54,35 @@ async function fetchTrendingTopicsFromRedis(category: string): Promise<any> {
   }
 }
 
-// Enhanced function to generate more realistic profile data
+// Enhanced function to generate more realistic profile data with proper username/handle mapping
 function generateMockProfile(tweet: string, trendHeader: string, index: number): any {
   // Diverse profile names
   const firstNames = ['Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Jamie', 'Riley', 'Quinn', 'Avery', 'Dakota', 'Sam', 'Charlie'];
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
   
-  // Extract a potential username from the tweet content if it starts with an @mention
-  let username = '';
-  let displayName = '';
+  // Generate display name (real name)
+  const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
+  const displayName = `${randomFirst} ${randomLast}`;
   
+  // Generate a username (handle) - lowercase, no spaces, sometimes with numbers
+  let username = '';
+  
+  // Try to extract a username from the tweet content if it starts with an @mention
   const mentionMatch = tweet.match(/@(\w+)/);
   if (mentionMatch) {
     username = mentionMatch[1].toLowerCase();
-    // Generate a display name based on the username with proper capitalization
-    displayName = username.charAt(0).toUpperCase() + username.slice(1);
   } else {
-    // Use portions of the trend header to create a username
-    const words = trendHeader.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    // Create a username based on the real name
+    username = (randomFirst + (Math.random() > 0.5 ? randomLast.substring(0, 1) : "")).toLowerCase();
     
-    if (words.length > 0) {
-      // Create username based on trend topic
-      username = (words[0] + (index + 1)).replace(/[^a-z0-9]/g, '');
-      
-      // Create a more realistic display name
-      const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
-      displayName = `${randomFirst} ${randomLast}`;
-    } else {
-      // Fallback to generic user
-      username = `user${index + 123}`;
-      displayName = `User ${index + 1}`;
+    // Sometimes add numbers to the username
+    if (Math.random() > 0.7) {
+      username += Math.floor(Math.random() * 1000);
     }
+    
+    // Remove any spaces or special characters
+    username = username.replace(/[^a-z0-9]/g, '');
   }
   
   // Set verified status randomly but weighted to mostly be unverified
