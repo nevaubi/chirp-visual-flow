@@ -1,19 +1,21 @@
-
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Loader2, Send, Twitter, Sparkles, Zap, FileText, Copy, Check, BadgeCheck } from 'lucide-react';
+import { Mic, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
 import TrendingTopics from '@/components/trends/TrendingTopics';
-import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import TweetGenerationPanel from '@/components/tweets/TweetGenerationPanel';
+
+interface SelectedTopic {
+  id: string;
+  header: string;
+  sentiment: string;
+  context: string;
+  subTopics: string[];
+  exampleTweets: string[];
+}
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
@@ -21,7 +23,7 @@ const GenerateTweets = () => {
   const hasVoiceProfile = profile?.voice_profile_analysis !== null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       {!hasVoiceProfile ? (
         <CreateVoiceProfileView />
       ) : (
@@ -93,7 +95,7 @@ const CreateVoiceProfileView = () => {
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4 border border-blue-100">
               <h3 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500" />
+                <div className="h-4 w-4 text-amber-500"></div>
                 What is a Voice Profile?
               </h3>
               <p className="text-sm text-gray-600">
@@ -106,7 +108,7 @@ const CreateVoiceProfileView = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex gap-3 p-3 bg-white rounded-lg border border-blue-100">
                 <div className="flex-shrink-0 h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-green-600" />
+                  
                 </div>
                 <div>
                   <h4 className="text-sm font-medium">Fast & Effortless</h4>
@@ -116,7 +118,7 @@ const CreateVoiceProfileView = () => {
               
               <div className="flex gap-3 p-3 bg-white rounded-lg border border-blue-100">
                 <div className="flex-shrink-0 h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-purple-600" />
+                  
                 </div>
                 <div>
                   <h4 className="text-sm font-medium">Authentic Content</h4>
@@ -183,106 +185,8 @@ const CreateVoiceProfileView = () => {
   );
 };
 
-interface TweetVariation {
-  text: string;
-  charCount: number;
-}
-
-interface SelectedTopic {
-  id: string;
-  header: string;
-  sentiment: string;
-  context: string;
-  subTopics: string[];
-  exampleTweets: string[];
-}
-
 const TweetGenerationView = () => {
-  const { authState } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([
-    { text: '', charCount: 0 },
-    { text: '', charCount: 0 },
-    { text: '', charCount: 0 }
-  ]);
   const [selectedTopic, setSelectedTopic] = useState<SelectedTopic | null>(null);
-  const isMobile = useIsMobile();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  const form = useForm({
-    defaultValues: {
-      prompt: '',
-    },
-  });
-
-  const handleGenerateTweets = async (values: { prompt: string }) => {
-    try {
-      // Use either the user-provided prompt or the selected topic header as fallback
-      const promptText = values.prompt || (selectedTopic ? selectedTopic.header : '');
-      
-      // If there's still no prompt, show an error and return early
-      if (!promptText) {
-        toast({
-          title: "Missing prompt",
-          description: "Please enter a prompt or select a trending topic",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setIsLoading(true);
-      
-      const requestBody: any = {
-        prompt: promptText,
-        userId: authState.user?.id
-      };
-      
-      // Add selected topic metadata if available
-      if (selectedTopic) {
-        requestBody.selectedTopics = [{
-          header: selectedTopic.header,
-          sentiment: selectedTopic.sentiment,
-          context: selectedTopic.context,
-          subTopics: selectedTopic.subTopics,
-          exampleTweets: selectedTopic.exampleTweets
-        }];
-      }
-      
-      console.log('Generating tweets with prompt:', promptText);
-      console.log('Request body:', requestBody);
-      
-      const { data, error } = await supabase.functions.invoke('generate-tweets', {
-        body: requestBody
-      });
-      
-      if (error) {
-        console.error("Error invoking function:", error);
-        throw new Error(error.message);
-      }
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to generate tweets');
-      }
-
-      // Format the tweets with character count
-      const formattedTweets = data.tweets.map((tweet: string) => ({
-        text: tweet,
-        charCount: tweet.length
-      }));
-      
-      setGeneratedTweets(formattedTweets);
-      
-    } catch (error: any) {
-      console.error("Error generating tweets:", error);
-      toast({
-        title: "Error generating tweets",
-        description: error.message || "Something went wrong. Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleTopicSelect = (topicData: any) => {
     setSelectedTopic({
@@ -294,219 +198,25 @@ const TweetGenerationView = () => {
       exampleTweets: topicData.exampleTweets || []
     });
     
-    // Update the prompt field with the topic header
-    form.setValue('prompt', topicData.header);
-    
-    // Focus the textarea after a moment to ensure UI is updated
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
-    }, 100);
-    
     toast({
       title: "Topic selected",
       description: `Added "${topicData.header}" to your prompt`,
     });
   };
 
-  const handleRemoveTopic = () => {
-    setSelectedTopic(null);
-    
-    // Focus the textarea after a moment
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
-    }, 100);
-  };
-
-  // Custom render for the textarea with pill
-  const CustomTextarea = ({ field }: { field: any }) => {
-    return (
-      <div className="relative">
-        {selectedTopic && (
-          <div className="mb-2">
-            <TrendingTopicPill 
-              header={selectedTopic.header} 
-              onRemove={handleRemoveTopic}
-            />
-          </div>
-        )}
-        <Textarea
-          {...field}
-          ref={textareaRef}
-          placeholder={selectedTopic 
-            ? "Add any additional details to your prompt..."
-            : "What would you like to tweet about?"
-          }
-          className="min-h-24 resize-none"
-        />
-      </div>
-    );
-  };
-
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-2 gap-8'}`}>
-      {/* Left column - Tweet generation (now as a grid) */}
-      <div className={`${isMobile ? 'space-y-6' : 'grid grid-cols-2 gap-4 auto-rows-min'}`}>
-        {/* Input form - top left */}
-        <Card className="h-full">
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="prompt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <CustomTextarea field={field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-[#0087C8] hover:bg-[#0076b2]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      Generate Tweets
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-            
-        {/* Tweet variations - distributed in the remaining grid cells */}
-        {generatedTweets.map((tweet, index) => (
-          <TwitterCard 
-            key={index} 
-            tweet={tweet} 
-            profile={authState.profile} 
-            index={index} 
-          />
-        ))}
-      </div>
-
-      {/* Right column - Trending Topics */}
-      <div className={isMobile ? 'mt-6' : ''}>
+    <div className="relative">
+      {/* Main content - Trending Topics */}
+      <div className="w-full">
         <TrendingTopics onSelectTopic={handleTopicSelect} />
       </div>
+      
+      {/* Right side panel for tweet generation */}
+      <TweetGenerationPanel 
+        onTopicSelect={setSelectedTopic}
+        selectedTopic={selectedTopic}
+      />
     </div>
-  );
-};
-
-interface TwitterCardProps {
-  tweet: TweetVariation;
-  profile: any;
-  index: number;
-}
-
-const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
-  const [copied, setCopied] = useState(false);
-  const [isNew, setIsNew] = useState(true);
-  const isVerified = profile?.is_verified || false;
-
-  // Set isNew to false after animation completes
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsNew(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(tweet.text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    
-    toast({
-      title: "Tweet copied!",
-      description: "Tweet text copied to clipboard",
-    });
-  };
-
-  return (
-    <Card className="overflow-hidden border border-gray-200 shadow-sm hover-lift transition-all duration-300">
-      {/* User info section - more compact with better spacing */}
-      <div className="p-3 flex items-center space-x-3 border-b border-gray-100">
-        <Avatar className="h-10 w-10">
-          {profile?.twitter_profilepic_url ? (
-            <AvatarImage 
-              src={profile.twitter_profilepic_url} 
-              alt={profile.twitter_username || 'Profile'} 
-            />
-          ) : (
-            <AvatarFallback className="bg-gray-100">
-              <Twitter className="w-4 h-4 text-gray-500" />
-            </AvatarFallback>
-          )}
-        </Avatar>
-        
-        <div className="flex-1">
-          <div className="flex items-center gap-1">
-            <span className="font-semibold text-gray-900 text-sm">{profile?.twitter_username || 'Your Name'}</span>
-            <BadgeCheck className="h-3.5 w-3.5 text-[#1DA1F2]" />
-            <Badge variant="outline" className="ml-1 text-xs font-normal px-1.5 py-0 rounded-full bg-gray-100 border-none text-gray-700">
-              {index + 1}
-            </Badge>
-          </div>
-          <p className="text-xs text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
-        </div>
-      </div>
-      
-      {/* Tweet content - improved typography and spacing */}
-      <div className={`p-3 min-h-[90px] flex items-start ${isNew ? 'animate-fade-in' : ''}`}>
-        {tweet.text ? (
-          <p className="text-base text-gray-800 leading-normal">{tweet.text}</p>
-        ) : (
-          <div className="w-full text-center text-gray-400 italic">
-            <div className="flex justify-center space-x-2">
-              <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-              <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-              <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Action buttons */}
-      <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center">
-        <div className="text-xs text-gray-500">
-          {tweet.charCount} / 280
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-xs text-gray-700 rounded-full h-7 hover:bg-gray-100 flex items-center gap-1"
-          onClick={copyToClipboard}
-        >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5" />
-              <span>Copied</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-3.5 h-3.5" />
-              <span>Copy</span>
-            </>
-          )}
-        </Button>
-      </div>
-    </Card>
   );
 };
 
