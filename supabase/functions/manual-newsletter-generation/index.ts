@@ -585,11 +585,18 @@ FORMAT GUIDELINES:
 - Reword the content as if you were a professional newsletter who communicated to their loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
 
 CONTENT STRUCTURE:
-1. Top sections contain the first few Main Topics
-2. Below, include the Sub-Topics separated by dividers as needed
-3. Present the other Main Topics below the sub topics sections in a neat and visually appealing structure
-4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
-5. Add proper spacing and formatting throughout
+1. Start with the first Main topic at the top
+2. Use dividers, spacing, clean and visually appealing structure as needed
+3. Then present a Sub-Topic section below using longer sentence descriptions rich with context 
+4. Continue to use dividers, proper spacings, clean and visually appealing structures as needed
+5. Present a secondary main topic with expanded details
+6. Present another 1 or 2 sub topics related to the main topics with additional context for additional discussions/perspectives
+7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
+8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
+9. Add a final horizontal rule divider
+10. After a final divider, include the Discourse Analysis section but rename it to Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
+11. Add proper spacing and formatting throughout
+12. Max 2-3 images if applicable
 
 OUTPUT:
 Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
@@ -603,13 +610,17 @@ ${discourseAnalysis}
 
 Please format these into a single, well-structured visually appealing Markdown newsletter with the following layout:
 
-1. Start with the first few Main Topics at the top (first main topic results from the analysis)
+1. Start with the first Main topic at the top
 2. Use dividers, spacing, clean and visually appealing structure as needed
-3. Then present the Sub-Topics sections (from the analysis)
+3. Then present a Sub-Topic section below using longer sentence descriptions rich with context 
 4. Continue to use dividers, proper spacings, clean and visually appealing structures as needed
-5. Present the remaining main topics (also from the earlier analysis)
-6. Add a final horizontal rule divider
-7. Include the Discourse Analysis content but rename it Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
+5. Present a secondary main topic with expanded details
+6. Present another 1 or 2 sub topics related to the main topics with additional context for additional discussions/perspectives
+7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
+8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
+9. Add a final horizontal rule divider
+10. Include the Discourse Analysis content but rename it Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
+11. Max 2-3 images if applicable
 
 Use proper Markdown formatting throughout:
 - # for main headings
