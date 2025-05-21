@@ -35,6 +35,11 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
 
+  // Function to clean topic headers by removing "TOPIC HEADER: " prefix
+  const cleanHeader = (header: string): string => {
+    return header.replace(/^TOPIC HEADER:\s*/i, '');
+  };
+
   const availableTags = [
     { id: 1, name: 'AI' },
     { id: 2, name: 'Coding' },
@@ -207,13 +212,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                     <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
                       {topic.tag}
                     </Badge>
-                    <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
-                      <topic.sentiment.icon size={12} className="mr-1" />
+                    <div className={`flex items-center ${topic.sentiment.color} text-sm font-medium px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800`}>
+                      <topic.sentiment.icon size={14} className="mr-1.5" />
                       <span className="capitalize">{topic.sentiment.type}</span>
                     </div>
                   </div>
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    {topic.header}
+                    {cleanHeader(topic.header)}
                   </h3>
                 </div>
                 
