@@ -226,3 +226,27 @@ verify_jwt = false
 
 [functions.trendingtopics-AI]
 verify_jwt = false
+
+[functions.trendingtopics-Crypto]
+verify_jwt = false
+
+[functions.trendingtopics-Finance]
+verify_jwt = false
+
+[functions.trendingtopics-Coding]
+verify_jwt = false
+
+[functions.trendingtopics-Tech]
+verify_jwt = false
+
+[functions.trendingtopics-Politics]
+verify_jwt = false
+
+[functions.trendingtopics-Sports]
+verify_jwt = false
+
+[functions.trendingtopics-Entertainment]
+verify_jwt = false
+
+[functions.trendingtopics-Marketing]
+verify_jwt = false
