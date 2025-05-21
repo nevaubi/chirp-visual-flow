@@ -186,9 +186,9 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
   // Header component for the panel
   const PanelHeader = () => (
-    <div className="bg-gradient-to-r from-[#0087C8] to-[#0099db] p-4 rounded-t-lg border-b border-blue-400">
+    <div className="bg-gradient-to-r from-[#0087C8] to-[#0099db] p-4 border-b border-blue-400">
       <div className="flex items-center gap-3">
-        <div className="bg-white/20 p-2 rounded-full">
+        <div className="bg-white/20 p-2 rounded">
           <Twitter className="h-5 w-5 text-white" />
         </div>
         <div>
@@ -203,11 +203,11 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     return (
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="fixed top-20 right-4 z-50 rounded-full shadow-md hover:shadow-lg transition-all">
+          <Button variant="outline" size="icon" className="fixed top-20 right-4 z-50 rounded-md shadow-md hover:shadow-lg transition-all">
             <Twitter className="h-5 w-5 text-[#0087C8]" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto">
+        <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto rounded-none">
           <PanelHeader />
           <div className="p-4 space-y-4">
             <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4">
@@ -227,7 +227,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-[#0087C8] hover:bg-[#0076b2]"
+                    className="w-full bg-[#0087C8] hover:bg-[#0076b2] rounded-md"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -266,12 +266,12 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     <div 
       ref={panelRef}
       className={`fixed top-16 right-0 h-[calc(100vh-64px)] z-40 transform transition-all duration-300 ease-in-out ${
-        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-24px)]'
+        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-40px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
       {/* Handle for hover */}
       <div 
-        className="w-6 h-20 absolute top-1/2 -translate-y-1/2 -left-6 bg-[#0087C8] rounded-l-lg flex items-center justify-center cursor-pointer"
+        className="w-6 h-20 absolute top-1/2 -translate-y-1/2 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
         <div className="w-1 h-8 bg-white/60 rounded-full"></div>
@@ -279,7 +279,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
       <PanelHeader />
       
-      <div className={`flex-1 w-[340px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4`}>
+      <div className={`flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4`}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
             <FormField
@@ -296,7 +296,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
             <Button 
               type="submit" 
-              className="w-full bg-[#0087C8] hover:bg-[#0076b2]"
+              className="w-full bg-[#0087C8] hover:bg-[#0076b2] rounded-md"
               disabled={isLoading}
             >
               {isLoading ? (

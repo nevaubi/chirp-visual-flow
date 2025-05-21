@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
+import TweetGenerationPanel from '@/components/tweets/TweetGenerationPanel';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
@@ -28,6 +30,7 @@ const DashboardLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -121,6 +124,11 @@ const DashboardLayout = () => {
           : []),
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
+
+  // Handle topic selection for Tweet Generation panel
+  const handleTopicSelect = (topic) => {
+    setSelectedTopic(topic);
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -307,6 +315,14 @@ const DashboardLayout = () => {
           </div>
         </main>
       </div>
+
+      {/* Tweet Generation Panel for Creator Platform */}
+      {isCreatorPlatform && (
+        <TweetGenerationPanel 
+          onTopicSelect={handleTopicSelect}
+          selectedTopic={selectedTopic}
+        />
+      )}
 
       {/* Mobile Overlay */}
       {isMobile && mobileMenuOpen && (

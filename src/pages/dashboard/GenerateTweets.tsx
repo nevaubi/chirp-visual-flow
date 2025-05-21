@@ -6,7 +6,6 @@ import { Mic, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import TrendingTopics from '@/components/trends/TrendingTopics';
-import TweetGenerationPanel from '@/components/tweets/TweetGenerationPanel';
 
 interface SelectedTopic {
   id: string;
@@ -130,7 +129,7 @@ const CreateVoiceProfileView = () => {
         </CardContent>
         <CardFooter>
           <Button 
-            className="w-full sm:w-auto bg-[#0087C8] hover:bg-[#0076b2]"
+            className="w-full sm:w-auto bg-[#0087C8] hover:bg-[#0076b2] rounded-md"
             onClick={handleCreateVoiceProfile}
             disabled={isLoading}
           >
@@ -186,36 +185,17 @@ const CreateVoiceProfileView = () => {
 };
 
 const TweetGenerationView = () => {
-  const [selectedTopic, setSelectedTopic] = useState<SelectedTopic | null>(null);
-
-  const handleTopicSelect = (topicData: any) => {
-    setSelectedTopic({
-      id: topicData.id,
-      header: topicData.header,
-      sentiment: topicData.sentiment,
-      context: topicData.context,
-      subTopics: topicData.subTopics || [],
-      exampleTweets: topicData.exampleTweets || []
-    });
-    
-    toast({
-      title: "Topic selected",
-      description: `Added "${topicData.header}" to your prompt`,
-    });
-  };
-
+  // We're now handling topic selection at the layout level
   return (
     <div className="relative">
       {/* Main content - Trending Topics */}
       <div className="w-full">
-        <TrendingTopics onSelectTopic={handleTopicSelect} />
+        <TrendingTopics onSelectTopic={(topic) => {
+          // Notify parent through global state or context if needed
+          // This will be handled by the DashboardLayout component
+          window.dispatchEvent(new CustomEvent('topicSelected', { detail: topic }));
+        }} />
       </div>
-      
-      {/* Right side panel for tweet generation */}
-      <TweetGenerationPanel 
-        onTopicSelect={setSelectedTopic}
-        selectedTopic={selectedTopic}
-      />
     </div>
   );
 };
