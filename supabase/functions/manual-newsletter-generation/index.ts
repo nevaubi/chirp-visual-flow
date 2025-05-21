@@ -337,15 +337,15 @@ ANALYSIS METHODOLOGY:
 OUTPUT REQUIREMENTS:
 For each analysis, you will produce a structured report containing:
 
-TWO MAIN TOPICS (highest priority discussions):
-- Each with a concise header (5-10 words)
-- Four bullet points highlighting the most significant aspects (30 words max each)
+THREE MAIN TOPICS (highest priority discussions):
+- Each with a concise header (10-20 words)
+- Four bullet points highlighting the most significant aspects (100 words max each)
 - A detailed explanation of approximately 500-700 words covering context, sentiment, key discussions, and notable perspectives
 - The best photo url per topic
 
-ONE SUB-TOPIC (third most relevant discussion):
-- Concise header (5-10 words)
-- Three bullet points highlighting the most significant aspects (20 words max each)
+TWO SUB-TOPIC (third most relevant discussion):
+- Concise header (10-20 words)
+- Three bullet points highlighting the most significant aspects (40 words max each)
 - A comprehensive explanation of approximately 300-400 words providing context and analysis
 - A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
 - The best photo url that best represents this topic (if available)
@@ -358,11 +358,11 @@ Organization criteria:
 Here is the tweet collection to analyze:
 
 ${formattedTweets}`;
-    const userPrompt = `Analyze the following collection of tweets to identify the two most prevalent main topics and one sub-topic. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
+    const userPrompt = `Analyze the following collection of tweets to identify the FIVE most prevalent main topics and FOUR sub-topics. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
 
-For each MAIN TOPIC (2):
-1. Create a concise header (5-10 words) that captures the essence of the topic
-2. Provide 4 bullet points highlighting the most significant data points or aspects (30 words max each)
+For each MAIN TOPIC (5):
+1. Create a concise header (20-30 words) that captures the essence of the topic
+2. Provide 4 bullet points highlighting the most significant data points or aspects (60 words max each)
 3. Using an accessible and naturally communicating casual tone of voice, write a detailed explanation of approximately 500-700 words that thoroughly describes the topic, including:
    - Overall context and background
    - Predominant sentiment (positive, negative, mixed, neutral)
@@ -371,9 +371,9 @@ For each MAIN TOPIC (2):
    - Implications or significance
 4. Include the best photo url that best represents this topic (if available)
 
-For the SUB-TOPIC (1):
-1. Create a concise header (5-10 words)
-2. Provide 3 bullet points highlighting the most significant aspects (20 words max each)
+For the SUB-TOPIC (4):
+1. Create a concise header (10-20 words)
+2. Provide 3 bullet points highlighting the most significant aspects (50 words max each)
 3. Write a comprehensive explanation of approximately 300-400 words that thoroughly describes the sub-topic using accessible naturally human sounding casual language
 4. Extract or reference a notable quote or statement related to this sub-topic
 5. Include the best photo url that best represents this topic (if available)
@@ -427,9 +427,9 @@ ${formattedTweets}`;
           mainMap[t.id] = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
         }
       });
-      const idsToQuery = tweetIds.length <= 7 ? tweetIds : [
+      const idsToQuery = tweetIds.length <= 10 ? tweetIds : [
         ...tweetIds
-      ].sort(()=>Math.random() - 0.5).slice(0, 7);
+      ].sort(()=>Math.random() - 0.5).slice(0, 10);
       console.log("Using random tweet IDs for replies:", idsToQuery);
       const repliesRes = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-reply/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
         method: "POST",
@@ -485,10 +485,10 @@ Your analysis should focus on discovering:
 - Unexpected patterns that challenge surface-level interpretations
 
 OUTPUT FRAMEWORK:
-You are to output 5 high quality insights. For each insight, provide:
-1. A concise, compelling header (5-8 words)
+You are to output 8 high quality insights. For each insight, provide:
+1. A concise, compelling header (20-30 words)
 2. A detailed explanation of approximately 150-200 words that unpacks the insight with nuance, specific evidence, and contextual significance, delivered in natural, normal flowing wording spoken at an 8th grade writing level.`;
-        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 5 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
+        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 8 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
 
 Go beyond surface-level topic identification to discover:
 - Hidden assumptions or implicit values revealed in conversation patterns
@@ -496,8 +496,8 @@ Go beyond surface-level topic identification to discover:
 - Emerging attitudes or shifts in sentiment not explicitly stated
 - Rhetorical patterns that reveal deeper community perspectives
 
-For each of the 5 insights:
-1. Create a concise, compelling header (5-8 words) that captures the essence of the insight
+For each of the 8 insights:
+1. Create a concise, compelling header (20-30 words) that captures the essence of the insight
 2. Write a detailed explanation of approximately 150-200 words that:
    - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
    - Provides specific evidence from multiple tweet conversations
@@ -585,9 +585,9 @@ FORMAT GUIDELINES:
 - Reword the content as if you were a professional newsletter who communicated to their loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
 
 CONTENT STRUCTURE:
-1. Top section contains Main Topic 1 (most important topic)
-2. After a divider, include the Sub-Topic
-3. After another divider, present Main Topic 2 and after Main topic 3 if applicable
+1. Top sections contain the first few Main Topics
+2. Below, include the Sub-Topics separated by dividers as needed
+3. Present the other Main Topics below the sub topics sections in a neat and visually appealing structure
 4. After a final divider, include the Discourse Analysis section but rename it to Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
 5. Add proper spacing and formatting throughout
 
@@ -603,11 +603,11 @@ ${discourseAnalysis}
 
 Please format these into a single, well-structured visually appealing Markdown newsletter with the following layout:
 
-1. Start with Main Topic 1 at the top (first main topic from the analysis)
-2. Add a horizontal rule divider
-3. Then present the Sub-Topic (from the analysis)
-4. Add another horizontal rule divider
-5. Present Main Topic 2 (second main topic from the analysis) and main topic 3 after if applicable
+1. Start with the first few Main Topics at the top (first main topic results from the analysis)
+2. Use dividers, spacing, clean and visually appealing structure as needed
+3. Then present the Sub-Topics sections (from the analysis)
+4. Continue to use dividers, proper spacings, clean and visually appealing structures as needed
+5. Present the remaining main topics (also from the earlier analysis)
 6. Add a final horizontal rule divider
 7. Include the Discourse Analysis content but rename it Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
 
@@ -674,7 +674,8 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
 2. **Spacing & layout**  
    - One blank line before and after headings, lists, tables, and callout boxes.  
    - Use padded \`<div style="background:#f0f4f6;padding:12px;border-radius:4px">\` blocks for key callouts.  
-   - If adding images make sure to size accordingly to keep sizes proportional and correct
+   - If adding images make sure to size accordingly to keep sizes proportional and correct in proper layout
+   - Prioritize visually appealing structures and ease of cognitive ability for users when reading the newsletter
 3. **Lists & tables**  
    - Convert any dense list into bullet points with bolded lead-ins.  
    - Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
@@ -696,7 +697,7 @@ I'm sharing my raw markdown newsletter below. Please transform it into a **visua
 
 - **No page breaks or "Page X" sections**—just a smooth scroll.  
 - **Color accents:** use inline HTML/CSS spans or blocks to hint at a color scheme (headers in blue, callouts in light gray, etc.).  
-- **Better spacing:** extra blank lines around headings, lists, and callout boxes.  
+- **Better spacing:** extra blank lines around headings, lists, and callout boxes. Prioritize a visually appealing and cleanly formatted beautiful newsletter
 - **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
 - **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
 - **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no TOC. Ensure all original content is preserved.
