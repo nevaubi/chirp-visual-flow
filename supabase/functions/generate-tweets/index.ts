@@ -48,11 +48,18 @@ serve(async (req) => {
       
       selectedTopics.forEach((topic, index) => {
         trendingTopicsContent += `\nTREND ${index + 1}: ${topic.header}\n`;
-        trendingTopicsContent += `* Strength: ${topic.strength}%\n`;
         trendingTopicsContent += `* Sentiment: ${topic.sentiment}\n`;
-        trendingTopicsContent += `* Details: ${topic.details}\n`;
         trendingTopicsContent += `* Context: ${topic.context}\n`;
         
+        // Add sub topics if available
+        if (topic.subTopics && topic.subTopics.length > 0) {
+          trendingTopicsContent += '* Sub Topics:\n';
+          topic.subTopics.forEach((subTopic, subIndex) => {
+            trendingTopicsContent += `  - ${subTopic}\n`;
+          });
+        }
+        
+        // Add example tweets if available
         if (topic.exampleTweets && topic.exampleTweets.length > 0) {
           trendingTopicsContent += '* Example Tweets:\n';
           topic.exampleTweets.forEach((tweet, tweetIndex) => {
@@ -114,6 +121,7 @@ Here are examples of my top tweets to further understand my style:
 <top tweets>
 ${topTweetsList}
 </top tweets>
+${trendingTopicsContent}
 
 GUIDELINES FOR MY TWEETS:
 - All three tweets must authentically match my writing style
