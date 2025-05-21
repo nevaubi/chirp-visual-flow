@@ -208,3 +208,18 @@ verify_jwt = false
 
 [functions.asynch-database-Crypto]
 verify_jwt = false
+
+[functions.asynch-database-Entertainment]
+verify_jwt = false
+
+[functions.asynch-database-Sports]
+verify_jwt = false
+
+[functions.asynch-database-Finance]
+verify_jwt = false
+
+[functions.asynch-database-Marketing]
+verify_jwt = false
+
+[functions.asynch-database-Politics]
+verify_jwt = false
