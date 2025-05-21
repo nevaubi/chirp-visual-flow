@@ -115,7 +115,7 @@ async function runTwitterXScraper(): Promise<any[]> {
 async function processTweets(tweets: any[]): Promise<void> {
   try {
     console.log(`Processing ${tweets.length} tweets for storage`);
-    const key = `asynch-collection-AI`;
+    const key = `asynch-database-AI`;
     
     // Process each tweet and add to Redis
     for (const tweet of tweets) {
