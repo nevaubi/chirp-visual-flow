@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -208,40 +209,48 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                 key={topic.id} 
                 className="hover-lift overflow-hidden border border-border"
               >
-                <CardContent className="p-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2 mb-2">
+                <CardContent className="p-0">
+                  {/* Header section with sentiment badge */}
+                  <div className="p-3 border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center justify-between mb-1">
                       <Badge variant="outline" className="text-xs font-normal bg-background">
                         {topic.tag}
                       </Badge>
-                      <div className={`flex items-center ${topic.sentiment.color}`}>
-                        <topic.sentiment.icon size={14} className="mr-1" />
-                        <span className="text-xs font-medium capitalize">{topic.sentiment.type}</span>
+                      <div className={`flex items-center ${topic.sentiment.color} text-xs px-2 py-0.5 rounded-full bg-background/80 border border-border/50`}>
+                        <topic.sentiment.icon size={12} className="mr-1" />
+                        <span className="font-medium capitalize">{topic.sentiment.type}</span>
                       </div>
                     </div>
+                    <h3 className="text-sm font-semibold text-foreground">{topic.header}</h3>
                   </div>
                   
-                  <h3 className="text-base font-semibold mb-1 text-foreground">{topic.header}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{topic.context}</p>
-                  
-                  {topic.subTopics.length > 0 && (
-                    <div className="mb-3 text-xs">
-                      <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
-                        {topic.subTopics.map((subtopic, idx) => (
-                          <li key={idx}>{subtopic}</li>
-                        ))}
-                      </ul>
+                  {/* Content section */}
+                  <div className="p-3">
+                    <p className="text-xs text-muted-foreground mb-3 leading-normal">{topic.context}</p>
+                    
+                    {topic.subTopics.length > 0 && (
+                      <div className="mb-3">
+                        <span className="text-xs font-medium text-foreground/70 mb-1.5 block">Key points:</span>
+                        <ul className="space-y-1">
+                          {topic.subTopics.map((subtopic, idx) => (
+                            <li key={idx} className="flex text-xs text-muted-foreground">
+                              <span className="mr-2 text-primary">•</span>
+                              <span>{subtopic}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleUseTopic(topic)}
+                        className="rounded-full text-xs h-7"
+                      >
+                        Use Topic
+                      </Button>
                     </div>
-                  )}
-                  
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleUseTopic(topic)}
-                      className="rounded-full text-xs h-8"
-                    >
-                      Use Topic
-                    </Button>
                   </div>
                 </CardContent>
               </Card>

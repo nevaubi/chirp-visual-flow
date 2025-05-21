@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -416,7 +417,7 @@ interface TwitterCardProps {
 const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   const [copied, setCopied] = useState(false);
   const [isNew, setIsNew] = useState(true);
-  const isVerified = profile?.is_verified || false; // Add verification check
+  const isVerified = profile?.is_verified || false;
 
   // Set isNew to false after animation completes
   useEffect(() => {
@@ -439,9 +440,9 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
 
   return (
     <Card className="overflow-hidden border border-gray-200 shadow-sm hover-lift transition-all duration-300">
-      {/* User info section */}
-      <div className="p-4 flex items-center space-x-3 border-b border-gray-100">
-        <Avatar className="h-12 w-12">
+      {/* User info section - more compact with better spacing */}
+      <div className="p-3 flex items-center space-x-3 border-b border-gray-100">
+        <Avatar className="h-10 w-10">
           {profile?.twitter_profilepic_url ? (
             <AvatarImage 
               src={profile.twitter_profilepic_url} 
@@ -449,28 +450,27 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
             />
           ) : (
             <AvatarFallback className="bg-gray-100">
-              <Twitter className="w-5 h-5 text-gray-500" />
+              <Twitter className="w-4 h-4 text-gray-500" />
             </AvatarFallback>
           )}
         </Avatar>
         
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-1">
-            <span className="font-bold text-gray-900">{profile?.twitter_username || 'Your Name'}</span>
-            {/* Add blue checkmark icon */}
-            <BadgeCheck className="h-4 w-4 text-[#1DA1F2]" />
-            <Badge variant="outline" className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 border-none text-gray-700">
-              Option {index + 1}
+            <span className="font-semibold text-gray-900 text-sm">{profile?.twitter_username || 'Your Name'}</span>
+            <BadgeCheck className="h-3.5 w-3.5 text-[#1DA1F2]" />
+            <Badge variant="outline" className="ml-1 text-xs font-normal px-1.5 py-0 rounded-full bg-gray-100 border-none text-gray-700">
+              {index + 1}
             </Badge>
           </div>
-          <p className="text-sm text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
+          <p className="text-xs text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
         </div>
       </div>
       
-      {/* Tweet content */}
-      <div className={`p-4 min-h-[100px] flex items-center ${isNew ? 'animate-fade-in' : ''}`}>
+      {/* Tweet content - improved typography and spacing */}
+      <div className={`p-3 min-h-[90px] flex items-start ${isNew ? 'animate-fade-in' : ''}`}>
         {tweet.text ? (
-          <p className="text-gray-800 text-lg leading-relaxed">{tweet.text}</p>
+          <p className="text-base text-gray-800 leading-normal">{tweet.text}</p>
         ) : (
           <div className="w-full text-center text-gray-400 italic">
             <div className="flex justify-center space-x-2">
@@ -483,25 +483,25 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
       </div>
       
       {/* Action buttons */}
-      <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+      <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center">
         <div className="text-xs text-gray-500">
-          {tweet.charCount} / 280 characters
+          {tweet.charCount} / 280
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          className="text-gray-700 rounded-full hover:bg-gray-100 flex items-center gap-1.5"
+          className="text-xs text-gray-700 rounded-full h-7 hover:bg-gray-100 flex items-center gap-1"
           onClick={copyToClipboard}
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4" />
-              Copied!
+              <Check className="w-3.5 h-3.5" />
+              <span>Copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4" />
-              Copy text
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy</span>
             </>
           )}
         </Button>
