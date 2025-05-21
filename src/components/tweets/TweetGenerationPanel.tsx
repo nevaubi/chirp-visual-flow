@@ -266,7 +266,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     <div 
       ref={panelRef}
       className={`fixed top-16 right-0 h-[calc(100vh-64px)] z-40 transform transition-all duration-300 ease-in-out ${
-        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-40px)]'
+        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-12px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
       {/* Handle for hover */}
