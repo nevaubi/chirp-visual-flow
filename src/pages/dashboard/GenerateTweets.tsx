@@ -248,9 +248,10 @@ const TweetGenerationView = () => {
 
   return (
     <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-2 gap-8'}`}>
-      {/* Left column - Tweet generation */}
-      <div className="space-y-6">
-        <Card>
+      {/* Left column - Tweet generation (now as a grid) */}
+      <div className={`${isMobile ? 'space-y-6' : 'grid grid-cols-2 gap-4 auto-rows-min'}`}>
+        {/* Input form - top left */}
+        <Card className="h-full">
           <CardContent className="pt-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
@@ -292,11 +293,15 @@ const TweetGenerationView = () => {
           </CardContent>
         </Card>
             
-        <div className="space-y-4">
-          {generatedTweets.map((tweet, index) => (
-            <TwitterCard key={index} tweet={tweet} profile={authState.profile} index={index} />
-          ))}
-        </div>
+        {/* Tweet variations - distributed in the remaining grid cells */}
+        {generatedTweets.map((tweet, index) => (
+          <TwitterCard 
+            key={index} 
+            tweet={tweet} 
+            profile={authState.profile} 
+            index={index} 
+          />
+        ))}
       </div>
 
       {/* Right column - Trending Topics */}
