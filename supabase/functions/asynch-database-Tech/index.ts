@@ -1,69 +1,17 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY');
-const REDIS_URL     = Deno.env.get("UPSTASH_REDIS_REST_URL");
-const REDIS_TOKEN   = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
+const REDIS_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
+const REDIS_TOKEN = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// ——— Redis helpers ———
-
-// Check if a member is in a Redis Set
-async function isInSet(setKey: string, member: string): Promise<boolean> {
-  const res = await fetch(
-    `${REDIS_URL}/sismember/${encodeURIComponent(setKey)}/${encodeURIComponent(member)}`,
-    {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${REDIS_TOKEN}` },
-    }
-  );
-  if (!res.ok) throw new Error(`Redis SISMEMBER failed: ${res.status}`);
-  const result = await res.json();
-  return result === 1;
-}
-
-// Add a member to a Redis Set and reset its TTL to 3 days
-async function addToSet(setKey: string, member: string): Promise<void> {
-  // 1) SADD
-  let res = await fetch(
-    `${REDIS_URL}/sadd/${encodeURIComponent(setKey)}`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${REDIS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ elements: [member] })
-    }
-  );
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Redis SADD failed: ${res.status}\n${txt}`);
-  }
-
-  // 2) EXPIRE for 3 days (259200 seconds)
-  res = await fetch(
-    `${REDIS_URL}/expire/${encodeURIComponent(setKey)}`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${REDIS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ seconds: 259200 })
-    }
-  );
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Redis EXPIRE failed: ${res.status}\n${txt}`);
-  }
-}
-
-// Store an arbitrary value in a Redis List
+// Function to store data in Redis
 async function storeInRedis(key: string, value: string): Promise<void> {
   if (!REDIS_URL || !REDIS_TOKEN) {
     console.error("Redis environment variables are not set");
@@ -71,36 +19,44 @@ async function storeInRedis(key: string, value: string): Promise<void> {
   }
 
   try {
-    const response = await fetch(
-      `${REDIS_URL}/lpush/${encodeURIComponent(key)}`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${REDIS_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ elements: [value] })
-      }
-    );
+    const response = await fetch(`${REDIS_URL}/lpush/${encodeURIComponent(key)}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${REDIS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ "elements": [value] })
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Redis LPUSH failed: ${response.status}\n${errorText}`);
+      throw new Error(`Redis operation failed: ${response.status} ${response.statusText}\n${errorText}`);
     }
 
-    console.log(`Successfully LPUSHed to Redis list: ${key}`);
+    console.log(`Successfully stored data in Redis list: ${key}`);
   } catch (error) {
-    console.error(`Redis LPUSH error: ${error.message || error.toString()}`);
+    console.error(`Redis storage error: ${error.message || error.toString()}`);
   }
 }
 
-// ——— Twitter scraping logic ———
-
+// Helper function to determine media type
 function determineMediaType(tweet: any): string {
   const media = tweet.extendedEntities?.media || [];
-  if (media.length === 0) return "Text only";
-  if (media.some((m: any) => m.type === "video" || m.expanded_url?.includes("/video/"))) return "Video";
-  if (media.some((m: any) => m.type === "photo" || m.expanded_url?.includes("/photo/"))) return "Photo";
+  
+  if (media.length === 0) {
+    return "Text only";
+  }
+  
+  const hasVideo = media.some((m: any) => m.type === "video" || m.expanded_url?.includes("/video/"));
+  if (hasVideo) {
+    return "Video";
+  }
+  
+  const hasPhoto = media.some((m: any) => m.type === "photo" || m.expanded_url?.includes("/photo/"));
+  if (hasPhoto) {
+    return "Photo";
+  }
+  
   return "Text only";
 }
 
@@ -110,6 +66,7 @@ async function runTwitterXScraper(): Promise<any[]> {
   }
 
   const endpoint = `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_KEY)}`;
+  
   const params = {
     "filter:blue_verified": false,
     "filter:consumer_video": false,
@@ -140,41 +97,32 @@ async function runTwitterXScraper(): Promise<any[]> {
   };
 
   console.log("Calling Twitter scraper with params:", JSON.stringify(params));
+  
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params)
   });
+  
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`Actor call failed: ${res.status} ${res.statusText}\n${txt}`);
   }
+  
   return res.json();
 }
 
-// ——— Process & dedupe tweets ———
-
+// Process tweets and store in Redis
 async function processTweets(tweets: any[]): Promise<void> {
   try {
     console.log(`Processing ${tweets.length} tweets for storage`);
-    const listKey = `asynch-collection-Tech`;
-    const setKey  = `${listKey}:seen-ids`;
-
+    const key = `asynch-database-Tech`;
+    
+    // Process each tweet and add to Redis
     for (const tweet of tweets) {
-      const tweetId = tweet.id;
-      if (!tweetId) {
-        console.warn("Skipping tweet with no id", tweet);
-        continue;
-      }
-
-      // 1) Skip dupes
-      if (await isInSet(setKey, tweetId)) {
-        console.log(`Skipping already‐stored tweet ${tweetId}`);
-        continue;
-      }
-
-      // 2) Build record
       const mediaType = determineMediaType(tweet);
+      
+      // Format the tweet record - including ProfilePic
       const tweetRecord = {
         "Twitter author name": tweet.author?.name || null,
         "Handle": tweet.author?.userName || null,
@@ -198,61 +146,62 @@ async function processTweets(tweets: any[]): Promise<void> {
         "Timestamp": tweet.createdAt || null,
         "collection_timestamp": new Date().toISOString()
       };
-
-      // 3) Store in list
-      await storeInRedis(listKey, JSON.stringify(tweetRecord));
-
-      // 4) Mark seen & reset TTL
-      await addToSet(setKey, tweetId);
-
-      // 5) Throttle
+      
+      // Store in Redis - each tweet as a separate item in the list
+      await storeInRedis(key, JSON.stringify(tweetRecord));
+      
+      // Add a small delay to avoid overwhelming Redis
       await new Promise(resolve => setTimeout(resolve, 20));
     }
-
+    
     console.log(`Completed processing ${tweets.length} tweets`);
   } catch (error) {
     console.error(`Error in tweet processing: ${error.message || error.toString()}`);
   }
 }
 
-// ——— Edge function entrypoint ———
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     console.log("Starting asynchronous tech tweet collection process");
+    
+    // Run the Twitter scraper to get tweets
     const tweets = await runTwitterXScraper();
     console.log(`Retrieved ${tweets.length} tweets for processing`);
-
+    
+    // Process tweets in the background if in Edge environment
     if (typeof EdgeRuntime !== 'undefined') {
       EdgeRuntime.waitUntil(processTweets(tweets));
       console.log("Background processing of tweets initiated");
     } else {
+      // Fallback for environments where EdgeRuntime is not available
       await processTweets(tweets);
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
+      JSON.stringify({ 
+        success: true, 
         message: `Started processing ${tweets.length} tweets`,
         timestamp: new Date().toISOString()
       }),
-      {
+      { 
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
+
   } catch (error: any) {
     console.error("Error in asynch-collection-Tech:", error);
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         error: error.message || error.toString(),
         timestamp: new Date().toISOString()
       }),
-      {
+      { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
