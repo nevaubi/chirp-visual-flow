@@ -199,3 +199,6 @@ verify_jwt = true
 
 [functions.asynch-database-Tech]
 verify_jwt = false
+
+[functions.asynch-database-Coding]
+verify_jwt = false
