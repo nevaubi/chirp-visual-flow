@@ -153,7 +153,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
             ? "Add any additional details to your prompt..."
             : "What would you like to tweet about?"
           }
-          className="min-h-24 resize-none"
+          className="min-h-24 resize-none border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:outline-none px-4 py-3"
         />
       </div>
     );
@@ -187,14 +187,14 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
   // Header component for the panel
   const PanelHeader = () => (
-    <div className="bg-gradient-to-r from-[#0087C8] to-[#0099db] p-4 border-b border-blue-400">
-      <div className="flex items-center gap-3">
-        <div className="bg-white/20 p-2 rounded">
-          <Twitter className="h-5 w-5 text-white" />
+    <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-6 py-8">
+      <div className="flex items-center space-x-3">
+        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+          <span className="text-gray-900 font-bold text-3xl">𝕏</span>
         </div>
         <div>
-          <h3 className="text-white font-medium text-lg tracking-tight">Tweet Generator</h3>
-          <p className="text-white/80 text-xs">Create tweets in your authentic voice</p>
+          <h3 className="text-2xl font-bold text-white">X Post Generator</h3>
+          <p className="text-gray-300 text-sm">Create posts in your authentic voice</p>
         </div>
       </div>
     </div>
@@ -210,7 +210,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
         </SheetTrigger>
         <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto rounded-none">
           <PanelHeader />
-          <div className="p-4 space-y-4">
+          <div className="p-6 space-y-4">
             <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
@@ -228,7 +228,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-[#0087C8] hover:bg-[#0076b2] rounded-md"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -239,7 +239,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Generate Tweets
+                        Generate Posts
                       </>
                     )}
                   </Button>
@@ -282,40 +282,49 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
 
       <PanelHeader />
       
-      <div className={`flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4 pt-6`}>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="prompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <CustomTextarea field={field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+      <div className="flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-6 space-y-4 bg-gray-50">
+        <div className="bg-white rounded-lg p-6 shadow-sm">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-3">
+                  What would you like to post about?
+                </label>
+                <FormField
+                  control={form.control}
+                  name="prompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <CustomTextarea field={field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-[#0087C8] hover:bg-[#0076b2] rounded-md"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Generate Tweets
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Generate Posts
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </div>
+        
+        <h2 className="text-lg font-semibold text-gray-800 mt-2 mb-2">Generated Posts</h2>
         
         <div className="space-y-4">
           {generatedTweets.map((tweet, index) => (
@@ -363,26 +372,29 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden border border-gray-200 shadow-sm hover-lift transition-all duration-300">
+    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
       {/* User info section */}
-      <div className="p-3 flex items-center space-x-3 border-b border-gray-100">
-        <Avatar className="h-10 w-10">
+      <div className="flex items-center space-x-3 mb-3">
+        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
           {profile?.twitter_profilepic_url ? (
-            <AvatarImage 
+            <img 
               src={profile.twitter_profilepic_url} 
-              alt={profile.twitter_username || 'Profile'} 
+              alt={profile.twitter_username || 'Profile'}
+              className="w-full h-full object-cover"
             />
           ) : (
-            <AvatarFallback className="bg-gray-100">
-              <Twitter className="w-4 h-4 text-gray-500" />
-            </AvatarFallback>
+            <div className="w-8 h-8 bg-gray-600 rounded-full"></div>
           )}
-        </Avatar>
+        </div>
         
         <div className="flex-1">
-          <div className="flex items-center gap-1">
-            <span className="font-semibold text-gray-900 text-sm">{profile?.twitter_username || 'Your Name'}</span>
-            <BadgeIcon className="h-3.5 w-3.5 text-[#1DA1F2]" />
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-gray-900">{profile?.twitter_username || 'Your Name'}</span>
+            {isVerified && (
+              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
+              </div>
+            )}
             <Badge variant="outline" className="ml-1 text-xs font-normal px-1.5 py-0 rounded-full bg-gray-100 border-none text-gray-700">
               {index + 1}
             </Badge>
@@ -392,34 +404,26 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
       </div>
       
       {/* Tweet content */}
-      <div className={`p-3 min-h-[90px] flex items-start ${isNew ? 'animate-fade-in' : ''}`}>
+      <div className="mb-4">
         {tweet.text ? (
           <p className="text-base text-gray-800 leading-normal">{tweet.text}</p>
         ) : (
-          <div className="w-full text-center text-gray-400 italic">
-            <div className="flex justify-center space-x-2">
-              <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-              <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-              <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-            </div>
+          <div className="bg-gray-50 rounded-lg p-4 min-h-20 flex items-center justify-center text-gray-500 italic border-2 border-dashed border-gray-200">
+            Generated post content will appear here
           </div>
         )}
       </div>
       
       {/* Action buttons */}
-      <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center">
-        <div className="text-xs text-gray-500">
-          {tweet.charCount} / 280
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-xs text-gray-700 rounded-full h-7 hover:bg-gray-100 flex items-center gap-1"
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <span>{tweet.charCount} / 280</span>
+        <button 
+          className="flex items-center space-x-1 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors"
           onClick={copyToClipboard}
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-3.5 h-3.5 text-green-500" />
               <span>Copied</span>
             </>
           ) : (
@@ -428,9 +432,9 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
               <span>Copy</span>
             </>
           )}
-        </Button>
+        </button>
       </div>
-    </Card>
+    </div>
   );
 };
 
