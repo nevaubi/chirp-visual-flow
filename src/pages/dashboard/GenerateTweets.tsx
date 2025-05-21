@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,6 @@ interface SelectedTopic {
   sentiment: string;
   context: string;
   subTopics: string[];
-  exampleTweets: string[];
 }
 
 const GenerateTweets = () => {

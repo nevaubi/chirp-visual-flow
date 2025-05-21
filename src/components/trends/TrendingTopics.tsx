@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -5,20 +6,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import ExampleTweetCard from './ExampleTweetCard';
-
-interface TweetProfile {
-  username: string;
-  displayName: string;
-  verified: boolean;
-  timestamp: string;
-  avatarUrl: string;
-}
-
-interface ExampleTweet {
-  text: string;
-  profile: TweetProfile;
-}
 
 interface TrendingTopic {
   id: string;
@@ -31,7 +18,6 @@ interface TrendingTopic {
   };
   context: string;
   subTopics: string[];
-  exampleTweets: ExampleTweet[];
 }
 
 interface Tag {
@@ -112,8 +98,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           header: topic.header,
           sentiment,
           context: topic.context,
-          subTopics: topic.subTopics || [],
-          exampleTweets: topic.exampleTweets || []
+          subTopics: topic.subTopics || []
         };
       });
       
@@ -152,14 +137,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   };
 
   const handleUseTopic = (topic: TrendingTopic) => {
-    // Pass the full topic data to the parent component
+    // Pass the topic data to the parent component without example tweets
     onSelectTopic({
       id: topic.id,
       header: topic.header,
       sentiment: topic.sentiment.type,
       context: topic.context,
-      subTopics: topic.subTopics,
-      exampleTweets: topic.exampleTweets.map(tweet => tweet.text)
+      subTopics: topic.subTopics
     });
   };
 
@@ -248,23 +232,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  )}
-                  
-                  {/* Example Tweets - Changed to 2 columns on larger screens */}
-                  {topic.exampleTweets.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {topic.exampleTweets.map((tweet, idx) => (
-                          <ExampleTweetCard 
-                            key={idx} 
-                            text={tweet.text} 
-                            profile={tweet.profile} 
-                            index={idx} 
-                          />
-                        ))}
-                      </div>
                     </div>
                   )}
                   
