@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Loader2, Send, RefreshCw, Twitter, Sparkles, Zap, FileText } from 'lucide-react';
+import { Mic, Loader2, Send, RefreshCw, Twitter, Sparkles, Zap, FileText, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import TrendingTopics from '@/components/trends/TrendingTopics';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
@@ -313,6 +315,15 @@ interface TwitterCardProps {
 
 const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   const [copied, setCopied] = useState(false);
+  const [isNew, setIsNew] = useState(true);
+
+  // Set isNew to false after animation completes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsNew(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(tweet.text);
@@ -326,51 +337,72 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="flex-shrink-0">
-            {profile?.twitter_profilepic_url ? (
-              <img 
-                src={profile.twitter_profilepic_url} 
-                alt={profile.twitter_username || 'Profile'} 
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <Twitter className="w-5 h-5 text-gray-500" />
-              </div>
-            )}
+    <Card className="overflow-hidden border border-gray-200 shadow-sm hover-lift transition-all duration-300">
+      {/* User info section */}
+      <div className="p-4 flex items-center space-x-3 border-b border-gray-100">
+        <Avatar className="h-12 w-12">
+          {profile?.twitter_profilepic_url ? (
+            <AvatarImage 
+              src={profile.twitter_profilepic_url} 
+              alt={profile.twitter_username || 'Profile'} 
+            />
+          ) : (
+            <AvatarFallback className="bg-gray-100">
+              <Twitter className="w-5 h-5 text-gray-500" />
+            </AvatarFallback>
+          )}
+        </Avatar>
+        
+        <div>
+          <div className="flex items-center gap-1">
+            <span className="font-bold text-gray-900">{profile?.twitter_username || 'Your Name'}</span>
+            <Badge variant="outline" className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 border-none text-gray-700">
+              Option {index + 1}
+            </Badge>
           </div>
-          <div className="flex-1">
-            <div className="flex justify-between items-start w-full">
-              <div>
-                <p className="font-semibold text-gray-900">{profile?.twitter_username || 'Your Name'}</p>
-                <p className="text-sm text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
-              </div>
-              <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
-                Option {index + 1}
-              </div>
-            </div>
-            <div className="mt-2 text-gray-800">
-              {tweet.text}
-            </div>
-            <div className="mt-3 flex justify-between items-center">
-              <div className="text-xs text-gray-500">
-                {tweet.charCount} / 280 characters
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-500 hover:text-gray-700"
-                onClick={copyToClipboard}
-              >
-                {copied ? 'Copied!' : 'Copy text'}
-              </Button>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500">@{profile?.twitter_handle || 'yourusername'}</p>
         </div>
-      </CardContent>
+      </div>
+      
+      {/* Tweet content */}
+      <div className={`p-4 min-h-[100px] flex items-center ${isNew ? 'animate-fade-in' : ''}`}>
+        {tweet.text ? (
+          <p className="text-gray-800 text-lg leading-relaxed">{tweet.text}</p>
+        ) : (
+          <div className="w-full text-center text-gray-400 italic">
+            <div className="flex justify-center space-x-2">
+              <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+              <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Action buttons */}
+      <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+        <div className="text-xs text-gray-500">
+          {tweet.charCount} / 280 characters
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-gray-700 rounded-full hover:bg-gray-100 flex items-center gap-1.5"
+          onClick={copyToClipboard}
+        >
+          {copied ? (
+            <>
+              <Check className="w-4 h-4" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4" />
+              Copy text
+            </>
+          )}
+        </Button>
+      </div>
     </Card>
   );
 };
