@@ -46,31 +46,31 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm shadow-sm hover:shadow transition-shadow">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
       <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10 rounded-full flex-shrink-0">
+        <Avatar className="h-10 w-10 rounded-full flex-shrink-0 border border-gray-200 dark:border-gray-700">
           <AvatarImage src={profile.avatarUrl} alt={profile.displayName} className="rounded-full" />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+          <AvatarFallback className="bg-twitter-blue/10 text-twitter-blue font-semibold">
             {getInitials(profile.displayName)}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="font-bold text-gray-900 dark:text-white truncate mr-0.5">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="font-bold text-gray-900 dark:text-white">
               {profile.displayName}
             </span>
             {profile.verified && (
-              <span className="text-blue-500 flex-shrink-0">
-                <Check className="h-4 w-4 bg-blue-500 text-white rounded-full p-0.5" />
+              <span className="text-blue-500 flex-shrink-0 ml-0.5">
+                <Check className="h-4 w-4 bg-twitter-blue text-white rounded-full p-0.5" />
               </span>
             )}
-            <span className="text-gray-500 dark:text-gray-400 truncate ml-0.5">@{profile.username}</span>
+            <span className="text-gray-500 dark:text-gray-400 ml-1">@{profile.username}</span>
             <span className="text-gray-500 dark:text-gray-400 mx-1">·</span>
-            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">{formatTimestamp(profile.timestamp)}</span>
+            <span className="text-gray-500 dark:text-gray-400">{formatTimestamp(profile.timestamp)}</span>
           </div>
           
-          <p className="mt-1 text-gray-900 dark:text-gray-100 break-words leading-normal">{text}</p>
+          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px]">{text}</p>
         </div>
       </div>
     </div>

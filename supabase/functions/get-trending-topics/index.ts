@@ -55,34 +55,54 @@ async function fetchTrendingTopicsFromRedis(category: string): Promise<any> {
   }
 }
 
-// Generate a mock profile based on the tweet content and topic
+// Enhanced function to generate more realistic profile data
 function generateMockProfile(tweet: string, trendHeader: string, index: number): any {
+  // Diverse profile names
+  const firstNames = ['Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Jamie', 'Riley', 'Quinn', 'Avery', 'Dakota', 'Sam', 'Charlie'];
+  const lastNames = ['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
+  
   // Extract a potential username from the tweet content if it starts with an @mention
   let username = '';
+  let displayName = '';
+  
   const mentionMatch = tweet.match(/@(\w+)/);
   if (mentionMatch) {
-    username = mentionMatch[1];
+    username = mentionMatch[1].toLowerCase();
+    // Generate a display name based on the username with proper capitalization
+    displayName = username.charAt(0).toUpperCase() + username.slice(1);
   } else {
     // Use portions of the trend header to create a username
     const words = trendHeader.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    username = words.length > 0 ? words[0] + (index + 1) : `user${index + 1}`;
+    
+    if (words.length > 0) {
+      // Create username based on trend topic
+      username = (words[0] + (index + 1)).replace(/[^a-z0-9]/g, '');
+      
+      // Create a more realistic display name
+      const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
+      displayName = `${randomFirst} ${randomLast}`;
+    } else {
+      // Fallback to generic user
+      username = `user${index + 123}`;
+      displayName = `User ${index + 1}`;
+    }
   }
   
-  // Create a display name based on the username with proper capitalization
-  const displayName = username.charAt(0).toUpperCase() + username.slice(1);
-  
   // Set verified status randomly but weighted to mostly be unverified
-  const verified = Math.random() > 0.8;
+  const verified = Math.random() > 0.85;
   
   // Generate a timestamp within the last 24 hours
   const now = new Date();
   const hoursAgo = Math.floor(Math.random() * 24);
   const timestamp = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString();
   
-  // Avatar URL - use a consistent pattern based on the username
+  // Avatar URL - use a more diverse set of avatars
   // This ensures the same username always gets the same avatar
-  const avatarSeed = username.length % 9 + 1; // 1-9 range for diverse avatars
-  const avatarUrl = `https://randomuser.me/api/portraits/men/${avatarSeed}.jpg`;
+  const seed = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const gender = seed % 2 === 0 ? 'men' : 'women';
+  const avatarId = (seed % 99) + 1; // Range 1-99
+  const avatarUrl = `https://randomuser.me/api/portraits/${gender}/${avatarId}.jpg`;
   
   return {
     username: username,

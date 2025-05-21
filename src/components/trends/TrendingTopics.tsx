@@ -164,37 +164,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     });
   };
 
-  // Helper function to get a better title when the header is "Unknown Topic"
-  const getDisplayHeader = (topic: TrendingTopic): string => {
-    if (topic.header !== "Unknown Topic") {
-      return topic.header;
-    }
-    
-    // Try to extract a meaningful title from the context
-    if (topic.context && topic.context.length > 0) {
-      // Use the first sentence or up to 40 chars
-      const firstSentence = topic.context.split('.')[0];
-      if (firstSentence.length <= 40) {
-        return firstSentence;
-      }
-      return firstSentence.substring(0, 40) + '...';
-    }
-    
-    // If all else fails, use subtopics
-    if (topic.subTopics.length > 0) {
-      return topic.subTopics[0];
-    }
-    
-    return "Trending Topic";
-  };
-
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
     <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
       <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <TrendingUp className="text-primary h-5 w-5" />
+          <TrendingUp className="text-twitter-blue h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
         <div className="text-sm text-muted-foreground">
@@ -240,12 +216,12 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
             {trendingTopics.map(topic => (
               <div 
                 key={topic.id} 
-                className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
               >
                 {/* Header */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs">
+                    <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
                       {topic.tag}
                     </Badge>
                     <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
@@ -254,7 +230,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                     </div>
                   </div>
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    {getDisplayHeader(topic)}
+                    {topic.header}
                   </h3>
                 </div>
                 
@@ -263,12 +239,12 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
                   
                   {topic.subTopics.length > 0 && (
-                    <div className="mb-4">
+                    <div className="mb-5">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
-                      <ul className="space-y-2 ml-1">
+                      <ul className="space-y-2">
                         {topic.subTopics.map((subtopic, idx) => (
-                          <li key={idx} className="flex text-sm text-gray-700 dark:text-gray-300">
-                            <span className="text-twitter-blue mr-2 flex-shrink-0">•</span>
+                          <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
+                            <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
                             <span>{subtopic}</span>
                           </li>
                         ))}
@@ -279,8 +255,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                   {/* Example Tweets */}
                   {topic.exampleTweets.length > 0 && (
                     <div className="space-y-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Example Tweets</h4>
-                      <div className="grid grid-cols-1 gap-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3 gap-3">
                         {topic.exampleTweets.map((tweet, idx) => (
                           <ExampleTweetCard 
                             key={idx} 
@@ -293,7 +269,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                     </div>
                   )}
                   
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-5 flex justify-end">
                     <Button 
                       size="sm" 
                       onClick={() => handleUseTopic(topic)}
@@ -308,7 +284,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           </div>
         )}
         
-        {!showTopics && selectedTags.length > 0 && isLoading && (
+        {!showTopics && selectedTags.length > 0 && !isLoading && (
           <div className="flex justify-center my-6">
             <div className="flex space-x-2">
               <div className="w-3 h-3 bg-twitter-blue/70 rounded-full animate-pulse"></div>
