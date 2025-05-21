@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -265,21 +266,23 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
   return (
     <div 
       ref={panelRef}
-      className={`fixed top-16 right-0 h-[calc(100vh-64px)] z-40 transform transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 right-0 h-screen z-50 transform transition-all duration-300 ease-in-out ${
         isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-12px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
-      {/* Handle for hover */}
+      {/* Handle for hover - moved to top */}
       <div 
-        className="w-6 h-20 absolute top-1/2 -translate-y-1/2 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer"
+        className="w-6 h-20 absolute top-20 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer animate-pulse-subtle overflow-hidden"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
         <div className="w-1 h-8 bg-white/60 rounded-full"></div>
+        {/* Glow effect overlay */}
+        <div className="absolute inset-0 bg-white/0 animate-glow-pulse"></div>
       </div>
 
       <PanelHeader />
       
-      <div className={`flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4`}>
+      <div className={`flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4 pt-6`}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
             <FormField
