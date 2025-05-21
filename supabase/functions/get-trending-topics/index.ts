@@ -36,8 +36,16 @@ async function fetchTrendingTopicsFromRedis(category: string): Promise<any> {
       return [];
     }
     
-    // Decode the URI encoded content from Redis
-    const decodedContent = decodeURIComponent(data.result);
+    // Try to decode the URI encoded content from Redis, with fallback to raw data
+    let decodedContent;
+    try {
+      // Attempt to decode URI component
+      decodedContent = decodeURIComponent(data.result);
+    } catch (decodeError) {
+      console.error(`Failed to decode URI component: ${decodeError.message}`);
+      // Fallback to using the raw data
+      decodedContent = data.result;
+    }
     
     // Parse the trends from the content
     return parseTrendsFromContent(decodedContent);
@@ -52,11 +60,24 @@ function parseTrendsFromContent(content: string): any[] {
   try {
     const trends = [];
     
+    // Defensive check for empty or invalid content
+    if (!content || typeof content !== 'string') {
+      console.log("Empty or invalid content received:", content);
+      return [];
+    }
+    
+    // Log the first 200 characters of content for debugging
+    console.log(`Content preview (first 200 chars): ${content.substring(0, 200)}...`);
+    
     // Extract each trend section using regex
     const trendRegex = /<Trend\d+>([\s\S]*?)<\/Trend\d+>/g;
     const trendMatches = content.matchAll(trendRegex);
     
+    // Track if we found any matches
+    let matchFound = false;
+    
     for (const match of trendMatches) {
+      matchFound = true;
       const trendContent = match[1];
       
       // Extract the header/title
@@ -102,6 +123,30 @@ function parseTrendsFromContent(content: string): any[] {
       });
     }
     
+    // If no matches found with the primary regex, try an alternative parsing approach
+    if (!matchFound) {
+      console.log("No trend matches found with primary regex, trying alternative parsing...");
+      
+      // Alternative parsing for different format - looking for sections without XML tags
+      const sections = content.split(/\n\n+/);
+      for (const section of sections) {
+        if (section.trim().length > 0) {
+          // Try to extract a title/header from the section
+          const titleMatch = section.match(/^(.+?)(?:\n|$)/);
+          const header = titleMatch ? titleMatch[1].trim() : "Unknown Topic";
+          
+          // Just use the whole section as context if we can't parse it properly
+          trends.push({
+            header,
+            sentiment: "neutral",
+            context: section.trim(),
+            subTopics: [],
+            exampleTweets: []
+          });
+        }
+      }
+    }
+    
     return trends;
   } catch (error) {
     console.error("Error parsing trends:", error);
@@ -123,7 +168,9 @@ serve(async (req) => {
       throw new Error("Category parameter is required");
     }
     
+    console.log(`Fetching trending topics for category: ${category}`);
     const topics = await fetchTrendingTopicsFromRedis(category);
+    console.log(`Found ${topics.length} topics for category ${category}`);
     
     return new Response(
       JSON.stringify({ 
