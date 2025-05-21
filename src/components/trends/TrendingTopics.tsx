@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface TrendingTopic {
   id: string;
@@ -107,81 +110,89 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 w-full transition-all duration-300 ease-in-out">
-      <div className="flex items-center mb-2">
-        <TrendingUp className="text-blue-600 mr-2" />
-        <h2 className="text-gray-900 text-lg font-semibold">Trending Topics</h2>
-      </div>
-      
-      <div className="text-xs text-blue-600 font-medium mb-3 flex items-center">
-        <span className="inline-flex items-center bg-blue-50 rounded-full px-2 py-0.5">
+    <Card className="shadow-md border-gray-200 w-full transition-all duration-300 ease-in-out">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="text-primary h-5 w-5" />
+          <span>Trending Topics</span>
+        </CardTitle>
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3">
           Select up to two tags
-        </span>
-      </div>
+        </Badge>
+      </CardHeader>
       
-      {!showTopics && (
-        <div className="mb-4 text-gray-700 animate-fade-in">
-          <p className="mb-3">Select tags to see real-time trending topics</p>
-        </div>
-      )}
-      
-      <div className="flex flex-wrap gap-2 mb-4">
-        {availableTags.map(tag => (
-          <button
-            key={tag.id}
-            onClick={() => toggleTag(tag)}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
-              selectedTags.find(t => t.id === tag.id)
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-            }`}
-          >
-            {tag.name}
-          </button>
-        ))}
-      </div>
-      
-      {showTopics && (
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
-          {trendingTopics.map(topic => (
-            <div 
-              key={topic.id} 
-              className="p-3 bg-gradient-to-b from-white to-gray-50 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200"
+      <CardContent>
+        {!showTopics && (
+          <div className="mb-4 text-muted-foreground animate-fade-in">
+            <p className="text-sm">Select tags to see real-time trending topics</p>
+          </div>
+        )}
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          {availableTags.map(tag => (
+            <button
+              key={tag.id}
+              onClick={() => toggleTag(tag)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                selectedTags.find(t => t.id === tag.id)
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted hover:bg-muted/80 text-foreground/80 border border-border'
+              }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center">
-                  <p className="text-xs text-gray-600 mr-2">Trending in {topic.tag}</p>
-                  <div className={`flex items-center font-medium ${topic.sentiment.color}`}>
-                    <topic.sentiment.icon size={14} />
-                    <span className="text-xs ml-1">{topic.sentiment.type}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <p className="text-gray-800 font-medium mb-1">{topic.title}</p>
-              <p className="text-xs text-gray-600 mb-3">{topic.context}</p>
-              
-              <button 
-                onClick={() => handleUseTopic(topic)}
-                className="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-full transition-colors duration-200 flex items-center justify-center shadow-sm"
-              >
-                Use Topic
-              </button>
-            </div>
+              {tag.name}
+            </button>
           ))}
         </div>
-      )}
-      
-      {!showTopics && selectedTags.length > 0 && (
-        <div className="flex justify-center my-4">
-          <div className="animate-pulse flex space-x-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+        
+        {showTopics && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
+            {trendingTopics.map(topic => (
+              <Card 
+                key={topic.id} 
+                className="hover-lift overflow-hidden border border-border"
+              >
+                <CardContent className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="text-xs font-normal bg-background">
+                        {topic.tag}
+                      </Badge>
+                      <div className={`flex items-center ${topic.sentiment.color}`}>
+                        <topic.sentiment.icon size={14} className="mr-1" />
+                        <span className="text-xs font-medium">{topic.sentiment.type}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-base font-semibold mb-1 text-foreground">{topic.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{topic.context}</p>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUseTopic(topic)}
+                      className="rounded-full text-xs h-8"
+                    >
+                      Use Topic
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+        
+        {!showTopics && selectedTags.length > 0 && (
+          <div className="flex justify-center my-4">
+            <div className="flex space-x-2">
+              <div className="w-2.5 h-2.5 bg-primary/70 rounded-full animate-pulse"></div>
+              <div className="w-2.5 h-2.5 bg-primary/50 rounded-full animate-pulse delay-150"></div>
+              <div className="w-2.5 h-2.5 bg-primary/30 rounded-full animate-pulse delay-300"></div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
