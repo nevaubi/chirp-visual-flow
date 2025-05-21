@@ -196,3 +196,6 @@ verify_jwt = false
 
 [functions.create-voice-profile]
 verify_jwt = true
+
+[functions.asynch-collection-Tech]
+verify_jwt = false
