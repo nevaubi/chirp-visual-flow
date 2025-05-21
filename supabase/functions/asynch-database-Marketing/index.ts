@@ -91,9 +91,9 @@ async function runTwitterXScraper(): Promise<any[]> {
     "include:nativeretweets": false,
     "lang": "en",
     "list": "1922530287654707602",
-    "maxItems": 200,
+    "maxItems": 50,
     "queryType": "Top",
-    "within_time": "60d"
+    "within_time": "1d"
   };
 
   console.log("Calling Twitter scraper with params:", JSON.stringify(params));
