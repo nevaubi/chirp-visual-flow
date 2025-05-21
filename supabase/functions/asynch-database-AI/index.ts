@@ -60,8 +60,8 @@ function determineMediaType(tweet: any): string {
 }
 
 async function runTwitterXScraper(): Promise<any[]> {
-  if (!API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
+  if (!APIFY_PI_KEY) {
+    throw new Error("APIFY_API_KEY environment variable is not set");
   }
 
   const endpoint = `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_KEY)}`;
