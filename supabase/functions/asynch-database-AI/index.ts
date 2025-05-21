@@ -60,7 +60,7 @@ function determineMediaType(tweet: any): string {
 }
 
 async function runTwitterXScraper(): Promise<any[]> {
-  if (!APIFY_PI_KEY) {
+  if (!APIFY_API_KEY) {
     throw new Error("APIFY_API_KEY environment variable is not set");
   }
 
