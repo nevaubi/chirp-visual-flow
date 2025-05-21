@@ -205,3 +205,6 @@ verify_jwt = false
 
 [functions.asynch-database-AI]
 verify_jwt = false
+
+[functions.asynch-database-Crypto]
+verify_jwt = false
