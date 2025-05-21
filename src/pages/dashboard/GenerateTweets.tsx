@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -217,10 +216,23 @@ const TweetGenerationView = () => {
 
   const handleGenerateTweets = async (values: { prompt: string }) => {
     try {
+      // Use either the user-provided prompt or the selected topic header as fallback
+      const promptText = values.prompt || (selectedTopic ? selectedTopic.header : '');
+      
+      // If there's still no prompt, show an error and return early
+      if (!promptText) {
+        toast({
+          title: "Missing prompt",
+          description: "Please enter a prompt or select a trending topic",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setIsLoading(true);
       
       const requestBody: any = {
-        prompt: values.prompt,
+        prompt: promptText,
         userId: authState.user?.id
       };
       
@@ -234,6 +246,9 @@ const TweetGenerationView = () => {
           exampleTweets: selectedTopic.exampleTweets
         }];
       }
+      
+      console.log('Generating tweets with prompt:', promptText);
+      console.log('Request body:', requestBody);
       
       const { data, error } = await supabase.functions.invoke('generate-tweets', {
         body: requestBody
@@ -278,9 +293,8 @@ const TweetGenerationView = () => {
       exampleTweets: topicData.exampleTweets || []
     });
     
-    // Refresh form field
-    const currentText = form.getValues('prompt');
-    form.setValue('prompt', currentText);
+    // Update the prompt field with the topic header
+    form.setValue('prompt', topicData.header);
     
     // Focus the textarea after a moment to ensure UI is updated
     setTimeout(() => {
