@@ -223,3 +223,6 @@ verify_jwt = false
 
 [functions.asynch-database-Politics]
 verify_jwt = false
+
+[functions.trendingtopics-AI]
+verify_jwt = false
