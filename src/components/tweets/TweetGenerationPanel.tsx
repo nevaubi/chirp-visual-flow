@@ -1,11 +1,10 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, Copy, Check } from 'lucide-react';
+import { Loader2, Send, Copy, Check, Twitter } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Badge as BadgeIcon } from 'lucide-react';
 import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Twitter } from 'lucide-react';
 
 interface TweetVariation {
   text: string;
@@ -186,15 +184,31 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     };
   }, [isMobile, panelRef]);
 
+  // Header component for the panel
+  const PanelHeader = () => (
+    <div className="bg-gradient-to-r from-[#0087C8] to-[#0099db] p-4 rounded-t-lg border-b border-blue-400">
+      <div className="flex items-center gap-3">
+        <div className="bg-white/20 p-2 rounded-full">
+          <Twitter className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-white font-medium text-lg tracking-tight">Tweet Generator</h3>
+          <p className="text-white/80 text-xs">Create tweets in your authentic voice</p>
+        </div>
+      </div>
+    </div>
+  );
+
   if (isMobile) {
     return (
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="fixed top-20 right-4 z-50 rounded-full">
+          <Button variant="outline" size="icon" className="fixed top-20 right-4 z-50 rounded-full shadow-md hover:shadow-lg transition-all">
             <Twitter className="h-5 w-5 text-[#0087C8]" />
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto">
+          <PanelHeader />
           <div className="p-4 space-y-4">
             <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4">
               <Form {...form}>
@@ -253,7 +267,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
       ref={panelRef}
       className={`fixed top-16 right-0 h-[calc(100vh-64px)] z-40 transform transition-all duration-300 ease-in-out ${
         isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-24px)]'
-      } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex`}
+      } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
       {/* Handle for hover */}
       <div 
@@ -262,8 +276,10 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
       >
         <div className="w-1 h-8 bg-white/60 rounded-full"></div>
       </div>
+
+      <PanelHeader />
       
-      <div className={`w-[340px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4`}>
+      <div className={`flex-1 w-[340px] max-h-full overflow-y-auto scrollbar-thin p-4 space-y-4`}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
             <FormField
