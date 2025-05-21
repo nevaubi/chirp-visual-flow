@@ -55,6 +55,44 @@ async function fetchTrendingTopicsFromRedis(category: string): Promise<any> {
   }
 }
 
+// Generate a mock profile based on the tweet content and topic
+function generateMockProfile(tweet: string, trendHeader: string, index: number): any {
+  // Extract a potential username from the tweet content if it starts with an @mention
+  let username = '';
+  const mentionMatch = tweet.match(/@(\w+)/);
+  if (mentionMatch) {
+    username = mentionMatch[1];
+  } else {
+    // Use portions of the trend header to create a username
+    const words = trendHeader.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    username = words.length > 0 ? words[0] + (index + 1) : `user${index + 1}`;
+  }
+  
+  // Create a display name based on the username with proper capitalization
+  const displayName = username.charAt(0).toUpperCase() + username.slice(1);
+  
+  // Set verified status randomly but weighted to mostly be unverified
+  const verified = Math.random() > 0.8;
+  
+  // Generate a timestamp within the last 24 hours
+  const now = new Date();
+  const hoursAgo = Math.floor(Math.random() * 24);
+  const timestamp = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString();
+  
+  // Avatar URL - use a consistent pattern based on the username
+  // This ensures the same username always gets the same avatar
+  const avatarSeed = username.length % 9 + 1; // 1-9 range for diverse avatars
+  const avatarUrl = `https://randomuser.me/api/portraits/men/${avatarSeed}.jpg`;
+  
+  return {
+    username: username,
+    displayName: displayName,
+    verified: verified,
+    timestamp: timestamp,
+    avatarUrl: avatarUrl
+  };
+}
+
 // Function to parse trends from the Redis content
 function parseTrendsFromContent(content: string): any[] {
   try {
@@ -133,14 +171,30 @@ function parseTrendsFromContent(content: string): any[] {
         }
       }
       
-      // Extract example tweets - improved to capture more formats
+      // Extract example tweets - improved to capture more formats and now add profile information
       const tweetRegex = /\*Example of Real Current Tweet\d+:\s+(.*?)(?=\*Example|\*\*|<\/Trend|$)/gs;
-      let exampleTweets = [...trendContent.matchAll(tweetRegex)].map(tweet => tweet[1].trim());
+      let exampleTweets = [...trendContent.matchAll(tweetRegex)].map((tweet, index) => {
+        const tweetText = tweet[1].trim();
+        const profile = generateMockProfile(tweetText, header, index);
+        
+        return {
+          text: tweetText,
+          profile: profile
+        };
+      });
       
       // If no example tweets found with the primary pattern, try alternative patterns
       if (exampleTweets.length === 0) {
         const altTweetRegex = /Example Tweet \d+:\s+(.*?)(?=Example Tweet|\*\*|<\/Trend|$)/gs;
-        exampleTweets = [...trendContent.matchAll(altTweetRegex)].map(tweet => tweet[1].trim());
+        exampleTweets = [...trendContent.matchAll(altTweetRegex)].map((tweet, index) => {
+          const tweetText = tweet[1].trim();
+          const profile = generateMockProfile(tweetText, header, index);
+          
+          return {
+            text: tweetText,
+            profile: profile
+          };
+        });
       }
       
       // If still no tweets found, look for any sections that look like tweets
@@ -148,7 +202,13 @@ function parseTrendsFromContent(content: string): any[] {
         const lines = trendContent.split('\n');
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].includes("Example") && lines[i].includes("Tweet") && i + 1 < lines.length) {
-            exampleTweets.push(lines[i + 1].trim());
+            const tweetText = lines[i + 1].trim();
+            const profile = generateMockProfile(tweetText, header, exampleTweets.length);
+            
+            exampleTweets.push({
+              text: tweetText,
+              profile: profile
+            });
           }
         }
       }

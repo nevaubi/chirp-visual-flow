@@ -9,6 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ExampleTweetCard from './ExampleTweetCard';
 
+interface TweetProfile {
+  username: string;
+  displayName: string;
+  verified: boolean;
+  timestamp: string;
+  avatarUrl: string;
+}
+
+interface ExampleTweet {
+  text: string;
+  profile: TweetProfile;
+}
+
 interface TrendingTopic {
   id: string;
   tag: string;
@@ -20,7 +33,7 @@ interface TrendingTopic {
   };
   context: string;
   subTopics: string[];
-  exampleTweets: string[];
+  exampleTweets: ExampleTweet[];
 }
 
 interface Tag {
@@ -163,8 +176,32 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
       sentiment: topic.sentiment.type,
       context: topic.context,
       subTopics: topic.subTopics,
-      exampleTweets: topic.exampleTweets
+      exampleTweets: topic.exampleTweets.map(tweet => tweet.text)
     });
+  };
+
+  // Helper function to get a better title when the header is "Unknown Topic"
+  const getDisplayHeader = (topic: TrendingTopic): string => {
+    if (topic.header !== "Unknown Topic") {
+      return topic.header;
+    }
+    
+    // Try to extract a meaningful title from the context
+    if (topic.context && topic.context.length > 0) {
+      // Use the first sentence or up to 40 chars
+      const firstSentence = topic.context.split('.')[0];
+      if (firstSentence.length <= 40) {
+        return firstSentence;
+      }
+      return firstSentence.substring(0, 40) + '...';
+    }
+    
+    // If all else fails, use subtopics
+    if (topic.subTopics.length > 0) {
+      return topic.subTopics[0];
+    }
+    
+    return "Trending Topic";
   };
 
   const showTopics = !isLoading && trendingTopics.length > 0;
@@ -242,8 +279,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                       </div>
                     </div>
                     <h3 className="text-sm font-semibold text-foreground">
-                      {topic.header !== "Unknown Topic" ? topic.header : 
-                        (topic.context.length > 20 ? topic.context.substring(0, 20) + "..." : topic.context)}
+                      {getDisplayHeader(topic)}
                     </h3>
                   </div>
                   
@@ -303,7 +339,12 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                       <h4 className="text-xs font-medium text-foreground/70 mb-2">Example Tweets:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         {topic.exampleTweets.map((tweet, idx) => (
-                          <ExampleTweetCard key={idx} text={tweet} index={idx} />
+                          <ExampleTweetCard 
+                            key={idx} 
+                            text={tweet.text} 
+                            profile={tweet.profile} 
+                            index={idx} 
+                          />
                         ))}
                       </div>
                     </div>
