@@ -114,9 +114,9 @@ Your task is to extract exactly 4 distinct trending topics from the provided twe
 For each trend, you will:
 1. Create a concise specific 3-5 word header capturing the core topic using specific details if applicable
 2. Assign a single-word specific sentiment descriptor (not just "positive" but "enthusiastic" or "skeptical")
-3. Create 2 relevant sub topics bullet points for each. Sub topics are 4 words max, and must use specifics like names places products events etc
+3. Create 2 relevant sub topics bullet points for each. Sub topics are 7 words max, and must use specifics like names places products events etc
 4. Extract key phrases and specific language patterns directly from relevant tweets
-5. Provide concise contextual significance in 10 words or less
+5. Provide concise contextual significance in 20 words or less
 6. Include the EXACT UNALTERED TEXT of 3 representative source tweets that best exemplify the trend
 
 Analysis priorities:
@@ -148,8 +148,8 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 <Trend1>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
@@ -157,8 +157,8 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 <Trend2>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
@@ -166,8 +166,8 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 <Trend3>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
@@ -175,8 +175,8 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 <Trend4>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
@@ -184,7 +184,7 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 
 For each trend, you must include the exact unmodified text of 3 tweets that best represent the trend. Choose tweets with high engagement metrics that clearly demonstrate the identified pattern. Copy the tweet text exactly as it appears in the dataset.
 
-Do not include any introductory or concluding text. Ensure each field stays under 10 words and contains specific, meaningful insights directly derived from the dataset.`
+Do not include any introductory or concluding text. Ensure each field stays under 20 words and contains specific, meaningful insights directly derived from the dataset.`
           }
         ],
         temperature: 0.3,
