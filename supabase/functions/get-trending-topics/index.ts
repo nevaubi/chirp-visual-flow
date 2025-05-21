@@ -116,8 +116,8 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const category = url.searchParams.get('category');
+    // Read category from the request body instead of URL params
+    const { category } = await req.json();
     
     if (!category) {
       throw new Error("Category parameter is required");

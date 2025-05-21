@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -77,7 +76,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     
     try {
       const { data, error } = await supabase.functions.invoke('get-trending-topics', {
-        query: { category: tag }
+        body: { category: tag }
       });
       
       if (error) {
