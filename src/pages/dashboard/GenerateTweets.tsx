@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Loader2, Send, RefreshCw, Twitter, Sparkles, Zap, FileText, Copy, Check } from 'lucide-react';
+import { Mic, Loader2, Send, RefreshCw, Twitter, Sparkles, Zap, FileText, Copy, Check, BadgeCheck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
@@ -321,6 +321,7 @@ interface TwitterCardProps {
 const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   const [copied, setCopied] = useState(false);
   const [isNew, setIsNew] = useState(true);
+  const isVerified = profile?.is_verified || false; // Add verification check
 
   // Set isNew to false after animation completes
   useEffect(() => {
@@ -361,6 +362,8 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
         <div>
           <div className="flex items-center gap-1">
             <span className="font-bold text-gray-900">{profile?.twitter_username || 'Your Name'}</span>
+            {/* Add blue checkmark icon */}
+            <BadgeCheck className="h-4 w-4 text-[#1DA1F2]" />
             <Badge variant="outline" className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 border-none text-gray-700">
               Option {index + 1}
             </Badge>
