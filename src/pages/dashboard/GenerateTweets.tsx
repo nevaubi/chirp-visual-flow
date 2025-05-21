@@ -1,15 +1,16 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Loader2, Send, RefreshCw, Twitter, Sparkles, Zap, FileText, Copy, Check, BadgeCheck } from 'lucide-react';
+import { Mic, Loader2, Send, Twitter, Sparkles, Zap, FileText, Copy, Check, BadgeCheck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import TrendingTopics from '@/components/trends/TrendingTopics';
+import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -187,6 +188,15 @@ interface TweetVariation {
   charCount: number;
 }
 
+interface SelectedTopic {
+  id: string;
+  header: string;
+  sentiment: string;
+  context: string;
+  subTopics: string[];
+  exampleTweets: string[];
+}
+
 const TweetGenerationView = () => {
   const { authState } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -195,7 +205,10 @@ const TweetGenerationView = () => {
     { text: '', charCount: 0 },
     { text: '', charCount: 0 }
   ]);
+  const [selectedTopic, setSelectedTopic] = useState<SelectedTopic | null>(null);
   const isMobile = useIsMobile();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const form = useForm({
     defaultValues: {
       prompt: '',
@@ -206,11 +219,24 @@ const TweetGenerationView = () => {
     try {
       setIsLoading(true);
       
+      const requestBody: any = {
+        prompt: values.prompt,
+        userId: authState.user?.id
+      };
+      
+      // Add selected topic metadata if available
+      if (selectedTopic) {
+        requestBody.selectedTopics = [{
+          header: selectedTopic.header,
+          sentiment: selectedTopic.sentiment,
+          context: selectedTopic.context,
+          subTopics: selectedTopic.subTopics,
+          exampleTweets: selectedTopic.exampleTweets
+        }];
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-tweets', {
-        body: { 
-          prompt: values.prompt,
-          userId: authState.user?.id
-        }
+        body: requestBody
       });
       
       if (error) {
@@ -242,8 +268,67 @@ const TweetGenerationView = () => {
     }
   };
 
-  const handleTopicSelect = (topicText: string) => {
-    form.setValue('prompt', topicText);
+  const handleTopicSelect = (topicData: any) => {
+    setSelectedTopic({
+      id: topicData.id,
+      header: topicData.header,
+      sentiment: topicData.sentiment,
+      context: topicData.context,
+      subTopics: topicData.subTopics || [],
+      exampleTweets: topicData.exampleTweets || []
+    });
+    
+    // Refresh form field
+    const currentText = form.getValues('prompt');
+    form.setValue('prompt', currentText);
+    
+    // Focus the textarea after a moment to ensure UI is updated
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 100);
+    
+    toast({
+      title: "Topic selected",
+      description: `Added "${topicData.header}" to your prompt`,
+    });
+  };
+
+  const handleRemoveTopic = () => {
+    setSelectedTopic(null);
+    
+    // Focus the textarea after a moment
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 100);
+  };
+
+  // Custom render for the textarea with pill
+  const CustomTextarea = ({ field }: { field: any }) => {
+    return (
+      <div className="relative">
+        {selectedTopic && (
+          <div className="mb-2">
+            <TrendingTopicPill 
+              header={selectedTopic.header} 
+              onRemove={handleRemoveTopic}
+            />
+          </div>
+        )}
+        <Textarea
+          {...field}
+          ref={textareaRef}
+          placeholder={selectedTopic 
+            ? "Add any additional details to your prompt..."
+            : "What would you like to tweet about?"
+          }
+          className="min-h-24 resize-none"
+        />
+      </div>
+    );
   };
 
   return (
@@ -261,11 +346,7 @@ const TweetGenerationView = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea 
-                          placeholder="What would you like to tweet about?"
-                          className="min-h-24 resize-none"
-                          {...field}
-                        />
+                        <CustomTextarea field={field} />
                       </FormControl>
                     </FormItem>
                   )}

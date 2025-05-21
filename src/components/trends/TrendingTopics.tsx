@@ -1,20 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface TrendingTopic {
   id: string;
   tag: string;
-  title: string;
+  header: string;
   sentiment: {
     type: string;
     icon: any;
     color: string;
   };
   context: string;
+  subTopics: string[];
+  exampleTweets: string[];
 }
 
 interface Tag {
@@ -23,12 +27,13 @@ interface Tag {
 }
 
 interface TrendingTopicsProps {
-  onSelectTopic: (topic: string) => void;
+  onSelectTopic: (topicData: any) => void;
 }
 
 const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [showTopics, setShowTopics] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
 
   const availableTags = [
@@ -43,51 +48,83 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     { id: 9, name: 'Tech' },
   ];
 
-  // Sentiment options with colors
-  const sentiments = [
-    { type: 'positive', icon: ArrowUp, color: 'text-emerald-500' },
-    { type: 'neutral', icon: Minus, color: 'text-amber-500' },
-    { type: 'negative', icon: ArrowDown, color: 'text-rose-500' }
-  ];
+  // Map sentiment types to icons and colors
+  const getSentimentData = (sentimentType: string) => {
+    sentimentType = sentimentType.toLowerCase();
+    
+    if (sentimentType.includes('positive') || 
+        sentimentType.includes('excited') || 
+        sentimentType.includes('enthusiastic') || 
+        sentimentType.includes('optimistic')) {
+      return { type: sentimentType, icon: ArrowUp, color: 'text-emerald-500' };
+    }
+    
+    if (sentimentType.includes('negative') || 
+        sentimentType.includes('concerned') || 
+        sentimentType.includes('worried') || 
+        sentimentType.includes('skeptical') ||
+        sentimentType.includes('critical')) {
+      return { type: sentimentType, icon: ArrowDown, color: 'text-rose-500' };
+    }
+    
+    return { type: sentimentType, icon: Minus, color: 'text-amber-500' };
+  };
 
-  // Example context sentences
-  const contextSentences = [
-    "New breakthrough changes everything",
-    "Experts weigh in on latest developments",
-    "Community buzzing with excitement over release",
-    "Controversial opinion sparks heated debate",
-    "Unexpected announcement shocks followers",
-    "Major update improves user experience",
-    "Investors rush to capitalize on trend",
-    "Exclusive look at inside information"
-  ];
+  // Fetch trending topics from our edge function
+  const fetchTrendingTopics = async (tag: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('get-trending-topics', {
+        query: { category: tag }
+      });
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch trending topics');
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch trending topics');
+      }
+      
+      // Transform the data to match our component's expected format
+      const formattedTopics: TrendingTopic[] = data.topics.map((topic: any, index: number) => {
+        const sentiment = getSentimentData(topic.sentiment);
+        
+        return {
+          id: `${tag}-${index + 1}`,
+          tag: tag,
+          header: topic.header,
+          sentiment,
+          context: topic.context,
+          subTopics: topic.subTopics || [],
+          exampleTweets: topic.exampleTweets || []
+        };
+      });
+      
+      setTrendingTopics(formattedTopics);
+    } catch (err: any) {
+      console.error('Error fetching trending topics:', err);
+      setError(err.message || 'Failed to fetch trending topics');
+      toast({
+        title: 'Error loading trending topics',
+        description: err.message || 'Please try again later',
+        variant: 'destructive',
+      });
+      setTrendingTopics([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Mock trending topics based on selected tags
+  // Effect to fetch trending topics when tags change
   useEffect(() => {
     if (selectedTags.length > 0) {
-      // Simulate loading trending topics
-      const timer = setTimeout(() => {
-        const mockTopics: TrendingTopic[] = [];
-        selectedTags.forEach(tag => {
-          const tagTopics = Array.from({ length: 4 }, (_, i) => {
-            const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
-            const randomContext = contextSentences[Math.floor(Math.random() * contextSentences.length)];
-            return {
-              id: `${tag.id}-${i+1}`,
-              tag: tag.name,
-              title: `#${tag.name}Trending${i+1}`,
-              sentiment: randomSentiment,
-              context: randomContext
-            };
-          });
-          mockTopics.push(...tagTopics);
-        });
-        setTrendingTopics(mockTopics);
-        setShowTopics(true);
-      }, 600);
-      return () => clearTimeout(timer);
+      const tag = selectedTags[0].name;
+      fetchTrendingTopics(tag);
     } else {
-      setShowTopics(false);
+      setTrendingTopics([]);
     }
   }, [selectedTags]);
 
@@ -95,19 +132,24 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     if (selectedTags.find(t => t.id === tag.id)) {
       setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
     } else {
-      // Only allow 2 tags max
-      if (selectedTags.length < 2) {
-        setSelectedTags([...selectedTags, tag]);
-      } else {
-        // Replace the oldest selected tag
-        setSelectedTags([selectedTags[1], tag]);
-      }
+      // Only allow 1 tag - this is simpler than the original 2 tags max
+      setSelectedTags([tag]);
     }
   };
 
   const handleUseTopic = (topic: TrendingTopic) => {
-    onSelectTopic(`${topic.title} - ${topic.context}`);
+    // Pass the full topic data to the parent component
+    onSelectTopic({
+      id: topic.id,
+      header: topic.header,
+      sentiment: topic.sentiment.type,
+      context: topic.context,
+      subTopics: topic.subTopics,
+      exampleTweets: topic.exampleTweets
+    });
   };
+
+  const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
     <Card className="shadow-md border-gray-200 w-full transition-all duration-300 ease-in-out">
@@ -117,14 +159,14 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           <span>Trending Topics</span>
         </CardTitle>
         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3">
-          Select up to two tags
+          Select a tag to see trending topics
         </Badge>
       </CardHeader>
       
       <CardContent>
-        {!showTopics && (
+        {!showTopics && !isLoading && !error && (
           <div className="mb-4 text-muted-foreground animate-fade-in">
-            <p className="text-sm">Select tags to see real-time trending topics</p>
+            <p className="text-sm">Select a tag to see real-time trending topics from Twitter</p>
           </div>
         )}
         
@@ -144,6 +186,22 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           ))}
         </div>
         
+        {error && (
+          <div className="flex items-center gap-2 p-4 mb-4 bg-rose-50 text-rose-600 rounded-lg border border-rose-200">
+            <AlertCircle className="h-5 w-5" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+        
+        {isLoading && (
+          <div className="flex justify-center my-8">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Loading trending topics...</p>
+            </div>
+          </div>
+        )}
+        
         {showTopics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
             {trendingTopics.map(topic => (
@@ -159,13 +217,23 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                       </Badge>
                       <div className={`flex items-center ${topic.sentiment.color}`}>
                         <topic.sentiment.icon size={14} className="mr-1" />
-                        <span className="text-xs font-medium">{topic.sentiment.type}</span>
+                        <span className="text-xs font-medium capitalize">{topic.sentiment.type}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <h3 className="text-base font-semibold mb-1 text-foreground">{topic.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-3">{topic.context}</p>
+                  <h3 className="text-base font-semibold mb-1 text-foreground">{topic.header}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">{topic.context}</p>
+                  
+                  {topic.subTopics.length > 0 && (
+                    <div className="mb-3 text-xs">
+                      <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                        {topic.subTopics.map((subtopic, idx) => (
+                          <li key={idx}>{subtopic}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   
                   <div className="flex justify-end">
                     <Button 
@@ -182,7 +250,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           </div>
         )}
         
-        {!showTopics && selectedTags.length > 0 && (
+        {!showTopics && selectedTags.length > 0 && isLoading && (
           <div className="flex justify-center my-4">
             <div className="flex space-x-2">
               <div className="w-2.5 h-2.5 bg-primary/70 rounded-full animate-pulse"></div>
