@@ -46,29 +46,31 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-700 leading-snug shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start gap-2 mb-2">
-        <Avatar className="h-9 w-9 flex-shrink-0">
-          <AvatarImage src={profile.avatarUrl} alt={profile.displayName} />
-          <AvatarFallback className="bg-primary/10 text-primary font-medium">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm shadow-sm hover:shadow transition-shadow">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-10 w-10 rounded-full flex-shrink-0">
+          <AvatarImage src={profile.avatarUrl} alt={profile.displayName} className="rounded-full" />
+          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
             {getInitials(profile.displayName)}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
-            <span className="font-medium text-gray-900 truncate">{profile.displayName}</span>
+            <span className="font-bold text-gray-900 dark:text-white truncate mr-0.5">
+              {profile.displayName}
+            </span>
             {profile.verified && (
               <span className="text-blue-500 flex-shrink-0">
-                <Check className="h-3.5 w-3.5" />
+                <Check className="h-4 w-4 bg-blue-500 text-white rounded-full p-0.5" />
               </span>
             )}
-            <span className="text-gray-500 truncate flex-shrink-0">@{profile.username}</span>
-            <span className="text-gray-500">·</span>
-            <span className="text-gray-500 flex-shrink-0">{formatTimestamp(profile.timestamp)}</span>
+            <span className="text-gray-500 dark:text-gray-400 truncate ml-0.5">@{profile.username}</span>
+            <span className="text-gray-500 dark:text-gray-400 mx-1">·</span>
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">{formatTimestamp(profile.timestamp)}</span>
           </div>
           
-          <p className="mt-1 break-words">{text}</p>
+          <p className="mt-1 text-gray-900 dark:text-gray-100 break-words leading-normal">{text}</p>
         </div>
       </div>
     </div>

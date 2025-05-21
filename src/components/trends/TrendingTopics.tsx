@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ExampleTweetCard from './ExampleTweetCard';
@@ -50,7 +49,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
-  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
 
   const availableTags = [
     { id: 1, name: 'AI' },
@@ -86,14 +84,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     return { type: sentimentType, icon: Minus, color: 'text-amber-500' };
   };
 
-  // Toggle expanded state for example tweets
-  const toggleExampleTweets = (topicId: string) => {
-    setExpandedTopics(prev => ({
-      ...prev,
-      [topicId]: !prev[topicId]
-    }));
-  };
-
   // Fetch trending topics from our edge function
   const fetchTrendingTopics = async (tag: string) => {
     setIsLoading(true);
@@ -116,12 +106,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
       const formattedTopics: TrendingTopic[] = data.topics.map((topic: any, index: number) => {
         const sentiment = getSentimentData(topic.sentiment);
         const topicId = `${tag}-${index + 1}`;
-        
-        // Initialize expanded state for this topic
-        setExpandedTopics(prev => ({
-          ...prev,
-          [topicId]: false
-        }));
         
         return {
           id: topicId,
@@ -207,33 +191,27 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-md border-gray-200 w-full transition-all duration-300 ease-in-out">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
+    <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
+      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <TrendingUp className="text-primary h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
-        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3">
-          Select a tag to see trending topics
-        </Badge>
+        <div className="text-sm text-muted-foreground">
+          Select a category to discover trending topics on Twitter
+        </div>
       </CardHeader>
       
-      <CardContent>
-        {!showTopics && !isLoading && !error && (
-          <div className="mb-4 text-muted-foreground animate-fade-in">
-            <p className="text-sm">Select a tag to see real-time trending topics from Twitter</p>
-          </div>
-        )}
-        
-        <div className="flex flex-wrap gap-2 mb-4">
+      <CardContent className="pt-4">
+        <div className="flex flex-wrap gap-2 mb-5">
           {availableTags.map(tag => (
             <button
               key={tag.id}
               onClick={() => toggleTag(tag)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedTags.find(t => t.id === tag.id)
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted hover:bg-muted/80 text-foreground/80 border border-border'
+                  ? 'bg-twitter-blue text-white shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >
               {tag.name}
@@ -242,8 +220,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
         </div>
         
         {error && (
-          <div className="flex items-center gap-2 p-4 mb-4 bg-rose-50 text-rose-600 rounded-lg border border-rose-200">
-            <AlertCircle className="h-5 w-5" />
+          <div className="flex items-center gap-2 p-4 mb-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-800/30">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <p className="text-sm">{error}</p>
           </div>
         )}
@@ -251,93 +229,58 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <Loader2 className="h-8 w-8 text-twitter-blue animate-spin" />
               <p className="text-sm text-muted-foreground">Loading trending topics...</p>
             </div>
           </div>
         )}
         
         {showTopics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {trendingTopics.map(topic => (
-              <Collapsible 
+              <div 
                 key={topic.id} 
-                open={expandedTopics[topic.id]}
-                onOpenChange={() => toggleExampleTweets(topic.id)}
-                className="hover-lift overflow-hidden border border-border rounded-lg"
+                className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="bg-muted/30">
-                  {/* Header section with sentiment badge */}
-                  <div className="p-3 border-b border-border/50">
-                    <div className="flex items-center justify-between mb-1">
-                      <Badge variant="outline" className="text-xs font-normal bg-background">
-                        {topic.tag}
-                      </Badge>
-                      <div className={`flex items-center ${topic.sentiment.color} text-xs px-2 py-0.5 rounded-full bg-background/80 border border-border/50`}>
-                        <topic.sentiment.icon size={12} className="mr-1" />
-                        <span className="font-medium capitalize">{topic.sentiment.type}</span>
-                      </div>
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground">
-                      {getDisplayHeader(topic)}
-                    </h3>
-                  </div>
-                  
-                  {/* Content section */}
-                  <div className="p-3">
-                    <p className="text-xs text-muted-foreground mb-3 leading-normal">{topic.context}</p>
-                    
-                    {topic.subTopics.length > 0 && (
-                      <div className="mb-3">
-                        <span className="text-xs font-medium text-foreground/70 mb-1.5 block">Key points:</span>
-                        <ul className="space-y-1.5">
-                          {topic.subTopics.slice(0, 2).map((subtopic, idx) => (
-                            <li key={idx} className="flex text-xs text-muted-foreground">
-                              <span className="mr-2 text-primary flex-shrink-0">•</span>
-                              <span className="flex-1">{subtopic}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center">
-                      <CollapsibleTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-7 text-xs flex items-center gap-1"
-                        >
-                          {expandedTopics[topic.id] ? (
-                            <>
-                              <ChevronUp size={14} />
-                              <span>Hide Examples</span>
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown size={14} />
-                              <span>Show Examples</span>
-                            </>
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleUseTopic(topic)}
-                        className="rounded-full text-xs h-7"
-                      >
-                        Use Topic
-                      </Button>
+                {/* Header */}
+                <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs">
+                      {topic.tag}
+                    </Badge>
+                    <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
+                      <topic.sentiment.icon size={12} className="mr-1" />
+                      <span className="capitalize">{topic.sentiment.type}</span>
                     </div>
                   </div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    {getDisplayHeader(topic)}
+                  </h3>
                 </div>
                 
-                <CollapsibleContent>
-                  {topic.exampleTweets.length > 0 ? (
-                    <div className="p-3 bg-muted/10 border-t border-border/30">
-                      <h4 className="text-xs font-medium text-foreground/70 mb-2">Example Tweets:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {/* Content */}
+                <div className="p-4 bg-white dark:bg-gray-900">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
+                  
+                  {topic.subTopics.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                      <ul className="space-y-2 ml-1">
+                        {topic.subTopics.map((subtopic, idx) => (
+                          <li key={idx} className="flex text-sm text-gray-700 dark:text-gray-300">
+                            <span className="text-twitter-blue mr-2 flex-shrink-0">•</span>
+                            <span>{subtopic}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Example Tweets */}
+                  {topic.exampleTweets.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Example Tweets</h4>
+                      <div className="grid grid-cols-1 gap-3">
                         {topic.exampleTweets.map((tweet, idx) => (
                           <ExampleTweetCard 
                             key={idx} 
@@ -348,24 +291,36 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                         ))}
                       </div>
                     </div>
-                  ) : (
-                    <div className="p-3 bg-muted/10 border-t border-border/30 text-center text-xs text-muted-foreground">
-                      No example tweets available
-                    </div>
                   )}
-                </CollapsibleContent>
-              </Collapsible>
+                  
+                  <div className="mt-4 flex justify-end">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUseTopic(topic)}
+                      className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
+                    >
+                      Use Topic
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
         
         {!showTopics && selectedTags.length > 0 && isLoading && (
-          <div className="flex justify-center my-4">
+          <div className="flex justify-center my-6">
             <div className="flex space-x-2">
-              <div className="w-2.5 h-2.5 bg-primary/70 rounded-full animate-pulse"></div>
-              <div className="w-2.5 h-2.5 bg-primary/50 rounded-full animate-pulse delay-150"></div>
-              <div className="w-2.5 h-2.5 bg-primary/30 rounded-full animate-pulse delay-300"></div>
+              <div className="w-3 h-3 bg-twitter-blue/70 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-twitter-blue/50 rounded-full animate-pulse delay-150"></div>
+              <div className="w-3 h-3 bg-twitter-blue/30 rounded-full animate-pulse delay-300"></div>
             </div>
+          </div>
+        )}
+        
+        {!showTopics && selectedTags.length === 0 && !isLoading && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Select a category above to see trending topics</p>
           </div>
         )}
       </CardContent>
