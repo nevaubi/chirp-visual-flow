@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import TrendingTopics from '@/components/trends/TrendingTopics';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const GenerateTweets = () => {
   const { authState } = useAuth();
@@ -190,6 +193,7 @@ const TweetGenerationView = () => {
     { text: '', charCount: 0 },
     { text: '', charCount: 0 }
   ]);
+  const isMobile = useIsMobile();
   const form = useForm({
     defaultValues: {
       prompt: '',
@@ -236,8 +240,13 @@ const TweetGenerationView = () => {
     }
   };
 
+  const handleTopicSelect = (topicText: string) => {
+    form.setValue('prompt', topicText);
+  };
+
   return (
-    <div className="max-w-md ml-0 mr-auto">
+    <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-2 gap-8'}`}>
+      {/* Left column - Tweet generation */}
       <div className="space-y-6">
         <Card>
           <CardContent className="pt-6">
@@ -286,6 +295,11 @@ const TweetGenerationView = () => {
             <TwitterCard key={index} tweet={tweet} profile={authState.profile} index={index} />
           ))}
         </div>
+      </div>
+
+      {/* Right column - Trending Topics */}
+      <div className={isMobile ? 'mt-6' : ''}>
+        <TrendingTopics onSelectTopic={handleTopicSelect} />
       </div>
     </div>
   );
