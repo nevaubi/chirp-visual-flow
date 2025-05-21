@@ -80,9 +80,24 @@ function parseTrendsFromContent(content: string): any[] {
       matchFound = true;
       const trendContent = match[1];
       
-      // Extract the header/title
+      // Improved header extraction with multiple patterns
+      let header = "Unknown Topic";
+      
+      // First try standard header format with brackets
       const headerMatch = trendContent.match(/\[(.*?)\]/);
-      const header = headerMatch ? headerMatch[1] : "Unknown Topic";
+      if (headerMatch && headerMatch[1] && headerMatch[1].trim().length > 0) {
+        header = headerMatch[1].trim();
+      } else {
+        // Try to find the first meaningful line as header
+        const lines = trendContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        if (lines.length > 0) {
+          // Remove markdown symbols and other formatting from the first line
+          const firstLine = lines[0].replace(/\*/g, '').replace(/\[|\]/g, '').replace(/^#+\s+/, '').trim();
+          if (firstLine.length > 0) {
+            header = firstLine;
+          }
+        }
+      }
       
       // Extract sentiment
       const sentimentMatch = trendContent.match(/\*\s+\*\*Sentiment:\*\*\s+(.*?)[\r\n]/);
@@ -92,7 +107,7 @@ function parseTrendsFromContent(content: string): any[] {
       const contextMatch = trendContent.match(/\*\s+\*\*Context:\*\*\s+(.*?)[\r\n]/);
       const context = contextMatch ? contextMatch[1] : "No context available";
       
-      // Extract subtopics
+      // Extract subtopics - improved extraction
       const subTopicsMatch = trendContent.match(/\*\s+\*\*Sub topics:\*\*\s+(.*?)[\r\n]/);
       let subTopics = [];
       
@@ -109,10 +124,34 @@ function parseTrendsFromContent(content: string): any[] {
         }
       }
       
-      // Extract example tweets
+      // If still no subtopics found, try to extract any bullet points from the content
+      if (subTopics.length === 0) {
+        const bulletPointsRegex = /•\s+([^\n•]+)/g;
+        const bulletMatches = [...trendContent.matchAll(bulletPointsRegex)];
+        if (bulletMatches.length > 0) {
+          subTopics = bulletMatches.map(match => match[1].trim());
+        }
+      }
+      
+      // Extract example tweets - improved to capture more formats
       const tweetRegex = /\*Example of Real Current Tweet\d+:\s+(.*?)(?=\*Example|\*\*|<\/Trend|$)/gs;
-      const tweetMatches = [...trendContent.matchAll(tweetRegex)];
-      const exampleTweets = tweetMatches.map(tweet => tweet[1].trim());
+      let exampleTweets = [...trendContent.matchAll(tweetRegex)].map(tweet => tweet[1].trim());
+      
+      // If no example tweets found with the primary pattern, try alternative patterns
+      if (exampleTweets.length === 0) {
+        const altTweetRegex = /Example Tweet \d+:\s+(.*?)(?=Example Tweet|\*\*|<\/Trend|$)/gs;
+        exampleTweets = [...trendContent.matchAll(altTweetRegex)].map(tweet => tweet[1].trim());
+      }
+      
+      // If still no tweets found, look for any sections that look like tweets
+      if (exampleTweets.length === 0) {
+        const lines = trendContent.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes("Example") && lines[i].includes("Tweet") && i + 1 < lines.length) {
+            exampleTweets.push(lines[i + 1].trim());
+          }
+        }
+      }
       
       trends.push({
         header,

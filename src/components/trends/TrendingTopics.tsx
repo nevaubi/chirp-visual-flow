@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import ExampleTweetCard from './ExampleTweetCard';
 
 interface TrendingTopic {
   id: string;
@@ -35,6 +37,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
+  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
 
   const availableTags = [
     { id: 1, name: 'AI' },
@@ -70,6 +73,14 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     return { type: sentimentType, icon: Minus, color: 'text-amber-500' };
   };
 
+  // Toggle expanded state for example tweets
+  const toggleExampleTweets = (topicId: string) => {
+    setExpandedTopics(prev => ({
+      ...prev,
+      [topicId]: !prev[topicId]
+    }));
+  };
+
   // Fetch trending topics from our edge function
   const fetchTrendingTopics = async (tag: string) => {
     setIsLoading(true);
@@ -91,9 +102,16 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
       // Transform the data to match our component's expected format
       const formattedTopics: TrendingTopic[] = data.topics.map((topic: any, index: number) => {
         const sentiment = getSentimentData(topic.sentiment);
+        const topicId = `${tag}-${index + 1}`;
+        
+        // Initialize expanded state for this topic
+        setExpandedTopics(prev => ({
+          ...prev,
+          [topicId]: false
+        }));
         
         return {
-          id: `${tag}-${index + 1}`,
+          id: topicId,
           tag: tag,
           header: topic.header,
           sentiment,
@@ -205,13 +223,15 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
         {showTopics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
             {trendingTopics.map(topic => (
-              <Card 
+              <Collapsible 
                 key={topic.id} 
-                className="hover-lift overflow-hidden border border-border"
+                open={expandedTopics[topic.id]}
+                onOpenChange={() => toggleExampleTweets(topic.id)}
+                className="hover-lift overflow-hidden border border-border rounded-lg"
               >
-                <CardContent className="p-0">
+                <div className="bg-muted/30">
                   {/* Header section with sentiment badge */}
-                  <div className="p-3 border-b border-border/50 bg-muted/30">
+                  <div className="p-3 border-b border-border/50">
                     <div className="flex items-center justify-between mb-1">
                       <Badge variant="outline" className="text-xs font-normal bg-background">
                         {topic.tag}
@@ -221,7 +241,10 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                         <span className="font-medium capitalize">{topic.sentiment.type}</span>
                       </div>
                     </div>
-                    <h3 className="text-sm font-semibold text-foreground">{topic.header}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {topic.header !== "Unknown Topic" ? topic.header : 
+                        (topic.context.length > 20 ? topic.context.substring(0, 20) + "..." : topic.context)}
+                    </h3>
                   </div>
                   
                   {/* Content section */}
@@ -231,18 +254,38 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                     {topic.subTopics.length > 0 && (
                       <div className="mb-3">
                         <span className="text-xs font-medium text-foreground/70 mb-1.5 block">Key points:</span>
-                        <ul className="space-y-1">
-                          {topic.subTopics.map((subtopic, idx) => (
+                        <ul className="space-y-1.5">
+                          {topic.subTopics.slice(0, 2).map((subtopic, idx) => (
                             <li key={idx} className="flex text-xs text-muted-foreground">
-                              <span className="mr-2 text-primary">•</span>
-                              <span>{subtopic}</span>
+                              <span className="mr-2 text-primary flex-shrink-0">•</span>
+                              <span className="flex-1">{subtopic}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
                     
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
+                      <CollapsibleTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs flex items-center gap-1"
+                        >
+                          {expandedTopics[topic.id] ? (
+                            <>
+                              <ChevronUp size={14} />
+                              <span>Hide Examples</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={14} />
+                              <span>Show Examples</span>
+                            </>
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      
                       <Button 
                         size="sm" 
                         onClick={() => handleUseTopic(topic)}
@@ -252,8 +295,25 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                
+                <CollapsibleContent>
+                  {topic.exampleTweets.length > 0 ? (
+                    <div className="p-3 bg-muted/10 border-t border-border/30">
+                      <h4 className="text-xs font-medium text-foreground/70 mb-2">Example Tweets:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        {topic.exampleTweets.map((tweet, idx) => (
+                          <ExampleTweetCard key={idx} text={tweet} index={idx} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-muted/10 border-t border-border/30 text-center text-xs text-muted-foreground">
+                      No example tweets available
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         )}
