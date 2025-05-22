@@ -639,6 +639,7 @@ const emailHtml = juice(`
   </body>
 `);
 
+
     // 15) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com";
