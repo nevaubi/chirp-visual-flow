@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -211,6 +210,11 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     }));
   };
 
+  // Generate a random engagement percentage for UI display
+  const getRandomEngagement = (): number => {
+    return Math.floor(Math.random() * 30) + 70; // Returns a number between 70-99
+  };
+
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
@@ -260,68 +264,100 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         )}
         
         {showTopics && (
-          <div className="grid grid-cols-1 gap-4 animate-fade-in">
-            {trendingTopics.map(topic => (
-              <div 
-                key={topic.id} 
-                className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
-                  ${selectedTopicId === topic.id ? 'ring-2 ring-twitter-blue' : ''} 
-                  ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}`}
-                onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
-              >
-                {/* Header */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
-                      {topic.tag}
-                    </Badge>
-                    <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
-                      <topic.sentiment.icon size={12} className="mr-1" />
-                      <span className="capitalize">{topic.sentiment.type}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">
-                      {cleanHeader(topic.header)}
-                    </h3>
-                    {isCompact && (
-                      <ChevronRight size={16} className="text-gray-400" />
-                    )}
-                  </div>
-                </div>
-                
-                {/* Content - only show in full mode */}
-                {!isCompact && (
-                  <div className="p-4 bg-white dark:bg-gray-900">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
-                    
-                    {topic.subTopics.length > 0 && (
-                      <div className="mb-5">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
-                        <ul className="space-y-2">
-                          {topic.subTopics.map((subtopic, idx) => (
-                            <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                              <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
-                              <span>{subtopic}</span>
-                            </li>
-                          ))}
-                        </ul>
+          <div className={`grid ${isCompact ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-4 animate-fade-in`}>
+            {trendingTopics.map(topic => {
+              const engagementPercentage = getRandomEngagement();
+              return (
+                <div 
+                  key={topic.id} 
+                  className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
+                    ${selectedTopicId === topic.id ? 'ring-2 ring-twitter-blue' : ''} 
+                    ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
+                    ${isCompact ? 'h-auto' : ''}`}
+                  onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
+                >
+                  {/* Header */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
+                        {topic.tag}
+                      </Badge>
+                      <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
+                        <topic.sentiment.icon size={12} className="mr-1" />
+                        <span className="capitalize">{topic.sentiment.type}</span>
                       </div>
-                    )}
-                    
-                    <div className="mt-5 flex justify-end">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleUseTopic(topic)}
-                        className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
-                      >
-                        Use Topic
-                      </Button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">
+                        {cleanHeader(topic.header)}
+                      </h3>
+                      {isCompact && (
+                        <span className="text-xs font-bold text-twitter-blue">{engagementPercentage}%</span>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  
+                  {/* Content */}
+                  {!isCompact ? (
+                    <div className="p-4 bg-white dark:bg-gray-900">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
+                      
+                      {topic.subTopics.length > 0 && (
+                        <div className="mb-5">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                          <ul className="space-y-2">
+                            {topic.subTopics.map((subtopic, idx) => (
+                              <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
+                                <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
+                                <span>{subtopic}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="mt-5 flex justify-end">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleUseTopic(topic)}
+                          className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
+                        >
+                          Use Topic
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-white dark:bg-gray-900">
+                      {/* Compact content for grid view */}
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{topic.context}</p>
+                      
+                      {topic.subTopics.length > 0 && (
+                        <div className="mb-2">
+                          <ul>
+                            {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
+                              <li key={idx} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
+                                <span className="text-twitter-blue mr-1 flex-shrink-0 mt-0.5">•</span>
+                                <span className="line-clamp-1">{subtopic}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="flex items-center">
+                          <ChevronRight size={14} className="text-gray-400" />
+                          <span className="text-xs text-gray-500 ml-1">View details</span>
+                        </div>
+                        <div className="text-xs font-medium text-gray-500">
+                          Engagement: <span className="font-bold text-twitter-blue">{engagementPercentage}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         
