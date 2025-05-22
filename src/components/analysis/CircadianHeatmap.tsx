@@ -156,18 +156,19 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
         <CardDescription>
           When you typically post throughout the week
         </CardDescription>
+        
+        {/* Moved timezone indicator to here with padding */}
+        {timezone && (
+          <div className="mt-2 flex justify-end">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-flex items-center">
+              <Clock className="h-3 w-3 mr-1" /> {formatTimezone(timezone)} timezone
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="w-full overflow-x-auto">
           <div className="min-w-[600px]">
-            {timezone && (
-              <div className="mb-2 flex justify-end">
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-flex items-center">
-                  <Clock className="h-3 w-3 mr-1" /> {formatTimezone(timezone)} timezone
-                </span>
-              </div>
-            )}
-            
             {/* Hour labels */}
             <div className="flex mb-2">
               <div className="w-12 sm:w-16"></div>
@@ -230,9 +231,8 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                 </div>
               </div>
               
-              {/* Key Insights */}
+              {/* Key Insights - Removed the title but kept the content */}
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-800 mb-2">Key Insights</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-blue-700">Peak Activity:</span>
