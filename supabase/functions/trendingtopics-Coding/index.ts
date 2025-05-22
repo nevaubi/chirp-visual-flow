@@ -65,31 +65,41 @@ async function fetchTweetsFromRedis(key: string, count: number = 50): Promise<an
   }
 }
 
-// Function to format tweets for OpenAI analysis
+// Enhanced function to format tweets for OpenAI analysis including more metadata
 function formatTweetsForAnalysis(tweets: any[]): string {
   let formattedText = "";
 
   tweets.forEach((tweet, index) => {
-    // Extract tweet data, handling both possible formats
+    // Extract tweet data, handling both possible formats with comprehensive metadata
     const text = tweet["text of tweet"] || tweet.text || "No text available";
     const likes = tweet["Likes"] || tweet.likeCount || 0;
     const replies = tweet["Replies"] || tweet.replyCount || 0;
+    const retweets = tweet["retweets"] || tweet.retweetCount || 0;
     const views = tweet["Impressions"] || tweet.viewCount || 0;
-    const author = tweet["Twitter author name"] || tweet.author?.name || "Unknown Author";
+    const authorName = tweet["Twitter author name"] || tweet.author?.name || "Unknown Author";
+    const authorHandle = tweet["Handle"] || tweet.author?.userName || "unknown_handle";
+    const verified = tweet["Verified?"] || tweet.author?.isBlueVerified || false;
+    const profilePicUrl = tweet["ProfilePic"] || tweet.author?.profilePicture || "";
+    const timestamp = tweet["Timestamp"] || tweet.createdAt || new Date().toISOString();
 
     formattedText += `Tweet ${index + 1}:\n`;
     formattedText += `Text: ${text.replace(/https?:\/\/\S+/g, "").trim()}\n`;
+    formattedText += `Author: ${authorName}\n`;
+    formattedText += `Handle: @${authorHandle}\n`;
+    formattedText += `Verified: ${verified ? "Yes" : "No"}\n`;
+    formattedText += `Profile Picture URL: ${profilePicUrl}\n`;
+    formattedText += `Timestamp: ${timestamp}\n`;
     formattedText += `Likes: ${likes}\n`;
     formattedText += `Replies: ${replies}\n`;
+    formattedText += `Retweets: ${retweets}\n`;
     formattedText += `Views: ${views}\n`;
-    formattedText += `Author: ${author}\n`;
     formattedText += "---\n\n";
   });
 
   return formattedText;
 }
 
-// Function to analyze tweets using OpenAI
+// Function to analyze tweets using OpenAI - updated to include and return metadata
 async function analyzeWithOpenAI(formattedTweets: string): Promise<string> {
   if (!OPENAI_API_KEY) {
     throw new Error("OpenAI API key is not set");
@@ -114,10 +124,10 @@ Your task is to extract exactly 4 distinct trending topics from the provided twe
 For each trend, you will:
 1. Create a concise specific 3-5 word header capturing the core topic using specific details if applicable
 2. Assign a single-word specific sentiment descriptor (not just "positive" but "enthusiastic" or "skeptical")
-3. Create 2 relevant sub topics bullet points for each. Sub topics are 4 words max, and must use specifics like names places products events etc
+3. Create 2 relevant sub topics bullet points for each. Sub topics are 7 words max, and must use specifics like names places products events etc
 4. Extract key phrases and specific language patterns directly from relevant tweets
-5. Provide concise contextual significance in 10 words or less
-6. Include the EXACT UNALTERED TEXT of 3 representative source tweets that best exemplify the trend
+5. Provide concise contextual significance in 20 words or less
+6. Include the EXACT UNALTERED TEXT of 3 representative source tweets that best exemplify the trend, WITH THEIR FULL METADATA
 
 Analysis priorities:
 - Higher average engagement metrics across multiple tweets
@@ -130,6 +140,7 @@ When selecting example tweets:
 - Select tweets that clearly demonstrate the trend's key characteristics
 - Copy the tweet text EXACTLY as provided in the dataset without any modifications
 - Include exactly 3 example tweets per trend (no more, no less)
+- Include ALL the metadata for each tweet (author name, handle, verified status, profile pic URL, timestamp, likes, replies, retweets)
 
 Do not include citations, tweet references, asterisks, or hashtags in your analysis fields. Extract actual text phrases directly from tweets as evidence without attribution in the Details field. Keep all detail fields under 10 words maximum.
 
@@ -137,7 +148,7 @@ Your output must follow the exact format specified with <Trend> XML tags and no 
           },
           {
             role: 'user',
-            content: `Analyze the following collection of high-performing tweets. Each tweet includes engagement metrics (likes, replies, views).
+            content: `Analyze the following collection of high-performing tweets. Each tweet includes full metadata (author name, handle, verified status, profile pic URL, timestamp, engagement metrics).
 
 <tweet dataset>
 ${formattedTweets}
@@ -148,47 +159,59 @@ Based on thorough analysis of these tweets and their metrics, identify exactly 4
 <Trend1>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
+*Tweet1_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
+*Tweet2_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
+*Tweet3_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 </Trend1>
 <Trend2>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
+*Tweet1_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
+*Tweet2_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
+*Tweet3_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 </Trend2>
 <Trend3>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
+*Tweet1_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
+*Tweet2_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
+*Tweet3_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 </Trend3>
 <Trend4>
 [TOPIC HEADER: 3-5 words]
 * **Sentiment:** [single specific word]
-* **Context:** [Concise specific analysis, max 10 words]
-* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 4 words]
+* **Context:** [Concise specific analysis, max 20 words]
+* **Sub topics:** [Bullet points of two relevant sub topics of trend, each max 7 words]
 *Example of Real Current Tweet1: [exact unaltered text of sourced tweet1]
+*Tweet1_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet2: [exact unaltered text of sourced tweet2]
+*Tweet2_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 *Example of Real Current Tweet3: [exact unaltered text of sourced tweet3]
+*Tweet3_Metadata: {"authorName": "full name", "handle": "@username", "verified": true/false, "profilePicUrl": "url", "timestamp": "ISO date", "likes": number, "replies": number, "retweets": number}
 </Trend4>
 
-For each trend, you must include the exact unmodified text of 3 tweets that best represent the trend. Choose tweets with high engagement metrics that clearly demonstrate the identified pattern. Copy the tweet text exactly as it appears in the dataset.
+For each trend, you must include the exact unmodified text of 3 tweets that best represent the trend along with their complete metadata in the JSON format specified. Choose tweets with high engagement metrics that clearly demonstrate the identified pattern. Copy the tweet text exactly as it appears in the dataset.
 
-Do not include any introductory or concluding text. Ensure each field stays under 10 words and contains specific, meaningful insights directly derived from the dataset.`
+Do not include any introductory or concluding text. Ensure each field stays under 20 words and contains specific, meaningful insights directly derived from the dataset.`
           }
         ],
-        temperature: 0.3,
-        max_tokens: 1500
+        temperature: 0.2,
+        max_tokens: 5000
       }),
     });
 
@@ -211,7 +234,7 @@ async function saveAnalysisToRedis(analysis: string): Promise<string> {
   }
   
   try {
-    // FIXED: Remove extra JSON.stringify - store the analysis string directly
+    // Store the analysis string directly
     const response = await fetch(
       `${REDIS_URL}/set/trendingtopics-Coding/${encodeURIComponent(analysis)}`,
       {
@@ -240,7 +263,7 @@ async function processTrends() {
     // 1. Fetch tweets from Redis
     const tweets = await fetchTweetsFromRedis("asynch-database-Coding", 50);
     
-    // 2. Format tweets for analysis
+    // 2. Format tweets for analysis with enhanced metadata
     const formattedTweets = formatTweetsForAnalysis(tweets);
     
     // 3. Analyze tweets with OpenAI
