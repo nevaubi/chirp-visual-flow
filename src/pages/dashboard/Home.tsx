@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle } from 'lucide-react';
+import { TrendingUp, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle, Zap } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
@@ -168,7 +168,7 @@ const CreatorDashboard = ({ profile }) => {
               className="gap-2 bg-[#0087C8] hover:bg-[#0076b2]"
             >
               <Link to="/dashboard/community">
-                <Zap size={16} /> Generate Tweets
+                <TrendingUp size={16} /> Generate Tweets
               </Link>
             </Button>
           </CardContent>
@@ -409,7 +409,7 @@ const NewsletterDashboard = ({ profile }) => {
     {
       title: "Generate newsletters",
       description: "We'll transform your bookmarks into a well-formatted newsletter.",
-      icon: Zap
+      icon: TrendingUp
     }
   ];
 
