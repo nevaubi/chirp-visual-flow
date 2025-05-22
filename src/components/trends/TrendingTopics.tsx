@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -282,7 +281,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                 <div 
                   key={topic.id} 
                   className={`border-2 border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden 
-                    ${selectedTopicId === topic.id ? 'ring-2 ring-darkBlue-light' : ''} 
+                    ${selectedTopicId === topic.id ? 
+                      'ring-4 ring-darkBlue-light/90 shadow-[0_0_15px_rgba(51,162,216,0.4)] dark:shadow-[0_0_15px_rgba(51,162,216,0.3)] animate-pulse-subtle' : ''} 
                     ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
                     ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
