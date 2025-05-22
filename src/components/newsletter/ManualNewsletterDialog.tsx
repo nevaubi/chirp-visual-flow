@@ -99,83 +99,76 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       setProgress(0);
       setFunctionTimedOut(false);
       
-      // Call the Supabase Edge Function to generate the newsletter with a longer timeout
-      const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
-        body: { selectedCount },
-        // Using a longer timeout to give the function more time to complete
-        options: {
-          timeout: 60000 // 60 seconds timeout
-        }
-      });
+      // Create an AbortController to handle timeouts manually
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
       
-      if (error) {
-        console.error('Error generating newsletter:', error);
+      try {
+        // Call the Supabase Edge Function to generate the newsletter
+        const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
+          body: { selectedCount }
+        });
         
-        // Check if this is a timeout error (which means the function is still running in the background)
-        if (error.message && (
-            error.message.includes('FunctionsFetchError') || 
-            error.message.includes('timeout') || 
-            error.message.includes('AbortError')
-        )) {
-          console.log('Function timed out but is still running in the background');
-          setFunctionTimedOut(true);
+        // Clear the timeout since the request completed
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          console.error('Error generating newsletter:', error);
           
-          // Continue showing progress and let the user know it's still processing
-          setProgress(92);
-          
-          // We won't show an error toast since this is expected for long-running operations
-          // The newsletter will still be generated in the background
-          
-          // Keep the dialog open for a bit longer to show progress
-          setTimeout(() => {
-            toast.success('Newsletter generation started', {
-              description: `Your newsletter is being generated in the background and will be delivered to your email soon.`,
-            });
-            
-            // Close the dialog
-            onOpenChange(false);
-            setIsGenerating(false);
-          }, 3000);
-          
+          // For errors, show the error toast
+          toast.error('Failed to generate newsletter', {
+            description: error.message || 'Please try again later',
+          });
+          setIsGenerating(false);
           return;
         }
         
-        // For other errors, show the error toast
-        toast.error('Failed to generate newsletter', {
-          description: error.message || 'Please try again later',
-        });
-        setIsGenerating(false);
-        return;
-      }
-      
-      if (data.error) {
-        console.error('Function returned error:', data.error);
-        toast.error('Failed to generate newsletter', {
-          description: data.error,
-        });
-        setIsGenerating(false);
-        return;
-      }
-      
-      // Success! Update local state with the new remaining generations count
-      if (data.remainingGenerations !== undefined) {
-        setUpdatedRemainingGenerations(data.remainingGenerations);
-      }
-      
-      // Set progress to 100% to show completion
-      setProgress(100);
-      
-      // Keep the completion screen visible for 2.5 seconds
-      setTimeout(() => {
-        toast.success('Newsletter generated successfully', {
-          description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
-        });
+        if (data.error) {
+          console.error('Function returned error:', data.error);
+          toast.error('Failed to generate newsletter', {
+            description: data.error,
+          });
+          setIsGenerating(false);
+          return;
+        }
         
-        // Close the dialog
-        onOpenChange(false);
-        setIsGenerating(false);
-      }, 2500);
-      
+        // Success! Update local state with the new remaining generations count
+        if (data.remainingGenerations !== undefined) {
+          setUpdatedRemainingGenerations(data.remainingGenerations);
+        }
+        
+        // Set progress to 100% to show completion
+        setProgress(100);
+        
+        // Keep the completion screen visible for 2.5 seconds
+        setTimeout(() => {
+          toast.success('Newsletter generated successfully', {
+            description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
+          });
+          
+          // Close the dialog
+          onOpenChange(false);
+          setIsGenerating(false);
+        }, 2500);
+      } catch (abortError) {
+        // Handle aborted requests (timeouts)
+        clearTimeout(timeoutId);
+        
+        // If this was a timeout abort or other network error
+        console.log('Request timed out or aborted:', abortError);
+        setFunctionTimedOut(true);
+        setProgress(92);
+        
+        // Let the user know the process continues in the background
+        setTimeout(() => {
+          toast.success('Newsletter generation started', {
+            description: `Your newsletter is being generated in the background and will be delivered to your email soon.`,
+          });
+          
+          onOpenChange(false);
+          setIsGenerating(false);
+        }, 3000);
+      }
     } catch (error) {
       console.error('Error in handleGenerate:', error);
       
