@@ -542,57 +542,74 @@ ${analysisResult}`;
       } else {
         logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
         
-        // Make Perplexity API calls for each selected topic
-        const enrichmentResults = [];
-        
-        for (const topic of topics) {
-          try {
-            const perplexityRes = await fetch("https://api.perplexity.ai/sonar/pro/medium", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
-              },
-              body: JSON.stringify({
-                query: topic.query,
-                max_tokens: 350,
-                temperature: 0.2,
-                focus: "internet"
-              })
-            });
-            
-            if (perplexityRes.ok) {
-              const perplexityData = await perplexityRes.json();
-              enrichmentResults.push({
-                topic: topic.topic,
-                query: topic.query,
-                goal: topic.goal,
-                webContent: perplexityData.response,
-                sources: perplexityData.web_search_results || []
-              });
-              logStep(`Successfully enriched topic: ${topic.topic}`);
-            } else {
-              const errorText = await perplexityRes.text();
-              console.error(`Perplexity API error for query "${topic.query}":`, errorText);
-              enrichmentResults.push({
-                topic: topic.topic,
-                query: topic.query,
-                goal: topic.goal,
-                webContent: `[Error retrieving additional information: ${perplexityRes.status}]`,
-                sources: []
-              });
-            }
-          } catch (err) {
-            console.error(`Error in Perplexity API call for query "${topic.query}":`, err);
-            enrichmentResults.push({
-              topic: topic.topic,
-              query: topic.query,
-              goal: topic.goal,
-              webContent: "[Error retrieving additional information]",
-              sources: []
-            });
-          }
-        }
+        // ──────────────────────────────────────────────────────────────
+// 11) Perplexity API calls — REPLACE the whole loop with this
+// ──────────────────────────────────────────────────────────────
+const enrichmentResults = [];
+
+for (const topic of topics) {
+  try {
+    const perplexityRes = await fetch(
+      "https://api.perplexity.ai/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "sonar-pro",                 // ◀️ search-enabled model
+          messages: [
+            { role: "user", content: topic.query }
+          ],
+          temperature: 0.2,
+          max_tokens: 350,
+
+          // recency: only results from the last 7 days
+          search_recency_filter: "week"
+        })
+      }
+    );
+
+    if (perplexityRes.ok) {
+      const data = await perplexityRes.json();
+
+      enrichmentResults.push({
+        topic:      topic.topic,
+        query:      topic.query,
+        goal:       topic.goal,
+        webContent: data.choices[0].message.content,
+        sources:    data.citations ?? []           // ⬅️ updated citations field
+      });
+
+      logStep(`Successfully enriched topic: ${topic.topic}`);
+    } else {
+      console.error(
+        `Perplexity API error for "${topic.query}":`,
+        await perplexityRes.text()
+      );
+
+      enrichmentResults.push({
+        topic: topic.topic,
+        query: topic.query,
+        goal:  topic.goal,
+        webContent: `[Perplexity error ${perplexityRes.status}]`,
+        sources: []
+      });
+    }
+  } catch (err) {
+    console.error(`Perplexity fetch failed for "${topic.query}":`, err);
+
+    enrichmentResults.push({
+      topic: topic.topic,
+      query: topic.query,
+      goal:  topic.goal,
+      webContent: "[Perplexity request failed]",
+      sources: []
+    });
+  }
+}
+
         
         // 12) Integrate Web Content with Original Analysis
         logStep("Integrating web content with original analysis");
