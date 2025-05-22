@@ -759,13 +759,21 @@ ${markdownNewsletter}
     // 16) Convert final Markdown to HTML & inline CSS
     const renderer = new marked.Renderer();
 
-    // Responsive e-mail-safe image
-    renderer.image = (href, _title, alt) => `
-      <img src="${href}"
-           alt="${alt}"
-           width="552"
-           style="width:100%;max-width:552px;height:auto;display:block;margin:12px auto;border-radius:4px;">
-    `;
+    // ──────────────────────────────────────────────────────────────
+// CENTRED, SIZE-CAPPED IMAGES FOR E-MAIL CLIENTS
+// ──────────────────────────────────────────────────────────────
+renderer.image = (href, _title, alt) => `
+  <div style="text-align:center;">
+    <img src="${href}"
+         alt="${alt}"
+         style="
+           max-width:400px;   /* adjust if you want */
+           width:100%;
+           height:auto;
+           border-radius:4px;
+           display:inline-block;">
+  </div>`;
+
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
