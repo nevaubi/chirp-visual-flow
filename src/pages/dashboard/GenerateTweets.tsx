@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface SelectedTopic {
   id: string;
   header: string;
-  sentiment: string;
+  sentiment: string | { type: string; icon: any; color: string };
   context: string;
   subTopics: string[];
   exampleTweets?: any[];
@@ -39,7 +39,8 @@ const TweetGenerationView = () => {
       const cleanedTopic = {
         id: topic.id,
         header: topic.header,
-        sentiment: typeof topic.sentiment === 'string' ? topic.sentiment : topic.sentiment?.type,
+        sentiment: typeof topic.sentiment === 'string' ? topic.sentiment : 
+                  typeof topic.sentiment === 'object' && topic.sentiment ? topic.sentiment.type : 'neutral',
         context: topic.context,
         subTopics: topic.subTopics
       };
