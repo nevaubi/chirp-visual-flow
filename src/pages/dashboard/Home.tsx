@@ -255,6 +255,7 @@ const NewsletterDashboard = ({ profile }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [tweetCount, setTweetCount] = useState<"10" | "20" | "30">("20");
   const { refreshProfile } = useAuth();
+  const [showToasts, setShowToasts] = useState(false); // New flag to control toast display
 
   // Check if user has a subscription
   const isSubscribed = profile?.subscribed;
@@ -272,17 +273,21 @@ const NewsletterDashboard = ({ profile }) => {
   const handleGenerateNewsletter = async () => {
     // Check if user has required subscription tier
     if (!hasRequiredTier) {
-      toast.error("Subscription Required", {
-        description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
-      });
+      if (showToasts) {
+        toast.error("Subscription Required", {
+          description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
+        });
+      }
       return;
     }
     
     // Check if manual generation is available for the user
     if (!remainingGenerations || remainingGenerations <= 0) {
-      toast.error("No Generations Available", {
-        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
-      });
+      if (showToasts) {
+        toast.error("No Generations Available", {
+          description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+        });
+      }
       return;
     }
 
@@ -294,9 +299,11 @@ const NewsletterDashboard = ({ profile }) => {
 
       if (error) {
         console.error('Error generating newsletter:', error);
-        toast.error('Failed to generate newsletter', {
-          description: error.message,
-        });
+        if (showToasts) {
+          toast.error('Failed to generate newsletter', {
+            description: error.message,
+          });
+        }
         return;
       }
 
@@ -304,20 +311,27 @@ const NewsletterDashboard = ({ profile }) => {
         // Refresh the profile to get updated remaining generations
         await refreshProfile();
         
-        toast.success('Newsletter generated successfully!', {
-          description: 'Your newsletter has been added to the library.',
-        });
+        if (showToasts) {
+          toast.success('Newsletter generated successfully!', {
+            description: 'Your newsletter has been added to the library.',
+          });
+        }
         
         // Navigate to library after successful generation
         window.location.href = '/dashboard/analytics';
       } else {
-        toast.error('Failed to generate newsletter', {
-          description: data.error || 'An error occurred during generation.',
-        });
+        console.error('Function returned error:', data.error);
+        if (showToasts) {
+          toast.error('Failed to generate newsletter', {
+            description: data.error || 'An error occurred during generation.',
+          });
+        }
       }
     } catch (error) {
       console.error('Error in generation:', error);
-      toast.error('An unexpected error occurred');
+      if (showToasts) {
+        toast.error('An unexpected error occurred');
+      }
     } finally {
       setIsGenerating(false);
     }
