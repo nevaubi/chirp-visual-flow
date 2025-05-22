@@ -1,9 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle, Zap } from 'lucide-react';
+import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, Zap } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import TwitterProfileCard from '@/components/profile/TwitterProfileCard';
 import MetricCard from '@/components/profile/MetricCard';
 import GrowthCard from '@/components/profile/GrowthCard';
-import BestTweetCard from '@/components/profile/BestTweetCard';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -98,16 +97,6 @@ const CreatorDashboard = ({ profile }) => {
             <h1 className="text-2xl font-bold text-gray-900">Welcome, {profile?.twitter_username || 'User'}</h1>
             <p className="text-gray-600">Your creator dashboard is being set up</p>
           </div>
-          
-          <Button 
-            asChild
-            size="sm" 
-            className="gap-1 text-xs bg-[#0087C8] hover:bg-[#0076b2]"
-          >
-            <Link to="/dashboard/community">
-              <TrendingUp size={14} /> Trending Topics
-            </Link>
-          </Button>
         </div>
 
         <Card className="border-none shadow-sm hover:shadow transition-shadow">
@@ -173,65 +162,48 @@ const CreatorDashboard = ({ profile }) => {
   // When analysis results are available, show the enhanced dashboard
   return (
     <div className="space-y-6">
-      {/* Top section with action button */}
+      {/* Top section - no action button anymore */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 sr-only">Welcome, {localProfile?.twitter_username || 'User'}</h1>
         </div>
-        
-        <Button 
-          asChild
-          size="sm" 
-          className="gap-1 text-xs bg-[#0087C8] hover:bg-[#0076b2]"
-        >
-          <Link to="/dashboard/community">
-            <TrendingUp size={14} /> Trending Topics
-          </Link>
-        </Button>
       </div>
 
-      {/* Profile and Key Metrics Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Twitter Profile Card */}
-        <div className="lg:col-span-1">
+      {/* All components in one horizontal row for larger screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Twitter Profile Card - reduced size */}
+        <div className="lg:col-span-3">
           <TwitterProfileCard profile={localProfile} />
         </div>
 
-        {/* Key Metrics */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Compact Key Metrics - in a row */}
+        <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-3">
           <MetricCard 
             title="Best Time to Post" 
             value={formatHour(analysisResults?.top_posting_hour)} 
-            description="Based on your audience activity"
-            icon={<Clock className="h-5 w-5 text-[#0087C8]" />}
+            description="Based on audience activity"
+            icon={<Clock className="h-4 w-4 text-[#0087C8]" />}
           />
           
           <MetricCard 
             title="Avg. Engagement Rate" 
             value={`${(analysisResults?.avg_engagement_rate || 0).toFixed(1)}`} 
-            description="Likes, retweets, and replies per post"
-            icon={<Users className="h-5 w-5 text-purple-500" />}
+            description="Likes, retweets, replies per post"
+            icon={<Users className="h-4 w-4 text-purple-500" />}
           />
           
           <MetricCard 
             title="Analyzed Tweets" 
             value={analysisResults?.total_tweets_analyzed || 0} 
-            description="From your recent posting history"
-            icon={<BarChart className="h-5 w-5 text-green-500" />}
+            description="From recent posting history"
+            icon={<BarChart className="h-4 w-4 text-green-500" />}
           />
         </div>
-      </div>
 
-      {/* Growth Opportunities and Best Tweet */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Growth Opportunities */}
-        <GrowthCard opportunities={analysisResults?.growth_opportunities || []} />
-        
-        {/* Best Performing Tweet */}
-        <BestTweetCard 
-          tweet={analysisResults?.best_performing_tweet || {}} 
-          username={localProfile?.twitter_username || 'User'}
-        />
+        {/* Growth Opportunities - now at the same level */}
+        <div className="lg:col-span-4">
+          <GrowthCard opportunities={analysisResults?.growth_opportunities || []} />
+        </div>
       </div>
       
       {/* Completion popup */}

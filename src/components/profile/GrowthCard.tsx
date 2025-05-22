@@ -14,23 +14,23 @@ const GrowthCard = ({ opportunities }: GrowthCardProps) => {
 
   return (
     <Card className="border-none shadow-sm hover:shadow transition-shadow h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Award size={18} className="text-amber-500" />
+      <CardHeader className="p-3 pb-1">
+        <CardTitle className="flex items-center gap-1 text-base">
+          <Award size={16} className="text-amber-500" />
           Growth Opportunities
         </CardTitle>
-        <CardDescription>
-          Personalized recommendations to improve your performance
+        <CardDescription className="text-xs">
+          Personalized recommendations
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ul className="space-y-3">
+      <CardContent className="p-3 pt-1">
+        <ul className="space-y-1.5">
           {opportunities.map((opportunity, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <div className="mt-1 flex-shrink-0">
-                <Check size={16} className="text-green-500" />
+            <li key={index} className="flex items-start gap-1.5">
+              <div className="mt-0.5 flex-shrink-0">
+                <Check size={12} className="text-green-500" />
               </div>
-              <p className="text-gray-700 text-sm">{opportunity}</p>
+              <p className="text-gray-700 text-xs">{opportunity}</p>
             </li>
           ))}
         </ul>
