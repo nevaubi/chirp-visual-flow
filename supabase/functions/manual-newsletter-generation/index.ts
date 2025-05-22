@@ -329,13 +329,13 @@ ANALYSIS METHODOLOGY:
 OUTPUT REQUIREMENTS:
 For each analysis, you will produce a structured report containing:
 
-THREE MAIN TOPICS (highest priority discussions):
+FIVE MAIN TOPICS (highest priority discussions):
 - Each with a concise header (10-20 words)
 - Four bullet points highlighting the most significant aspects (100 words max each)
 - A detailed explanation of approximately 500-700 words covering context, sentiment, key discussions, and notable perspectives
 - The best photo url per topic
 
-TWO SUB-TOPIC (third most relevant discussion):
+FOUR SUB-TOPICS (additional relevant discussions):
 - Concise header (10-20 words)
 - Three bullet points highlighting the most significant aspects (40 words max each)
 - A comprehensive explanation of approximately 300-400 words providing context and analysis
@@ -363,7 +363,7 @@ For each MAIN TOPIC (5):
    - Implications or significance
 4. Include the best photo url that best represents this topic (if available)
 
-For the SUB-TOPIC (4):
+For each SUB-TOPIC (4):
 1. Create a concise header (10-20 words)
 2. Provide 3 bullet points highlighting the most significant aspects (50 words max each)
 3. Write a comprehensive explanation of approximately 300-400 words that thoroughly describes the sub-topic using accessible naturally human sounding casual language
@@ -409,158 +409,15 @@ ${formattedTweets}`;
     const analysisResult = openaiJson.choices[0].message.content.trim();
     console.log("OpenAI Analysis Result:\n", analysisResult);
 
-    // 10) Fetch & log top 5 replies for 7 random tweet IDs
-    let discourseAnalysis = "";
-    try {
-      const arrTweets = Array.isArray(apifyData) ? apifyData : Array.isArray(apifyData.items) ? apifyData.items : [];
-      const mainMap = {};
-      arrTweets.forEach((t)=>{
-        if (t.isReply === false) {
-          mainMap[t.id] = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-        }
-      });
-      const idsToQuery = tweetIds.length <= 10 ? tweetIds : [
-        ...tweetIds
-      ].sort(()=>Math.random() - 0.5).slice(0, 10);
-      console.log("Using random tweet IDs for replies:", idsToQuery);
-      const repliesRes = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-reply/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          conversation_ids: idsToQuery,
-          max_items_per_conversation: 20
-        })
-      });
-      if (repliesRes.ok) {
-        const repliesData = await repliesRes.json();
-        const grouped = repliesData.filter((r)=>r.isReply).reduce((acc, r)=>{
-          (acc[r.conversationId] ||= []).push(r);
-          return acc;
-        }, {});
-        const outLogs = [];
-        idsToQuery.forEach((mainId, idx)=>{
-          outLogs.push(`Tweet ${idx + 1} text: ${mainMap[mainId] || "N/A"}`);
-          const reps = grouped[mainId] || [];
-          reps.sort((a, b)=>Number(b.likeCount || 0) - Number(a.likeCount || 0)).slice(0, 5).forEach((r, i)=>{
-            const txt = (r.text || "").replace(/https?:\/\/\S+/g, "").trim();
-            outLogs.push(`Top reply ${i + 1}: ${txt}`);
-          });
-          outLogs.push("---");
-        });
-        console.log(outLogs.join("\n"));
-        const replyAnalysisData = outLogs.join("\n");
+    // 10) REMOVED: Reply fetching and discourse analysis functionality
+    // This section previously fetched tweet replies and performed discourse analysis
+    // Now we set discourseAnalysis to empty string to maintain compatibility
+    const discourseAnalysis = "";
 
-        // 11) Call OpenAI with reply data for discourse analysis
-        const discourseSystemPrompt = `You are an advanced social media discourse analyzer that speaks in normal everyday style casual english, specializing in identifying underlying patterns, hidden sentiments, and emerging trends in tweet conversations. Your purpose is to uncover insights that aren't immediately obvious but reveal meaningful community perspectives and attitudes.
-
-CORE CAPABILITIES:
-- Analyze the relationship between original tweets and their replies to identify discourse patterns
-- Detect sentiment shifts, contradictions, and consensus within conversation threads
-- Recognize implicit biases, unstated assumptions, and community values
-- Identify emerging trends, evolving opinions, and changing public sentiment
-- Extract meaningful insights that reveal deeper societal or community perspectives
-
-ANALYTICAL METHODOLOGY:
-1. Parse relationships between original tweets and reply patterns
-2. Identify tonal shifts, rhetorical patterns, and response clusters
-3. Detect conversation dynamics including agreement/disagreement ratios, humor markers, and emotional intensity
-4. Analyze linguistic patterns revealing unspoken community norms and values
-5. Prioritize insights based on their revelatory value, counter-intuitiveness, and uniqueness
-
-Your analysis should focus on discovering:
-- Underlying assumptions shared within the community
-- Implicit biases or frameworks revealed through response patterns
-- Emerging consensus or division points that aren't explicitly stated
-- Hidden values or priorities revealed through collective reactions
-- Unexpected patterns that challenge surface-level interpretations
-
-OUTPUT FRAMEWORK:
-You are to output 8 high quality insights. For each insight, provide:
-1. A concise, compelling header (20-30 words)
-2. A detailed explanation of approximately 150-200 words that unpacks the insight with nuance, specific evidence, and contextual significance, delivered in natural, normal flowing wording spoken at an 8th grade writing level.`;
-        const discourseUserPrompt = `Analyze the following collection of tweets and their top replies to identify 8 underlying sentiments, opinions, or trends that provide meaningful insights into community perspectives.
-
-Go beyond surface-level topic identification to discover:
-- Hidden assumptions or implicit values revealed in conversation patterns
-- Unexpected consensus or division points across different tweets
-- Emerging attitudes or shifts in sentiment not explicitly stated
-- Rhetorical patterns that reveal deeper community perspectives
-
-For each of the 8 insights:
-1. Create a concise, compelling header (20-30 words) that captures the essence of the insight
-2. Write a detailed explanation of approximately 150-200 words that:
-   - Articulates the underlying trend or sentiment in a clear accessible wording style for everyday very casual speaking style
-   - Provides specific evidence from multiple tweet conversations
-   - Explains why this insight is significant
-   - Addresses both what is said and what remains unsaid
-   - Connects the insight to broader social or technological contexts when relevant
-   - It is IMPORTANT that you deliver your output in natural normal wording spoken at an 8th grade writing level.
-
-Analysis criteria:
-- Prioritize insights that reveal something unexpected or non-obvious
-- Focus on patterns across singular tweets as well as multiple tweets if applicable rather than isolated opinions
-- Consider the relationship between original tweets and the nature of responses
-- Pay attention to linguistic patterns, emotional markers, and conversational dynamics
-- Look for contradictions between stated positions and implicit values
-
-Please format your response with clear numbered headers and well-structured explanations spoken in an 8th grade writing level.
-
-DO NOT MENTION SPECIFIC TWEETS OR USERNAMES, FOCUS ONLY ON DISCUSSION TOPICS, CONCEPTS AND SENTIMENTS. 
-
-Here is the tweet collection to analyze:
-
-${replyAnalysisData}`;
-        try {
-          const discourseOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: "gpt-4.1-2025-04-14",
-              messages: [
-                {
-                  role: "system",
-                  content: discourseSystemPrompt
-                },
-                {
-                  role: "user",
-                  content: discourseUserPrompt
-                }
-              ],
-              temperature: 0.4,
-              max_tokens: 2000 // Sufficient for 5 * 200 words + headers
-            })
-          });
-          if (discourseOpenaiRes.ok) {
-            const discourseJson = await discourseOpenaiRes.json();
-            discourseAnalysis = discourseJson.choices[0].message.content;
-            console.log("Discourse Analysis Result:\n", discourseAnalysis);
-          } else {
-            const errorText = await discourseOpenaiRes.text();
-            console.error(`Discourse Analysis OpenAI error (${discourseOpenaiRes.status}):`, errorText);
-            discourseAnalysis = "Error: Unable to generate discourse analysis. Please try again later.";
-          }
-        } catch (discourseError) {
-          console.error("Error in discourse analysis API call:", discourseError);
-          discourseAnalysis = "Error: Unable to generate discourse analysis due to API error.";
-        }
-      } else {
-        console.error(`Apify Reply API error (${repliesRes.status}):`, await repliesRes.text());
-        discourseAnalysis = "Error: Unable to fetch tweet replies for analysis.";
-      }
-    } catch (err) {
-      console.error("Error fetching/parsing tweet replies:", err);
-      discourseAnalysis = "Error: Unable to process tweet replies for analysis.";
-    }
-
-    // 12) Generate Markdown formatted newsletter
+    // 11) Generate Markdown formatted newsletter
     let markdownNewsletter = "";
     try {
-      console.log("Starting step 12: Markdown newsletter formatting");
+      console.log("Starting step 11: Markdown newsletter formatting");
       const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
 
 FORMAT GUIDELINES:
@@ -586,21 +443,16 @@ CONTENT STRUCTURE:
 7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
 8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
 9. Add a final horizontal rule divider
-10. After a final divider, include the Discourse Analysis section but rename it to Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
-11. Add proper spacing and formatting throughout
-12. Max 2-3 images if applicable
+10. Max 2-3 images if applicable
 
 OUTPUT:
 Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
-      const markdownUserPrompt = `I have two pieces of analysis content that need to be worded for better flow and accessibility, and then combined and formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat these analyses into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
+      const markdownUserPrompt = `I have analysis content that needs to be worded for better flow and accessibility, and then formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat this analysis into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
 
-1. MAIN ANALYSIS CONTENT:
+MAIN ANALYSIS CONTENT:
 ${analysisResult}
 
-2. DISCOURSE ANALYSIS:
-${discourseAnalysis}
-
-Please format these into a single, well-structured visually appealing Markdown newsletter with the following layout:
+Please format this into a single, well-structured visually appealing Markdown newsletter with the following layout:
 
 1. Start with the first Main topic at the top
 2. Use dividers, spacing, clean and visually appealing structure as needed
@@ -611,8 +463,7 @@ Please format these into a single, well-structured visually appealing Markdown n
 7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
 8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
 9. Add a final horizontal rule divider
-10. Include the Discourse Analysis content but rename it Hot Takes or Discussions or Sentiment Analysis or something similar and format it as a 2x2 grid section
-11. Max 2-3 images if applicable
+10. Max 2-3 images if applicable
 
 Use proper Markdown formatting throughout:
 - # for main headings
@@ -624,7 +475,7 @@ Use proper Markdown formatting throughout:
 - Format quotes properly with >
 - Use bold and italic formatting where it enhances readability
 
-Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analyses is included.`;
+Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analysis is included.`;
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -666,10 +517,10 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
       markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
 
-    // 13) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
+    // 12) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
     let enhancedMarkdownNewsletter = "";
     try {
-      console.log("Starting step 13: Enhanced UI/UX Markdown formatting");
+      console.log("Starting step 12: Enhanced UI/UX Markdown formatting");
       const enhancedSystemPrompt = `
 You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
 
@@ -752,7 +603,7 @@ ${markdownNewsletter}
       enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
     }
 
-    // 14) Clean up stray text around enhanced Markdown
+    // 13) Clean up stray text around enhanced Markdown
     function cleanMarkdown(md) {
       let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
       cleaned = cleaned.trim();
@@ -764,19 +615,32 @@ ${markdownNewsletter}
     }
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
 
-    // 15) Convert final Markdown to HTML & inline CSS
-    const htmlBody = marked(finalMarkdown);
-    const emailHtml = juice(`
-      <body style="background:#f5f7fa;margin:0;padding:20px;">
-        <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-          <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-            ${htmlBody}
-          </div>
-        </div>
-      </body>
-    `);
+    // 14) Convert final Markdown to HTML & inline CSS
+// -----------------------------------------------
+const renderer = new marked.Renderer();
 
-    // 16) Send email via Resend
+// Responsive e-mail-safe image
+renderer.image = (href, _title, alt) => `
+  <img src="${href}"
+       alt="${alt}"
+       width="552"
+       style="width:100%;max-width:552px;height:auto;display:block;margin:12px auto;border-radius:4px;">
+`;
+
+const htmlBody = marked(finalMarkdown, { renderer });
+
+const emailHtml = juice(`
+  <body style="background:#f5f7fa;margin:0;padding:20px;">
+    <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
+      <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+        ${htmlBody}
+      </div>
+    </div>
+  </body>
+`);
+
+
+    // 15) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com";
       const { data: emailData, error: emailError } = await resend.emails.send({
@@ -795,7 +659,7 @@ ${markdownNewsletter}
       console.error("Error sending email:", sendErr);
     }
 
-    // 16.5) NEW STEP: Save the newsletter to newsletter_storage table
+    // 15.5) NEW STEP: Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
         user_id: user.id,
@@ -835,7 +699,7 @@ ${markdownNewsletter}
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
       data: {
         analysisResult,
-        discourseAnalysis,
+        discourseAnalysis, // Will be empty string
         markdownNewsletter, // Original markdown before UI/UX enhancements
         enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
         timestamp
