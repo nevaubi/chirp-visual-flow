@@ -161,9 +161,13 @@ const CreatorDashboard = ({ profile }) => {
   
   // When analysis results are available, show the enhanced dashboard
   return (
-    <div className="space-y-6">
-      {/* Top section - no action button anymore */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div className="space-y-4">
+      {/* Header section with background stripe */}
+      <div className="relative pt-1 pb-6">
+        {/* Decorative background stripe */}
+        <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-r from-[#E5DEFF] via-[#D3E4FD] to-[#F1F0FB] -z-10 rounded-md opacity-70"></div>
+        
+        {/* Welcome header (now sr-only) */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 sr-only">Welcome, {localProfile?.twitter_username || 'User'}</h1>
         </div>
@@ -171,25 +175,18 @@ const CreatorDashboard = ({ profile }) => {
 
       {/* All components in one horizontal row for larger screens */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Twitter Profile Card - reduced size */}
+        {/* Twitter Profile Card - increased width */}
         <div className="lg:col-span-3">
           <TwitterProfileCard profile={localProfile} />
         </div>
 
-        {/* Compact Key Metrics - in a row */}
-        <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Compact Key Metrics - in a row, removed Engagement Rate */}
+        <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-3">
           <MetricCard 
             title="Best Time to Post" 
             value={formatHour(analysisResults?.top_posting_hour)} 
             description="Based on audience activity"
             icon={<Clock className="h-4 w-4 text-[#0087C8]" />}
-          />
-          
-          <MetricCard 
-            title="Avg. Engagement Rate" 
-            value={`${(analysisResults?.avg_engagement_rate || 0).toFixed(1)}`} 
-            description="Likes, retweets, replies per post"
-            icon={<Users className="h-4 w-4 text-purple-500" />}
           />
           
           <MetricCard 

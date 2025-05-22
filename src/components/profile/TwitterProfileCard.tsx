@@ -10,18 +10,18 @@ interface TwitterProfileCardProps {
 
 const TwitterProfileCard = ({ profile }: TwitterProfileCardProps) => {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 w-3/4 max-w-xs">
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 w-[85%] max-w-sm">
       {/* Cover photo and profile image */}
       <div className="relative">
         <div className="bg-[#0087C8]/80 h-14 w-full"></div>
         <div className="absolute bottom-0 left-3 transform translate-y-1/2">
-          <Avatar className="border-3 border-white w-16 h-16">
+          <Avatar className="border-3 border-white w-12 h-12">
             <AvatarImage 
               src={profile?.twitter_profilepic_url || ''} 
               alt={profile?.twitter_username || 'Profile'} 
               className="object-cover"
             />
-            <AvatarFallback className="text-xl bg-[#0087C8] text-white">
+            <AvatarFallback className="text-base bg-[#0087C8] text-white">
               {profile?.twitter_username?.charAt(0)?.toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
@@ -29,7 +29,7 @@ const TwitterProfileCard = ({ profile }: TwitterProfileCardProps) => {
       </div>
       
       {/* Profile information */}
-      <div className="pt-12 pb-4 px-3">
+      <div className="pt-10 pb-4 px-3">
         {/* Name and verification */}
         <div className="flex items-center mb-1">
           <h1 className="text-base font-bold mr-1 break-words">{profile?.twitter_username || 'User'}</h1>
