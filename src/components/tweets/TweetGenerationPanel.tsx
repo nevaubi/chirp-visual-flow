@@ -1,10 +1,11 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, Copy, Check, Twitter, X } from 'lucide-react';
+import { Loader2, Send, Copy, Check, Twitter, X, Mic } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,9 @@ const TweetGenerationPanel = ({
   isOpen = false, 
   onClose 
 }: TweetGenerationPanelProps) => {
-  const { authState } = useAuth();
+  const { authState, refreshProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([
     { text: '', charCount: 0 },
     { text: '', charCount: 0 },
@@ -54,6 +56,8 @@ const TweetGenerationPanel = ({
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  
+  const hasVoiceProfile = authState.profile?.voice_profile_analysis !== null;
   
   const form = useForm({
     defaultValues: {
@@ -98,6 +102,48 @@ const TweetGenerationPanel = ({
         textareaRef.current.focus();
       }
     }, 100);
+  };
+
+  const handleCreateVoiceProfile = async () => {
+    try {
+      setIsCreatingProfile(true);
+      toast({
+        title: "Starting analysis",
+        description: "We're analyzing your tweets to create your voice profile. This may take a few minutes.",
+      });
+      
+      const { data, error } = await supabase.functions.invoke('create-voice-profile', {
+        body: { userId: authState.user?.id }
+      });
+      
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(error.message || 'Failed to create voice profile');
+      }
+      
+      if (!data.success) {
+        console.error("Function returned error:", data.error);
+        throw new Error(data.error || 'Failed to create voice profile');
+      }
+      
+      toast({
+        title: "Voice profile created!",
+        description: "Your voice profile has been successfully created. You can now generate tweets.",
+      });
+      
+      // Refresh user profile to get updated voice_profile_analysis
+      await refreshProfile();
+      
+    } catch (error: any) {
+      console.error("Error creating voice profile:", error);
+      toast({
+        title: "Error creating voice profile",
+        description: error.message || "Something went wrong. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingProfile(false);
+    }
   };
 
   const handleGenerateTweets = async (values: { prompt: string }) => {
@@ -248,14 +294,37 @@ const TweetGenerationPanel = ({
           <X size={18} />
         </Button>
       )}
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-          <span className="text-gray-900 font-bold text-3xl">𝕏</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+            <span className="text-gray-900 font-bold text-3xl">𝕏</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-white">X Post Generator</h3>
+            <p className="text-gray-300 text-sm">Create posts in your authentic voice</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-2xl font-bold text-white">X Post Generator</h3>
-          <p className="text-gray-300 text-sm">Create posts in your authentic voice</p>
-        </div>
+        
+        {!hasVoiceProfile && (
+          <Button 
+            size="sm"
+            onClick={handleCreateVoiceProfile}
+            disabled={isCreatingProfile}
+            className="bg-[#0087C8] hover:bg-[#0076b2] text-white"
+          >
+            {isCreatingProfile ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Mic className="mr-2 h-4 w-4" />
+                Create Voice Profile
+              </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -293,10 +362,25 @@ const TweetGenerationPanel = ({
                       )}
                     />
 
+                    {!hasVoiceProfile ? (
+                      <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg mb-4">
+                        <p className="text-sm text-amber-800 mb-2">
+                          A voice profile is required to generate posts in your authentic voice.
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          Click the "Create Voice Profile" button above to analyze your writing style.
+                        </p>
+                      </div>
+                    ) : null}
+
                     <Button 
                       type="submit" 
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
-                      disabled={isLoading}
+                      className={`w-full font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
+                        hasVoiceProfile 
+                          ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                      disabled={isLoading || !hasVoiceProfile}
                     >
                       {isLoading ? (
                         <>
@@ -372,10 +456,25 @@ const TweetGenerationPanel = ({
                 />
               </div>
 
+              {!hasVoiceProfile ? (
+                <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg mb-4">
+                  <p className="text-sm text-amber-800 mb-2">
+                    A voice profile is required to generate posts in your authentic voice.
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Click the "Create Voice Profile" button in the header to analyze your writing style.
+                  </p>
+                </div>
+              ) : null}
+
               <Button 
                 type="submit" 
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
-                disabled={isLoading}
+                className={`w-full font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
+                  hasVoiceProfile 
+                    ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+                disabled={isLoading || !hasVoiceProfile}
               >
                 {isLoading ? (
                   <>

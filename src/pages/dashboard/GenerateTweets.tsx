@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,17 +16,9 @@ interface SelectedTopic {
 }
 
 const GenerateTweets = () => {
-  const { authState } = useAuth();
-  const { profile } = authState;
-  const hasVoiceProfile = profile?.voice_profile_analysis !== null;
-
   return (
     <div className="space-y-6 relative">
-      {!hasVoiceProfile ? (
-        <CreateVoiceProfileView />
-      ) : (
-        <TweetGenerationView />
-      )}
+      <TweetGenerationView />
     </div>
   );
 };
