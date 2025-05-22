@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,6 +13,9 @@ import { cn } from '@/lib/utils';
 import TwitterProfileCard from '@/components/profile/TwitterProfileCard';
 import MetricCard from '@/components/profile/MetricCard';
 import GrowthCard from '@/components/profile/GrowthCard';
+import CircadianHeatmap from '@/components/analysis/CircadianHeatmap';
+import HourlyEngagementChart from '@/components/analysis/HourlyEngagementChart';
+import ProfileHeatmap from '@/components/analysis/ProfileHeatmap';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -200,6 +204,27 @@ const CreatorDashboard = ({ profile }) => {
         {/* Growth Opportunities - now at the same level */}
         <div className="lg:col-span-4">
           <GrowthCard opportunities={analysisResults?.growth_opportunities || []} />
+        </div>
+      </div>
+      
+      {/* NEW SECTION: Visualizations */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-6">
+        {/* Posting Activity Heatmap */}
+        <div className="lg:col-span-6">
+          <ProfileHeatmap 
+            data={analysisResults?.circadian_rhythm || {}} 
+            timezone={localProfile?.timezone} 
+          />
+        </div>
+        
+        {/* Hourly Engagement Chart */}
+        <div className="lg:col-span-6">
+          <HourlyEngagementChart 
+            hourlyAvgLikes={analysisResults?.hourly_avg_likes || {}} 
+            averageTweetsPerHour={analysisResults?.average_tweets_per_hour || {}} 
+            timezone={localProfile?.timezone}
+            bestHour={parseInt(analysisResults?.top_posting_hour || "0")}
+          />
         </div>
       </div>
       
