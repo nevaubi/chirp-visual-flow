@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -207,11 +206,11 @@ const CreatorDashboard = ({ profile }) => {
         </div>
       </div>
       
-      {/* NEW SECTION: Visualizations */}
+      {/* Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-6">
-        {/* Posting Activity Heatmap */}
+        {/* Updated CircadianHeatmap - replaces ProfileHeatmap */}
         <div className="lg:col-span-6">
-          <ProfileHeatmap 
+          <CircadianHeatmap 
             data={analysisResults?.circadian_rhythm || {}} 
             timezone={localProfile?.timezone} 
           />
