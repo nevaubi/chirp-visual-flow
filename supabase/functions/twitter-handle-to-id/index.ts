@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -9,44 +8,62 @@ const corsHeaders = {
 // Rate limit: 10 requests per day per IP
 const RATE_LIMIT = 10;
 const FEATURE_NAME = "tweet_id_converter";
+const REDIS_TTL = 86400; // 24 hours in seconds
 
-// Simple in-memory rate limit store
-// Will reset when function is redeployed (which happens daily)
-const rateLimitStore: Record<string, { count: number; expiry: number }> = {};
+// Get Redis connection details from environment
+const UPSTASH_REDIS_REST_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
+const UPSTASH_REDIS_REST_TOKEN = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
 
-// Check and update rate limit
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const dayStart = new Date();
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date();
-  dayEnd.setHours(23, 59, 59, 999);
-  
-  // Clean up expired entries
-  for (const key in rateLimitStore) {
-    if (rateLimitStore[key].expiry < now) {
-      delete rateLimitStore[key];
+// Check and update rate limit using Redis
+async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  try {
+    // Skip rate limiting if Redis is not configured
+    if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {
+      console.warn("Redis not configured, skipping rate limiting");
+      return { allowed: true, remaining: RATE_LIMIT };
     }
+
+    const redisKey = `${FEATURE_NAME}:${ip}:count`;
+    
+    // Use Upstash Redis REST API to increment the counter
+    const response = await fetch(`${UPSTASH_REDIS_REST_URL}/incr/${redisKey}`, {
+      headers: {
+        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Redis API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    const count = result.result;
+    
+    // If this is the first request, set expiry (TTL)
+    if (count === 1) {
+      const ttlResponse = await fetch(`${UPSTASH_REDIS_REST_URL}/expire/${redisKey}/${REDIS_TTL}`, {
+        headers: {
+          Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`
+        }
+      });
+      
+      if (!ttlResponse.ok) {
+        console.error(`Failed to set TTL: ${ttlResponse.status} ${ttlResponse.statusText}`);
+      }
+    }
+    
+    // Check if rate limit is exceeded
+    const allowed = count <= RATE_LIMIT;
+    const remaining = Math.max(0, RATE_LIMIT - count);
+    
+    return { allowed, remaining };
+    
+  } catch (error) {
+    // Log the error but don't fail the request
+    console.error("Rate limit check failed:", error);
+    // Fallback: allow the request
+    return { allowed: true, remaining: RATE_LIMIT };
   }
-  
-  // Get or create user rate limit
-  if (!rateLimitStore[ip] || rateLimitStore[ip].expiry < now) {
-    rateLimitStore[ip] = {
-      count: 0,
-      expiry: dayEnd.getTime()
-    };
-  }
-  
-  // Check if limit is exceeded
-  if (rateLimitStore[ip].count >= RATE_LIMIT) {
-    return { allowed: false, remaining: 0 };
-  }
-  
-  // Increment count and return
-  rateLimitStore[ip].count++;
-  const remaining = RATE_LIMIT - rateLimitStore[ip].count;
-  
-  return { allowed: true, remaining };
 }
 
 serve(async (req) => {
@@ -63,7 +80,7 @@ serve(async (req) => {
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     
     // Check rate limit
-    const rateLimitCheck = checkRateLimit(clientIP);
+    const rateLimitCheck = await checkRateLimit(clientIP);
     
     // If rate limit exceeded
     if (!rateLimitCheck.allowed) {
