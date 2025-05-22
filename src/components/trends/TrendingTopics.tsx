@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -39,7 +40,6 @@ interface TrendingTopic {
   context: string;
   subTopics: string[];
   exampleTweets: ExampleTweet[];
-  percentage?: number; // Adding percentage for trending relevance
 }
 
 interface Tag {
@@ -48,13 +48,13 @@ interface Tag {
 }
 
 interface TrendingTopicsProps {
-  onUseTopic: (topicData: any) => void;
+  onSelectTopic: (topicData: any) => void;
   selectedTopicId?: string;
-  displayMode?: 'compact' | 'full' | 'grid'; // Added 'grid' mode
+  displayMode?: 'full' | 'compact'; // 'full' for original display, 'compact' for left column
 }
 
 const TrendingTopics: React.FC<TrendingTopicsProps> = ({ 
-  onUseTopic, 
+  onSelectTopic, 
   selectedTopicId,
   displayMode = 'full'
 }) => {
@@ -63,7 +63,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
   const isMobile = useIsMobile();
-  const isGrid = displayMode === 'grid';
+  const isCompact = displayMode === 'compact';
 
   // Function to clean topic headers by removing "TOPIC HEADER: " prefix
   const cleanHeader = (header: string): string => {
@@ -104,14 +104,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     return { type: sentimentType, icon: Minus, color: 'text-amber-500' };
   };
 
-  // Generate random trending percentages for the topics
-  const generatePercentages = (topics: TrendingTopic[]): TrendingTopic[] => {
-    return topics.map(topic => ({
-      ...topic,
-      percentage: Math.floor(Math.random() * 30) + 70 // Random value between 70% and 99%
-    }));
-  };
-
   // Fetch trending topics from our edge function
   const fetchTrendingTopics = async (tag: string) => {
     setIsLoading(true);
@@ -146,9 +138,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         };
       });
       
-      // Add trending percentages
-      const topicsWithPercentages = generatePercentages(formattedTopics);
-      setTrendingTopics(topicsWithPercentages);
+      setTrendingTopics(formattedTopics);
     } catch (err: any) {
       console.error('Error fetching trending topics:', err);
       setError(err.message || 'Failed to fetch trending topics');
@@ -190,82 +180,38 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     };
     
     // Pass the topic data to the parent component
-    onUseTopic(cleanedTopic);
+    onSelectTopic(cleanedTopic);
+  };
+
+  const handleUseTopic = (topic: TrendingTopic) => {
+    // Clean the topic header before passing it
+    const cleanedTopic = {
+      ...topic,
+      header: cleanHeader(topic.header)
+    };
+    
+    // Pass the topic data to the parent component without example tweets
+    onSelectTopic({
+      id: cleanedTopic.id,
+      header: cleanedTopic.header,
+      sentiment: cleanedTopic.sentiment.type,
+      context: cleanedTopic.context,
+      subTopics: cleanedTopic.subTopics
+    });
+    
+    // Dispatch a custom event for the DashboardLayout to listen for
+    window.dispatchEvent(new CustomEvent('topicSelected', { 
+      detail: {
+        id: cleanedTopic.id,
+        header: cleanedTopic.header,
+        sentiment: cleanedTopic.sentiment.type,
+        context: cleanedTopic.context,
+        subTopics: cleanedTopic.subTopics
+      }
+    }));
   };
 
   const showTopics = !isLoading && trendingTopics.length > 0;
-
-  // Render the grid view of trending topics
-  const renderGridTopics = () => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-        {trendingTopics.map(topic => (
-          <Card 
-            key={topic.id} 
-            className="border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow duration-300 flex flex-col"
-          >
-            {/* Header */}
-            <CardHeader className="pb-2 border-b border-gray-200 dark:border-gray-700/50">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex gap-2 items-center">
-                  <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
-                    {topic.tag}
-                  </Badge>
-                  
-                  {topic.percentage && (
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {topic.percentage}% trending
-                    </span>
-                  )}
-                </div>
-                
-                <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
-                  <topic.sentiment.icon size={12} className="mr-1" />
-                  <span className="capitalize">{topic.sentiment.type}</span>
-                </div>
-              </div>
-              
-              <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
-                {cleanHeader(topic.header)}
-              </CardTitle>
-            </CardHeader>
-            
-            {/* Content */}
-            <CardContent className="pt-3 pb-1 flex-grow">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{topic.context}</p>
-              
-              {topic.subTopics.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
-                  <ul className="space-y-1.5">
-                    {topic.subTopics.slice(0, 3).map((subtopic, idx) => (
-                      <li key={idx} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
-                        <span className="text-twitter-blue mr-1.5 flex-shrink-0 mt-0.5">•</span>
-                        <span className="line-clamp-1">{subtopic}</span>
-                      </li>
-                    ))}
-                    {topic.subTopics.length > 3 && (
-                      <li className="text-xs text-twitter-blue font-medium pl-4">+ {topic.subTopics.length - 3} more points</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-            
-            <CardFooter className="pt-2 flex justify-end">
-              <Button 
-                size="sm" 
-                onClick={() => handleSelectTopic(topic)}
-                className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-xs px-3 py-1.5"
-              >
-                Use Topic
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
@@ -313,13 +259,69 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
           </div>
         )}
         
-        {/* Grid View */}
-        {showTopics && isGrid && renderGridTopics()}
-        
-        {/* Original List View (kept for compatibility) */}
-        {showTopics && !isGrid && (
+        {showTopics && (
           <div className="grid grid-cols-1 gap-4 animate-fade-in">
-            {/* ... keep existing code (original list view rendering) */}
+            {trendingTopics.map(topic => (
+              <div 
+                key={topic.id} 
+                className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
+                  ${selectedTopicId === topic.id ? 'ring-2 ring-twitter-blue' : ''} 
+                  ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}`}
+                onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
+              >
+                {/* Header */}
+                <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
+                      {topic.tag}
+                    </Badge>
+                    <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
+                      <topic.sentiment.icon size={12} className="mr-1" />
+                      <span className="capitalize">{topic.sentiment.type}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">
+                      {cleanHeader(topic.header)}
+                    </h3>
+                    {isCompact && (
+                      <ChevronRight size={16} className="text-gray-400" />
+                    )}
+                  </div>
+                </div>
+                
+                {/* Content - only show in full mode */}
+                {!isCompact && (
+                  <div className="p-4 bg-white dark:bg-gray-900">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
+                    
+                    {topic.subTopics.length > 0 && (
+                      <div className="mb-5">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                        <ul className="space-y-2">
+                          {topic.subTopics.map((subtopic, idx) => (
+                            <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
+                              <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
+                              <span>{subtopic}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="mt-5 flex justify-end">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleUseTopic(topic)}
+                        className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
+                      >
+                        Use Topic
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
         

@@ -210,8 +210,8 @@ For each trend, you must include the exact unmodified text of 3 tweets that best
 Do not include any introductory or concluding text. Ensure each field stays under 20 words and contains specific, meaningful insights directly derived from the dataset.`
           }
         ],
-        temperature: 0.2,
-        max_tokens: 5000
+        temperature: 0.3,
+        max_tokens: 3000
       }),
     });
 
