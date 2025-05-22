@@ -253,7 +253,7 @@ const CreatorDashboard = ({ profile }) => {
 const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [tweetCount, setTweetCount] = useState<"25" | "50" | "100">("50");
+  const [tweetCount, setTweetCount] = useState<"10" | "20" | "30">("20");
   const { refreshProfile } = useAuth();
 
   // Check if user has a subscription
@@ -289,7 +289,7 @@ const NewsletterDashboard = ({ profile }) => {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
-        body: { tweetCount: Number(tweetCount) },
+        body: { selectedCount: Number(tweetCount) },
       });
 
       if (error) {
@@ -370,16 +370,16 @@ const NewsletterDashboard = ({ profile }) => {
                 <Label htmlFor="tweet-count">Number of tweets to include</Label>
                 <Select 
                   value={tweetCount} 
-                  onValueChange={(value: "25" | "50" | "100") => setTweetCount(value)}
+                  onValueChange={(value: "10" | "20" | "30") => setTweetCount(value)}
                   disabled={isGenerating || remainingGenerations <= 0}
                 >
                   <SelectTrigger id="tweet-count" className="w-full">
                     <SelectValue placeholder="Select tweet count" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="25">25 tweets</SelectItem>
-                    <SelectItem value="50">50 tweets</SelectItem>
-                    <SelectItem value="100">100 tweets</SelectItem>
+                    <SelectItem value="10">10 tweets</SelectItem>
+                    <SelectItem value="20">20 tweets</SelectItem>
+                    <SelectItem value="30">30 tweets</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
