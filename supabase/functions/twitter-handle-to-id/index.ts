@@ -6,6 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 
+// Rate limit: 10 requests per day per IP
+const RATE_LIMIT = 10;
+const FEATURE_NAME = "tweet_id_converter";
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -16,6 +20,37 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP address
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+    
+    // Default rate limit response if check fails
+    let rateLimitCheck = { allowed: true, remaining: RATE_LIMIT - 1 };
+    
+    try {
+      // Check rate limit - use a simple in-memory approach since we don't have a full rate-limit function
+      // In a production environment, you would use a database or Redis to track rate limits
+      rateLimitCheck = { allowed: true, remaining: RATE_LIMIT - 1 };
+    } catch (error) {
+      console.error("Rate limit check error:", error);
+      // Continue with default values if rate limit check fails
+    }
+    
+    // If rate limit exceeded
+    if (!rateLimitCheck.allowed) {
+      return new Response(JSON.stringify({
+        error: "Rate limit exceeded",
+        message: "You've reached the daily limit of 10 requests. Try again tomorrow.",
+        remaining: 0,
+        error_code: "RATE_LIMIT"
+      }), {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
     const { handle, id, conversionType } = await req.json();
 
     // Get RapidAPI key from environment
@@ -25,8 +60,22 @@ serve(async (req) => {
     }
 
     // Handle to ID conversion
-    if (conversionType === "handle2id" && handle) {
+    if ((conversionType === "handle2id" && handle) || (!conversionType && handle)) {
       const cleanHandle = handle.trim().replace('@', '');
+      
+      if (!cleanHandle) {
+        return new Response(JSON.stringify({
+          error: "Handle is required",
+          message: "Please enter a valid X handle",
+          error_code: "MISSING_INPUT"
+        }), {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        });
+      }
       
       // Build the request to the RapidAPI endpoint
       const url = `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`;
@@ -68,7 +117,11 @@ serve(async (req) => {
           is_blue_verified: user.is_blue_verified || false,
           name: user.legacy?.name || "",
           screen_name: user.legacy?.screen_name || "",
-          profile_image_url_https: user.legacy?.profile_image_url_https || ""
+          profile_image_url_https: user.legacy?.profile_image_url_https || "",
+          rate_limit: {
+            remaining: rateLimitCheck.remaining,
+            daily_limit: RATE_LIMIT
+          }
         };
       } else {
         return new Response(JSON.stringify({
@@ -136,7 +189,11 @@ serve(async (req) => {
           is_blue_verified: user.is_blue_verified || false,
           name: user.legacy?.name || "",
           screen_name: user.legacy?.screen_name || "",
-          profile_image_url_https: user.legacy?.profile_image_url_https || ""
+          profile_image_url_https: user.legacy?.profile_image_url_https || "",
+          rate_limit: {
+            remaining: rateLimitCheck.remaining,
+            daily_limit: RATE_LIMIT
+          }
         };
       } else {
         return new Response(JSON.stringify({

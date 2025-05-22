@@ -16,6 +16,10 @@ interface UserData {
   name: string;
   screen_name: string;
   profile_image_url_https: string;
+  rate_limit?: {
+    remaining: number;
+    daily_limit: number;
+  };
 }
 
 const HandleIdConverter = () => {
@@ -70,7 +74,7 @@ const HandleIdConverter = () => {
           setIsLoading(false);
           return;
         }
-        payload = { handle, conversionType: "handle2id" };
+        payload = { handle: handle.trim() };
         functionName = "twitter-handle-to-id";
       } else {
         if (!id.trim()) {
@@ -98,6 +102,14 @@ const HandleIdConverter = () => {
       }
 
       setUserData(data);
+      
+      // Show rate limit toast if available
+      if (data.rate_limit) {
+        toast({
+          title: "Rate limit info",
+          description: `You have ${data.rate_limit.remaining} requests remaining out of ${data.rate_limit.daily_limit} daily limit.`
+        });
+      }
     } catch (err: any) {
       setError(err.message || "An error occurred while fetching data");
     } finally {
@@ -114,7 +126,7 @@ const HandleIdConverter = () => {
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="w-full grid grid-cols-2 mb-4">
         <TabsTrigger value="handle2id" className="w-full">
-          X handle -&gt; ID
+          X handle ➡️ ID
         </TabsTrigger>
         <TabsTrigger value="id2handle" className="w-full">
           User ID -&gt; handle
