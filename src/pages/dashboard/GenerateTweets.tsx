@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import TrendingTopics from '@/components/trends/TrendingTopics';
-import DetailedTweetView from '@/components/trends/DetailedTweetView';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SelectedTopic {
@@ -18,20 +17,12 @@ interface SelectedTopic {
 const GenerateTweets = () => {
   return (
     <div className="space-y-6 relative">
-      <TweetGenerationView />
+      <TrendingTopicsGrid />
     </div>
   );
 };
 
-const TweetGenerationView = () => {
-  const [selectedTopic, setSelectedTopic] = useState<SelectedTopic | null>(null);
-  const isMobile = useIsMobile();
-
-  // Handle topic selection to display in the right panel
-  const handleSelectTopic = (topic: SelectedTopic) => {
-    setSelectedTopic(topic);
-  };
-
+const TrendingTopicsGrid = () => {
   // Handle using a topic by dispatching a custom event
   const handleUseTopic = (topic: SelectedTopic) => {
     if (topic) {
@@ -51,33 +42,11 @@ const TweetGenerationView = () => {
   };
 
   return (
-    <div className="relative">
-      <div className={`w-full grid gap-6 ${!isMobile ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {/* Left column - Trending Topics */}
-        <div className="w-full">
-          <TrendingTopics 
-            onSelectTopic={handleSelectTopic} 
-            selectedTopicId={selectedTopic?.id} 
-            displayMode="compact"
-          />
-        </div>
-        
-        {/* Right column - Selected topic details and tweets */}
-        <div className="w-full">
-          {selectedTopic ? (
-            <DetailedTweetView 
-              topic={selectedTopic} 
-              onUseTopic={handleUseTopic}
-            />
-          ) : (
-            <Card className="h-full flex items-center justify-center text-center p-8 text-muted-foreground border border-gray-200 dark:border-gray-800">
-              <CardContent>
-                <p>Select a trending topic from the left to view details and example tweets</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+    <div className="w-full">
+      <TrendingTopics 
+        onUseTopic={handleUseTopic}
+        displayMode="grid"
+      />
     </div>
   );
 };
