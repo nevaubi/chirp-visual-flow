@@ -93,7 +93,7 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
         {/* Example Tweets Section */}
         {topic.exampleTweets && topic.exampleTweets.length > 0 ? (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">TWEETS ABOUT TRENDING TOPIC</h4>
             <div className="space-y-3">
               {topic.exampleTweets.map((tweet, index) => (
                 <ExampleTweetCard
