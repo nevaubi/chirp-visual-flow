@@ -33,19 +33,19 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     hourLabels.push(formattedHour);
   }
   
-  // Color intensity function - enhanced blue gradient with better contrast
+  // Color intensity function - enhanced blue gradient with darker shades
   const getColor = (value: number, max: number) => {
     if (value === 0) return '#fafafa'; // Even lighter gray for zero values for better contrast
     
     // Calculate intensity (0-1)
     const intensity = value / max;
     
-    // Enhanced blue gradient with better visual distinction
-    if (intensity < 0.2) return '#d4e6ff'; // Slightly more visible light blue
-    if (intensity < 0.4) return '#9fc7ff'; // Medium light blue (enhanced contrast)
-    if (intensity < 0.6) return '#62a0ff'; // Medium blue (darker than before)
-    if (intensity < 0.8) return '#2e7bff'; // Medium-dark blue (enhanced contrast)
-    return '#0055cc';                      // Darker blue for highest values
+    // Enhanced blue gradient with darker shades for better visual distinction
+    if (intensity < 0.2) return '#b6d0f7'; // Darker light blue (two shades darker)
+    if (intensity < 0.4) return '#7aa9f0'; // Darker medium light blue (two shades darker)
+    if (intensity < 0.6) return '#3d84e6'; // Darker medium blue (two shades darker)
+    if (intensity < 0.8) return '#1668d9'; // Darker medium-dark blue (two shades darker)
+    return '#0043a0';                      // Darker blue for highest values (two shades darker)
   };
   
   // Get border color for cell based on value - darker borders for higher values
@@ -53,9 +53,9 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     if (value === 0) return 'border-gray-100';
     
     const intensity = value / max;
-    if (intensity < 0.3) return 'border-blue-100';
-    if (intensity < 0.6) return 'border-blue-200';
-    return 'border-blue-300';
+    if (intensity < 0.3) return 'border-blue-200';
+    if (intensity < 0.6) return 'border-blue-300';
+    return 'border-blue-400';
   };
   
   // Format timezone for display
@@ -224,11 +224,11 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                 </div>
                 <div className="flex items-center space-x-1">
                   <span className="text-xs text-gray-500">Less</span>
-                  <div className="w-3 h-3 border border-blue-100" style={{ backgroundColor: '#d4e6ff' }}></div>
-                  <div className="w-3 h-3 border border-blue-100" style={{ backgroundColor: '#9fc7ff' }}></div>
-                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#62a0ff' }}></div>
-                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#2e7bff' }}></div>
-                  <div className="w-3 h-3 border border-blue-300" style={{ backgroundColor: '#0055cc' }}></div>
+                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#b6d0f7' }}></div>
+                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#7aa9f0' }}></div>
+                  <div className="w-3 h-3 border border-blue-300" style={{ backgroundColor: '#3d84e6' }}></div>
+                  <div className="w-3 h-3 border border-blue-300" style={{ backgroundColor: '#1668d9' }}></div>
+                  <div className="w-3 h-3 border border-blue-400" style={{ backgroundColor: '#0043a0' }}></div>
                   <span className="text-xs text-gray-500">More</span>
                 </div>
               </div>
