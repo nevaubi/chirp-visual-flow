@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, Copy, Check, Twitter } from 'lucide-react';
+import { Loader2, Send, Copy, Check, Twitter, X } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 
 interface TweetVariation {
   text: string;
@@ -31,9 +32,16 @@ interface SelectedTopic {
 interface TweetGenerationPanelProps {
   onTopicSelect: (topic: any) => void;
   selectedTopic: SelectedTopic | null;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationPanelProps) => {
+const TweetGenerationPanel = ({ 
+  onTopicSelect, 
+  selectedTopic, 
+  isOpen = false, 
+  onClose 
+}: TweetGenerationPanelProps) => {
   const { authState } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [generatedTweets, setGeneratedTweets] = useState<TweetVariation[]>([
@@ -44,6 +52,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   
   const form = useForm({
@@ -52,8 +61,36 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     },
   });
 
+  // Set form value when selected topic changes
+  useEffect(() => {
+    if (selectedTopic && selectedTopic.header) {
+      form.setValue('prompt', selectedTopic.header);
+    }
+  }, [selectedTopic, form]);
+
+  // Focus the textarea when the panel is opened
+  useEffect(() => {
+    if (isOpen || isPanelOpen || isSheetOpen) {
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [isOpen, isPanelOpen, isSheetOpen]);
+
+  // Sync the local isPanelOpen state with the parent's isOpen prop
+  useEffect(() => {
+    if (!isMobile) {
+      setIsPanelOpen(isOpen);
+    } else {
+      setIsSheetOpen(isOpen);
+    }
+  }, [isOpen, isMobile]);
+
   const handleRemoveTopic = () => {
     onTopicSelect(null);
+    form.setValue('prompt', '');
     
     // Focus the textarea after a moment
     setTimeout(() => {
@@ -166,7 +203,9 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     };
 
     const handleMouseLeave = () => {
-      setIsPanelOpen(false);
+      if (!isOpen) { // Only auto-close if not explicitly opened by parent
+        setIsPanelOpen(false);
+      }
     };
 
     const panelElement = panelRef.current;
@@ -181,11 +220,34 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
         panelElement.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [isMobile, panelRef]);
+  }, [isMobile, isOpen]);
+
+  // Function to close the panel
+  const handleClosePanel = () => {
+    if (isMobile) {
+      setIsSheetOpen(false);
+    } else {
+      setIsPanelOpen(false);
+    }
+    
+    if (onClose) {
+      onClose();
+    }
+  };
 
   // Header component for the panel
-  const PanelHeader = () => (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-6 py-8">
+  const PanelHeader = ({ showClose = false }) => (
+    <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-6 py-8 relative">
+      {showClose && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-2 right-2 text-white hover:bg-white/10"
+          onClick={handleClosePanel}
+        >
+          <X size={18} />
+        </Button>
+      )}
       <div className="flex items-center space-x-3">
         <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
           <span className="text-gray-900 font-bold text-3xl">𝕏</span>
@@ -198,69 +260,78 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
     </div>
   );
 
+  // Render mobile view using Sheet
   if (isMobile) {
     return (
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="fixed top-20 right-4 z-50 rounded-md shadow-md hover:shadow-lg transition-all">
-            <Twitter className="h-5 w-5 text-[#0087C8]" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto rounded-none">
-          <PanelHeader />
-          <div className="p-6 space-y-4">
-            <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="prompt"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomTextarea field={field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+      <>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="fixed top-20 right-4 z-50 rounded-md shadow-md hover:shadow-lg transition-all"
+              onClick={() => setIsSheetOpen(true)}
+            >
+              <Twitter className="h-5 w-5 text-[#0087C8]" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[90%] sm:w-[375px] p-0 overflow-y-auto rounded-none">
+            <PanelHeader showClose={true} />
+            <div className="p-6 space-y-4">
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="prompt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <CustomTextarea field={field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" />
-                        Generate Posts
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </Form>
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Generate Posts
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </div>
+              
+              <div className="space-y-4">
+                {generatedTweets.map((tweet, index) => (
+                  <TwitterCard 
+                    key={index} 
+                    tweet={tweet} 
+                    profile={authState.profile} 
+                    index={index} 
+                  />
+                ))}
+              </div>
             </div>
-            
-            <div className="space-y-4">
-              {generatedTweets.map((tweet, index) => (
-                <TwitterCard 
-                  key={index} 
-                  tweet={tweet} 
-                  profile={authState.profile} 
-                  index={index} 
-                />
-              ))}
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      </>
     );
   }
 
+  // Render desktop view
   return (
     <div 
       ref={panelRef}
@@ -278,7 +349,7 @@ const TweetGenerationPanel = ({ onTopicSelect, selectedTopic }: TweetGenerationP
         <div className="absolute inset-0 bg-white/0 animate-glow-pulse"></div>
       </div>
 
-      <PanelHeader />
+      <PanelHeader showClose={isOpen} />
       
       <div className="flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-6 space-y-4 bg-gray-50">
         <div className="bg-white rounded-lg p-6 shadow-sm">

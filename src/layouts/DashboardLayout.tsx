@@ -31,6 +31,7 @@ const DashboardLayout = () => {
   const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [isTweetPanelOpen, setIsTweetPanelOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -63,6 +64,26 @@ const DashboardLayout = () => {
     
     // Clean up
     return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Listen for topic selection events
+  useEffect(() => {
+    // Function to handle the topicSelected custom event
+    const handleTopicSelected = (event: CustomEvent) => {
+      const topic = event.detail;
+      if (topic) {
+        setSelectedTopic(topic);
+        setIsTweetPanelOpen(true); // Open the tweet panel when a topic is selected
+      }
+    };
+
+    // Add event listener for the topicSelected event
+    window.addEventListener('topicSelected', handleTopicSelected as EventListener);
+
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('topicSelected', handleTopicSelected as EventListener);
+    };
   }, []);
 
   const handleSignOut = () => {
@@ -128,6 +149,12 @@ const DashboardLayout = () => {
   // Handle topic selection for Tweet Generation panel
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
+    setIsTweetPanelOpen(true); // Open the panel when a topic is selected
+  };
+
+  // Close the tweet panel
+  const handleCloseTweetPanel = () => {
+    setIsTweetPanelOpen(false);
   };
 
   return (
@@ -321,6 +348,8 @@ const DashboardLayout = () => {
         <TweetGenerationPanel 
           onTopicSelect={handleTopicSelect}
           selectedTopic={selectedTopic}
+          isOpen={isTweetPanelOpen}
+          onClose={handleCloseTweetPanel}
         />
       )}
 

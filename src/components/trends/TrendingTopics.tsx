@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -142,14 +141,31 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   };
 
   const handleUseTopic = (topic: TrendingTopic) => {
+    // Clean the topic header before passing it
+    const cleanedTopic = {
+      ...topic,
+      header: cleanHeader(topic.header)
+    };
+    
     // Pass the topic data to the parent component without example tweets
     onSelectTopic({
-      id: topic.id,
-      header: topic.header,
-      sentiment: topic.sentiment.type,
-      context: topic.context,
-      subTopics: topic.subTopics
+      id: cleanedTopic.id,
+      header: cleanedTopic.header,
+      sentiment: cleanedTopic.sentiment.type,
+      context: cleanedTopic.context,
+      subTopics: cleanedTopic.subTopics
     });
+    
+    // Dispatch a custom event for the DashboardLayout to listen for
+    window.dispatchEvent(new CustomEvent('topicSelected', { 
+      detail: {
+        id: cleanedTopic.id,
+        header: cleanedTopic.header,
+        sentiment: cleanedTopic.sentiment.type,
+        context: cleanedTopic.context,
+        subTopics: cleanedTopic.subTopics
+      }
+    }));
   };
 
   const showTopics = !isLoading && trendingTopics.length > 0;

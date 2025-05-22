@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -184,16 +185,19 @@ const CreateVoiceProfileView = () => {
 };
 
 const TweetGenerationView = () => {
-  // We're now handling topic selection at the layout level
+  // Handle topic selection by dispatching a custom event
+  const handleSelectTopic = (topic: SelectedTopic) => {
+    if (topic) {
+      // Dispatch a custom event that will be caught by the DashboardLayout
+      window.dispatchEvent(new CustomEvent('topicSelected', { detail: topic }));
+    }
+  };
+
   return (
     <div className="relative">
       {/* Main content - Trending Topics */}
       <div className="w-full">
-        <TrendingTopics onSelectTopic={(topic) => {
-          // Notify parent through global state or context if needed
-          // This will be handled by the DashboardLayout component
-          window.dispatchEvent(new CustomEvent('topicSelected', { detail: topic }));
-        }} />
+        <TrendingTopics onSelectTopic={handleSelectTopic} />
       </div>
     </div>
   );
