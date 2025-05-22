@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TrendingUp, Clock } from 'lucide-react';
@@ -130,8 +129,8 @@ const HourlyEngagementChart = ({
         )}
       </CardHeader>
       <CardContent className="p-3">
-        {/* Chart - with increased height */}
-        <div className="h-[260px]">
+        {/* Chart - with increased height to match CircadianHeatmap */}
+        <div className="h-[290px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 5, right: 40, bottom: 0, left: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={GRID_GRAY} strokeWidth={1} />

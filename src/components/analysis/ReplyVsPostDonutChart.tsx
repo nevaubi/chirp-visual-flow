@@ -66,30 +66,32 @@ const ReplyVsPostDonutChart = ({ replyVsPostStats }: ReplyVsPostDonutChartProps)
   );
 
   return (
-    <Card className="border-none shadow-sm hover:shadow transition-shadow h-full">
-      <CardContent className="p-4">
+    <Card className="border-none shadow-sm hover:shadow transition-shadow h-full flex flex-col">
+      <CardContent className="p-4 flex-1 flex flex-col">
         <h3 className="text-base font-medium mb-3 text-blue-700">Posts vs. Replies</h3>
-        <div className="w-full h-44">
+        <div className="w-full flex-1 flex flex-col">
           {totalCount > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height="80%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="60%"
-                    outerRadius="80%"
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="flex-1 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="60%"
+                      outerRadius="80%"
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
               <CustomLegend />
             </>
           ) : (

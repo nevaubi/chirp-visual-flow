@@ -3,6 +3,7 @@ import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Profile } from '@/types/auth';
+import { Card } from '@/components/ui/card';
 
 interface TwitterProfileCardProps {
   profile: Profile;
@@ -10,7 +11,7 @@ interface TwitterProfileCardProps {
 
 const TwitterProfileCard = ({ profile }: TwitterProfileCardProps) => {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 w-full max-w-xl">
+    <Card className="border-none shadow-sm hover:shadow transition-shadow w-full h-full flex flex-col">
       {/* Cover photo and profile image */}
       <div className="relative">
         <div className="bg-[#0087C8]/80 h-14 w-full"></div>
@@ -29,7 +30,7 @@ const TwitterProfileCard = ({ profile }: TwitterProfileCardProps) => {
       </div>
       
       {/* Profile information in a more horizontal layout */}
-      <div className="pt-8 pb-3 px-3">
+      <div className="pt-8 pb-3 px-3 flex-grow flex flex-col justify-between">
         <div className="flex flex-col sm:flex-row gap-2">
           {/* Left column: Name, handle, verification */}
           <div className="min-w-[140px]">
@@ -62,8 +63,13 @@ const TwitterProfileCard = ({ profile }: TwitterProfileCardProps) => {
             <p className="text-gray-800 text-xs break-words line-clamp-3">{profile?.bio || 'No bio available'}</p>
           </div>
         </div>
+        
+        {/* Added some spacing at the bottom to ensure consistent height */}
+        <div className="mt-auto pt-2">
+          <div className="h-2"></div>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
