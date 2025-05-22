@@ -52,9 +52,10 @@ const CreateVoiceProfileView = () => {
         throw new Error(error.message || 'Failed to create voice profile');
       }
       
-      if (!data.success) {
-        console.error("Function returned error:", data.error);
-        throw new Error(data.error || 'Failed to create voice profile');
+      if (!data || !data.success) {
+        const errorMsg = data?.error || 'Failed to create voice profile';
+        console.error("Function returned error:", errorMsg);
+        throw new Error(errorMsg);
       }
       
       setLoadingMessage('Finalizing profile...');
