@@ -21,6 +21,7 @@ import ReplyVsPostDonutChart from '@/components/analysis/ReplyVsPostDonutChart';
 import ContentTypeEngagementChart from '@/components/analysis/ContentTypeEngagementChart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import NewsletterAnimation from '@/components/newsletter/NewsletterAnimation';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -256,6 +257,7 @@ const NewsletterDashboard = ({ profile }) => {
   const [tweetCount, setTweetCount] = useState<"10" | "20" | "30">("20");
   const { refreshProfile } = useAuth();
   const [showToasts, setShowToasts] = useState(false); // New flag to control toast display
+  const [animationState, setAnimationState] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // Check if user has a subscription
   const isSubscribed = profile?.subscribed;
@@ -292,6 +294,8 @@ const NewsletterDashboard = ({ profile }) => {
     }
 
     setIsGenerating(true);
+    setAnimationState('loading');
+    
     try {
       const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
         body: { selectedCount: Number(tweetCount) },
@@ -304,6 +308,8 @@ const NewsletterDashboard = ({ profile }) => {
             description: error.message,
           });
         }
+        setAnimationState('idle');
+        setIsGenerating(false);
         return;
       }
 
@@ -311,14 +317,16 @@ const NewsletterDashboard = ({ profile }) => {
         // Refresh the profile to get updated remaining generations
         await refreshProfile();
         
+        // Show success animation
+        setAnimationState('success');
+        
         if (showToasts) {
           toast.success('Newsletter generated successfully!', {
             description: 'Your newsletter has been added to the library.',
           });
         }
         
-        // Navigate to library after successful generation
-        window.location.href = '/dashboard/analytics';
+        // We'll reset the generating state after the animation completes
       } else {
         console.error('Function returned error:', data.error);
         if (showToasts) {
@@ -326,15 +334,25 @@ const NewsletterDashboard = ({ profile }) => {
             description: data.error || 'An error occurred during generation.',
           });
         }
+        setAnimationState('idle');
+        setIsGenerating(false);
       }
     } catch (error) {
       console.error('Error in generation:', error);
       if (showToasts) {
         toast.error('An unexpected error occurred');
       }
-    } finally {
+      setAnimationState('idle');
       setIsGenerating(false);
     }
+  };
+  
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    setAnimationState('idle');
+    setIsGenerating(false);
+    // Navigate to library after successful generation
+    window.location.href = '/dashboard/analytics';
   };
   
   // Steps for how the newsletter generation works
@@ -378,8 +396,8 @@ const NewsletterDashboard = ({ profile }) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6 pb-4">
-          <div className="space-y-4">
-            <div className="max-w-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div className="mb-4">
                 <Label htmlFor="tweet-count">Number of tweets to include</Label>
                 <Select 
@@ -432,6 +450,14 @@ const NewsletterDashboard = ({ profile }) => {
                   )}
                 </div>
               </div>
+            </div>
+            
+            {/* Animation section */}
+            <div className="relative h-[300px]">
+              <NewsletterAnimation 
+                state={animationState} 
+                onComplete={handleAnimationComplete}
+              />
             </div>
           </div>
         </CardContent>
