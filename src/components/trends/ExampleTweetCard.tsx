@@ -74,7 +74,7 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metr
       <div className="flex items-start gap-3">
         <Avatar className="h-10 w-10 rounded-full flex-shrink-0 border border-gray-200 dark:border-gray-700">
           <AvatarImage src={profile.avatarUrl} alt={profile.displayName} className="rounded-full" />
-          <AvatarFallback className="bg-darkPurple-light/10 text-darkPurple-light font-semibold">
+          <AvatarFallback className="bg-darkBlue-light/10 text-darkBlue-light font-semibold">
             {getInitials(profile.displayName)}
           </AvatarFallback>
         </Avatar>
@@ -86,7 +86,7 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metr
             </span>
             {profile.verified && (
               <span className="text-blue-500 flex-shrink-0 ml-0.5">
-                <Check className="h-4 w-4 bg-darkPurple-light text-white rounded-full p-0.5" />
+                <Check className="h-4 w-4 bg-darkBlue-light text-white rounded-full p-0.5" />
               </span>
             )}
             <span className="text-gray-500 dark:text-gray-400 ml-1">@{profile.username}</span>
@@ -94,7 +94,7 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metr
             <span className="text-gray-500 dark:text-gray-400">{formatTimestamp(profile.timestamp)}</span>
           </div>
           
-          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px]">
+          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px] text-[1.05rem]">
             {truncateText(text)}
           </p>
           

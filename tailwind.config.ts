@@ -65,11 +65,11 @@ export default {
           orange: '#FF6B35',
           gray: '#8E9196'
         },
-        darkPurple: {
-          DEFAULT: '#1A1F2C',
-          light: '#9b87f5',
-          medium: '#7E69AB',
-          dark: '#6E59A5'
+        darkBlue: {
+          DEFAULT: '#0085C5',
+          light: '#33A2D8',
+          medium: '#006CA1',
+          dark: '#00537D'
         }
 			},
 			borderRadius: {
@@ -95,6 +95,16 @@ export default {
 					}
 				},
 				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'fade-in-slow': {
 					'0%': {
 						opacity: '0',
 						transform: 'translateY(10px)'

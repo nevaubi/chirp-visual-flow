@@ -214,9 +214,9 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
 
   return (
     <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
-      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-darkPurple text-white">
+      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-darkBlue text-white">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <TrendingUp className="text-darkPurple-light h-5 w-5" />
+          <TrendingUp className="text-darkBlue-light h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
         <div className="text-sm text-gray-300">
@@ -232,7 +232,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               onClick={() => toggleTag(tag)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedTags.find(t => t.id === tag.id)
-                  ? 'bg-darkPurple-light text-white shadow-sm'
+                  ? 'bg-darkBlue-light text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >
@@ -252,7 +252,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 text-darkPurple-light animate-spin" />
+              <Loader2 className="h-8 w-8 text-darkBlue-light animate-spin" />
               <p className="text-sm text-muted-foreground">Loading trending topics...</p>
             </div>
           </div>
@@ -265,20 +265,22 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                 <div 
                   key={topic.id} 
                   className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
-                    ${selectedTopicId === topic.id ? 'ring-2 ring-darkPurple-light' : ''} 
+                    ${selectedTopicId === topic.id ? 'ring-2 ring-darkBlue-light' : ''} 
                     ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
-                    ${isCompact ? 'min-h-[288px] flex flex-col' : ''}`}
+                    ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-darkPurple text-white border-b border-darkPurple-dark p-3">
+                  <div className="bg-darkBlue text-white border-b border-darkBlue-dark p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <Badge variant="outline" className="bg-darkPurple-medium text-white text-xs font-medium border-darkPurple-light">
+                      <Badge variant="outline" className="bg-darkBlue-medium text-white text-xs font-medium border-darkBlue-light">
                         {topic.tag}
                       </Badge>
-                      <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-darkPurple-medium`}>
-                        <topic.sentiment.icon size={12} className="mr-1" />
-                        <span className="capitalize">{topic.sentiment.type}</span>
+                      <div className={`flex items-center bg-darkBlue-medium text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
+                        <topic.sentiment.icon size={12} className={`mr-1 ${topic.sentiment.color}`} />
+                        <span className="capitalize">
+                          {topic.sentiment.type}
+                        </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
@@ -299,7 +301,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                           <ul className="space-y-2">
                             {topic.subTopics.map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                                <span className="text-darkPurple-light mr-2 flex-shrink-0 mt-0.5">•</span>
+                                <span className="text-darkBlue-light mr-2 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -311,7 +313,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <Button 
                           size="sm" 
                           onClick={() => handleUseTopic(topic)}
-                          className="bg-darkPurple-light hover:bg-darkPurple-medium text-white rounded-full text-sm px-4"
+                          className="bg-darkBlue-light hover:bg-darkBlue-medium text-white rounded-full text-sm px-4"
                         >
                           Use Topic
                         </Button>
@@ -320,15 +322,15 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                   ) : (
                     <div className="p-3 bg-white dark:bg-gray-900 flex flex-col flex-grow">
                       {/* Expanded content for grid view */}
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{topic.context}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 text-[1.05rem]">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-3 flex-grow">
                           <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
                           <ul className="space-y-1.5">
                             {topic.subTopics.map((subtopic, idx) => (
-                              <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                                <span className="text-darkPurple-light mr-1 flex-shrink-0 mt-0.5">•</span>
+                              <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300 text-[1.05rem]">
+                                <span className="text-darkBlue-light mr-1 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -343,7 +345,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                             e.stopPropagation();
                             handleUseTopic(topic);
                           }}
-                          className="bg-darkPurple-light hover:bg-darkPurple-medium text-white rounded-full text-sm px-4 w-full"
+                          className="bg-darkBlue-light hover:bg-darkBlue-medium text-white rounded-full text-sm px-4 w-full"
                         >
                           Use Topic
                         </Button>
@@ -359,9 +361,9 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {!showTopics && selectedTags.length > 0 && !isLoading && (
           <div className="flex justify-center my-6">
             <div className="flex space-x-2">
-              <div className="w-3 h-3 bg-darkPurple-light/70 rounded-full animate-pulse"></div>
-              <div className="w-3 h-3 bg-darkPurple-light/50 rounded-full animate-pulse delay-150"></div>
-              <div className="w-3 h-3 bg-darkPurple-light/30 rounded-full animate-pulse delay-300"></div>
+              <div className="w-3 h-3 bg-darkBlue-light/70 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-darkBlue-light/50 rounded-full animate-pulse delay-150"></div>
+              <div className="w-3 h-3 bg-darkBlue-light/30 rounded-full animate-pulse delay-300"></div>
             </div>
           </div>
         )}

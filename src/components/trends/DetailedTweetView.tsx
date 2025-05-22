@@ -78,13 +78,13 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
   
   return (
     <Card className="shadow-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 h-full">
-      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-darkPurple text-white">
+      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-darkBlue text-white">
         <div className="flex items-center justify-between mb-2">
-          <Badge variant="outline" className="bg-darkPurple-medium text-white border-darkPurple-light text-xs font-medium">
+          <Badge variant="outline" className="bg-darkBlue-medium text-white border-darkBlue-light text-xs font-medium">
             {topic.tag || 'Trending'}
           </Badge>
-          <div className={`flex items-center ${sentimentData.color} text-sm font-medium px-3 py-1 rounded-full bg-darkPurple-medium`}>
-            <SentimentIcon size={14} className="mr-1.5" />
+          <div className={`flex items-center bg-darkBlue-medium text-white text-sm font-medium px-3 py-1 rounded-full`}>
+            <SentimentIcon size={14} className={`mr-1.5 ${sentimentData.color}`} />
             <span className="capitalize">{sentimentData.type}</span>
           </div>
         </div>
