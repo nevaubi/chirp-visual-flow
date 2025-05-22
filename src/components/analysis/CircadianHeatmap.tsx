@@ -74,75 +74,8 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     }
   };
   
-  // Find peak activity time
-  const getPeakActivity = () => {
-    if (!data || data.length === 0) return { day: 'N/A', hour: 'N/A', value: 0 };
-    
-    let maxDay = 0;
-    let maxHour = 0;
-    let maxValue = 0;
-    
-    data.forEach((dayData, dayIndex) => {
-      dayData.forEach((value, hourIndex) => {
-        if (value > maxValue) {
-          maxValue = value;
-          maxHour = hourIndex;
-          maxDay = dayIndex;
-        }
-      });
-    });
-    
-    const formattedHour = maxHour === 0 ? '12 AM' : 
-                         maxHour === 12 ? '12 PM' : 
-                         maxHour < 12 ? `${maxHour} AM` : 
-                         `${maxHour - 12} PM`;
-    
-    return { 
-      day: dayLabels[maxDay], 
-      hour: formattedHour,
-      value: maxValue 
-    };
-  };
-  
-  // Find quiet hours (lowest activity)
-  const getQuietHours = () => {
-    if (!data || data.length === 0) return 'None detected';
-    
-    // Get average activity by hour across all days
-    const hourlyAverages = Array(24).fill(0);
-    
-    data.forEach(dayData => {
-      dayData.forEach((value, hour) => {
-        hourlyAverages[hour] += value;
-      });
-    });
-    
-    // Divide by number of days
-    hourlyAverages.forEach((sum, idx) => {
-      hourlyAverages[idx] = sum / data.length;
-    });
-    
-    // Find hours with lowest average activity
-    const hourEntries = hourlyAverages
-      .map((value, hour) => ({ hour, value }))
-      .sort((a, b) => a.value - b.value)
-      .filter(entry => entry.value <= 1)
-      .slice(0, 2)
-      .map(entry => {
-        const h = entry.hour;
-        return h === 0 ? '12 AM' : 
-               h === 12 ? '12 PM' : 
-               h < 12 ? `${h} AM` : 
-               `${h - 12} PM`;
-      });
-    
-    return hourEntries.length > 0 ? hourEntries.join(', ') : 'None detected';
-  };
-  
-  const peak = getPeakActivity();
-  
   return (
-    <Card className="border-none shadow-sm hover:shadow transition-shadow">
+    <Card className="border-none shadow-sm hover:shadow transition-shadow h-full">
       <CardHeader className="p-3 pb-1">
         <CardTitle className="flex items-center gap-2 text-xl">
           <Clock size={18} className="text-[#0087C8]" />
@@ -210,7 +143,7 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
               </div>
             ))}
             
-            {/* Legend and insights */}
+            {/* Hover info display */}
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
                 <div className="text-xs text-gray-600 mb-1 sm:mb-0">
@@ -230,24 +163,6 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                   <div className="w-3 h-3 border border-blue-300" style={{ backgroundColor: '#1668d9' }}></div>
                   <div className="w-3 h-3 border border-blue-400" style={{ backgroundColor: '#0043a0' }}></div>
                   <span className="text-xs text-gray-500">More</span>
-                </div>
-              </div>
-              
-              {/* Key insights - compact layout */}
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <span className="font-medium text-blue-700">Peak Activity:</span>
-                    <div>{peak.day} at {peak.hour} ({peak.value})</div>
-                  </div>
-                  <div>
-                    <span className="font-medium text-blue-700">Best Posting Time:</span>
-                    <div>6-8 PM (Weekdays)</div>
-                  </div>
-                  <div>
-                    <span className="font-medium text-blue-700">Quiet Hours:</span>
-                    <div>{getQuietHours()}</div>
-                  </div>
                 </div>
               </div>
             </div>

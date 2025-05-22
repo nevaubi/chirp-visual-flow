@@ -15,6 +15,8 @@ import GrowthCard from '@/components/profile/GrowthCard';
 import CircadianHeatmap from '@/components/analysis/CircadianHeatmap';
 import HourlyEngagementChart from '@/components/analysis/HourlyEngagementChart';
 import ProfileHeatmap from '@/components/analysis/ProfileHeatmap';
+import CircadianInsights from '@/components/analysis/CircadianInsights';
+import HourlyInsights from '@/components/analysis/HourlyInsights';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -180,9 +182,12 @@ const CreatorDashboard = ({ profile }) => {
             />
           </div>
           
-          {/* Right column: Empty for future content */}
-          <div className="lg:col-span-1 hidden lg:block">
-            {/* Space for future complementary UI elements */}
+          {/* Right column: Insights */}
+          <div className="lg:col-span-1">
+            <CircadianInsights 
+              data={analysisResults?.circadianHeatmap || []}
+              timezone={localProfile?.timezone}
+            />
           </div>
         </div>
       </div>
@@ -204,9 +209,13 @@ const CreatorDashboard = ({ profile }) => {
             />
           </div>
           
-          {/* Right column: Empty for future content */}
-          <div className="lg:col-span-1 hidden lg:block">
-            {/* Space for future complementary UI elements */}
+          {/* Right column: Insights */}
+          <div className="lg:col-span-1">
+            <HourlyInsights
+              hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}}
+              averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}}
+              bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
+            />
           </div>
         </div>
       </div>
