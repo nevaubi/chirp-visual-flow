@@ -12,20 +12,24 @@ const corsHeaders = {
 // Initialize Resend client
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-serve(async (req)=>{
+// Helper function for logging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details, null, 2)}` : '';
+  console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
+};
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: corsHeaders
     });
   }
   try {
+    logStep("Starting newsletter generation process");
+    
     // 1) Validate selection
     const { selectedCount } = await req.json();
-    if (!selectedCount || ![
-      10,
-      20,
-      30
-    ].includes(selectedCount)) {
+    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
       return new Response(JSON.stringify({
         error: "Invalid selection. Please choose 10, 20, or 30 tweets."
       }), {
@@ -50,11 +54,13 @@ serve(async (req)=>{
         }
       });
     }
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
     if (userError || !user) {
       console.error("Authentication error:", userError);
       return new Response(JSON.stringify({
@@ -69,7 +75,12 @@ serve(async (req)=>{
     }
 
     // 3) Load profile
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle").eq("id", user.id).single();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
+      .eq("id", user.id)
+      .single();
+      
     if (profileError || !profile) {
       console.error("Profile fetch error:", profileError);
       return new Response(JSON.stringify({
@@ -96,9 +107,6 @@ serve(async (req)=>{
       });
     }
     
-    // Removed the check for newsletter_day_preference being "Manual: 4" or "Manual: 8"
-    // This allows all users to generate newsletters manually regardless of their newsletter_day_preference setting
-    
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
       return new Response(JSON.stringify({
         error: "You have no remaining newsletter generations"
@@ -110,6 +118,7 @@ serve(async (req)=>{
         }
       });
     }
+    
     if (!profile.twitter_bookmark_access_token) {
       return new Response(JSON.stringify({
         error: "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings."
@@ -121,6 +130,7 @@ serve(async (req)=>{
         }
       });
     }
+    
     const now = Math.floor(Date.now() / 1000);
     if (profile.twitter_bookmark_token_expires_at && profile.twitter_bookmark_token_expires_at < now) {
       return new Response(JSON.stringify({
@@ -140,6 +150,7 @@ serve(async (req)=>{
       try {
         const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
         if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
+        
         const cleanHandle = profile.twitter_handle.trim().replace("@", "");
         const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
           method: "GET",
@@ -148,13 +159,19 @@ serve(async (req)=>{
             "x-rapidapi-host": "twitter293.p.rapidapi.com"
           }
         });
+        
         if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
+        
         const j = await resp.json();
         if (j?.user?.result?.rest_id) {
           numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase.from("profiles").update({
-            numerical_id: numericalId
-          }).eq("id", user.id);
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({
+              numerical_id: numericalId
+            })
+            .eq("id", user.id);
+            
           if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
           throw new Error("Could not retrieve your Twitter ID. Please try again later.");
@@ -172,6 +189,7 @@ serve(async (req)=>{
         });
       }
     }
+    
     if (!numericalId) {
       return new Response(JSON.stringify({
         error: "Could not determine your Twitter ID. Please update your Twitter handle in settings."
@@ -185,6 +203,7 @@ serve(async (req)=>{
     }
 
     // 6) Fetch bookmarks
+    logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
       headers: {
@@ -192,9 +211,11 @@ serve(async (req)=>{
         "Content-Type": "application/json"
       }
     });
+    
     if (!bookmarksResp.ok) {
       const text = await bookmarksResp.text();
       console.error(`Twitter API error (${bookmarksResp.status}):`, text);
+      
       if (bookmarksResp.status === 401) {
         return new Response(JSON.stringify({
           error: "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks."
@@ -206,6 +227,7 @@ serve(async (req)=>{
           }
         });
       }
+      
       if (bookmarksResp.status === 429) {
         return new Response(JSON.stringify({
           error: "Twitter API rate limit exceeded. Please try again later."
@@ -217,11 +239,14 @@ serve(async (req)=>{
           }
         });
       }
+      
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
     }
+    
     const bookmarksData = await bookmarksResp.json();
     if (!bookmarksData?.data) {
       console.error("Invalid or empty bookmark data:", bookmarksData);
+      
       if (bookmarksData.meta?.result_count === 0) {
         return new Response(JSON.stringify({
           error: "You don't have any bookmarks. Please save some tweets before generating a newsletter."
@@ -233,13 +258,18 @@ serve(async (req)=>{
           }
         });
       }
+      
       throw new Error("Failed to retrieve bookmarks from Twitter");
     }
-    const tweetIds = bookmarksData.data.map((t)=>t.id);
+    
+    const tweetIds = bookmarksData.data.map((t) => t.id);
+    logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
     // 7) Fetch detailed tweets via Apify
+    logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
+    
     const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
       method: "POST",
       headers: {
@@ -270,25 +300,30 @@ serve(async (req)=>{
         tweetIDs: tweetIds
       })
     });
+    
     if (!apifyResp.ok) {
       const text = await apifyResp.text();
       console.error(`Apify API error (${apifyResp.status}):`, text);
       throw new Error(`Apify API error: ${apifyResp.status}`);
     }
+    
     const apifyData = await apifyResp.json();
-    console.log("Raw Apify response:", JSON.stringify(apifyData, null, 2));
+    logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
     // 8) Format tweets for OpenAI
     function parseToOpenAI(data) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
-      arr.forEach((t, i)=>{
+      
+      arr.forEach((t, i) => {
         const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
         let dateStr = "N/A";
         try {
           dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-        } catch  {}
-        const photo = t.extendedEntities?.media?.find((m)=>m.type === "photo")?.media_url_https;
+        } catch {}
+        
+        const photo = t.extendedEntities?.media?.find((m) => m.type === "photo")?.media_url_https;
+        
         out += `Tweet ${i + 1}\n`;
         out += `Tweet ID: ${t.id}\n`;
         out += `Tweet text: ${txt}\n`;
@@ -298,16 +333,21 @@ serve(async (req)=>{
         out += `Date: ${dateStr}\n`;
         out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
         out += `PhotoUrl: ${photo || "N/A"}\n`;
+        
         if (i < arr.length - 1) out += "\n---\n\n";
       });
+      
       return out;
     }
+    
     const formattedTweets = parseToOpenAI(apifyData);
-    console.log("Formatted tweets for OpenAI:\n", formattedTweets);
+    logStep("Formatted tweets for analysis");
 
     // 9) Call OpenAI for main analysis
+    logStep("Calling OpenAI for initial topic analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
+    
     const systemPrompt = `You are a sophisticated tweet analysis system designed to identify key topics, trends, and insights from collections of tweets. Your purpose is to transform raw tweet data into structured, insightful analysis that captures the most significant discussions and themes.
 
 CAPABILITIES:
@@ -350,6 +390,7 @@ Organization criteria:
 Here is the tweet collection to analyze:
 
 ${formattedTweets}`;
+    
     const userPrompt = `Analyze the following collection of tweets to identify the FIVE most prevalent main topics and FOUR sub-topics. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
 
 For each MAIN TOPIC (5):
@@ -378,6 +419,7 @@ Organization criteria:
 Here is the tweet collection to analyze:
 
 ${formattedTweets}`;
+    
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -397,27 +439,231 @@ ${formattedTweets}`;
           }
         ],
         temperature: 0.4,
-        max_tokens: 3000 // Increased from 1000
+        max_tokens: 3000
       })
     });
+    
     if (!openaiRes.ok) {
       const txt = await openaiRes.text();
       console.error(`OpenAI API error (${openaiRes.status}):`, txt);
       throw new Error(`OpenAI API error: ${openaiRes.status}`);
     }
+    
     const openaiJson = await openaiRes.json();
     const analysisResult = openaiJson.choices[0].message.content.trim();
-    console.log("OpenAI Analysis Result:\n", analysisResult);
+    logStep("Successfully generated initial topic analysis");
 
-    // 10) REMOVED: Reply fetching and discourse analysis functionality
-    // This section previously fetched tweet replies and performed discourse analysis
-    // Now we set discourseAnalysis to empty string to maintain compatibility
+    // 10) NEW STEP: Topic Selection and Query Generation for Perplexity
+    logStep("Selecting topics and generating search queries for Perplexity");
+    const queryGenerationPrompt = `You are an expert at identifying the most promising topics for web search enrichment from a content analysis. Given an analysis of Twitter bookmarks, select the 3 most significant topics that would benefit from additional web-based context and information.
+
+For each selected topic, create a precise search query that will return the most relevant, current, and comprehensive information. These queries will be sent to a web search API.
+
+TASK:
+1. Review the provided content analysis
+2. Select the 3 most significant topics based on:
+   - Relevance to current events
+   - Complexity (topics that would benefit from additional context)
+   - Engagement level
+   - Potential for educational value
+3. For each selected topic, create:
+   - A search query string (25-50 characters) optimized for web search
+   - A brief explanation of what specific information would most enhance this topic
+
+FORMAT YOUR RESPONSE AS:
+===
+TOPIC 1: [Topic Name]
+QUERY: [Search Query]
+ENRICHMENT GOAL: [What specific information or context we want to add]
+
+TOPIC 2: [Topic Name]
+QUERY: [Search Query]
+ENRICHMENT GOAL: [What specific information or context we want to add]
+
+TOPIC 3: [Topic Name]
+QUERY: [Search Query]
+ENRICHMENT GOAL: [What specific information or context we want to add]
+===
+
+CONTENT ANALYSIS TO REVIEW:
+${analysisResult}`;
+
+    const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-2025-04-14",
+        messages: [
+          {
+            role: "system",
+            content: "You are a search query optimization specialist who helps select the most promising topics for enrichment and creates perfect search queries."
+          },
+          {
+            role: "user",
+            content: queryGenerationPrompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 800
+      })
+    });
+    
+    if (!queryGenRes.ok) {
+      const txt = await queryGenRes.text();
+      console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
+      logStep("Failed to generate search queries, continuing without Perplexity enrichment");
+      // Continue with the original analysis rather than failing the whole process
+    } else {
+      const queryGenJson = await queryGenRes.json();
+      const searchQueries = queryGenJson.choices[0].message.content.trim();
+      logStep("Successfully generated search queries", { searchQueries });
+
+      // 11) Perplexity API Calls for Web Enrichment
+      // Parse the search queries
+      const topics: { topic: string; query: string; goal: string }[] = [];
+      const regex = /TOPIC \d+: (.*)\nQUERY: (.*)\nENRICHMENT GOAL: (.*?)(?=\n\nTOPIC \d+:|$)/gs;
+      let match;
+      
+      while ((match = regex.exec(searchQueries)) !== null) {
+        topics.push({
+          topic: match[1].trim(),
+          query: match[2].trim(),
+          goal: match[3].trim()
+        });
+      }
+      
+      // Get Perplexity API key
+      const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+      if (!PERPLEXITY_API_KEY) {
+        logStep("Missing Perplexity API key, continuing without web enrichment");
+      } else {
+        logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
+        
+        // Make Perplexity API calls for each selected topic
+        const enrichmentResults = [];
+        
+        for (const topic of topics) {
+          try {
+            const perplexityRes = await fetch("https://api.perplexity.ai/sonar/pro/medium", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
+              },
+              body: JSON.stringify({
+                query: topic.query,
+                max_tokens: 350,
+                temperature: 0.2,
+                focus: "internet"
+              })
+            });
+            
+            if (perplexityRes.ok) {
+              const perplexityData = await perplexityRes.json();
+              enrichmentResults.push({
+                topic: topic.topic,
+                query: topic.query,
+                goal: topic.goal,
+                webContent: perplexityData.response,
+                sources: perplexityData.web_search_results || []
+              });
+              logStep(`Successfully enriched topic: ${topic.topic}`);
+            } else {
+              const errorText = await perplexityRes.text();
+              console.error(`Perplexity API error for query "${topic.query}":`, errorText);
+              enrichmentResults.push({
+                topic: topic.topic,
+                query: topic.query,
+                goal: topic.goal,
+                webContent: `[Error retrieving additional information: ${perplexityRes.status}]`,
+                sources: []
+              });
+            }
+          } catch (err) {
+            console.error(`Error in Perplexity API call for query "${topic.query}":`, err);
+            enrichmentResults.push({
+              topic: topic.topic,
+              query: topic.query,
+              goal: topic.goal,
+              webContent: "[Error retrieving additional information]",
+              sources: []
+            });
+          }
+        }
+        
+        // 12) Integrate Web Content with Original Analysis
+        logStep("Integrating web content with original analysis");
+        
+        const integrationPrompt = `You are an expert content integrator. You've been given:
+1. An original analysis of Twitter bookmarks organized into main topics and sub-topics
+2. Additional web-sourced information for 3 selected topics
+
+Your task is to integrate the web-sourced information into the original analysis in a seamless, natural way that enhances the content while maintaining the original structure and flow.
+
+INTEGRATION RULES:
+- Preserve the original structure of 5 main topics and 4 sub-topics
+- For the 3 topics that have additional web information, weave this information naturally into the existing content
+- Add a "Web Insights" section to each enriched topic with 2-3 key points from the web search
+- Include 1-2 sources as references where appropriate
+- Ensure the transitions between original and new content are smooth
+- Maintain a consistent tone and style throughout
+
+ORIGINAL ANALYSIS:
+${analysisResult}
+
+WEB-SOURCED INFORMATION:
+${JSON.stringify(enrichmentResults, null, 2)}
+
+Provide the complete integrated analysis with all main topics and sub-topics, including the seamlessly integrated web-sourced information.`;
+        
+        const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-2025-04-14",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert content integrator who seamlessly combines original analysis with web-sourced information to create richer, more informative content."
+              },
+              {
+                role: "user",
+                content: integrationPrompt
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 4000
+          })
+        });
+        
+        if (integrationRes.ok) {
+          const integrationJson = await integrationRes.json();
+          const enhancedAnalysis = integrationJson.choices[0].message.content.trim();
+          logStep("Successfully integrated web content with original analysis");
+          // Replace the original analysis with the enhanced one
+          const analysisResult = enhancedAnalysis;
+        } else {
+          const txt = await integrationRes.text();
+          console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
+          logStep("Failed to integrate web content, continuing with original analysis");
+          // Continue with the original analysis
+        }
+      }
+    }
+
+    // Assume discourseAnalysis is not needed in the new workflow
     const discourseAnalysis = "";
 
-    // 11) Generate Markdown formatted newsletter
+    // 13) Generate Markdown formatted newsletter
     let markdownNewsletter = "";
     try {
-      console.log("Starting step 11: Markdown newsletter formatting");
+      logStep("Starting markdown newsletter formatting");
       const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
 
 FORMAT GUIDELINES:
@@ -447,6 +693,7 @@ CONTENT STRUCTURE:
 
 OUTPUT:
 Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
+      
       const markdownUserPrompt = `I have analysis content that needs to be worded for better flow and accessibility, and then formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat this analysis into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
 
 MAIN ANALYSIS CONTENT:
@@ -476,6 +723,7 @@ Use proper Markdown formatting throughout:
 - Use bold and italic formatting where it enhances readability
 
 Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analysis is included.`;
+      
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -499,10 +747,11 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
             max_tokens: 4000
           })
         });
+        
         if (markdownOpenaiRes.ok) {
           const markdownJson = await markdownOpenaiRes.json();
           markdownNewsletter = markdownJson.choices[0].message.content;
-          console.log("Markdown Newsletter Generated:\n", markdownNewsletter);
+          logStep("Markdown newsletter generated successfully");
         } else {
           const errorText = await markdownOpenaiRes.text();
           console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
@@ -517,10 +766,10 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
       markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
     }
 
-    // 12) NEW STEP: Generate Enhanced Markdown with UI/UX improvements
+    // 14) Generate Enhanced Markdown with UI/UX improvements
     let enhancedMarkdownNewsletter = "";
     try {
-      console.log("Starting step 12: Enhanced UI/UX Markdown formatting");
+      logStep("Generating enhanced UI/UX markdown");
       const enhancedSystemPrompt = `
 You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
 
@@ -546,6 +795,7 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
 
 Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
 `;
+      
       const enhancedUserPrompt = `
 I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
 
@@ -562,6 +812,7 @@ Here is my markdown draft—please output one cohesive, styled markdown document
 ${markdownNewsletter}
 </current newsletter>
 `;
+      
       try {
         const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -570,7 +821,7 @@ ${markdownNewsletter}
             Authorization: `Bearer ${OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "chatgpt-4o-latest", // As per original code
+            model: "gpt-4.1-2025-04-14", // Updated from chatgpt-4o-latest
             messages: [
               {
                 role: "system",
@@ -585,10 +836,11 @@ ${markdownNewsletter}
             max_tokens: 4000
           })
         });
+        
         if (enhancedOpenaiRes.ok) {
           const enhancedJson = await enhancedOpenaiRes.json();
           enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          console.log("Enhanced UI/UX Markdown Newsletter Generated:\n", enhancedMarkdownNewsletter);
+          logStep("Enhanced UI/UX markdown newsletter generated successfully");
         } else {
           const errorText = await enhancedOpenaiRes.text();
           console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
@@ -603,8 +855,8 @@ ${markdownNewsletter}
       enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
     }
 
-    // 13) Clean up stray text around enhanced Markdown
-    function cleanMarkdown(md) {
+    // 15) Clean up stray text around enhanced Markdown
+    function cleanMarkdown(md: string): string {
       let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
       cleaned = cleaned.trim();
       const match = cleaned.match(/(^|\n)(#{1,6}\s)/);
@@ -613,34 +865,36 @@ ${markdownNewsletter}
       }
       return cleaned;
     }
+    
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
+    logStep("Cleaned up final markdown");
 
-    // 14) Convert final Markdown to HTML & inline CSS
-// -----------------------------------------------
-const renderer = new marked.Renderer();
+    // 16) Convert final Markdown to HTML & inline CSS
+    const renderer = new marked.Renderer();
 
-// Responsive e-mail-safe image
-renderer.image = (href, _title, alt) => `
-  <img src="${href}"
-       alt="${alt}"
-       width="552"
-       style="width:100%;max-width:552px;height:auto;display:block;margin:12px auto;border-radius:4px;">
-`;
+    // Responsive e-mail-safe image
+    renderer.image = (href, _title, alt) => `
+      <img src="${href}"
+           alt="${alt}"
+           width="552"
+           style="width:100%;max-width:552px;height:auto;display:block;margin:12px auto;border-radius:4px;">
+    `;
 
-const htmlBody = marked(finalMarkdown, { renderer });
+    const htmlBody = marked(finalMarkdown, { renderer });
 
-const emailHtml = juice(`
-  <body style="background:#f5f7fa;margin:0;padding:20px;">
-    <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-      <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-        ${htmlBody}
-      </div>
-    </div>
-  </body>
-`);
+    const emailHtml = juice(`
+      <body style="background:#f5f7fa;margin:0;padding:20px;">
+        <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
+          <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+            ${htmlBody}
+          </div>
+        </div>
+      </body>
+    `);
+    
+    logStep("Converted markdown to HTML with inline CSS");
 
-
-    // 15) Send email via Resend
+    // 17) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com";
       const { data: emailData, error: emailError } = await resend.emails.send({
@@ -650,49 +904,57 @@ const emailHtml = juice(`
         html: emailHtml,
         text: finalMarkdown
       });
+      
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
         throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
       }
-      console.log("Email sent successfully with Resend:", emailData);
+      
+      logStep("Email sent successfully", { id: emailData?.id });
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
+      // Continue with saving to database even if email fails
     }
 
-    // 15.5) NEW STEP: Save the newsletter to newsletter_storage table
+    // 18) Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
         user_id: user.id,
         markdown_text: finalMarkdown
       });
+      
       if (storageError) {
         console.error("Failed to save newsletter to storage:", storageError);
       } else {
-        console.log("Newsletter successfully saved to storage");
+        logStep("Newsletter successfully saved to storage");
       }
     } catch (storageErr) {
       console.error("Error saving newsletter to storage:", storageErr);
     }
 
-    // Update remaining generations count
+    // 19) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({
         remaining_newsletter_generations: newCount
       }).eq("id", user.id);
+      
       if (updateError) {
         console.error("Failed to update remaining generations:", updateError);
+      } else {
+        logStep("Updated remaining generations count", { newCount });
       }
     }
 
-    // Final log & response
+    // 20) Final log & response
     const timestamp = new Date().toISOString();
-    console.log("Newsletter generation successful:", {
+    logStep("Newsletter generation successful", {
       userId: user.id,
       timestamp,
       tweetCount: selectedCount,
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
     });
+    
     return new Response(JSON.stringify({
       status: "success",
       message: "Newsletter generated and emailed successfully",
