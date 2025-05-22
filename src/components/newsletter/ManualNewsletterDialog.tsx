@@ -14,7 +14,6 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/components/ui/sonner";
 
 interface ManualNewsletterDialogProps {
   open: boolean;
@@ -115,19 +114,13 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         if (error) {
           console.error('Error generating newsletter:', error);
           
-          // For errors, show the error toast
-          toast.error('Failed to generate newsletter', {
-            description: error.message || 'Please try again later',
-          });
+          // Just show the visual failure in the UI, no toast
           setIsGenerating(false);
           return;
         }
         
         if (data.error) {
           console.error('Function returned error:', data.error);
-          toast.error('Failed to generate newsletter', {
-            description: data.error,
-          });
           setIsGenerating(false);
           return;
         }
@@ -140,16 +133,12 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         // Set progress to 100% to show completion
         setProgress(100);
         
-        // Keep the completion screen visible for 2.5 seconds
+        // Keep the completion screen visible for longer (4 seconds)
         setTimeout(() => {
-          toast.success('Newsletter generated successfully', {
-            description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
-          });
-          
           // Close the dialog
           onOpenChange(false);
           setIsGenerating(false);
-        }, 2500);
+        }, 4000);
       } catch (abortError) {
         // Handle aborted requests (timeouts)
         clearTimeout(timeoutId);
@@ -161,13 +150,9 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         
         // Let the user know the process continues in the background
         setTimeout(() => {
-          toast.success('Newsletter generation started', {
-            description: `Your newsletter is being generated in the background and will be delivered to your email soon.`,
-          });
-          
           onOpenChange(false);
           setIsGenerating(false);
-        }, 3000);
+        }, 4000);
       }
     } catch (error) {
       console.error('Error in handleGenerate:', error);
@@ -179,22 +164,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         setFunctionTimedOut(true);
         setProgress(92);
         
-        // We won't show an error toast for timeouts
+        // No toast for timeouts - show the message in the dialog
         setTimeout(() => {
-          toast.success('Newsletter generation started', {
-            description: `Your newsletter is being generated in the background and will be delivered to your email soon.`,
-          });
-          
           onOpenChange(false);
           setIsGenerating(false);
-        }, 3000);
+        }, 4000);
         
         return;
       }
       
-      toast.error('Failed to generate newsletter', {
-        description: 'An unexpected error occurred. Please try again later.',
-      });
+      // Just show the visual feedback in the UI for errors, no toast
       setIsGenerating(false);
     }
   };
