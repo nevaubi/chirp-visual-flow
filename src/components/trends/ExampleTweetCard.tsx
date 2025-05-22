@@ -70,7 +70,7 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metr
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+    <div className="bg-white dark:bg-gray-800 border-3 border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
       <div className="flex items-start gap-3">
         <Avatar className="h-10 w-10 rounded-full flex-shrink-0 border border-gray-200 dark:border-gray-700">
           <AvatarImage src={profile.avatarUrl} alt={profile.displayName} className="rounded-full" />
