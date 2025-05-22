@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TrendingUp, Clock } from 'lucide-react';
@@ -201,15 +200,15 @@ const HourlyEngagementChart = ({
             </div>
           </div>
 
-          {/* Chart - reduced height */}
-          <div className="h-[220px]">
+          {/* Chart - with adjusted height */}
+          <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 5, right: 40, bottom: 0, left: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_GRAY} strokeWidth={1} />
                 <XAxis
                   dataKey="hourLabel"
                   stroke={TEXT_GRAY}
-                  fontSize={10}
+                  fontSize={12}
                   interval={3}
                   tick={{ dy: 5 }}
                   height={25}
@@ -218,17 +217,17 @@ const HourlyEngagementChart = ({
                 <YAxis
                   yAxisId="likes"
                   stroke={TWEET_BLUE}
-                  tick={{ fontSize: 10, fill: TEXT_GRAY }}
+                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
                   axisLine={{ strokeWidth: 1, stroke: TWEET_BLUE }}
-                  label={{ value: 'Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 10, fontWeight: 'bold' } }}
+                  label={{ value: 'Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 12, fontWeight: 'bold' } }}
                 />
                 <YAxis
                   yAxisId="tweets"
                   orientation="right"
                   stroke={LINE_GREEN}
-                  tick={{ fontSize: 10, fill: TEXT_GRAY }}
+                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
                   axisLine={{ strokeWidth: 1, stroke: LINE_GREEN }}
-                  label={{ value: 'Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 10, fontWeight: 'bold' } }}
+                  label={{ value: 'Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 12, fontWeight: 'bold' } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 
@@ -244,7 +243,7 @@ const HourlyEngagementChart = ({
                   dataKey="avgLikes" 
                   name="Avg Likes/Tweet" 
                   radius={[3, 3, 0, 0]}
-                  barSize={5}
+                  barSize={10}
                 >
                   {chartData.map((entry, index) => (
                     <Cell 
