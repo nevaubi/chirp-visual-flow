@@ -133,29 +133,29 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
   
   return (
     <Card className="border-none shadow-sm hover:shadow transition-shadow">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock size={20} className="text-[#0087C8]" />
+      <CardHeader className="p-3 pb-1">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <Clock size={18} className="text-[#0087C8]" />
           Weekly Activity Pattern
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           When you typically post throughout the week
         </CardDescription>
         
         {/* Timezone indicator */}
         {timezone && (
-          <div className="mt-2 flex justify-end">
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-flex items-center">
+          <div className="mt-1 flex justify-end">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-flex items-center">
               <Clock className="h-3 w-3 mr-1" /> {formatTimezone(timezone)} timezone
             </span>
           </div>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         <div className="w-full overflow-x-auto">
-          <div className="min-w-[600px]">
+          <div className="min-w-[550px]">
             {/* Hour labels (simplified) */}
-            <div className="flex mb-1 pl-12">
+            <div className="flex mb-0.5 pl-10">
               {hourLabels.map((label, i) => (
                 <div key={i} className="flex-1 text-xs text-gray-500 text-center">
                   {label}
@@ -165,9 +165,9 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
             
             {/* Heatmap grid */}
             {heatmapData.map((dayData, dayIndex) => (
-              <div key={dayIndex} className="flex items-center mb-1">
+              <div key={dayIndex} className="flex items-center mb-0.5">
                 {/* Day label */}
-                <div className="w-12 text-sm font-medium text-gray-600 text-right pr-2">
+                <div className="w-10 text-xs font-medium text-gray-600 text-right pr-2">
                   {dayLabels[dayIndex]}
                 </div>
                 
@@ -184,7 +184,7 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                     return (
                       <div
                         key={colIndex}
-                        className="aspect-square border border-gray-100 cursor-pointer transition-all duration-200 hover:border-blue-300"
+                        className="h-5 border border-gray-100 cursor-pointer transition-all duration-200 hover:border-blue-300"
                         style={{ backgroundColor: getColor(value, maxValue) }}
                         onMouseEnter={() => setHoveredCell({ 
                           day: dayIndex, 
@@ -200,9 +200,9 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
             ))}
             
             {/* Legend and insights */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
-                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
+                <div className="text-xs text-gray-600 mb-1 sm:mb-0">
                   {hoveredCell ? (
                     <span className="font-medium">
                       {dayLabels[hoveredCell.day]} at {hoveredCell.hour % 12 || 12}{hoveredCell.hour < 12 ? 'am' : 'pm'}: {hoveredCell.value} events
@@ -211,31 +211,31 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                     'Hover over cells for details'
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <span className="text-xs text-gray-500">Less</span>
-                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#e2f1ff' }}></div>
-                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#b3d7ff' }}></div>
-                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#80baff' }}></div>
-                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#4d9fff' }}></div>
-                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#0073e6' }}></div>
+                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#e2f1ff' }}></div>
+                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#b3d7ff' }}></div>
+                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#80baff' }}></div>
+                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#4d9fff' }}></div>
+                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#0073e6' }}></div>
                   <span className="text-xs text-gray-500">More</span>
                 </div>
               </div>
               
-              {/* Key insights */}
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              {/* Key insights - now in a more compact layout */}
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
                     <span className="font-medium text-blue-700">Peak Activity:</span>
-                    <br />{peak.day} at {peak.hour} ({peak.value} events)
+                    <div>{peak.day} at {peak.hour} ({peak.value})</div>
                   </div>
                   <div>
                     <span className="font-medium text-blue-700">Best Posting Time:</span>
-                    <br />6:00-8:00 PM (Weekdays)
+                    <div>6-8 PM (Weekdays)</div>
                   </div>
                   <div>
                     <span className="font-medium text-blue-700">Quiet Hours:</span>
-                    <br />{getQuietHours()}
+                    <div>{getQuietHours()}</div>
                   </div>
                 </div>
               </div>
