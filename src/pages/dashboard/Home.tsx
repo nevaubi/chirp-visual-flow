@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap } from 'lucide-react';
+import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Send, RotateCw } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
@@ -19,6 +19,8 @@ import HourlyInsights from '@/components/analysis/HourlyInsights';
 import AvgLikesByLengthChart from '@/components/analysis/AvgLikesByLengthChart';
 import ReplyVsPostDonutChart from '@/components/analysis/ReplyVsPostDonutChart';
 import ContentTypeEngagementChart from '@/components/analysis/ContentTypeEngagementChart';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -247,9 +249,11 @@ const CreatorDashboard = ({ profile }) => {
   );
 };
 
-// Newsletter Platform Dashboard - enhanced version
+// Newsletter Platform Dashboard - enhanced version with inline generation
 const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [tweetCount, setTweetCount] = useState<"25" | "50" | "100">("50");
   const { refreshProfile } = useAuth();
 
   // Check if user has a subscription
@@ -259,6 +263,64 @@ const NewsletterDashboard = ({ profile }) => {
   
   // Number of remaining manual generations
   const remainingGenerations = profile?.remaining_newsletter_generations || 0;
+  
+  // Handle newsletter generation
+  const handleGenerateNewsletter = async () => {
+    // Check if user has required subscription tier
+    const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                           profile?.subscription_tier === "Newsletter Premium";
+                           
+    if (!hasRequiredTier) {
+      toast.error("Subscription Required", {
+        description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
+      });
+      return;
+    }
+    
+    // Check if manual generation is available for the user
+    if (!remainingGenerations || remainingGenerations <= 0) {
+      toast.error("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
+        body: { tweetCount: Number(tweetCount) },
+      });
+
+      if (error) {
+        console.error('Error generating newsletter:', error);
+        toast.error('Failed to generate newsletter', {
+          description: error.message,
+        });
+        return;
+      }
+
+      if (data.success) {
+        // Refresh the profile to get updated remaining generations
+        await refreshProfile();
+        
+        toast.success('Newsletter generated successfully!', {
+          description: 'Your newsletter has been added to the library.',
+        });
+        
+        // Navigate to library after successful generation
+        window.location.href = '/dashboard/analytics';
+      } else {
+        toast.error('Failed to generate newsletter', {
+          description: data.error || 'An error occurred during generation.',
+        });
+      }
+    } catch (error) {
+      console.error('Error in generation:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   // Steps for how the newsletter generation works
   const steps = [
@@ -287,12 +349,78 @@ const NewsletterDashboard = ({ profile }) => {
           <h1 className="text-2xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
           <p className="text-gray-600">Generate newsletters from your X bookmarks</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <p className="text-sm text-gray-600">
-            Use the "Create Newsletter" button in the sidebar to generate a newsletter
-          </p>
-        </div>
       </div>
+
+      {/* Newsletter Generation Card */}
+      <Card className="border-none shadow-sm hover:shadow transition-shadow overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50 pb-6">
+          <CardTitle className="flex items-center gap-2">
+            <Zap size={20} className="text-amber-500" />
+            Generate Newsletter
+          </CardTitle>
+          <CardDescription>
+            Create a newsletter from your X bookmarks with just a few clicks
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6 pb-4">
+          <div className="space-y-4">
+            <div className="max-w-md">
+              <div className="mb-4">
+                <Label htmlFor="tweet-count">Number of tweets to include</Label>
+                <Select 
+                  value={tweetCount} 
+                  onValueChange={(value: "25" | "50" | "100") => setTweetCount(value)}
+                  disabled={isGenerating || remainingGenerations <= 0}
+                >
+                  <SelectTrigger id="tweet-count" className="w-full">
+                    <SelectValue placeholder="Select tweet count" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25 tweets</SelectItem>
+                    <SelectItem value="50">50 tweets</SelectItem>
+                    <SelectItem value="100">100 tweets</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  More tweets will create a longer newsletter
+                </p>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={handleGenerateNewsletter}
+                  disabled={isGenerating || remainingGenerations <= 0 || !hasRequiredTier}
+                  className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RotateCw className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Generate Newsletter
+                    </>
+                  )}
+                </Button>
+                
+                <div className="text-sm text-muted-foreground">
+                  {remainingGenerations > 0 ? (
+                    <span className="text-amber-600 font-medium">
+                      You have {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
+                    </span>
+                  ) : (
+                    <span className="text-red-500">
+                      No generations remaining. Please upgrade your plan.
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* How It Works Section */}
       <Card className="border-none shadow-sm hover:shadow transition-shadow">
