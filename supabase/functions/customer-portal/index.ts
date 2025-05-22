@@ -58,18 +58,22 @@ serve(async (req) => {
     });
 
     // First try to fetch user profile to get Stripe customer ID
-    let stripeCustomerId: string | null = null;
     const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
       
+    let stripeCustomerId = null;
+    
     if (profileError) {
       logStep("Error fetching profile", profileError);
       // Don't return error here, try to find the customer ID from Stripe instead
     } else if (profileData?.stripe_customer_id) {
-      stripeCustomerId = profileData.stripe_customer_id;
+      stripeCustomerId = typeof profileData.stripe_customer_id === 'string' 
+        ? profileData.stripe_customer_id 
+        : (profileData.stripe_customer_id as any)?.id || null;
+      
       logStep("Found Stripe customer ID in profile", { stripeCustomerId });
     }
 
@@ -83,7 +87,13 @@ serve(async (req) => {
         logStep("Found customer in Stripe", { stripeCustomerId });
         
         // Update the profile with the found customer ID
-        const { error: updateError } = await supabaseClient
+        const supabaseAdmin = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          { auth: { persistSession: false } }
+        );
+        
+        const { error: updateError } = await supabaseAdmin
           .from('profiles')
           .update({ stripe_customer_id: stripeCustomerId })
           .eq('id', user.id);
@@ -108,7 +118,13 @@ serve(async (req) => {
         logStep("Created new Stripe customer", { stripeCustomerId });
         
         // Update the profile with the new customer ID
-        const { error: updateError } = await supabaseClient
+        const supabaseAdmin = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          { auth: { persistSession: false } }
+        );
+        
+        const { error: updateError } = await supabaseAdmin
           .from('profiles')
           .update({ stripe_customer_id: stripeCustomerId })
           .eq('id', user.id);
@@ -137,18 +153,48 @@ serve(async (req) => {
     // Get origin for return URL
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
-    // Create a Stripe Customer Portal session
-    const session = await stripe.billingPortal.sessions.create({
-      customer: stripeCustomerId,
-      return_url: `${origin}/dashboard/home`,
-    });
+    try {
+      // Create a Stripe Customer Portal session
+      const session = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${origin}/dashboard/home`,
+      });
 
-    logStep("Customer portal session created", { sessionUrl: session.url });
+      logStep("Customer portal session created", { sessionUrl: session.url });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } catch (stripeError) {
+      // Log the specific Stripe error for debugging
+      logStep("Stripe portal creation error", { 
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code,
+        param: stripeError.param
+      });
+      
+      if (stripeError.message && stripeError.message.includes("No configuration")) {
+        return new Response(JSON.stringify({ 
+          error: "Stripe Customer Portal is not configured", 
+          details: "You need to configure the Customer Portal in your Stripe Dashboard",
+          docLink: "https://dashboard.stripe.com/test/settings/billing/portal"
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        });
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: "Failed to create customer portal session", 
+        details: stripeError.message,
+        stripeErrorCode: stripeError.code 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });

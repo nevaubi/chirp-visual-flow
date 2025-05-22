@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // Parse request body
     const requestData = await req.json();
-    const { priceId, frequency, metadata } = requestData;
+    const { priceId, platform } = requestData;
     
     if (!priceId) {
       return new Response(JSON.stringify({ error: "Price ID is required" }), {
@@ -42,7 +42,7 @@ serve(async (req) => {
       });
     }
     
-    logStep("Request data", { priceId, frequency, metadata });
+    logStep("Request data", { priceId, platform });
 
     // Initialize Supabase client using anon key (for authentication only)
     const supabaseClient = createClient(
@@ -122,38 +122,47 @@ serve(async (req) => {
     // Prepare session metadata
     const sessionMetadata = {
       user_id: user.id,
-      frequency: frequency || "weekly", // Default to weekly if not specified
+      platform: platform || "default"
     };
-
-    // Add newsletter preferences to metadata if provided
-    if (metadata) {
-      if (metadata.newsletter_day_preference) {
-        sessionMetadata.newsletter_day_preference = metadata.newsletter_day_preference;
-      }
-      if (metadata.newsletter_content_preferences) {
-        sessionMetadata.newsletter_content_preferences = metadata.newsletter_content_preferences;
-      }
-    }
 
     logStep("Creating checkout session with metadata", sessionMetadata);
 
     // Create a subscription checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
-      success_url: `${origin}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/dashboard/checkout-cancel`,
-      metadata: sessionMetadata,
-    });
+    try {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: "subscription",
+        success_url: `${origin}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/dashboard/checkout-cancel`,
+        metadata: sessionMetadata,
+      });
 
-    logStep("Checkout session created", { sessionId: session.id });
+      logStep("Checkout session created", { sessionId: session.id });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } catch (stripeError) {
+      // Log the specific Stripe error for debugging
+      logStep("Stripe checkout creation error", { 
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code,
+        param: stripeError.param
+      });
+      
+      return new Response(JSON.stringify({ 
+        error: "Failed to create checkout session", 
+        details: stripeError.message,
+        stripeErrorCode: stripeError.code 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });

@@ -102,17 +102,25 @@ const PricingCard = ({
 // Helper function to manage subscription
 const handleManageSubscription = async () => {
   try {
+    toast.loading("Opening customer portal...");
     const { data, error } = await supabase.functions.invoke("customer-portal");
     
     if (error) {
+      toast.dismiss();
       toast.error("Could not open customer portal. Please try again.");
+      console.error("Customer portal error:", error);
       return;
     }
     
+    toast.dismiss();
+    
     if (data?.url) {
       window.open(data.url, "_blank");
+    } else {
+      toast.error("No portal URL returned. Please try again.");
     }
   } catch (error) {
+    toast.dismiss();
     console.error("Error opening customer portal:", error);
     toast.error("Something went wrong. Please try again.");
   }
@@ -125,8 +133,8 @@ const PricingSection = () => {
   const [isLoadingCreator, setIsLoadingCreator] = useState(false);
   
   // Check if user is subscribed to either plan
-  const isSubscribedToNewsletter = authState.profile?.subscription_tier?.includes("Newsletter");
-  const isSubscribedToCreator = authState.profile?.subscription_tier?.includes("Creator");
+  const isSubscribedToNewsletter = authState.profile?.subscription_tier === "Newsletter";
+  const isSubscribedToCreator = authState.profile?.subscription_tier === "Creator";
   
   // Handle checkout process
   const handleCheckout = async (priceId: string, platform: 'newsletter' | 'creator') => {
@@ -149,10 +157,7 @@ const PricingSection = () => {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { 
           priceId,
-          frequency: "monthly",
-          metadata: {
-            platform
-          }
+          platform
         }
       });
       
@@ -164,7 +169,10 @@ const PricingSection = () => {
       
       if (data?.url) {
         // Redirect to Stripe checkout
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
+        toast("Checkout opened in a new tab", {
+          description: "If the checkout window doesn't open, please check your popup blocker."
+        });
       } else {
         toast.error("Invalid response from server. Please try again.");
       }
