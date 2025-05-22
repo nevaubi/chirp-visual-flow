@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const REDIS_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
@@ -54,62 +55,7 @@ async function fetchTrendingTopicsFromRedis(category: string): Promise<any> {
   }
 }
 
-// Enhanced function to generate more realistic profile data with proper username/handle mapping
-function generateMockProfile(tweet: string, trendHeader: string, index: number): any {
-  // Diverse profile names
-  const firstNames = ['Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Jamie', 'Riley', 'Quinn', 'Avery', 'Dakota', 'Sam', 'Charlie'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
-  
-  // Generate display name (real name)
-  const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
-  const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
-  const displayName = `${randomFirst} ${randomLast}`;
-  
-  // Generate a username (handle) - lowercase, no spaces, sometimes with numbers
-  let username = '';
-  
-  // Try to extract a username from the tweet content if it starts with an @mention
-  const mentionMatch = tweet.match(/@(\w+)/);
-  if (mentionMatch) {
-    username = mentionMatch[1].toLowerCase();
-  } else {
-    // Create a username based on the real name
-    username = (randomFirst + (Math.random() > 0.5 ? randomLast.substring(0, 1) : "")).toLowerCase();
-    
-    // Sometimes add numbers to the username
-    if (Math.random() > 0.7) {
-      username += Math.floor(Math.random() * 1000);
-    }
-    
-    // Remove any spaces or special characters
-    username = username.replace(/[^a-z0-9]/g, '');
-  }
-  
-  // Set verified status randomly but weighted to mostly be unverified
-  const verified = Math.random() > 0.85;
-  
-  // Generate a timestamp within the last 24 hours
-  const now = new Date();
-  const hoursAgo = Math.floor(Math.random() * 24);
-  const timestamp = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString();
-  
-  // Avatar URL - use a more diverse set of avatars
-  // This ensures the same username always gets the same avatar
-  const seed = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const gender = seed % 2 === 0 ? 'men' : 'women';
-  const avatarId = (seed % 99) + 1; // Range 1-99
-  const avatarUrl = `https://randomuser.me/api/portraits/${gender}/${avatarId}.jpg`;
-  
-  return {
-    username: username,
-    displayName: displayName,
-    verified: verified,
-    timestamp: timestamp,
-    avatarUrl: avatarUrl
-  };
-}
-
-// Function to parse trends from the Redis content
+// Updated to parse real tweet metadata from OpenAI response
 function parseTrendsFromContent(content: string): any[] {
   try {
     const trends = [];
@@ -187,43 +133,116 @@ function parseTrendsFromContent(content: string): any[] {
         }
       }
       
-      // Extract example tweets - improved to capture more formats and now add profile information
-      const tweetRegex = /\*Example of Real Current Tweet\d+:\s+(.*?)(?=\*Example|\*\*|<\/Trend|$)/gs;
-      let exampleTweets = [...trendContent.matchAll(tweetRegex)].map((tweet, index) => {
-        const tweetText = tweet[1].trim();
-        const profile = generateMockProfile(tweetText, header, index);
-        
-        return {
-          text: tweetText,
-          profile: profile
-        };
-      });
+      // Extract example tweets and their metadata
+      const exampleTweets = [];
       
-      // If no example tweets found with the primary pattern, try alternative patterns
-      if (exampleTweets.length === 0) {
-        const altTweetRegex = /Example Tweet \d+:\s+(.*?)(?=Example Tweet|\*\*|<\/Trend|$)/gs;
-        exampleTweets = [...trendContent.matchAll(altTweetRegex)].map((tweet, index) => {
-          const tweetText = tweet[1].trim();
-          const profile = generateMockProfile(tweetText, header, index);
+      // Match tweet pairs (text + metadata)
+      const tweetPattern = /\*Example of Real Current Tweet\d+:\s+(.*?)(?=\*Tweet\d+_Metadata|\*Example|\*\*|<\/Trend|$)/gs;
+      const metadataPattern = /\*Tweet\d+_Metadata:\s+(.*?)(?=\*Example|\*\*|<\/Trend|$)/gs;
+      
+      const tweetTexts = [...trendContent.matchAll(tweetPattern)].map(match => match[1].trim());
+      const metadataTexts = [...trendContent.matchAll(metadataPattern)].map(match => match[1].trim());
+      
+      // Process each tweet-metadata pair
+      for (let i = 0; i < Math.min(tweetTexts.length, metadataTexts.length); i++) {
+        try {
+          // Parse the metadata JSON
+          let metadataJson;
+          try {
+            // Try to parse the JSON metadata
+            metadataJson = JSON.parse(metadataTexts[i]);
+          } catch (e) {
+            // If JSON parsing fails, try to extract values with regex
+            const mdText = metadataTexts[i];
+            metadataJson = {
+              authorName: (mdText.match(/"authorName":\s*"([^"]+)"/) || [])[1] || "Unknown Author",
+              handle: (mdText.match(/"handle":\s*"([^"]+)"/) || [])[1] || "@unknown",
+              verified: mdText.includes('"verified": true'),
+              profilePicUrl: (mdText.match(/"profilePicUrl":\s*"([^"]+)"/) || [])[1] || "",
+              timestamp: (mdText.match(/"timestamp":\s*"([^"]+)"/) || [])[1] || new Date().toISOString(),
+              likes: parseInt((mdText.match(/"likes":\s*(\d+)/) || [])[1] || "0"),
+              replies: parseInt((mdText.match(/"replies":\s*(\d+)/) || [])[1] || "0"),
+              retweets: parseInt((mdText.match(/"retweets":\s*(\d+)/) || [])[1] || "0")
+            };
+          }
           
-          return {
-            text: tweetText,
-            profile: profile
+          // Use the actual metadata from OpenAI response for the profile
+          const profile = {
+            username: metadataJson.handle?.replace('@', '') || "unknown_user",
+            displayName: metadataJson.authorName || "Unknown User",
+            verified: metadataJson.verified || false,
+            timestamp: metadataJson.timestamp || new Date().toISOString(),
+            avatarUrl: metadataJson.profilePicUrl || ""
           };
-        });
+          
+          exampleTweets.push({
+            text: tweetTexts[i],
+            profile: profile,
+            metrics: {
+              likes: metadataJson.likes || 0,
+              replies: metadataJson.replies || 0,
+              retweets: metadataJson.retweets || 0
+            }
+          });
+        } catch (error) {
+          console.error("Error parsing tweet metadata:", error);
+          // Fallback to generate fake profile if parsing fails
+          const profile = {
+            username: `user_${i}`,
+            displayName: "Twitter User",
+            verified: false,
+            timestamp: new Date().toISOString(),
+            avatarUrl: ""
+          };
+          
+          exampleTweets.push({
+            text: tweetTexts[i] || "No text available",
+            profile: profile,
+            metrics: {
+              likes: 0,
+              replies: 0,
+              retweets: 0
+            }
+          });
+        }
       }
       
-      // If still no tweets found, look for any sections that look like tweets
+      // If no tweets were found with the primary pattern, use the fallback generator
       if (exampleTweets.length === 0) {
+        // Extract tweet texts in a more lenient way
+        const altTweetTexts = [];
         const lines = trendContent.split('\n');
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].includes("Example") && lines[i].includes("Tweet") && i + 1 < lines.length) {
-            const tweetText = lines[i + 1].trim();
-            const profile = generateMockProfile(tweetText, header, exampleTweets.length);
+            altTweetTexts.push(lines[i + 1].trim());
+          }
+        }
+        
+        // Generate fallback profiles for each tweet
+        for (let i = 0; i < altTweetTexts.length; i++) {
+          const text = altTweetTexts[i];
+          if (text && text.length > 0) {
+            // Generate a mock profile as fallback
+            const seed = text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const gender = seed % 2 === 0 ? 'men' : 'women';
+            const avatarId = (seed % 99) + 1; // Range 1-99
+            
+            const profile = {
+              username: `user_${i}_${seed % 1000}`,
+              displayName: `Twitter User ${i + 1}`,
+              verified: seed % 10 === 0, // 10% chance of being verified
+              timestamp: new Date(Date.now() - (seed % 48) * 3600000).toISOString(),
+              avatarUrl: `https://randomuser.me/api/portraits/${gender}/${avatarId}.jpg`
+            };
             
             exampleTweets.push({
-              text: tweetText,
-              profile: profile
+              text: text,
+              profile: profile,
+              metrics: {
+                likes: seed % 100,
+                replies: seed % 50,
+                retweets: seed % 30
+              }
             });
           }
         }

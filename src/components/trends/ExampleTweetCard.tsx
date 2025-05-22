@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Check } from 'lucide-react';
+import { Check, MessageSquare, Repeat, Heart } from 'lucide-react';
 
 interface TweetProfile {
   username: string;
@@ -11,13 +11,20 @@ interface TweetProfile {
   avatarUrl: string;
 }
 
+interface TweetMetrics {
+  likes: number;
+  replies: number;
+  retweets: number;
+}
+
 interface ExampleTweetCardProps {
   text: string;
   profile: TweetProfile;
+  metrics?: TweetMetrics;
   index: number;
 }
 
-const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, index }) => {
+const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metrics, index }) => {
   // Format the timestamp to display in a Twitter-like format
   const formatTimestamp = (timestamp: string): string => {
     try {
@@ -37,6 +44,17 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
       }
     } catch (e) {
       return "recent";
+    }
+  };
+  
+  // Format numbers for display (e.g., 1200 -> 1.2K)
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    } else {
+      return num.toString();
     }
   };
   
@@ -79,6 +97,23 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, inde
           <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px]">
             {truncateText(text)}
           </p>
+          
+          {metrics && (
+            <div className="flex items-center gap-4 mt-3 text-gray-500 dark:text-gray-400 text-sm">
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" />
+                <span>{formatNumber(metrics.replies)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Repeat className="h-4 w-4" />
+                <span>{formatNumber(metrics.retweets)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Heart className="h-4 w-4" />
+                <span>{formatNumber(metrics.likes)}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
