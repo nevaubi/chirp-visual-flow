@@ -1,4 +1,3 @@
-
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -135,15 +134,11 @@ const PricingSection = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8 w-full">
-            {/* X Creator Platform Card */}
-            <PricingCard {...creatorCard} />
-            
-            {/* Auto Newsletter Platform Card */}
+            {/* Auto Newsletter Platform Card - Now First (Left Side) */}
             <PricingCard {...newsletterCard} />
-          </div>
-
-          <div className="mt-8 text-sm text-gray-500">
-            All plans include a 14-day free trial. No credit card required.
+            
+            {/* X Creator Platform Card - Now Second (Right Side) */}
+            <PricingCard {...creatorCard} />
           </div>
         </div>
       </div>
