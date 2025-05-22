@@ -30,6 +30,7 @@ const DashboardLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [isTweetPanelOpen, setIsTweetPanelOpen] = useState(false);
   const location = useLocation();
@@ -109,27 +110,65 @@ const DashboardLayout = () => {
     }
   };
   
-  // Function to handle subscription management via Stripe portal
+  // Function to handle subscription management or checkout based on subscription status
   const handleManageSubscription = async () => {
-    setIsPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      
-      if (error) {
-        console.error("Error opening customer portal:", error);
-        toast.error("Could not open subscription management portal");
-        return;
+    // If user is already subscribed, direct to customer portal
+    if (isSubscribed) {
+      setIsPortalLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("customer-portal");
+        
+        if (error) {
+          console.error("Error opening customer portal:", error);
+          toast.error("Could not open subscription management portal");
+          return;
+        }
+        
+        if (data?.url) {
+          // Open the customer portal in a new tab
+          window.open(data.url, "_blank");
+        }
+      } catch (error) {
+        console.error("Error in handleManageSubscription:", error);
+        toast.error("Something went wrong");
+      } finally {
+        setIsPortalLoading(false);
       }
-      
-      if (data?.url) {
-        // Open the customer portal in a new tab
-        window.open(data.url, "_blank");
+    } 
+    // If user is not subscribed, direct to checkout
+    else {
+      setIsCheckoutLoading(true);
+      try {
+        // Determine which price ID to use based on platform type
+        let priceId = "price_1RQUm7DBIslKIY5sNlWTFrQH"; // Default to Newsletter Standard
+        
+        if (isCreatorPlatform) {
+          priceId = "price_1RRXZ2DBIslKIY5s4gxpBlME"; // Creator platform price
+        }
+        
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: { 
+            priceId,
+            platform: isCreatorPlatform ? "creator" : "newsletter"
+          }
+        });
+        
+        if (error) {
+          console.error("Error creating checkout session:", error);
+          toast.error("Could not create checkout session");
+          return;
+        }
+        
+        if (data?.url) {
+          // Open the checkout page in a new tab
+          window.open(data.url, "_blank");
+        }
+      } catch (error) {
+        console.error("Error in handleCheckout:", error);
+        toast.error("Something went wrong");
+      } finally {
+        setIsCheckoutLoading(false);
       }
-    } catch (error) {
-      console.error("Error in handleManageSubscription:", error);
-      toast.error("Something went wrong");
-    } finally {
-      setIsPortalLoading(false);
     }
   };
 
@@ -272,7 +311,7 @@ const DashboardLayout = () => {
                 isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
               )}
               onClick={handleManageSubscription}
-              disabled={isPortalLoading}
+              disabled={isPortalLoading || isCheckoutLoading}
             >
               <CreditCard size={16} className={cn("shrink-0", expanded && "mr-2")} />
               {expanded && (
