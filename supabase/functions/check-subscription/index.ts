@@ -38,8 +38,14 @@ const extractCustomerId = (customer: string | any): string => {
   return String(customer);
 };
 
-// Helper function to determine newsletter generation count based on newsletter_day_preference
-const determineNewsletterGenerationCount = (preference: string | null | undefined): number => {
+// Helper function to determine newsletter generation count based on subscription type and price
+const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
+  // If it's a newsletter subscription, set a fixed value of 20
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+    return 20; // Fixed value for newsletter subscriptions
+  }
+  
+  // Otherwise use preference-based logic as fallback
   if (!preference) return 0;
   
   if (preference.includes('Manual: 8')) {
@@ -111,7 +117,7 @@ serve(async (req) => {
         // Retrieve the checkout session to get customer info
         logStep("Retrieving checkout session", { sessionId });
         const session = await stripe.checkout.sessions.retrieve(sessionId, {
-          expand: ['customer', 'subscription']
+          expand: ['customer', 'subscription', 'line_items']
         });
         
         if (!session) {
@@ -130,23 +136,32 @@ serve(async (req) => {
         const newsletterDayPreference = session.metadata?.newsletter_day_preference;
         let newsletterContentPreferences = null;
         
-        // Extract remaining_newsletter_generations from metadata or derive from preference
-        let remainingNewsletterGenerations = null;
-        if (session.metadata?.remaining_newsletter_generations) {
-          try {
-            remainingNewsletterGenerations = parseInt(session.metadata.remaining_newsletter_generations, 10);
-            logStep("Found remaining_newsletter_generations in metadata", { remainingNewsletterGenerations });
-          } catch (error) {
-            logStep("Error parsing remaining_newsletter_generations", error);
+        // Check if this is a newsletter subscription by examining price IDs
+        let isNewsletterSubscription = false;
+        let priceId = null;
+        
+        if (session.line_items?.data) {
+          const lineItems = session.line_items.data;
+          for (const item of lineItems) {
+            priceId = item.price?.id;
+            // Check if it's a newsletter price ID
+            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+              isNewsletterSubscription = true;
+              break;
+            }
           }
         }
         
-        // If remaining_newsletter_generations wasn't in metadata or couldn't be parsed,
-        // determine it based on newsletter_day_preference
-        if (remainingNewsletterGenerations === null) {
-          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference);
-          logStep("Determined remaining_newsletter_generations from preference", { remainingNewsletterGenerations });
-        }
+        // Set remaining_newsletter_generations to 20 for newsletter subscriptions
+        let remainingNewsletterGenerations = isNewsletterSubscription 
+          ? 20 
+          : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
+        
+        logStep("Newsletter generations determined", { 
+          isNewsletterSubscription, 
+          priceId,
+          remainingNewsletterGenerations 
+        });
         
         if (session.metadata?.newsletter_content_preferences) {
           try {
@@ -170,10 +185,8 @@ serve(async (req) => {
             profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
           }
           
-          // Add remaining_newsletter_generations if available
-          if (remainingNewsletterGenerations !== null) {
-            profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
-          }
+          // Add remaining_newsletter_generations
+          profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
           
           const { error: customerUpdateError } = await supabaseAdmin
             .from('profiles')
@@ -184,7 +197,7 @@ serve(async (req) => {
             logStep("Error updating profile with customer ID and preferences", customerUpdateError);
             // Continue despite error - we want to try retrieving subscription info
           } else {
-            logStep("Profile updated with customer ID and preferences");
+            logStep("Profile updated with customer ID and preferences", { remainingNewsletterGenerations });
           }
           
           // If we have a subscription in the session, we can use it directly
@@ -203,24 +216,6 @@ serve(async (req) => {
             if (subscription && subscription.status === 'active') {
               // Get price info
               const priceId = subscription.items.data[0].price.id;
-              
-              // Fetch product information in a separate call to avoid excessive nesting
-              const price = subscription.items.data[0].price;
-              let productId = null;
-              
-              try {
-                // Check if price has product data, if not fetch it separately
-                if (price.product && typeof price.product === 'string') {
-                  const product = await stripe.products.retrieve(price.product);
-                  productId = product.id;
-                  logStep("Retrieved product info", { productId });
-                } else if (price.product && typeof price.product === 'object') {
-                  productId = price.product.id;
-                }
-              } catch (error) {
-                logStep("Error retrieving product", error);
-                // Continue despite product error
-              }
               
               // Determine subscription tier based on price ID
               let subscriptionTier = null;
@@ -408,7 +403,7 @@ serve(async (req) => {
     const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
     
     // Determine remaining newsletter generations based on the user's preference
-    const remainingNewsletterGenerations = determineNewsletterGenerationCount(profileData.newsletter_day_preference);
+    const remainingNewsletterGenerations = determineNewsletterGenerationCount(profileData.newsletter_day_preference, priceId);
     logStep("Determined remaining newsletter generations", { 
       newsletterDayPreference: profileData.newsletter_day_preference, 
       remainingNewsletterGenerations 

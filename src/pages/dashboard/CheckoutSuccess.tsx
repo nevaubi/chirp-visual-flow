@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -170,6 +170,20 @@ const CheckoutSuccess = () => {
     }
   };
 
+  // Function to render newsletter generations info
+  const renderNewsletterGenerations = () => {
+    if (authState.profile?.remaining_newsletter_generations) {
+      return (
+        <div className="mt-2">
+          <span className="font-semibold text-green-600">
+            {authState.profile.remaining_newsletter_generations} Newsletter Generations
+          </span> included with your subscription
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] p-4 md:p-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
@@ -179,12 +193,15 @@ const CheckoutSuccess = () => {
         
         <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
         
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-2">
           Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
         </p>
         
+        {/* Display newsletter generations */}
+        {renderNewsletterGenerations()}
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mb-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
             <FormField
               control={form.control}
               name="email"
@@ -215,7 +232,7 @@ const CheckoutSuccess = () => {
         </Form>
         
         {authState.profile?.newsletter_day_preference && (
-          <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+          <div className="mt-6 p-4 bg-amber-50 rounded-lg">
             <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
             <p className="text-sm text-muted-foreground">
               Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
@@ -227,6 +244,11 @@ const CheckoutSuccess = () => {
                     ? 'Personal Newsletter' 
                     : 'Audience Newsletter'}
                 </span>
+              </p>
+            )}
+            {authState.profile.remaining_newsletter_generations > 0 && (
+              <p className="text-sm text-green-600 font-medium mt-1">
+                {authState.profile.remaining_newsletter_generations} Newsletter Generations Available
               </p>
             )}
           </div>

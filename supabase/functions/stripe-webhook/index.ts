@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -9,8 +8,14 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Helper function to determine newsletter generation count based on newsletter_day_preference
-const determineNewsletterGenerationCount = (preference: string | null | undefined): number => {
+// Helper function to determine newsletter generation count based on newsletter_day_preference or subscription
+const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
+  // If it's a newsletter subscription, set a fixed value of 20
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+    return 20; // Fixed value for newsletter subscriptions
+  }
+  
+  // Otherwise use preference-based logic as fallback
   if (!preference) return 0;
   
   if (preference.includes('Manual: 8')) {
@@ -63,7 +68,7 @@ serve(async (req) => {
     }
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       logStep(`Webhook signature verification failed: ${errorMessage}`);
@@ -103,20 +108,35 @@ serve(async (req) => {
           }
         }
         
-        // Extract remaining_newsletter_generations or derive from preference
-        let remainingNewsletterGenerations = null;
-        if (session.metadata?.remaining_newsletter_generations) {
-          try {
-            remainingNewsletterGenerations = parseInt(session.metadata.remaining_newsletter_generations, 10);
-          } catch (error) {
-            logStep("Error parsing remaining_newsletter_generations", error);
+        // Check if this is a newsletter subscription by examining the line items
+        let isNewsletterSubscription = false;
+        let priceId = null;
+        
+        if (session.line_items?.data) {
+          const lineItems = session.line_items.data;
+          for (const item of lineItems) {
+            priceId = item.price?.id;
+            // Check if it's a newsletter price ID
+            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+              isNewsletterSubscription = true;
+              break;
+            }
           }
         }
         
-        // If not in metadata, determine from preference
-        if (remainingNewsletterGenerations === null) {
-          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference);
+        // Set remaining newsletter generations based on subscription or preference
+        let remainingNewsletterGenerations = 20; // Default to 20 for newsletter subscriptions
+        
+        // If not a newsletter subscription, determine from preference
+        if (!isNewsletterSubscription) {
+          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference, priceId);
         }
+        
+        logStep("Newsletter generations determined", { 
+          isNewsletterSubscription, 
+          priceId,
+          remainingNewsletterGenerations
+        });
         
         if (customerId && userId) {
           // Update the profile with the customer ID and newsletter preferences
@@ -132,9 +152,8 @@ serve(async (req) => {
             profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
           }
           
-          if (remainingNewsletterGenerations !== null) {
-            profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
-          }
+          // Set the remaining_newsletter_generations to 20 for newsletter subscriptions
+          profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
           
           const { error: updateError } = await supabaseAdmin
             .from('profiles')
@@ -144,7 +163,7 @@ serve(async (req) => {
           if (updateError) {
             logStep("Error updating profile", updateError);
           } else {
-            logStep("Profile updated with checkout session data");
+            logStep("Profile updated with checkout session data", { remainingNewsletterGenerations });
           }
         }
         break;
@@ -192,7 +211,20 @@ serve(async (req) => {
         
         // Update each profile
         for (const profile of profiles) {
-          const remainingNewsletterGenerations = determineNewsletterGenerationCount(profile.newsletter_day_preference);
+          // Determine the generation count based on price ID and preference
+          const isNewsletterSubscription = priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || 
+                                          priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr";
+          
+          // Set to 20 for newsletter subscriptions, otherwise use preference-based logic
+          const remainingNewsletterGenerations = isNewsletterSubscription 
+            ? 20 
+            : determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId);
+          
+          logStep("Setting newsletter generations", { 
+            profileId: profile.id, 
+            isNewsletterSubscription,
+            remainingNewsletterGenerations
+          });
           
           const { error: updateError } = await supabaseAdmin
             .from('profiles')
@@ -210,7 +242,10 @@ serve(async (req) => {
           if (updateError) {
             logStep("Error updating profile", { profileId: profile.id, error: updateError });
           } else {
-            logStep("Profile updated with subscription data", { profileId: profile.id });
+            logStep("Profile updated with subscription data", { 
+              profileId: profile.id, 
+              remainingNewsletterGenerations 
+            });
           }
         }
         break;

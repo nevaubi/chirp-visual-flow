@@ -1,5 +1,5 @@
 
-import { CalendarIcon, CheckCircle, Settings } from "lucide-react";
+import { CalendarIcon, CheckCircle, Settings, Bookmark } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,7 @@ export function SubscriptionStatusCard() {
   const subscriptionEnd = profile?.subscription_period_end ? 
     new Date(profile.subscription_period_end) : null;
   const willCancel = profile?.cancel_at_period_end;
+  const remainingNewsletterGenerations = profile?.remaining_newsletter_generations || 0;
   
   const handleCheckStatus = async () => {
     setIsLoading(true);
@@ -104,6 +105,19 @@ export function SubscriptionStatusCard() {
               </span>
             </div>
           )}
+          
+          {/* Add Newsletter Generations counter */}
+          {subscriptionTier?.toLowerCase().includes('newsletter') && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Newsletter Generations:</span>
+              <span className="text-sm flex items-center gap-1">
+                <Bookmark className="h-3 w-3" />
+                <span className={remainingNewsletterGenerations > 0 ? "text-green-600 font-medium" : "text-gray-600"}>
+                  {remainingNewsletterGenerations}
+                </span>
+              </span>
+            </div>
+          )}
         </div>
         
         {isSubscribed && (
@@ -116,6 +130,13 @@ export function SubscriptionStatusCard() {
                   You have access to all {subscriptionTier.toLowerCase()} features. Your subscription will{" "}
                   {willCancel ? "cancel" : "renew"} on{" "}
                   {subscriptionEnd ? format(subscriptionEnd, "MMMM d, yyyy") : "N/A"}.
+                  
+                  {/* Add newsletter generations if applicable */}
+                  {subscriptionTier?.toLowerCase().includes('newsletter') && remainingNewsletterGenerations > 0 && (
+                    <p className="mt-1">
+                      You have <span className="font-medium">{remainingNewsletterGenerations} newsletter generations</span> available.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
