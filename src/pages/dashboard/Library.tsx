@@ -1,12 +1,13 @@
 
 import { useEffect, useState } from "react";
-import { Book, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
   Dialog, 
   DialogContent, 
@@ -57,39 +58,12 @@ const Library = () => {
     });
   };
 
-  // Create a cleaner preview of the newsletter content
-  const createPreview = (markdown: string | null) => {
-    if (!markdown) return "No content available";
-    
-    try {
-      // Extract the first heading if it exists
-      const headingMatch = markdown.match(/^#\s+(.+)$/m);
-      const firstHeading = headingMatch ? headingMatch[1] : "";
-      
-      // Extract the first paragraph that's not a heading
-      const paragraphMatch = markdown.match(/^(?!\s*#)(.+)/m);
-      let firstParagraph = paragraphMatch ? paragraphMatch[1] : "";
-      
-      // Clean up the paragraph
-      firstParagraph = firstParagraph
-        .replace(/\*\*/g, '') // Remove bold
-        .replace(/\*/g, '') // Remove italics
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with just the text
-        .replace(/!\[[^\]]*\]\([^)]*\)/g, ''); // Remove images
-      
-      // If we have a heading, use it as the preview with the first few words of text
-      if (firstHeading) {
-        return firstHeading + (firstParagraph ? ` - ${firstParagraph.substring(0, 50)}...` : "");
-      }
-      
-      // If no heading, just use the first paragraph
-      return firstParagraph.length > 150 
-        ? firstParagraph.substring(0, 150) + '...' 
-        : firstParagraph;
-    } catch (err) {
-      console.error("Error creating preview:", err);
-      return "Preview not available";
-    }
+  // Format short date for the card
+  const formatShortDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   // Render markdown to HTML
@@ -113,22 +87,21 @@ const Library = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Book className="h-5 w-5" />
+        <FileText className="h-5 w-5" />
         <h1 className="text-2xl font-bold">Newsletter Library</h1>
       </div>
       
       {isLoading ? (
         // Loading state with skeleton cards
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardContent className="p-6">
-                <Skeleton className="h-4 w-32 mb-4" />
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-              <CardFooter className="bg-muted/50 px-6 py-3">
-                <Skeleton className="h-4 w-24" />
-              </CardFooter>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
+              <AspectRatio ratio={1}>
+                <div className="flex flex-col items-center justify-center h-full p-2">
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </AspectRatio>
             </Card>
           ))}
         </div>
@@ -140,39 +113,27 @@ const Library = () => {
       ) : !newsletters || newsletters.length === 0 ? (
         // Empty state
         <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-          <Book className="h-10 w-10 mx-auto mb-4 text-gray-400" />
+          <FileText className="h-10 w-10 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-600 mb-1">No newsletters yet</h3>
           <p className="text-gray-500">Generated newsletters will appear here.</p>
         </div>
       ) : (
         // Display newsletters in grid
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {newsletters.map((newsletter) => (
-            <Card key={newsletter.id} className="overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow">
-              <CardContent className="p-6 flex-grow">
-                <div className="text-sm text-muted-foreground mb-2">
-                  {formatDate(newsletter.created_at)}
+            <Card 
+              key={newsletter.id} 
+              className="overflow-hidden hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer"
+              onClick={() => viewNewsletter(newsletter)}
+            >
+              <AspectRatio ratio={1}>
+                <div className="flex flex-col items-center justify-center h-full p-2">
+                  <span className="text-xs text-muted-foreground mb-2">
+                    {formatShortDate(newsletter.created_at)}
+                  </span>
+                  <FileText className="h-8 w-8 text-primary/80" />
                 </div>
-                <div className="prose-sm line-clamp-4">
-                  <h3 className="font-medium text-base mb-1">
-                    {createPreview(newsletter.markdown_text)}
-                  </h3>
-                </div>
-              </CardContent>
-              <CardFooter className="bg-muted/50 px-6 py-3 flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">
-                  Newsletter #{newsletter.id.substring(0, 8)}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-xs"
-                  onClick={() => viewNewsletter(newsletter)}
-                >
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                  View Newsletter
-                </Button>
-              </CardFooter>
+              </AspectRatio>
             </Card>
           ))}
         </div>
@@ -180,24 +141,25 @@ const Library = () => {
 
       {/* Newsletter Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           {selectedNewsletter && (
             <>
               <DialogHeader>
-                <DialogTitle>Newsletter from {formatDate(selectedNewsletter.created_at)}</DialogTitle>
+                <DialogTitle className="text-xl">Newsletter from {formatDate(selectedNewsletter.created_at)}</DialogTitle>
                 <DialogDescription>
                   Generated on {new Date(selectedNewsletter.created_at).toLocaleString()}
                 </DialogDescription>
               </DialogHeader>
               
               <div 
-                className="prose dark:prose-invert max-w-none my-6" 
+                className="prose dark:prose-invert max-w-none my-4" 
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
               />
               
-              <DialogFooter>
+              <DialogFooter className="flex gap-2 mt-2">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => {
                     navigator.clipboard.writeText(selectedNewsletter.markdown_text || "")
                       .then(() => toast.success("Newsletter content copied to clipboard"))
@@ -206,7 +168,7 @@ const Library = () => {
                 >
                   Copy Content
                 </Button>
-                <Button onClick={() => setDialogOpen(false)}>Close</Button>
+                <Button size="sm" onClick={() => setDialogOpen(false)}>Close</Button>
               </DialogFooter>
             </>
           )}
