@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -360,28 +359,18 @@ const WalkthroughPopup = ({
             title: "To get started, all we need is...",
             description: (
               <div className="text-left space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newsletter-timezone">Your Timezone (for accurate info and posting):</Label>
-                  <Select value={timezone} onValueChange={setTimezone}>
-                    <SelectTrigger id="newsletter-timezone" className="w-full">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
-                      <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
-                      <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
-                      <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
-                      <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Removed timezone selection for newsletter platform */}
                 
-                <div className="space-y-2">
-                  <Label>Your permission to read (but never write or edit) your bookmarks:</Label>
-                  <Button onClick={handleBookmarksConsent} variant="outline" className="w-full flex items-center justify-center gap-2">
-                    <Twitter className="h-4 w-4" />
+                <div className="mt-4 mb-6">
+                  <p className="text-base font-medium mb-2">Your permission to read (but never write or edit) your bookmarks:</p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    This allows us to create newsletters from your bookmarked content automatically.
+                  </p>
+                  <Button 
+                    onClick={handleBookmarksConsent} 
+                    className="w-full py-3 bg-[#0087C8] hover:bg-[#0087C8]/90 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+                  >
+                    <Twitter className="h-5 w-5" />
                     Authorize & Finish
                   </Button>
                 </div>
@@ -492,22 +481,38 @@ const WalkthroughPopup = ({
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleNextStep}
-              className={cn(
-                "px-6 py-2 font-medium",
-                isCreatorPlatform ? 
-                  "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
-                  "bg-amber-500 hover:bg-amber-600"
-              )}
-              disabled={currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid}
-            >
-              {currentStep < totalSteps ? "Next" : "Finish"}
-              {currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid && (
-                <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
-              )}
-            </Button>
+          <div className="flex justify-between items-center">
+            {/* Show "Maybe Later" button only on step 4 for newsletter platform */}
+            {currentStep === totalSteps && !isCreatorPlatform ? (
+              <div className="flex justify-end w-full">
+                <Button 
+                  onClick={handleNextStep}
+                  variant="ghost" 
+                  className="text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Maybe Later
+                </Button>
+              </div>
+            ) : (
+              // Regular navigation button for all other cases
+              <div className="flex justify-center w-full">
+                <Button 
+                  onClick={handleNextStep}
+                  className={cn(
+                    "px-6 py-2 font-medium",
+                    isCreatorPlatform ? 
+                      "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
+                      "bg-amber-500 hover:bg-amber-600"
+                  )}
+                  disabled={currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid}
+                >
+                  {currentStep < totalSteps ? "Next" : "Finish"}
+                  {currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid && (
+                    <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
