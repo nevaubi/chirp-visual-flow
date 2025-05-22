@@ -33,19 +33,29 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     hourLabels.push(formattedHour);
   }
   
-  // Color intensity function - simplified blue gradient
+  // Color intensity function - enhanced blue gradient with better contrast
   const getColor = (value: number, max: number) => {
-    if (value === 0) return '#f8fafc'; // Very light gray for zero values
+    if (value === 0) return '#fafafa'; // Even lighter gray for zero values for better contrast
     
     // Calculate intensity (0-1)
     const intensity = value / max;
     
-    // Create a blue gradient from light to dark
-    if (intensity < 0.2) return '#e2f1ff'; // Very light blue
-    if (intensity < 0.4) return '#b3d7ff'; // Light blue
-    if (intensity < 0.6) return '#80baff'; // Medium light blue
-    if (intensity < 0.8) return '#4d9fff'; // Medium blue
-    return '#0073e6';                      // Dark blue
+    // Enhanced blue gradient with better visual distinction
+    if (intensity < 0.2) return '#d4e6ff'; // Slightly more visible light blue
+    if (intensity < 0.4) return '#9fc7ff'; // Medium light blue (enhanced contrast)
+    if (intensity < 0.6) return '#62a0ff'; // Medium blue (darker than before)
+    if (intensity < 0.8) return '#2e7bff'; // Medium-dark blue (enhanced contrast)
+    return '#0055cc';                      // Darker blue for highest values
+  };
+  
+  // Get border color for cell based on value - darker borders for higher values
+  const getBorderColor = (value: number, max: number) => {
+    if (value === 0) return 'border-gray-100';
+    
+    const intensity = value / max;
+    if (intensity < 0.3) return 'border-blue-100';
+    if (intensity < 0.6) return 'border-blue-200';
+    return 'border-blue-300';
   };
   
   // Format timezone for display
@@ -180,11 +190,12 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                     const value1 = dayData[hourIndex1] || 0;
                     const value2 = dayData[hourIndex2] || 0;
                     const value = Math.max(value1, value2);
+                    const borderClass = getBorderColor(value, maxValue);
                     
                     return (
                       <div
                         key={colIndex}
-                        className="h-5 border border-gray-100 cursor-pointer transition-all duration-200 hover:border-blue-300"
+                        className={`h-5 border cursor-pointer transition-all duration-200 hover:border-blue-400 ${borderClass}`}
                         style={{ backgroundColor: getColor(value, maxValue) }}
                         onMouseEnter={() => setHoveredCell({ 
                           day: dayIndex, 
@@ -213,16 +224,16 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                 </div>
                 <div className="flex items-center space-x-1">
                   <span className="text-xs text-gray-500">Less</span>
-                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#e2f1ff' }}></div>
-                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#b3d7ff' }}></div>
-                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#80baff' }}></div>
-                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#4d9fff' }}></div>
-                  <div className="w-3 h-3 border border-gray-200" style={{ backgroundColor: '#0073e6' }}></div>
+                  <div className="w-3 h-3 border border-blue-100" style={{ backgroundColor: '#d4e6ff' }}></div>
+                  <div className="w-3 h-3 border border-blue-100" style={{ backgroundColor: '#9fc7ff' }}></div>
+                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#62a0ff' }}></div>
+                  <div className="w-3 h-3 border border-blue-200" style={{ backgroundColor: '#2e7bff' }}></div>
+                  <div className="w-3 h-3 border border-blue-300" style={{ backgroundColor: '#0055cc' }}></div>
                   <span className="text-xs text-gray-500">More</span>
                 </div>
               </div>
               
-              {/* Key insights - now in a more compact layout */}
+              {/* Key insights - compact layout */}
               <div className="p-2 bg-blue-50 rounded-lg">
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
