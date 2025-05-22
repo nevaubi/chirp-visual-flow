@@ -98,8 +98,8 @@ const Library = () => {
             <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
               <AspectRatio ratio={1}>
                 <div className="flex flex-col items-center justify-center h-full p-2">
-                  <Skeleton className="h-4 w-16 mb-2" />
-                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-6 w-20 mb-3" />
+                  <Skeleton className="h-12 w-12 rounded-full" />
                 </div>
               </AspectRatio>
             </Card>
@@ -113,7 +113,7 @@ const Library = () => {
       ) : !newsletters || newsletters.length === 0 ? (
         // Empty state
         <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-          <FileText className="h-10 w-10 mx-auto mb-4 text-gray-400" />
+          <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-600 mb-1">No newsletters yet</h3>
           <p className="text-gray-500">Generated newsletters will appear here.</p>
         </div>
@@ -128,10 +128,12 @@ const Library = () => {
             >
               <AspectRatio ratio={1}>
                 <div className="flex flex-col items-center justify-center h-full p-2">
-                  <span className="text-xs text-muted-foreground mb-2">
+                  <span className="text-base font-medium text-primary mb-2">
                     {formatShortDate(newsletter.created_at)}
                   </span>
-                  <FileText className="h-8 w-8 text-primary/80" />
+                  <div className="bg-primary/10 p-3 rounded-full">
+                    <FileText className="h-14 w-14 text-primary" />
+                  </div>
                 </div>
               </AspectRatio>
             </Card>
