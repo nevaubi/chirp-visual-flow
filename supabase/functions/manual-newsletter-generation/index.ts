@@ -765,16 +765,27 @@ ${markdownNewsletter}
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
 
     // 15) Convert final Markdown to HTML & inline CSS
-    const htmlBody = marked(finalMarkdown);
-    const emailHtml = juice(`
-      <body style="background:#f5f7fa;margin:0;padding:20px;">
-        <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-          <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-            ${htmlBody}
-          </div>
-        </div>
-      </body>
-    `);
+// -------------------------------------------------
+// Force all images to be responsive, centred, and capped to the container width
+const renderer = new marked.Renderer();
+renderer.image = (href, _title, alt) => `
+  <img src="${href}"
+       alt="${alt}"
+       style="max-width:100%;height:auto;display:block;margin:12px auto;border-radius:4px;">
+`;
+
+const htmlBody = marked(finalMarkdown, { renderer });
+
+const emailHtml = juice(`
+  <body style="background:#f5f7fa;margin:0;padding:20px;">
+    <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
+      <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+        ${htmlBody}
+      </div>
+    </div>
+  </body>
+`);
+
 
     // 16) Send email via Resend
     try {
