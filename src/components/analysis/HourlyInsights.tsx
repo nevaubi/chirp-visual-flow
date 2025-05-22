@@ -63,7 +63,7 @@ const HourlyInsights = ({
   return (
     <Card className="border-none shadow-sm hover:shadow transition-shadow h-full">
       <CardContent className="p-4">
-        <h3 className="text-base font-medium mb-4 text-blue-700">Engagement Insights</h3>
+        <h3 className="text-base font-medium mb-4 text-blue-700">Engagement Insights: Performance metrics</h3>
         
         <div className="space-y-4">
           <div className="p-3 bg-blue-50 rounded-lg">
