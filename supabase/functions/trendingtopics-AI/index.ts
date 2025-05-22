@@ -211,7 +211,7 @@ Do not include any introductory or concluding text. Ensure each field stays unde
           }
         ],
         temperature: 0.3,
-        max_tokens: 2000
+        max_tokens: 3000
       }),
     });
 
