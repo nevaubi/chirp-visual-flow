@@ -180,13 +180,13 @@ const CreatorDashboard = ({ profile }) => {
           />
         </div>
         
-        {/* Hourly Engagement Chart */}
+        {/* Hourly Engagement Chart - UPDATED PROPS TO MATCH DATA STRUCTURE */}
         <div className="lg:col-span-6">
           <HourlyEngagementChart 
-            hourlyAvgLikes={analysisResults?.hourly_avg_likes || {}} 
-            averageTweetsPerHour={analysisResults?.average_tweets_per_hour || {}} 
+            hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
+            averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
             timezone={localProfile?.timezone}
-            bestHour={parseInt(analysisResults?.top_posting_hour || "0")}
+            bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
           />
         </div>
       </div>
