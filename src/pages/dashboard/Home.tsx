@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -17,6 +16,9 @@ import HourlyEngagementChart from '@/components/analysis/HourlyEngagementChart';
 import ProfileHeatmap from '@/components/analysis/ProfileHeatmap';
 import CircadianInsights from '@/components/analysis/CircadianInsights';
 import HourlyInsights from '@/components/analysis/HourlyInsights';
+import AvgLikesByLengthChart from '@/components/analysis/AvgLikesByLengthChart';
+import ReplyVsPostDonutChart from '@/components/analysis/ReplyVsPostDonutChart';
+import ContentTypeEngagementChart from '@/components/analysis/ContentTypeEngagementChart';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -159,11 +161,27 @@ const CreatorDashboard = ({ profile }) => {
       {/* Background gradient decoration */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-[#E5DEFF]/20 via-[#D3E4FD]/20 to-[#F1F0FB]/20 -z-10 rounded-md"></div>
       
-      {/* Profile Section */}
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        {/* Twitter Profile Card - now left-aligned with updated styling */}
-        <div className="w-full">
-          <TwitterProfileCard profile={localProfile} />
+      {/* Profile Section with Metrics */}
+      <div className="w-full">
+        <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">PROFILE & METRICS</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Twitter Profile Card - now in a responsive grid */}
+          <div className="lg:col-span-1">
+            <TwitterProfileCard profile={localProfile} />
+          </div>
+          
+          {/* New charts in the remaining space */}
+          <div className="lg:col-span-1">
+            <AvgLikesByLengthChart avgLikesByLength={analysisResults?.avgLikesByLength} />
+          </div>
+          
+          <div className="lg:col-span-1">
+            <ReplyVsPostDonutChart replyVsPostStats={analysisResults?.replyVsPostStats} />
+          </div>
+          
+          <div className="lg:col-span-1">
+            <ContentTypeEngagementChart engagementByContentType={analysisResults?.engagement_by_content_type} />
+          </div>
         </div>
       </div>
       
