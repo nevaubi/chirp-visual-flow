@@ -1,11 +1,17 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
+
+interface ApifyResponse {
+  tweets: Tweet[];
+  error?: string;
+}
 
 interface Tweet {
   id: string;
   text: string;
   created_at?: string;
-  createdAt?: string;
+  createdAt?: string; // New format from kaitoeasyapi actor
   public_metrics?: {
     retweet_count: number;
     reply_count: number;
@@ -13,7 +19,7 @@ interface Tweet {
     quote_count: number;
     impression_count?: number;
   };
-  retweetCount?: number;
+  retweetCount?: number; // New format
   replyCount?: number;
   likeCount?: number;
   quoteCount?: number;
@@ -26,15 +32,6 @@ interface Tweet {
     media?: {
       expanded_url?: string;
       type?: string;
-      additional_media_info?: {
-        source_user?: {
-          user_results?: {
-            result?: {
-              core?: { created_at?: string }
-            }
-          }
-        }
-      }
     }[];
   };
   author?: {
@@ -45,10 +42,6 @@ interface Tweet {
     followers?: number;
     following?: number;
   };
-  url?: string;
-  isReply?: boolean;
-  inReplyToUsername?: string;
-  bookmarkCount?: number;
 }
 
 interface ProfileAnalysisRequest {
@@ -77,309 +70,401 @@ interface ProfileAnalysisResult {
   growth_opportunities: string[];
 }
 
+// Redis keys will be prefixed with this to avoid collisions
 const REDIS_PREFIX = 'twitter_data:';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Setup Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY') as string;
+// Get Apify API key
+const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY') as string
+
+// Get Redis Upstash credentials
 const REDIS_URL = Deno.env.get('UPSTASH_REDIS_REST_URL') as string;
 const REDIS_TOKEN = Deno.env.get('UPSTASH_REDIS_REST_TOKEN') as string;
 
-/**
- * Pushes a single tweet-record into a Redis list under key `${REDIS_PREFIX}${key}`.
- */
-async function storeTweetInRedis(key: string, data: unknown): Promise<void> {
-  if (!REDIS_URL || !REDIS_TOKEN) {
-    console.error('Redis credentials not found');
-    return;
-  }
-  const fullKey = `${REDIS_PREFIX}${key}`;
+// Function to store data in Redis
+async function storeInRedis(key: string, data: unknown, expireInDays = 30): Promise<boolean> {
   try {
-    const url = `${REDIS_URL}/lpush/${encodeURIComponent(fullKey)}`;
-    const res = await fetch(url, {
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.error('Redis credentials not found');
+      return false;
+    }
+
+    const fullKey = `${REDIS_PREFIX}${key}`;
+    console.log(`Storing data in Redis with key: ${fullKey}`);
+    
+    const url = `${REDIS_URL}/set/${fullKey}`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${REDIS_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ elements: [JSON.stringify(data)] })
+      body: JSON.stringify({
+        value: JSON.stringify(data),
+        ex: expireInDays * 24 * 60 * 60 // Expire time in seconds
+      })
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error('Redis LPUSH error:', txt);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Redis storage error:', errorData);
+      return false;
     }
-  } catch (e) {
-    console.error('Error pushing to Redis:', e);
+
+    const result = await response.json();
+    console.log('Redis storage result:', result);
+    return result.result === 'OK';
+  } catch (error) {
+    console.error('Error storing data in Redis:', error);
+    return false;
   }
 }
 
-/**
- * Iterates the fetched tweets and pushes each normalized record into Redis.
- */
+// Process and store tweet history in Redis
 async function processTweetHistory(tweets: Tweet[], userId: string) {
-  console.log(`Background: storing ${tweets.length} tweets for ${userId}`);
-  const key = `user:${userId}:tweets`;
+  try {
+    // Skip if no Redis credentials
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.log('Skipping Redis storage: credentials not available');
+      return;
+    }
 
-  for (const tweet of tweets) {
-    const mediaList = tweet.extendedEntities?.media || tweet.entities?.media || [];
-    const mediaType = mediaList.some(m => m.type === 'video' || m.expanded_url?.includes('/video/'))
-      ? 'Video'
-      : mediaList.some(m => m.type === 'photo' || m.expanded_url?.includes('/photo/'))
-      ? 'Photo'
-      : 'Text only';
-
-    const record = {
+    console.log(`Processing ${tweets.length} tweets for Redis storage`);
+    
+    // Store the full tweet history
+    const tweetHistory = tweets.map(tweet => ({
       id: tweet.id,
       text: tweet.text,
       created_at: tweet.createdAt || tweet.created_at || new Date().toISOString(),
       engagement: {
-        likes: tweet.likeCount ?? tweet.public_metrics?.like_count ?? 0,
-        retweets: tweet.retweetCount ?? tweet.public_metrics?.retweet_count ?? 0,
-        replies: tweet.replyCount ?? tweet.public_metrics?.reply_count ?? 0,
-        quotes: tweet.quoteCount ?? tweet.public_metrics?.quote_count ?? 0,
-        views: tweet.viewCount ?? tweet.public_metrics?.impression_count ?? 0
+        likes: tweet.likeCount || tweet.public_metrics?.like_count || 0,
+        retweets: tweet.retweetCount || tweet.public_metrics?.retweet_count || 0,
+        replies: tweet.replyCount || tweet.public_metrics?.reply_count || 0,
+        quotes: tweet.quoteCount || tweet.public_metrics?.quote_count || 0,
+        views: tweet.viewCount || tweet.public_metrics?.impression_count || 0
       },
-      has_image: mediaType === 'Photo',
-      has_video: mediaType === 'Video',
-      has_link: !!(tweet.entities?.urls && tweet.entities.urls.length > 0),
-      author: {
-        name: tweet.author?.name ?? null,
-        handle: tweet.author?.userName ?? null,
-        verified: tweet.author?.isBlueVerified ?? false,
-        location: tweet.author?.location ?? null,
-        followers: tweet.author?.followers ?? 0,
-        following: tweet.author?.following ?? 0
-      },
-      tweet_url: tweet.url ?? null,
-      is_reply: tweet.isReply ?? false,
-      reply_to: tweet.isReply ? tweet.inReplyToUsername : null,
-      media_type: mediaType,
-      bookmark_count: tweet.bookmarkCount ?? 0
-    };
+      // Determine content type
+      has_image: !!(tweet.entities?.media?.some(m => m.type === 'photo') || 
+                    tweet.extendedEntities?.media?.some(m => m.type === 'photo')),
+      has_video: !!(tweet.entities?.media?.some(m => m.type === 'video') || 
+                    tweet.extendedEntities?.media?.some(m => m.type === 'video')),
+      has_link: !!(tweet.entities?.urls && tweet.entities.urls.length > 0)
+    }));
 
-    await storeTweetInRedis(key, record);
-    // small delay to throttle
-    await new Promise(r => setTimeout(r, 20));
+    // Store in Redis with user ID as key
+    const storeResult = await storeInRedis(`user:${userId}:tweets`, tweetHistory, 90);
+    console.log(`Redis storage result for user ${userId}: ${storeResult ? 'Success' : 'Failed'}`);
+    
+    return storeResult;
+  } catch (error) {
+    console.error('Error processing tweet history for Redis:', error);
+    return false;
   }
-
-  console.log(`Completed background Redis storage for ${userId}`);
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
-
+  
   try {
-    const { userId, twitterUsername, timezone } =
-      (await req.json()) as ProfileAnalysisRequest;
-
+    const { userId, twitterUsername, timezone } = await req.json() as ProfileAnalysisRequest
+    
+    // Validate input
     if (!userId || !twitterUsername) {
       return new Response(
-        JSON.stringify({ error: 'Missing userId or twitterUsername' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
-
-    console.log(`Starting profile analysis for ${twitterUsername} (user ${userId})`);
-
-    // 1) Fetch tweets from Apify
-    const tweets = await fetchTweets(twitterUsername);
-    if (!tweets.length) {
+    
+    console.log(`Starting analysis for user ${userId} with Twitter username @${twitterUsername}`)
+    
+    // Fetch user's tweets using Apify
+    const tweets = await fetchTweets(twitterUsername)
+    
+    if (!tweets || tweets.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No tweets fetched' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'No tweets found or error fetching tweets' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
-    console.log(`Fetched ${tweets.length} tweets`);
-
-    // 2) Analyze tweets for profile insights
-    const analysisResults = analyzeUserTweets(tweets, timezone);
-
-    // 3) Update Supabase profile
-    const { error: supError } = await supabase
+    
+    console.log(`Successfully fetched ${tweets.length} tweets for analysis`)
+    
+    // Analyze tweets and generate insights
+    const analysisResults = analyzeUserTweets(tweets, timezone)
+    
+    // Update user profile with analysis results
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({ profile_analysis_results: analysisResults })
-      .eq('id', userId);
-    if (supError) {
-      console.error('Supabase update error:', supError);
-      throw supError;
+      .eq('id', userId)
+    
+    if (updateError) {
+      console.error('Error updating profile with analysis results:', updateError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to update profile with analysis results' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
     }
-    console.log('Supabase profile updated');
-
-    // 4) Background Redis list-based storage
-    if (typeof EdgeRuntime !== 'undefined') {
-      EdgeRuntime.waitUntil(processTweetHistory(tweets, userId));
-    } else {
-      processTweetHistory(tweets, userId);
+    
+    // Process and store tweets in Redis in the background
+    // This way we don't block the response and can handle any Redis errors separately
+    try {
+      // Use waitUntil to run Redis storage in the background
+      const storagePromise = processTweetHistory(tweets, userId);
+      EdgeRuntime.waitUntil(storagePromise);
+      
+      console.log('Redis storage task started in the background');
+    } catch (redisError) {
+      // If there's an error setting up the background task, just log it
+      // We don't want to fail the whole function just because Redis has issues
+      console.error('Error starting Redis background task:', redisError);
     }
-
-    // 5) Respond with analysis
+    
     return new Response(
-      JSON.stringify({ success: true, results: analysisResults }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Profile analysis completed successfully',
+        results: analysisResults
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (err: any) {
-    console.error('Error in profile-analysis function:', err);
+    )
+    
+  } catch (error) {
+    console.error('Error in profile analysis:', error)
     return new Response(
-      JSON.stringify({ error: err.message || err.toString() }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
   }
-});
+})
 
-/**
- * Calls the Apify actor to fetch up to 100 latest tweets for the given username.
- */
 async function fetchTweets(username: string): Promise<Tweet[]> {
-  const endpoint =
-    `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_KEY)}`;
-
-  const params = {
-    "from": username,
-    "lang": "en",
-    "maxItems": 100,
-    "queryType": "Latest"
-  };
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-  if (!res.ok) {
-    throw new Error(`Apify error: ${res.status} ${res.statusText}`);
+  try {
+    // Use the kaitoeasyapi actor for Twitter scraping - matching the one used in the working function
+    const apifyUrl = `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`
+    
+    // Parameter structure matching the working code
+    const params = {
+      "filter:blue_verified": false,
+      "filter:consumer_video": false,
+      "filter:has_engagement": false,
+      "filter:hashtags": false,
+      "filter:images": false,
+      "filter:links": false,
+      "filter:media": false,
+      "filter:mentions": false,
+      "filter:native_video": false,
+      "filter:nativeretweets": false,
+      "filter:news": false,
+      "filter:pro_video": false,
+      "filter:quote": false,
+      "filter:replies": false,
+      "filter:safe": false,
+      "filter:spaces": false,
+      "filter:twimg": false,
+      "filter:verified": false,
+      "filter:videos": false,
+      "filter:vine": false,
+      "from": username,
+      "include:nativeretweets": false,
+      "lang": "en",
+      "maxItems": 100,
+      "queryType": "Latest"
+    }
+    
+    const response = await fetch(apifyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Apify API error: ${response.statusText}`)
+    }
+    
+    // The new actor returns an array directly, not wrapped in a 'tweets' property
+    const data = await response.json() as Tweet[]
+    
+    console.log(`Received ${data.length} tweets from Apify`)
+    
+    if (!Array.isArray(data)) {
+      console.error('Unexpected response format:', data)
+      throw new Error('Unexpected response format from Apify')
+    }
+    
+    return data
+  } catch (error) {
+    console.error('Error fetching tweets:', error)
+    return []
   }
-  const data = (await res.json()) as Tweet[];
-  return Array.isArray(data) ? data : [];
 }
 
-/**
- * Aggregates tweet data into a ProfileAnalysisResult.
- */
 function analyzeUserTweets(tweets: Tweet[], timezone: string): ProfileAnalysisResult {
-  const hourlyActivity: Record<string, number> = {};
+  // Initialize analysis data structure
+  const hourlyActivity: Record<string, number> = {}
+  const hourlyEngagement: Record<string, number> = {}
+  
+  let totalEngagement = 0
+  let totalTweets = tweets.length
+  let bestTweet: Tweet | null = null
+  let bestTweetEngagement = 0
+  
+  // Content type engagement
   const contentTypeEngagement = {
     text_only: { count: 0, engagement: 0 },
     with_image: { count: 0, engagement: 0 },
     with_video: { count: 0, engagement: 0 },
     with_link: { count: 0, engagement: 0 }
-  };
-  let totalEngagement = 0;
-  let totalTweets = tweets.length;
-  let bestTweet: Tweet | null = null;
-  let bestEngagement = 0;
-
-  // Initialize hours
-  for (let h = 0; h < 24; h++) {
-    const hh = h.toString().padStart(2, '0');
-    hourlyActivity[hh] = 0;
   }
-
-  for (const tweet of tweets) {
-    // skip retweets
-    if (tweet.text.startsWith('RT @')) {
-      totalTweets--;
-      continue;
-    }
-
-    // parse creation date
-    const raw = tweet.createdAt || tweet.created_at || '';
-    const dt = new Date(raw);
-    let hour = dt.getUTCHours();
-    // adjust for timezone
-    try {
-      const local = new Date(dt.toLocaleString('en-US', { timeZone: timezone }));
-      hour = local.getHours();
-    } catch {
-      // keep UTC hour
-    }
-    const hourStr = hour.toString().padStart(2, '0');
-    hourlyActivity[hourStr]++;
-
-    // compute engagement score
-    const likes = tweet.likeCount ?? tweet.public_metrics?.like_count ?? 0;
-    const retweets = tweet.retweetCount ?? tweet.public_metrics?.retweet_count ?? 0;
-    const replies = tweet.replyCount ?? tweet.public_metrics?.reply_count ?? 0;
-    const quotes = tweet.quoteCount ?? tweet.public_metrics?.quote_count ?? 0;
-    const eng = likes + retweets*2 + replies*3 + quotes*3;
-    totalEngagement += eng;
-    if (eng > bestEngagement) {
-      bestEngagement = eng;
-      bestTweet = tweet;
-    }
-
-    // classify content type
-    const hasImage = !!tweet.entities?.media?.some(m => m.type === 'photo')
-      || !!tweet.extendedEntities?.media?.some(m => m.type === 'photo');
-    const hasVideo = !!tweet.entities?.media?.some(m => m.type === 'video')
-      || !!tweet.extendedEntities?.media?.some(m => m.type === 'video');
-    const hasLink = !!tweet.entities?.urls?.length;
-
-    let typeKey: keyof typeof contentTypeEngagement = 'text_only';
-    if (hasVideo) typeKey = 'with_video';
-    else if (hasImage) typeKey = 'with_image';
-    else if (hasLink) typeKey = 'with_link';
-
-    contentTypeEngagement[typeKey].count++;
-    contentTypeEngagement[typeKey].engagement += eng;
+  
+  // Initialize all hours
+  for (let i = 0; i < 24; i++) {
+    const hour = i.toString().padStart(2, '0')
+    hourlyActivity[hour] = 0
+    hourlyEngagement[hour] = 0
   }
-
-  const avgEngagementRate = totalTweets > 0 ? totalEngagement / totalTweets : 0;
-
-  // find top posting hour
-  let topHour = '00';
-  let maxCount = 0;
-  for (const [hr, cnt] of Object.entries(hourlyActivity)) {
-    if (cnt > maxCount) {
-      maxCount = cnt;
-      topHour = hr;
+  
+  // Process each tweet
+  tweets.forEach(tweet => {
+    // Skip retweets
+    if ((tweet.text || '').startsWith('RT @')) {
+      totalTweets--
+      return
+    }
+    
+    // Parse tweet date (handle both original and new format)
+    const tweetDate = new Date(tweet.createdAt || tweet.created_at || '')
+    
+    // Adjust for timezone if provided
+    if (timezone) {
+      try {
+        const options = { timeZone: timezone }
+        const timeString = tweetDate.toLocaleTimeString('en-US', options)
+        const hourMatch = timeString.match(/(\d+):/)
+        let hour = hourMatch ? parseInt(hourMatch[1]) : 0
+        
+        // Convert from 12-hour to 24-hour format if needed
+        if (timeString.includes('PM') && hour !== 12) {
+          hour += 12
+        } else if (timeString.includes('AM') && hour === 12) {
+          hour = 0
+        }
+        
+        const hourString = hour.toString().padStart(2, '0')
+        hourlyActivity[hourString]++
+      } catch (error) {
+        console.warn('Error parsing timezone, using UTC:', error)
+        const hour = tweetDate.getUTCHours().toString().padStart(2, '0')
+        hourlyActivity[hour]++
+      }
+    } else {
+      // Fallback to UTC
+      const hour = tweetDate.getUTCHours().toString().padStart(2, '0')
+      hourlyActivity[hour]++
+    }
+    
+    // Calculate engagement (use both formats)
+    const engagement = 
+      (tweet.public_metrics?.like_count || tweet.likeCount || 0) + 
+      (tweet.public_metrics?.retweet_count || tweet.retweetCount || 0) * 2 + 
+      (tweet.public_metrics?.reply_count || tweet.replyCount || 0) * 3 + 
+      (tweet.public_metrics?.quote_count || tweet.quoteCount || 0) * 3
+    
+    totalEngagement += engagement
+    
+    // Track best performing tweet
+    if (engagement > bestTweetEngagement) {
+      bestTweetEngagement = engagement
+      bestTweet = tweet
+    }
+    
+    // Determine content type
+    let contentType = 'text_only'
+    
+    // Check for media in both old and new formats
+    const hasVideo = 
+      tweet.entities?.urls?.some(url => url.expanded_url.includes('video')) ||
+      tweet.extendedEntities?.media?.some(media => media.type === 'video' || media.expanded_url?.includes('video'))
+    
+    const hasImage = 
+      tweet.entities?.media?.some(media => media.type === 'photo') ||
+      tweet.extendedEntities?.media?.some(media => media.type === 'photo' || media.expanded_url?.includes('photo'))
+    
+    const hasLink = tweet.entities?.urls && tweet.entities.urls.length > 0
+    
+    if (hasVideo) {
+      contentType = 'with_video'
+    } else if (hasImage) {
+      contentType = 'with_image'
+    } else if (hasLink) {
+      contentType = 'with_link'
+    }
+    
+    contentTypeEngagement[contentType].count++
+    contentTypeEngagement[contentType].engagement += engagement
+  })
+  
+  // Calculate average engagement rate
+  const avgEngagementRate = totalTweets > 0 ? totalEngagement / totalTweets : 0
+  
+  // Find top posting hour
+  let topHour = '00'
+  let maxActivity = 0
+  
+  for (const [hour, count] of Object.entries(hourlyActivity)) {
+    if (count > maxActivity) {
+      maxActivity = count
+      topHour = hour
     }
   }
-
+  
+  // Calculate engagement by content type
   const engagementByContentType = {
-    text_only: contentTypeEngagement.text_only.count
-      ? contentTypeEngagement.text_only.engagement / contentTypeEngagement.text_only.count
+    text_only: contentTypeEngagement.text_only.count > 0 
+      ? contentTypeEngagement.text_only.engagement / contentTypeEngagement.text_only.count 
       : 0,
-    with_image: contentTypeEngagement.with_image.count
-      ? contentTypeEngagement.with_image.engagement / contentTypeEngagement.with_image.count
+    with_image: contentTypeEngagement.with_image.count > 0 
+      ? contentTypeEngagement.with_image.engagement / contentTypeEngagement.with_image.count 
       : 0,
-    with_video: contentTypeEngagement.with_video.count
-      ? contentTypeEngagement.with_video.engagement / contentTypeEngagement.with_video.count
+    with_video: contentTypeEngagement.with_video.count > 0 
+      ? contentTypeEngagement.with_video.engagement / contentTypeEngagement.with_video.count 
       : 0,
-    with_link: contentTypeEngagement.with_link.count
-      ? contentTypeEngagement.with_link.engagement / contentTypeEngagement.with_link.count
+    with_link: contentTypeEngagement.with_link.count > 0 
+      ? contentTypeEngagement.with_link.engagement / contentTypeEngagement.with_link.count 
       : 0
-  };
-
+  }
+  
+  // Generate growth opportunities
   const growthOpportunities = generateGrowthOpportunities(
-    hourlyActivity,
-    engagementByContentType,
+    hourlyActivity, 
+    engagementByContentType, 
     avgEngagementRate,
     topHour
-  );
-
+  )
+  
+  // Format result
   return {
     circadian_rhythm: hourlyActivity,
     engagement_by_content_type: engagementByContentType,
     top_posting_hour: topHour,
     avg_engagement_rate: avgEngagementRate,
     total_tweets_analyzed: totalTweets,
-    best_performing_tweet: bestTweet
-      ? {
-          text: bestTweet.text.length > 100
-            ? bestTweet.text.slice(0, 97) + '...'
-            : bestTweet.text,
-          engagement: bestEngagement,
-          date: bestTweet.createdAt || bestTweet.created_at || new Date().toISOString()
-        }
-      : { text: '', engagement: 0, date: new Date().toISOString() },
+    best_performing_tweet: bestTweet ? {
+      text: bestTweet.text.length > 100 ? bestTweet.text.substring(0, 97) + '...' : bestTweet.text,
+      engagement: bestTweetEngagement,
+      date: bestTweet.createdAt || bestTweet.created_at || new Date().toISOString()
+    } : { text: '', engagement: 0, date: '' },
     analysis_date: new Date().toISOString(),
     growth_opportunities: growthOpportunities
-  };
+  }
 }
 
 function generateGrowthOpportunities(
@@ -388,38 +473,34 @@ function generateGrowthOpportunities(
   avgEngagementRate: number,
   topHour: string
 ): string[] {
-  const opportunities: string[] = [];
-
-  // content type suggestion
-  const bestType = Object.entries(engagementByContentType)
-    .sort((a, b) => b[1] - a[1])[0][0];
-  const typeMap: Record<string, string> = {
-    text_only: 'text-only tweets',
-    with_image: 'tweets with images',
-    with_video: 'tweets with videos',
-    with_link: 'tweets with links'
-  };
-  opportunities.push(
-    `Your ${typeMap[bestType]} get the most engagement—consider posting more of them.`
-  );
-
-  // best posting hour suggestion
-  const hr = Number(topHour);
-  const formattedHour =
-    hr === 0 ? '12 AM' :
-    hr < 12 ? `${hr} AM` :
-    hr === 12 ? '12 PM' :
-    `${hr - 12} PM`;
-  opportunities.push(
-    `Your audience is most active around ${formattedHour}. Try posting consistently at that time.`
-  );
-
-  // engagement rate advice
-  if (avgEngagementRate < 5) {
-    opportunities.push(
-      'Your average engagement rate is low. Try asking questions or running polls to boost interaction.'
-    );
+  const opportunities = []
+  
+  // Check content type recommendations
+  const bestContentType = Object.entries(engagementByContentType)
+    .sort((a, b) => b[1] - a[1])[0][0]
+  
+  const contentTypeMap = {
+    'text_only': 'text-only tweets',
+    'with_image': 'tweets with images',
+    'with_video': 'tweets with videos',
+    'with_link': 'tweets with links'
   }
-
-  return opportunities;
+  
+  opportunities.push(`Your ${contentTypeMap[bestContentType]} perform best. Consider posting more of this content type.`)
+  
+  // Convert hour to readable format
+  const hourNum = parseInt(topHour)
+  const formattedHour = hourNum === 0 ? '12 AM' 
+    : hourNum < 12 ? `${hourNum} AM` 
+    : hourNum === 12 ? '12 PM' 
+    : `${hourNum - 12} PM`
+  
+  opportunities.push(`Your audience is most active around ${formattedHour}. Try posting consistently at this time.`)
+  
+  // Check engagement rate
+  if (avgEngagementRate < 5) {
+    opportunities.push('Your overall engagement rate could be improved. Try asking questions or creating polls to boost interaction.')
+  }
+  
+  return opportunities
 }
