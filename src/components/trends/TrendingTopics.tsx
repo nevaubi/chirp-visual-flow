@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,28 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ExampleTweetCard from "./ExampleTweetCard";
+
+interface TweetProfile {
+  username: string;
+  displayName: string;
+  verified: boolean;
+  timestamp: string;
+  avatarUrl: string;
+}
+
+interface TweetMetrics {
+  likes: number;
+  replies: number;
+  retweets: number;
+}
+
+interface ExampleTweet {
+  text: string;
+  profile: TweetProfile;
+  metrics: TweetMetrics;
+}
 
 interface TrendingTopic {
   id: string;
@@ -17,6 +40,7 @@ interface TrendingTopic {
   };
   context: string;
   subTopics: string[];
+  exampleTweets: ExampleTweet[];
 }
 
 interface Tag {
@@ -33,6 +57,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
+  const isMobile = useIsMobile();
 
   // Function to clean topic headers by removing "TOPIC HEADER: " prefix
   const cleanHeader = (header: string): string => {
@@ -102,7 +127,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           header: topic.header,
           sentiment,
           context: topic.context,
-          subTopics: topic.subTopics || []
+          subTopics: topic.subTopics || [],
+          exampleTweets: topic.exampleTweets || []
         };
       });
       
@@ -199,6 +225,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
           ))}
         </div>
         
+        {/* Error and loading states */}
         {error && (
           <div className="flex items-center gap-2 p-4 mb-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-800/30">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -216,7 +243,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
         )}
         
         {showTopics && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+          <div className="grid grid-cols-1 gap-8 animate-fade-in">
             {trendingTopics.map(topic => (
               <div 
                 key={topic.id} 
@@ -253,6 +280,24 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+                  
+                  {/* Example Tweets Section */}
+                  {topic.exampleTweets && topic.exampleTweets.length > 0 && (
+                    <div className="mt-5">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
+                      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                        {topic.exampleTweets.map((tweet, index) => (
+                          <ExampleTweetCard
+                            key={`${topic.id}-tweet-${index}`}
+                            text={tweet.text}
+                            profile={tweet.profile}
+                            metrics={tweet.metrics}
+                            index={index}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                   
