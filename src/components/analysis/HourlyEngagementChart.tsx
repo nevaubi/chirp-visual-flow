@@ -134,7 +134,7 @@ const HourlyEngagementChart = ({
     if (!active || !payload?.length) return null;
     const hour = parseInt(label);
     return (
-      <div className="bg-white p-4 rounded-xl shadow-lg border border-[#DDE3E8] text-sm">
+      <div className="bg-white p-3 rounded-lg shadow-md border border-[#DDE3E8] text-xs">
         <p className="font-semibold text-gray-800 mb-1">{formatHour(hour)}</p>
         <p className="text-[#1DA1F2] flex items-center gap-1">
           <span className="inline-block w-2 h-2 rounded-full bg-[#1DA1F2]"></span>
@@ -145,7 +145,7 @@ const HourlyEngagementChart = ({
           Avg Tweets/Hour: {payload[1]?.value?.toFixed(3) || '0.000'}
         </p>
         {hour === bestHour && (
-          <p className="text-[#FFB300] font-semibold mt-2 flex items-center gap-1">
+          <p className="text-[#FFB300] font-semibold mt-1 flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#FFB300]"></span>
             Peak engagement hour
           </p>
@@ -157,85 +157,101 @@ const HourlyEngagementChart = ({
   return (
     <div className="w-full">
       <Card className="border-none shadow-sm hover:shadow transition-shadow">
-        <CardHeader className="pb-0">
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <TrendingUp size={24} className="text-[#0087C8]" />
+        <CardHeader className="p-3 pb-1">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <TrendingUp size={18} className="text-[#0087C8]" />
             Hourly Engagement
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-xs">
             Use data-backed insights to time your tweets
           </CardDescription>
+          
+          {/* Timezone indicator */}
+          {timezone && (
+            <div className="mt-1 flex justify-end">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-flex items-center">
+                <Clock className="h-3 w-3 mr-1" /> {formatTimezone(timezone)} timezone
+              </span>
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
-          {/* Summary stats */}
-          <div className="flex flex-wrap gap-3 mb-4 p-3 bg-[#F1F5F9] rounded-lg shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ background: PEAK_GOLD }} />
-              <span>Peak Likes:</span>
-              <strong>{formatHour(topLikeHour.hour)} ({topLikeHour.value.toFixed(2)})</strong>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ background: LINE_GREEN }} />
-              <span>Most Active:</span>
-              <strong>{formatHour(topTweetHour.hour)} ({topTweetHour.value.toFixed(2)}/hr)</strong>
-            </div>
-            {timezone && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>Timezone:</span>
-                <strong>{formatTimezone(timezone)}</strong>
+        <CardContent className="p-3">
+          {/* Summary stats - more compact */}
+          <div className="grid grid-cols-3 gap-2 mb-2 p-2 bg-[#F1F5F9] rounded-lg shadow-sm text-xs">
+            <div>
+              <span className="font-medium text-blue-700">Peak Likes:</span>
+              <div className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ background: PEAK_GOLD }} />
+                <span>{formatHour(topLikeHour.hour)} ({topLikeHour.value.toFixed(1)})</span>
               </div>
-            )}
-            <div className="flex items-center gap-2">
-              <span>💡 Sweet Spot:</span>
-              <strong className="text-[#1DA1F2]">{getSweetSpot()}</strong>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Most Active:</span>
+              <div className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ background: LINE_GREEN }} />
+                <span>{formatHour(topTweetHour.hour)} ({topTweetHour.value.toFixed(1)})</span>
+              </div>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Sweet Spot:</span>
+              <div className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ background: TWEET_BLUE }} />
+                <span>{getSweetSpot()}</span>
+              </div>
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="h-[310px]">
+          {/* Chart - reduced height */}
+          <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData} margin={{ top: 10, right: 60, bottom: 0, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID_GRAY} strokeWidth={1.5} />
+              <ComposedChart data={chartData} margin={{ top: 5, right: 40, bottom: 0, left: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_GRAY} strokeWidth={1} />
                 <XAxis
                   dataKey="hourLabel"
                   stroke={TEXT_GRAY}
-                  fontSize={14}
-                  interval={1}
-                  tick={{ dy: 8 }}
-                  height={50}
-                  axisLine={{ strokeWidth: 1.5, stroke: TEXT_GRAY }}
+                  fontSize={10}
+                  interval={3}
+                  tick={{ dy: 5 }}
+                  height={25}
+                  axisLine={{ strokeWidth: 1, stroke: TEXT_GRAY }}
                 />
                 <YAxis
                   yAxisId="likes"
                   stroke={TWEET_BLUE}
-                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
-                  axisLine={{ strokeWidth: 1.5, stroke: TWEET_BLUE }}
-                  label={{ value: 'Avg Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 14, fontWeight: 'bold' } }}
+                  tick={{ fontSize: 10, fill: TEXT_GRAY }}
+                  axisLine={{ strokeWidth: 1, stroke: TWEET_BLUE }}
+                  label={{ value: 'Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 10, fontWeight: 'bold' } }}
                 />
                 <YAxis
                   yAxisId="tweets"
                   orientation="right"
                   stroke={LINE_GREEN}
-                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
-                  axisLine={{ strokeWidth: 1.5, stroke: LINE_GREEN }}
-                  label={{ value: 'Avg Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 14, fontWeight: 'bold' } }}
+                  tick={{ fontSize: 10, fill: TEXT_GRAY }}
+                  axisLine={{ strokeWidth: 1, stroke: LINE_GREEN }}
+                  label={{ value: 'Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 10, fontWeight: 'bold' } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={20} iconType="circle" wrapperStyle={{ marginTop: -10, fontSize: '14px' }} />
+                <Legend 
+                  verticalAlign="top" 
+                  height={15} 
+                  iconType="circle" 
+                  iconSize={8}
+                  wrapperStyle={{ marginTop: -5, fontSize: '10px' }} 
+                />
 
                 <Bar 
                   yAxisId="likes" 
                   dataKey="avgLikes" 
                   name="Avg Likes/Tweet" 
-                  radius={[4, 4, 0, 0]}
+                  radius={[3, 3, 0, 0]}
+                  barSize={5}
                 >
                   {chartData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={entry.isTopHour ? PEAK_GOLD : TWEET_BLUE}
                       stroke={entry.isTopHour ? PEAK_GOLD_DARK : 'none'} 
-                      strokeWidth={entry.isTopHour ? 2 : 0}
+                      strokeWidth={entry.isTopHour ? 1 : 0}
                     />
                   ))}
                 </Bar>
@@ -246,9 +262,9 @@ const HourlyEngagementChart = ({
                   dataKey="avgTweets"
                   name="Avg Tweets/Hour"
                   stroke={LINE_GREEN}
-                  strokeWidth={3}
-                  dot={{ fill: LINE_GREEN, r: 4 }}
-                  activeDot={{ r: 6, stroke: LINE_GREEN, strokeWidth: 2 }}
+                  strokeWidth={2}
+                  dot={{ fill: LINE_GREEN, r: 3 }}
+                  activeDot={{ r: 4, stroke: LINE_GREEN, strokeWidth: 1 }}
                 />
               </ComposedChart>
             </ResponsiveContainer>
