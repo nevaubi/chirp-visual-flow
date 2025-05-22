@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -9,7 +8,7 @@ import { Loader2, Send, Copy, Check, Twitter, X, Mic } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import TrendingTopicPill from '@/components/trends/TrendingTopicPill';
@@ -281,7 +280,7 @@ const TweetGenerationPanel = ({
     }
   };
 
-  // Header component for the panel
+  // Header component for the panel with improved voice profile button placement
   const PanelHeader = ({ showClose = false }) => (
     <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-6 py-8 relative">
       {showClose && (
@@ -294,33 +293,35 @@ const TweetGenerationPanel = ({
           <X size={18} />
         </Button>
       )}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-gray-900 font-bold text-3xl">𝕏</span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-white">X Post Generator</h3>
-            <p className="text-gray-300 text-sm">Create posts in your authentic voice</p>
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-gray-900 font-bold text-3xl">𝕏</span>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white">X Post Generator</h3>
+              <p className="text-gray-300 text-sm">Create posts in your authentic voice</p>
+            </div>
           </div>
         </div>
         
         {!hasVoiceProfile && (
           <Button 
-            size="sm"
+            size="default"
             onClick={handleCreateVoiceProfile}
             disabled={isCreatingProfile}
-            className="bg-[#0087C8] hover:bg-[#0076b2] text-white"
+            className="bg-[#0087C8] hover:bg-[#0076b2] text-white w-full justify-center"
           >
             {isCreatingProfile ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                Creating Voice Profile...
               </>
             ) : (
               <>
                 <Mic className="mr-2 h-4 w-4" />
-                Create Voice Profile
+                Create Voice Profile to Generate Posts
               </>
             )}
           </Button>
@@ -364,11 +365,8 @@ const TweetGenerationPanel = ({
 
                     {!hasVoiceProfile ? (
                       <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg mb-4">
-                        <p className="text-sm text-amber-800 mb-2">
+                        <p className="text-sm text-amber-800">
                           A voice profile is required to generate posts in your authentic voice.
-                        </p>
-                        <p className="text-xs text-amber-700">
-                          Click the "Create Voice Profile" button above to analyze your writing style.
                         </p>
                       </div>
                     ) : null}
@@ -415,27 +413,27 @@ const TweetGenerationPanel = ({
     );
   }
 
-  // Render desktop view
+  // Render desktop view with increased width
   return (
     <div 
       ref={panelRef}
       className={`fixed top-0 right-0 h-screen z-50 transform transition-all duration-300 ease-in-out ${
-        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-12px)]'
+        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-14px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
-      {/* Handle for hover - moved to top */}
+      {/* Handle for hover - increased width and height */}
       <div 
-        className="w-6 h-20 absolute top-20 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer animate-pulse-subtle overflow-hidden"
+        className="w-6 h-32 absolute top-20 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer animate-pulse-subtle overflow-hidden"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
-        <div className="w-1 h-8 bg-white/60 rounded-full"></div>
+        <div className="w-1 h-16 bg-white/60 rounded-full"></div>
         {/* Glow effect overlay */}
         <div className="absolute inset-0 bg-white/0 animate-glow-pulse"></div>
       </div>
 
       <PanelHeader showClose={isOpen} />
       
-      <div className="flex-1 w-[380px] max-h-full overflow-y-auto scrollbar-thin p-6 space-y-4 bg-gray-50">
+      <div className="flex-1 w-[450px] max-h-full overflow-y-auto scrollbar-thin p-6 space-y-4 bg-gray-50">
         <div className="bg-white rounded-lg p-6 shadow-sm">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleGenerateTweets)} className="space-y-4">
@@ -458,11 +456,8 @@ const TweetGenerationPanel = ({
 
               {!hasVoiceProfile ? (
                 <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg mb-4">
-                  <p className="text-sm text-amber-800 mb-2">
+                  <p className="text-sm text-amber-800">
                     A voice profile is required to generate posts in your authentic voice.
-                  </p>
-                  <p className="text-xs text-amber-700">
-                    Click the "Create Voice Profile" button in the header to analyze your writing style.
                   </p>
                 </div>
               ) : null}
@@ -540,10 +535,10 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-      {/* User info section - reduced height with smaller margins and padding */}
-      <div className="flex items-center space-x-3 mb-2">
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+      {/* User info section - reduced height */}
+      <div className="flex items-center space-x-2 mb-1.5">
+        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
           {profile?.twitter_profilepic_url ? (
             <img 
               src={profile.twitter_profilepic_url} 
@@ -551,15 +546,15 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-7 h-7 bg-gray-600 rounded-full"></div>
+            <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
           )}
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-900">{profile?.twitter_username || 'Your Name'}</span>
+          <div className="flex items-center space-x-1">
+            <span className="font-semibold text-gray-900 text-sm">{profile?.twitter_username || 'Your Name'}</span>
             {isVerified && (
-              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
             )}
@@ -572,31 +567,31 @@ const TwitterCard = ({ tweet, profile, index }: TwitterCardProps) => {
       </div>
       
       {/* Tweet content - reduced height */}
-      <div className="mb-3">
+      <div className="mb-2">
         {tweet.text ? (
-          <p className="text-base text-gray-800 leading-normal">{tweet.text}</p>
+          <p className="text-sm text-gray-800 leading-normal">{tweet.text}</p>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-3 min-h-16 flex items-center justify-center text-gray-500 italic border-2 border-dashed border-gray-200">
+          <div className="bg-gray-50 rounded-lg p-2 min-h-12 flex items-center justify-center text-gray-500 italic border-2 border-dashed border-gray-200 text-sm">
             Generated post content will appear here
           </div>
         )}
       </div>
       
       {/* Action buttons - reduced height */}
-      <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-500">
         <span>{tweet.charCount} / 280</span>
         <button 
-          className="flex items-center space-x-1 px-3 py-0.5 rounded-md hover:bg-gray-100 transition-colors"
+          className="flex items-center space-x-1 px-2 py-0.5 rounded-md hover:bg-gray-100 transition-colors"
           onClick={copyToClipboard}
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-green-500" />
+              <Check className="w-3 h-3 text-green-500" />
               <span>Copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
+              <Copy className="w-3 h-3" />
               <span>Copy</span>
             </>
           )}
