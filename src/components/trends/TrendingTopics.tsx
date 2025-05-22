@@ -161,9 +161,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     if (selectedTags.length > 0) {
       const tag = selectedTags[0].name;
       fetchTrendingTopics(tag);
-      
-      // Always reset auto-selection flag when tags change
-      setHasAutoSelectedTopic(false);
     } else {
       setTrendingTopics([]);
     }
@@ -171,14 +168,14 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
 
   // Auto-select the first topic when topics are loaded
   useEffect(() => {
-    if (trendingTopics.length > 0 && !hasAutoSelectedTopic) {
+    if (trendingTopics.length > 0 && !selectedTopicId && !hasAutoSelectedTopic) {
       const firstTopic = trendingTopics[0];
       if (firstTopic) {
         handleSelectTopic(firstTopic);
         setHasAutoSelectedTopic(true);
       }
     }
-  }, [trendingTopics, hasAutoSelectedTopic]);
+  }, [trendingTopics, selectedTopicId, hasAutoSelectedTopic]);
 
   const toggleTag = (tag: Tag) => {
     if (selectedTags.find(t => t.id === tag.id)) {
@@ -186,7 +183,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     } else {
       // Only allow 1 tag - this is simpler than the original 2 tags max
       setSelectedTags([tag]);
-      // Reset auto-select flag when changing tags to ensure a new topic gets selected
+      // Reset auto-select flag when changing tags
       setHasAutoSelectedTopic(false);
     }
   };
@@ -233,8 +230,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-md border-3 border-gray-300 dark:border-gray-700 w-full bg-white dark:bg-gray-900">
-      <CardHeader className="pb-3 border-b-3 border-gray-300 dark:border-gray-700 bg-navy text-white">
+    <Card className="shadow-md border-2 border-gray-300 dark:border-gray-700 w-full bg-white dark:bg-gray-900">
+      <CardHeader className="pb-3 border-b-2 border-gray-300 dark:border-gray-700 bg-navy text-white">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <TrendingUp className="text-darkBlue-light h-5 w-5" />
           <span>Trending Topics</span>
@@ -284,16 +281,19 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               return (
                 <div 
                   key={topic.id} 
-                  className={`border-3 border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden 
+                  className={`border-2 border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 'ring-2 ring-darkBlue-light' : ''} 
                     ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
                     ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-navy text-white border-b-3 border-gray-300 dark:border-gray-700 p-3">
+                  <div className="bg-navy text-white border-b-2 border-gray-300 dark:border-gray-700 p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <div className={`flex items-center bg-darkBlue-medium text-white text-xs font-medium px-2 py-0.5 rounded-full ml-auto`}>
+                      <Badge variant="outline" className="bg-darkBlue-medium text-white text-xs font-medium border-darkBlue-light">
+                        {topic.tag}
+                      </Badge>
+                      <div className={`flex items-center bg-darkBlue-medium text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
                         <topic.sentiment.icon size={12} className={`mr-1 ${topic.sentiment.color}`} />
                         <span className="capitalize">
                           {topic.sentiment.type}

@@ -2,6 +2,7 @@
 import React from 'react';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ExampleTweetCard from "./ExampleTweetCard";
 
@@ -76,9 +77,12 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
   const SentimentIcon = sentimentData.icon;
   
   return (
-    <Card className="shadow-md border-3 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 h-full">
-      <CardHeader className="pb-3 border-b-3 border-gray-300 dark:border-gray-700 bg-navy text-white">
-        <div className="flex items-center justify-end mb-1">
+    <Card className="shadow-md border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 h-full">
+      <CardHeader className="pb-3 border-b-2 border-gray-300 dark:border-gray-700 bg-navy text-white">
+        <div className="flex items-center justify-between mb-2">
+          <Badge variant="outline" className="bg-darkBlue-medium text-white border-darkBlue-light text-xs font-medium">
+            {topic.tag || 'Trending'}
+          </Badge>
           <div className={`flex items-center bg-darkBlue-medium text-white text-sm font-medium px-3 py-1 rounded-full`}>
             <SentimentIcon size={14} className={`mr-1.5 ${sentimentData.color}`} />
             <span className="capitalize">{sentimentData.type}</span>
@@ -93,7 +97,7 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
         {/* Example Tweets Section */}
         {topic.exampleTweets && topic.exampleTweets.length > 0 ? (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">TWEETS ABOUT TRENDING TOPIC</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
             <div className="space-y-3">
               {topic.exampleTweets.map((tweet, index) => (
                 <ExampleTweetCard
