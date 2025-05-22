@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -158,39 +159,56 @@ const CreatorDashboard = ({ profile }) => {
       
       {/* Profile Section */}
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        {/* Twitter Profile Card - now left-aligned */}
-        <div className="w-full md:w-auto">
+        {/* Twitter Profile Card - now left-aligned with updated styling */}
+        <div className="w-full">
           <TwitterProfileCard profile={localProfile} />
         </div>
-        
-        {/* Space for future quick stats - can be filled in later */}
-        <div className="flex-1 hidden md:block"></div>
       </div>
       
       {/* Section Divider */}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
       
-      {/* Weekly Activity Pattern Row */}
+      {/* Weekly Activity Pattern Row - with two columns */}
       <div className="w-full">
         <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">WEEKLY ACTIVITY PATTERN</h3>
-        <CircadianHeatmap 
-          data={analysisResults?.circadianHeatmap || []} 
-          timezone={localProfile?.timezone} 
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left column: CircadianHeatmap */}
+          <div className="lg:col-span-1">
+            <CircadianHeatmap 
+              data={analysisResults?.circadianHeatmap || []} 
+              timezone={localProfile?.timezone} 
+            />
+          </div>
+          
+          {/* Right column: Empty for future content */}
+          <div className="lg:col-span-1 hidden lg:block">
+            {/* Space for future complementary UI elements */}
+          </div>
+        </div>
       </div>
       
       {/* Section Divider */}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
       
-      {/* Hourly Engagement Row */}
+      {/* Hourly Engagement Row - with two columns */}
       <div className="w-full">
         <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">HOURLY ENGAGEMENT</h3>
-        <HourlyEngagementChart 
-          hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
-          averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
-          timezone={localProfile?.timezone}
-          bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left column: HourlyEngagementChart */}
+          <div className="lg:col-span-1">
+            <HourlyEngagementChart 
+              hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
+              averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
+              timezone={localProfile?.timezone}
+              bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
+            />
+          </div>
+          
+          {/* Right column: Empty for future content */}
+          <div className="lg:col-span-1 hidden lg:block">
+            {/* Space for future complementary UI elements */}
+          </div>
+        </div>
       </div>
 
       {/* Completion popup */}
