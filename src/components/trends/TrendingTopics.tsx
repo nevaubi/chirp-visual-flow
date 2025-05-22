@@ -58,10 +58,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   selectedTopicId,
   displayMode = 'full'
 }) => {
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  // Initialize with AI tag selected
+  const aiTag = { id: 1, name: 'AI' };
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([aiTag]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
+  const [hasAutoSelectedTopic, setHasAutoSelectedTopic] = useState<boolean>(false);
   const isMobile = useIsMobile();
   const isCompact = displayMode === 'compact';
 
@@ -163,12 +166,25 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     }
   }, [selectedTags]);
 
+  // Auto-select the first topic when topics are loaded
+  useEffect(() => {
+    if (trendingTopics.length > 0 && !selectedTopicId && !hasAutoSelectedTopic) {
+      const firstTopic = trendingTopics[0];
+      if (firstTopic) {
+        handleSelectTopic(firstTopic);
+        setHasAutoSelectedTopic(true);
+      }
+    }
+  }, [trendingTopics, selectedTopicId, hasAutoSelectedTopic]);
+
   const toggleTag = (tag: Tag) => {
     if (selectedTags.find(t => t.id === tag.id)) {
       setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
     } else {
       // Only allow 1 tag - this is simpler than the original 2 tags max
       setSelectedTags([tag]);
+      // Reset auto-select flag when changing tags
+      setHasAutoSelectedTopic(false);
     }
   };
 
@@ -214,8 +230,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
-      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-navy text-white">
+    <Card className="shadow-md border-2 border-gray-300 dark:border-gray-700 w-full bg-white dark:bg-gray-900">
+      <CardHeader className="pb-3 border-b-2 border-gray-300 dark:border-gray-700 bg-navy text-white">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <TrendingUp className="text-darkBlue-light h-5 w-5" />
           <span>Trending Topics</span>
@@ -265,14 +281,14 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               return (
                 <div 
                   key={topic.id} 
-                  className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
+                  className={`border-2 border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 'ring-2 ring-darkBlue-light' : ''} 
                     ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
                     ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-navy text-white border-b border-gray-700 p-3">
+                  <div className="bg-navy text-white border-b-2 border-gray-300 dark:border-gray-700 p-3">
                     <div className="flex items-center justify-between mb-1">
                       <Badge variant="outline" className="bg-darkBlue-medium text-white text-xs font-medium border-darkBlue-light">
                         {topic.tag}

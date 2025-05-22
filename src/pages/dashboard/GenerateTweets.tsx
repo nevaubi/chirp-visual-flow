@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import TrendingTopics from '@/components/trends/TrendingTopics';
 import DetailedTweetView from '@/components/trends/DetailedTweetView';
@@ -70,7 +70,7 @@ const TweetGenerationView = () => {
               onUseTopic={handleUseTopic}
             />
           ) : (
-            <Card className="h-full flex items-center justify-center text-center p-8 text-muted-foreground border border-gray-200 dark:border-gray-800">
+            <Card className="h-full flex items-center justify-center text-center p-8 text-muted-foreground border-2 border-gray-300 dark:border-gray-700">
               <CardContent>
                 <p>Select a trending topic from the left to view example tweets</p>
               </CardContent>

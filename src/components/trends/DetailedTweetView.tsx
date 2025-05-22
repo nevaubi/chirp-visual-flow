@@ -77,8 +77,8 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
   const SentimentIcon = sentimentData.icon;
   
   return (
-    <Card className="shadow-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 h-full">
-      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-navy text-white">
+    <Card className="shadow-md border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 h-full">
+      <CardHeader className="pb-3 border-b-2 border-gray-300 dark:border-gray-700 bg-navy text-white">
         <div className="flex items-center justify-between mb-2">
           <Badge variant="outline" className="bg-darkBlue-medium text-white border-darkBlue-light text-xs font-medium">
             {topic.tag || 'Trending'}
