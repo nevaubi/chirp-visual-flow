@@ -79,17 +79,6 @@ const CreatorDashboard = ({ profile }) => {
     }
   };
   
-  // Format the top posting hour for display
-  const formatHour = (hourString: string) => {
-    if (!hourString) return "N/A";
-    
-    const hour = parseInt(hourString);
-    return hour === 0 ? '12 AM' 
-      : hour < 12 ? `${hour} AM` 
-      : hour === 12 ? '12 PM' 
-      : `${hour - 12} PM`;
-  };
-  
   // If analysis is not yet available, show initial state
   if (!hasAnalysisResults) {
     return (
@@ -176,39 +165,14 @@ const CreatorDashboard = ({ profile }) => {
         </div>
       </div>
 
-      {/* All components in one horizontal row for larger screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Twitter Profile Card - increased width */}
-        <div className="lg:col-span-3">
-          <TwitterProfileCard profile={localProfile} />
-        </div>
-
-        {/* Compact Key Metrics - in a row, removed Engagement Rate */}
-        <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <MetricCard 
-            title="Best Time to Post" 
-            value={formatHour(analysisResults?.top_posting_hour)} 
-            description="Based on audience activity"
-            icon={<Clock className="h-4 w-4 text-[#0087C8]" />}
-          />
-          
-          <MetricCard 
-            title="Analyzed Tweets" 
-            value={analysisResults?.total_tweets_analyzed || 0} 
-            description="From recent posting history"
-            icon={<BarChart className="h-4 w-4 text-green-500" />}
-          />
-        </div>
-
-        {/* Growth Opportunities - now at the same level */}
-        <div className="lg:col-span-4">
-          <GrowthCard opportunities={analysisResults?.growth_opportunities || []} />
-        </div>
+      {/* Twitter Profile Card - moved to top and centered */}
+      <div className="flex justify-center mb-6">
+        <TwitterProfileCard profile={localProfile} />
       </div>
-      
-      {/* Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-6">
-        {/* Updated CircadianHeatmap - Pass the correct data */}
+
+      {/* Visualizations - now displayed directly below profile card */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Updated CircadianHeatmap */}
         <div className="lg:col-span-6">
           <CircadianHeatmap 
             data={analysisResults?.circadianHeatmap || []} 
