@@ -463,58 +463,6 @@ const NewsletterDashboard = ({ profile }) => {
         </CardContent>
       </Card>
 
-      {/* Subscription Card - Updated to better reflect user's subscription status */}
-      <Card className="border-none shadow-sm hover:shadow transition-shadow overflow-hidden">
-        <CardHeader className={cn(
-          "relative pb-8",
-          isPremium ? "bg-gradient-to-r from-amber-100 to-amber-50" : "bg-gray-50"
-        )}>
-          {isPremium && (
-            <div className="absolute top-0 right-0 bg-amber-500 text-white px-4 py-1 transform translate-x-8 translate-y-5 -rotate-45 shadow-md">
-              Premium
-            </div>
-          )}
-          <CardTitle>{isPremium ? "Premium Plan" : "Free Plan"}</CardTitle>
-          <CardDescription>
-            {isPremium 
-              ? `You're currently on the ${subscriptionTier || "Newsletter Premium"} plan` 
-              : "Upgrade to Premium for additional features"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <h3 className="font-medium text-lg">Current Features:</h3>
-            
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  <strong>{isPremium ? "30" : "0"}</strong> manual newsletter generations
-                  {remainingGenerations > 0 && (
-                    <span className="ml-2 text-sm text-amber-600 font-semibold">
-                      ({remainingGenerations} remaining)
-                    </span>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  Customizable newsletter templates
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  Save and edit newsletters
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
