@@ -18,12 +18,13 @@ interface SelectedTopic {
 const GenerateTweets = () => {
   return (
     <div className="space-y-6 relative">
-      <TweetGenerationView />
+      <TrendingTopicsView />
     </div>
   );
 };
 
-const TweetGenerationView = () => {
+// Renamed from TweetGenerationView to TrendingTopicsView
+const TrendingTopicsView = () => {
   const [selectedTopic, setSelectedTopic] = useState<SelectedTopic | null>(null);
   const isMobile = useIsMobile();
 

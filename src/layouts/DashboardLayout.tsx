@@ -14,7 +14,7 @@ import {
   Bookmark,
   Book,
   CreditCard,
-  Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -137,9 +137,9 @@ const DashboardLayout = () => {
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
     { icon: Book, label: 'Library', path: '/dashboard/analytics' },
-    // For Creator platform, show "Generate Tweets" instead of "Community"
+    // For Creator platform, show "Trending Topics" instead of "Community"
     ...(isCreatorPlatform 
-        ? [{ icon: Sparkles, label: 'Generate Tweets', path: '/dashboard/community' }] 
+        ? [{ icon: TrendingUp, label: 'Trending Topics', path: '/dashboard/community' }] 
         : !isNewsletterPlatform 
           ? [{ icon: Users, label: 'Community', path: '/dashboard/community' }]
           : []),

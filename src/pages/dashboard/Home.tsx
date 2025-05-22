@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Zap, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle } from 'lucide-react';
+import { TrendingUp, Bookmark, Twitter, Info, Check, CreditCard, Clock, BarChart, Award, LineChart, Users, AlertCircle } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
@@ -218,7 +218,7 @@ const CreatorDashboard = ({ profile }) => {
             className="gap-1 text-xs bg-[#0087C8] hover:bg-[#0076b2]"
           >
             <Link to="/dashboard/community">
-              <Zap size={14} /> Generate Tweets
+              <TrendingUp size={14} /> Trending Topics
             </Link>
           </Button>
         </div>
