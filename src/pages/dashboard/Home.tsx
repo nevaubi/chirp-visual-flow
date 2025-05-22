@@ -208,10 +208,10 @@ const CreatorDashboard = ({ profile }) => {
       
       {/* Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-6">
-        {/* Updated CircadianHeatmap - replaces ProfileHeatmap */}
+        {/* Updated CircadianHeatmap - Pass the correct data */}
         <div className="lg:col-span-6">
           <CircadianHeatmap 
-            data={analysisResults?.circadian_rhythm || {}} 
+            data={analysisResults?.circadianHeatmap || []} 
             timezone={localProfile?.timezone} 
           />
         </div>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 
 interface CircadianHeatmapProps {
-  data: Record<string, number>;
+  data: number[][]; // Updated to accept a 2D array directly
   timezone?: string | null;
 }
 
@@ -11,48 +12,18 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
   const [hoveredCell, setHoveredCell] = useState<{day: number, hour: number, value: number} | null>(null);
   const [maxValue, setMaxValue] = useState<number>(0);
   
-  // Generate mock weekly data using the daily aggregates
-  // This creates a heatmap for a full week based on the daily hour counts
-  const generateWeeklyData = () => {
-    const hourKeys = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
-    
-    // Find max value for proper scaling
-    const maxHourlyValue = Math.max(...Object.values(data));
-    setMaxValue(maxHourlyValue > 0 ? maxHourlyValue : 8); // Default max if no data
-    
-    // Create weekly mock data that follows similar patterns to hourly data
-    // but varies slightly by day to make the visualization more interesting
-    return Array.from({ length: 7 }, (_, dayIndex) => {
-      return hourKeys.map(hour => {
-        const hourValue = data[hour] || 0;
-        
-        // Create variance based on day (more activity on weekdays, less on weekends)
-        let dayFactor = 1;
-        if (dayIndex === 0 || dayIndex === 6) {
-          dayFactor = 0.7; // Less activity on weekends
-        } else if (dayIndex === 2 || dayIndex === 3) {
-          dayFactor = 1.2; // More activity midweek
-        }
-        
-        // Add some randomness but keep the general pattern
-        const variance = Math.random() * 0.5 + 0.75;
-        
-        // Calculate and round the value
-        const cellValue = Math.round(hourValue * dayFactor * variance);
-        
-        // Cap at some reasonable maximum
-        return Math.min(cellValue, maxHourlyValue * 1.5);
-      });
-    });
-  };
-  
-  const [heatmapData, setHeatmapData] = useState<number[][]>([]);
-  
-  useEffect(() => {
-    if (Object.keys(data).length > 0) {
-      setHeatmapData(generateWeeklyData());
+  // Find maximum value in the heatmap data for proper color scaling
+  React.useEffect(() => {
+    if (data && data.length > 0) {
+      // Find max value across all cells
+      const allValues = data.flat();
+      const max = allValues.length > 0 ? Math.max(...allValues) : 8;
+      setMaxValue(max > 0 ? max : 8); // Default max if no data
     }
   }, [data]);
+  
+  // If no data provided, create an empty 7x24 grid (days x hours)
+  const heatmapData = data && data.length > 0 ? data : Array(7).fill(Array(24).fill(0));
   
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const hourLabels = Array.from({ length: 24 }, (_, i) => 
@@ -96,35 +67,76 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     }
   };
   
-  // Find peak activity hour
+  // Find peak activity hour from the heatmap data
   const getPeakActivityHour = () => {
-    const hourEntries = Object.entries(data);
-    if (hourEntries.length === 0) return { hour: "N/A", value: 0 };
+    if (!data || data.length === 0) return { hour: "N/A", value: 0 };
     
-    const peakEntry = hourEntries.reduce(
-      (max, [hour, value]) => value > max.value ? { hour, value } : max,
-      { hour: "0", value: 0 }
-    );
+    let maxHour = 0;
+    let maxValue = 0;
+    let maxDay = 0;
+    
+    // Go through all cells to find the peak hour
+    data.forEach((dayData, dayIndex) => {
+      dayData.forEach((value, hourIndex) => {
+        if (value > maxValue) {
+          maxValue = value;
+          maxHour = hourIndex;
+          maxDay = dayIndex;
+        }
+      });
+    });
     
     return { 
-      hour: formatHour(peakEntry.hour), 
-      value: peakEntry.value 
+      hour: formatHour(maxHour), 
+      day: dayLabels[maxDay],
+      value: maxValue 
     };
   };
   
   // Find evening peak (6-9 PM)
   const getEveningPeak = () => {
-    const eveningHours = ["18", "19", "20"];
-    const totalEvents = eveningHours.reduce((sum, hour) => sum + (data[hour] || 0), 0);
+    if (!data || data.length === 0) return 0;
+    
+    // Sum up all activity between 6-9 PM (18-21) across all days
+    const eveningHours = [18, 19, 20];
+    let totalEvents = 0;
+    
+    data.forEach(dayData => {
+      eveningHours.forEach(hour => {
+        if (dayData[hour]) {
+          totalEvents += dayData[hour];
+        }
+      });
+    });
+    
     return totalEvents;
   };
   
   // Find quiet hours (hours with least activity)
   const getQuietHours = () => {
-    const hourEntries = Object.entries(data)
-      .filter(([_, value]) => value === 0 || value <= 1)
-      .map(([hour, _]) => formatHour(hour))
-      .slice(0, 2);
+    if (!data || data.length === 0) return 'None detected';
+    
+    // Calculate the average value for each hour across all days
+    const hourlyAverages = Array(24).fill(0);
+    
+    data.forEach(dayData => {
+      dayData.forEach((value, hourIndex) => {
+        hourlyAverages[hourIndex] += value;
+      });
+    });
+    
+    // Divide by number of days to get average
+    hourlyAverages.forEach((sum, index) => {
+      hourlyAverages[index] = sum / data.length;
+    });
+    
+    // Find the hours with the lowest averages
+    const hourEntries = hourlyAverages
+      .map((value, hour) => ({ hour, value }))
+      .sort((a, b) => a.value - b.value)
+      .filter(entry => entry.value <= 1)
+      .slice(0, 2)
+      .map(entry => formatHour(entry.hour));
     
     return hourEntries.length > 0 
       ? hourEntries.join(', ')
@@ -224,7 +236,7 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-blue-700">Peak Activity:</span>
-                    <br />{peak.hour} ({peak.value} events)
+                    <br />{peak.day} {peak.hour} ({peak.value} events)
                   </div>
                   <div>
                     <span className="font-medium text-blue-700">Evening Activity:</span>
