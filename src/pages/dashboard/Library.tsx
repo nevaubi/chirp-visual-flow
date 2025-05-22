@@ -35,7 +35,6 @@ const Library = () => {
     marked.setOptions({
       breaks: true,
       gfm: true,
-      sanitize: false, // Allow HTML to pass through
     });
   }, []);
 
