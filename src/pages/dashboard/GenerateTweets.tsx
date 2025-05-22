@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,25 +17,32 @@ interface SelectedTopic {
 }
 
 const GenerateTweets = () => {
+  const { authState } = useAuth();
+  const hasVoiceProfile = !!authState.profile?.voice_profile_analysis;
+
   return (
     <div className="space-y-6 relative">
-      <TweetGenerationView />
+      {hasVoiceProfile ? <TweetGenerationView /> : <CreateVoiceProfileView />}
     </div>
   );
 };
 
 const CreateVoiceProfileView = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Creating profile...');
   const { authState, refreshProfile } = useAuth();
   
   const handleCreateVoiceProfile = async () => {
     try {
       setIsLoading(true);
+      setLoadingMessage('Starting analysis...');
+      
       toast({
         title: "Starting analysis",
         description: "We're analyzing your tweets to create your voice profile. This may take a few minutes.",
       });
       
+      setLoadingMessage('Analyzing tweets...');
       const { data, error } = await supabase.functions.invoke('create-voice-profile', {
         body: { userId: authState.user?.id }
       });
@@ -49,6 +57,7 @@ const CreateVoiceProfileView = () => {
         throw new Error(data.error || 'Failed to create voice profile');
       }
       
+      setLoadingMessage('Finalizing profile...');
       toast({
         title: "Voice profile created!",
         description: "Your voice profile has been successfully created. You can now generate tweets.",
@@ -127,7 +136,7 @@ const CreateVoiceProfileView = () => {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Profile...
+                {loadingMessage}
               </>
             ) : (
               <>

@@ -12,15 +12,97 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) console.error("Missing Redis configuration");
 if (!OPENAI_API_KEY) console.error("Missing OpenAI API key");
 
-async function fetchFromRedis(userId: string): Promise<string | null> {
-  const key = `twitter_data:user:${userId}:tweets`;
-  const url = `${UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` }
-  });
-  if (!res.ok) throw new Error(`Redis error: ${res.status}`);
-  const json = await res.json();
-  return json.result ?? null;
+// Fetch tweets from Redis, now supporting both list and string formats
+async function fetchFromRedis(userId: string): Promise<any[]> {
+  try {
+    const key = `twitter_data:user:${userId}:tweets`;
+    
+    // First try to get tweets from Redis list using LRANGE
+    const listUrl = `${UPSTASH_REDIS_REST_URL}/lrange/${encodeURIComponent(key)}/0/-1`;
+    const listRes = await fetch(listUrl, {
+      headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` }
+    });
+    
+    if (!listRes.ok) {
+      console.error(`Redis LRANGE error: ${listRes.status}`);
+    } else {
+      const listData = await listRes.json();
+      
+      // If we have results from LRANGE, parse each tweet and return them
+      if (listData.result && Array.isArray(listData.result) && listData.result.length > 0) {
+        console.log(`Found ${listData.result.length} tweets in Redis list`);
+        
+        // Parse each tweet from the list (each element is a JSON string)
+        return listData.result.map(tweetString => {
+          try {
+            return JSON.parse(tweetString);
+          } catch (e) {
+            console.error('Error parsing tweet from Redis list:', e);
+            return null;
+          }
+        }).filter(Boolean); // Remove any null entries from parsing failures
+      }
+    }
+    
+    // Fallback to legacy format (GET) if list is empty or doesn't exist
+    console.log('No tweets found in Redis list, trying legacy format...');
+    const getUrl = `${UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`;
+    const getRes = await fetch(getUrl, {
+      headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` }
+    });
+    
+    if (!getRes.ok) {
+      console.error(`Redis GET error: ${getRes.status}`);
+      return [];
+    }
+    
+    const getData = await getRes.json();
+    if (!getData.result) {
+      console.log('No tweets found in Redis (legacy format)');
+      return [];
+    }
+    
+    // Handle legacy format (string that needs to be parsed)
+    console.log('Found tweets in legacy format, parsing...');
+    try {
+      let parsedData;
+      
+      // If it's a string, parse it
+      if (typeof getData.result === 'string') {
+        parsedData = JSON.parse(getData.result);
+      } else {
+        // If it's already an object, use it directly
+        parsedData = getData.result;
+      }
+      
+      // Check if it's an array or has a common container field
+      if (Array.isArray(parsedData)) {
+        return parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        // Check for common container fields
+        for (const field of ['tweets', 'data', 'items', 'results']) {
+          if (Array.isArray(parsedData[field])) {
+            return parsedData[field];
+          }
+        }
+        
+        // If no common fields found, look for any array
+        for (const key in parsedData) {
+          if (Array.isArray(parsedData[key])) {
+            return parsedData[key];
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing legacy Redis data:', e);
+    }
+    
+    // If all else fails, return empty array
+    return [];
+  } catch (error) {
+    console.error('Error fetching from Redis:', error);
+    return [];
+  }
 }
 
 async function analyzeWithOpenAI(tweets: string[]): Promise<string> {
@@ -176,157 +258,36 @@ serve(async (req) => {
     }
 
     const twitterUsername = profile.twitter_username;
-    const rawResult = await fetchFromRedis(userId);
-    if (!rawResult) {
+    
+    // Fetch tweets from Redis (now supports both list and legacy formats)
+    const tweets = await fetchFromRedis(userId);
+    if (!tweets || tweets.length === 0) {
       return new Response(JSON.stringify({
-        success: false, error: 'No tweets in Redis'
+        success: false, error: 'No tweets found in Redis'
       }), { status: 404, headers: { ...corsHeaders, 'Content-Type':'application/json' } });
     }
-
-    // —— IMPROVED REDIS RESPONSE PARSING ——
-    console.log('Raw Redis result structure type:', typeof rawResult);
     
-    // Parse the Redis response which may contain a value field
-    let redisData: any;
-    try {
-      // If it's already an object from the previous JSON parsing, use it
-      if (typeof rawResult === 'object' && rawResult !== null) {
-        redisData = rawResult;
-        console.log('Redis result is already an object');
-      } else {
-        // Otherwise try to parse it as JSON
-        redisData = JSON.parse(rawResult);
-        console.log('Redis result parsed from string to object');
-      }
-    } catch (e) {
-      console.error('Error parsing Redis result:', e);
-      redisData = { value: rawResult }; // Fallback treating the entire result as a value
-    }
+    console.log(`Retrieved ${tweets.length} tweets from Redis`);
     
-    // Extract tweets from the redis data
-    let tweets: any[] = [];
-    
-    // If the Redis response contains a 'value' field that's a string, parse it
-    if (redisData && typeof redisData.value === 'string') {
-      try {
-        console.log('Redis data has a "value" field that is a string, parsing it');
-        const parsedValue = JSON.parse(redisData.value);
-        if (Array.isArray(parsedValue)) {
-          tweets = parsedValue;
-          console.log(`Successfully parsed ${tweets.length} tweets from value field`);
-        } else {
-          console.error('Parsed value is not an array:', typeof parsedValue);
-        }
-      } catch (e) {
-        console.error('Error parsing tweets from value field:', e);
-      }
-    }
-    // If redisData is already an array, use it directly
-    else if (Array.isArray(redisData)) {
-      tweets = redisData;
-      console.log(`Using redisData directly as it's already an array with ${tweets.length} items`);
-    }
-    // Try to find the tweets in common container fields
-    else if (redisData && typeof redisData === 'object') {
-      // Check for common container fields
-      const possibleFields = ['tweets', 'data', 'items', 'results'];
-      for (const field of possibleFields) {
-        if (Array.isArray(redisData[field])) {
-          tweets = redisData[field];
-          console.log(`Found tweets in "${field}" field: ${tweets.length} items`);
-          break;
-        }
-      }
-      
-      // If no tweets found in common fields, check all fields for an array
-      if (tweets.length === 0) {
-        for (const key in redisData) {
-          if (Array.isArray(redisData[key]) && redisData[key].length > 0) {
-            tweets = redisData[key];
-            console.log(`Found tweets in "${key}" field: ${tweets.length} items`);
-            break;
-          }
-        }
-      }
-    }
-    
-    // If we still don't have tweets, log error and use empty array
-    if (tweets.length === 0) {
-      console.error('No tweets found in Redis data. Redis raw result:', 
-        typeof rawResult === 'string' ? rawResult.substring(0, 200) + '...' : JSON.stringify(rawResult).substring(0, 200) + '...');
-    }
-    
-    console.log(`Total tweets extracted: ${tweets.length}`);
-    
-    // —— IMPROVED PARSING / FILTERING / RANKING ——
-    // Try to handle tweet format with nested elements structure
-    const parsedTweets = tweets.map(item => {
-      try {
-        // Check if this is a wrapper with elements field
-        if (item.elements && Array.isArray(item.elements) && item.elements.length > 0) {
-          try {
-            // If elements[0] is a string that needs parsing
-            if (typeof item.elements[0] === 'string') {
-              return JSON.parse(item.elements[0]);
-            } 
-            // If elements[0] is already an object
-            return item.elements[0];
-          } catch {
-            return item;
-          }
-        }
-        return item;
-      } catch {
-        return item;
-      }
-    }).filter(Boolean);
-    
-    console.log(`After format normalization: ${parsedTweets.length} tweets remain`);
-    
-    if (parsedTweets.length > 0) {
-      console.log('First tweet structure sample:', JSON.stringify(parsedTweets[0]).substring(0, 200) + '...');
-    }
-    
-    // —— IMPROVED REPLY FILTERING ——
-    const nonReplies = parsedTweets.filter(t => {
-      // If "IsReply?" field exists, use it directly
-      if (t && t['IsReply?'] !== undefined) {
-        console.log(`Using 'IsReply?' field which is ${t['IsReply?']}`);
-        return t['IsReply?'] === false;
-      }
-      
-      // Otherwise fall back to the original text-based method
+    // —— IMPROVED FILTERING / RANKING ——
+    // Filter out replies and retweets
+    const nonReplies = tweets.filter(t => {
+      // Get the tweet text from any possible field name
       const tweetText = t.text || t['text of tweet'] || '';
-      const hasEngagement = t.engagement && Object.keys(t.engagement).length > 0;
-      const hasLikes = (t.Likes !== undefined && t.Likes > 0) || 
-                       (t.likes !== undefined && t.likes > 0) ||
-                       (t.engagement?.likes !== undefined && t.engagement.likes > 0);
       
-      return (
-        typeof tweetText === 'string' && 
-        !tweetText.startsWith('RT @') && 
-        (!tweetText.startsWith('@') || hasEngagement || hasLikes)
-      );
+      // Check if it's a reply or retweet
+      const isReply = (t['IsReply?'] !== undefined) ? t['IsReply?'] : 
+                      (tweetText.startsWith('@') && !hasEngagement(t));
+      const isRetweet = tweetText.startsWith('RT @');
+      
+      return typeof tweetText === 'string' && !isRetweet && !isReply;
     });
     
     console.log(`After filtering replies: ${nonReplies.length} tweets remain`);
     
     // —— IMPROVED SORTING BY ENGAGEMENT ——
     nonReplies.sort((a, b) => {
-      // First check if Likes field exists (new format)
-      if (a['Likes'] !== undefined && b['Likes'] !== undefined) {
-        return (b['Likes'] || 0) - (a['Likes'] || 0);
-      }
-      // Check if engagement.likes exists (old format)
-      else if (a.engagement?.likes !== undefined && b.engagement?.likes !== undefined) {
-        return (b.engagement.likes || 0) - (a.engagement.likes || 0);
-      }
-      // Fall back to other possible engagement fields
-      else if (a.likes !== undefined && b.likes !== undefined) {
-        return (b.likes || 0) - (a.likes || 0);
-      }
-      // If no engagement metrics found, don't change order
-      return 0;
+      return getEngagementScore(b) - getEngagementScore(a);
     });
     
     // Get the top 30 tweets and extract their text
@@ -386,7 +347,6 @@ serve(async (req) => {
       style_analysis: styleAnalysis,
       debug: {
         raw_count: tweets.length,
-        parsed_count: parsedTweets.length,
         non_replies_count: nonReplies.length,
         top30_count: texts.length
       }
@@ -406,3 +366,38 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper functions
+function hasEngagement(tweet: any): boolean {
+  // Check if the tweet has any engagement
+  if (tweet.engagement && Object.values(tweet.engagement).some(v => (v as number) > 0)) {
+    return true;
+  }
+  
+  // Check specific engagement fields
+  return (tweet.Likes !== undefined && tweet.Likes > 0) || 
+         (tweet.likes !== undefined && tweet.likes > 0) ||
+         (tweet.engagement?.likes !== undefined && tweet.engagement.likes > 0);
+}
+
+function getEngagementScore(tweet: any): number {
+  // Calculate engagement score from any possible field structure
+  let score = 0;
+  
+  // Try specific field names first
+  if (tweet.Likes !== undefined) score += tweet.Likes;
+  else if (tweet.likes !== undefined) score += tweet.likes;
+  else if (tweet.engagement?.likes !== undefined) score += tweet.engagement.likes;
+  
+  // Add retweets with higher weight
+  if (tweet.Retweets !== undefined) score += tweet.Retweets * 2;
+  else if (tweet.retweets !== undefined) score += tweet.retweets * 2;
+  else if (tweet.engagement?.retweets !== undefined) score += tweet.engagement.retweets * 2;
+  
+  // Add replies with higher weight
+  if (tweet.Replies !== undefined) score += tweet.Replies * 3;
+  else if (tweet.replies !== undefined) score += tweet.replies * 3;
+  else if (tweet.engagement?.replies !== undefined) score += tweet.engagement.replies * 3;
+  
+  return score;
+}

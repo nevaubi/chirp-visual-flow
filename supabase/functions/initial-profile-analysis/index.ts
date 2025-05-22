@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -85,8 +84,8 @@ const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY') as string
 const REDIS_URL = Deno.env.get('UPSTASH_REDIS_REST_URL') as string;
 const REDIS_TOKEN = Deno.env.get('UPSTASH_REDIS_REST_TOKEN') as string;
 
-// Function to store data in Redis
-async function storeInRedis(key: string, data: unknown, expireInDays = 30): Promise<boolean> {
+// Function to store individual tweet in Redis list
+async function storeInRedisList(key: string, tweet: unknown): Promise<boolean> {
   try {
     if (!REDIS_URL || !REDIS_TOKEN) {
       console.error('Redis credentials not found');
@@ -94,9 +93,9 @@ async function storeInRedis(key: string, data: unknown, expireInDays = 30): Prom
     }
 
     const fullKey = `${REDIS_PREFIX}${key}`;
-    console.log(`Storing data in Redis with key: ${fullKey}`);
     
-    const url = `${REDIS_URL}/set/${fullKey}`;
+    // Use RPUSH to add tweet to the list
+    const url = `${REDIS_URL}/rpush/${fullKey}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -104,8 +103,7 @@ async function storeInRedis(key: string, data: unknown, expireInDays = 30): Prom
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        value: JSON.stringify(data),
-        ex: expireInDays * 24 * 60 * 60 // Expire time in seconds
+        elements: [JSON.stringify(tweet)]
       })
     });
 
@@ -116,10 +114,43 @@ async function storeInRedis(key: string, data: unknown, expireInDays = 30): Prom
     }
 
     const result = await response.json();
-    console.log('Redis storage result:', result);
-    return result.result === 'OK';
+    return result.result > 0; // RPUSH returns the new length of the list
   } catch (error) {
-    console.error('Error storing data in Redis:', error);
+    console.error('Error storing tweet in Redis list:', error);
+    return false;
+  }
+}
+
+// Set expiration time for Redis key
+async function setRedisExpiry(key: string, expireInDays = 30): Promise<boolean> {
+  try {
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      return false;
+    }
+
+    const fullKey = `${REDIS_PREFIX}${key}`;
+    const url = `${REDIS_URL}/expire/${fullKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        seconds: expireInDays * 24 * 60 * 60 // Expire time in seconds
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Redis expiry error:', errorData);
+      return false;
+    }
+
+    const result = await response.json();
+    return result.result === 1;
+  } catch (error) {
+    console.error('Error setting Redis expiry:', error);
     return false;
   }
 }
@@ -130,36 +161,60 @@ async function processTweetHistory(tweets: Tweet[], userId: string) {
     // Skip if no Redis credentials
     if (!REDIS_URL || !REDIS_TOKEN) {
       console.log('Skipping Redis storage: credentials not available');
-      return;
+      return false;
     }
 
     console.log(`Processing ${tweets.length} tweets for Redis storage`);
     
-    // Store the full tweet history
-    const tweetHistory = tweets.map(tweet => ({
-      id: tweet.id,
-      text: tweet.text,
-      created_at: tweet.createdAt || tweet.created_at || new Date().toISOString(),
-      engagement: {
-        likes: tweet.likeCount || tweet.public_metrics?.like_count || 0,
-        retweets: tweet.retweetCount || tweet.public_metrics?.retweet_count || 0,
-        replies: tweet.replyCount || tweet.public_metrics?.reply_count || 0,
-        quotes: tweet.quoteCount || tweet.public_metrics?.quote_count || 0,
-        views: tweet.viewCount || tweet.public_metrics?.impression_count || 0
-      },
-      // Determine content type
-      has_image: !!(tweet.entities?.media?.some(m => m.type === 'photo') || 
-                    tweet.extendedEntities?.media?.some(m => m.type === 'photo')),
-      has_video: !!(tweet.entities?.media?.some(m => m.type === 'video') || 
-                    tweet.extendedEntities?.media?.some(m => m.type === 'video')),
-      has_link: !!(tweet.entities?.urls && tweet.entities.urls.length > 0)
-    }));
-
-    // Store in Redis with user ID as key
-    const storeResult = await storeInRedis(`user:${userId}:tweets`, tweetHistory, 90);
-    console.log(`Redis storage result for user ${userId}: ${storeResult ? 'Success' : 'Failed'}`);
+    // Redis key for this user's tweets
+    const redisKey = `user:${userId}:tweets`;
     
-    return storeResult;
+    // First, clear any existing data for this key
+    const deleteUrl = `${REDIS_URL}/del/${REDIS_PREFIX}${redisKey}`;
+    await fetch(deleteUrl, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${REDIS_TOKEN}` }
+    });
+    
+    // Store each tweet individually in the Redis list
+    let successCount = 0;
+    for (const tweet of tweets) {
+      // Format the tweet data
+      const tweetData = {
+        id: tweet.id,
+        text: tweet.text,
+        created_at: tweet.createdAt || tweet.created_at || new Date().toISOString(),
+        engagement: {
+          likes: tweet.likeCount || tweet.public_metrics?.like_count || 0,
+          retweets: tweet.retweetCount || tweet.public_metrics?.retweet_count || 0,
+          replies: tweet.replyCount || tweet.public_metrics?.reply_count || 0,
+          quotes: tweet.quoteCount || tweet.public_metrics?.quote_count || 0,
+          views: tweet.viewCount || tweet.public_metrics?.impression_count || 0
+        },
+        // Determine content type
+        has_image: !!(tweet.entities?.media?.some(m => m.type === 'photo') || 
+                     tweet.extendedEntities?.media?.some(m => m.type === 'photo')),
+        has_video: !!(tweet.entities?.media?.some(m => m.type === 'video') || 
+                     tweet.extendedEntities?.media?.some(m => m.type === 'video')),
+        has_link: !!(tweet.entities?.urls && tweet.entities.urls.length > 0)
+      };
+      
+      // Add to Redis list
+      const success = await storeInRedisList(redisKey, tweetData);
+      if (success) successCount++;
+      
+      // Log success periodically to avoid excessive logging
+      if (successCount % 10 === 0) {
+        console.log(`Successfully stored ${successCount} tweets in Redis list: ${redisKey}`);
+      }
+    }
+    
+    // Set expiration for the Redis key
+    await setRedisExpiry(redisKey, 90);
+    
+    console.log(`Completed processing ${tweets.length} tweets`);
+    
+    return successCount > 0;
   } catch (error) {
     console.error('Error processing tweet history for Redis:', error);
     return false;
