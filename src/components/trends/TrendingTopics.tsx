@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -214,7 +215,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
 
   return (
     <Card className="shadow-md border border-gray-200 dark:border-gray-800 w-full bg-white dark:bg-gray-900">
-      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-darkBlue text-white">
+      <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800 bg-navy text-white">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <TrendingUp className="text-darkBlue-light h-5 w-5" />
           <span>Trending Topics</span>
@@ -271,7 +272,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-darkBlue text-white border-b border-darkBlue-dark p-3">
+                  <div className="bg-navy text-white border-b border-gray-700 p-3">
                     <div className="flex items-center justify-between mb-1">
                       <Badge variant="outline" className="bg-darkBlue-medium text-white text-xs font-medium border-darkBlue-light">
                         {topic.tag}
