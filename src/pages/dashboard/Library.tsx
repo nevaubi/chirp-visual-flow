@@ -30,10 +30,9 @@ const Library = () => {
   const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Configure marked options to handle HTML
+  // Configure marked options to handle HTML - using only valid options
   useEffect(() => {
     marked.setOptions({
-      headerIds: false,
       mangle: false,
       breaks: true,
       gfm: true,
