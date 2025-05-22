@@ -77,6 +77,7 @@ const HourlyEngagementChart = ({
         const avgTweets = averageTweetsPerHour[hourStr] ?? 0;
         
         return {
+          hour: h,
           hourLabel: h.toString().padStart(2, '0'),
           avgLikes,
           avgTweets,
@@ -124,20 +125,31 @@ const HourlyEngagementChart = ({
     
     // Look for a cluster of 2-3 hours with good engagement
     const sweetStart = topTweetHour.hour;
-    const sweetEnd = sweetStart + 2;
+    const sweetEnd = (sweetStart + 2) % 24;
     
     return `${formatHour(sweetStart)}–${formatHour(sweetEnd)}`;
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
-    const d = payload[0].payload;
+    const hour = parseInt(label);
     return (
       <div className="bg-white p-4 rounded-xl shadow-lg border border-[#DDE3E8] text-sm">
-        <p className="font-semibold text-gray-800 mb-1">{label}:00</p>
-        <p className="text-[#1DA1F2]">Avg Likes/Tweet: {d.avgLikes.toFixed(2)}</p>
-        <p className="text-[#17BF63]">Avg Tweets/Hour: {d.avgTweets.toFixed(3)}</p>
-        {d.isTopHour && <p className="text-[#FFB300] font-semibold mt-2">🏆 Peak hour</p>}
+        <p className="font-semibold text-gray-800 mb-1">{formatHour(hour)}</p>
+        <p className="text-[#1DA1F2] flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#1DA1F2]"></span>
+          Avg Likes/Tweet: {payload[0]?.value?.toFixed(2) || '0.00'}
+        </p>
+        <p className="text-[#17BF63] flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#17BF63]"></span>
+          Avg Tweets/Hour: {payload[1]?.value?.toFixed(3) || '0.000'}
+        </p>
+        {hour === bestHour && (
+          <p className="text-[#FFB300] font-semibold mt-2 flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#FFB300]"></span>
+            Peak engagement hour
+          </p>
+        )}
       </div>
     );
   };
@@ -188,7 +200,7 @@ const HourlyEngagementChart = ({
                 <XAxis
                   dataKey="hourLabel"
                   stroke={TEXT_GRAY}
-                  fontSize={16}
+                  fontSize={14}
                   interval={1}
                   tick={{ dy: 8 }}
                   height={50}
@@ -197,17 +209,17 @@ const HourlyEngagementChart = ({
                 <YAxis
                   yAxisId="likes"
                   stroke={TWEET_BLUE}
-                  tick={{ fontSize: 14, fill: TEXT_GRAY }}
+                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
                   axisLine={{ strokeWidth: 1.5, stroke: TWEET_BLUE }}
-                  label={{ value: 'Avg Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 16, fontWeight: 'bold' } }}
+                  label={{ value: 'Avg Likes', angle: -90, position: 'insideLeft', fill: TEXT_GRAY, style: { fontSize: 14, fontWeight: 'bold' } }}
                 />
                 <YAxis
                   yAxisId="tweets"
                   orientation="right"
                   stroke={LINE_GREEN}
-                  tick={{ fontSize: 14, fill: TEXT_GRAY }}
+                  tick={{ fontSize: 12, fill: TEXT_GRAY }}
                   axisLine={{ strokeWidth: 1.5, stroke: LINE_GREEN }}
-                  label={{ value: 'Avg Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 16, fontWeight: 'bold' } }}
+                  label={{ value: 'Avg Tweets', angle: 90, position: 'insideRight', fill: TEXT_GRAY, style: { fontSize: 14, fontWeight: 'bold' } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="top" height={20} iconType="circle" wrapperStyle={{ marginTop: -10, fontSize: '14px' }} />
@@ -235,7 +247,6 @@ const HourlyEngagementChart = ({
                   name="Avg Tweets/Hour"
                   stroke={LINE_GREEN}
                   strokeWidth={3}
-                  strokeDasharray="6 4"
                   dot={{ fill: LINE_GREEN, r: 4 }}
                   activeDot={{ r: 6, stroke: LINE_GREEN, strokeWidth: 2 }}
                 />
