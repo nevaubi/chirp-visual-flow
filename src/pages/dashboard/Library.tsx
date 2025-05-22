@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Book, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,14 +29,6 @@ const Library = () => {
   const { authState } = useAuth();
   const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Configure marked options with only valid properties
-  useEffect(() => {
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-    });
-  }, []);
 
   // Fetch newsletters from Supabase
   const { data: newsletters, isLoading, error } = useQuery({
@@ -69,59 +62,42 @@ const Library = () => {
     if (!markdown) return "No content available";
     
     try {
-      // Create a sanitized version for preview
-      let sanitized = markdown
-        // Remove HTML tags
-        .replace(/<[^>]*>/g, '')
-        // Remove markdown formatting
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-        .replace(/#{1,6}\s?/g, '')
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-        .replace(/`{1,3}[^`]*`{1,3}/g, '')
-        .replace(/~~[^~]*~~/g, '')
-        .replace(/>\s?(.*)/g, '$1')
-        .replace(/\n{2,}/g, ' ')
-        .replace(/\n/g, ' ')
-        .trim();
+      // Extract the first heading if it exists
+      const headingMatch = markdown.match(/^#\s+(.+)$/m);
+      const firstHeading = headingMatch ? headingMatch[1] : "";
       
-      // Extract the first meaningful content as title
-      const firstLine = sanitized.split('.')[0];
-      const title = firstLine.length > 60 ? firstLine.substring(0, 60) + '...' : firstLine;
+      // Extract the first paragraph that's not a heading
+      const paragraphMatch = markdown.match(/^(?!\s*#)(.+)/m);
+      let firstParagraph = paragraphMatch ? paragraphMatch[1] : "";
       
-      // Get the rest as description (without duplicating the title)
-      let description = sanitized.substring(firstLine.length).trim();
-      if (description.startsWith('.')) {
-        description = description.substring(1).trim();
+      // Clean up the paragraph
+      firstParagraph = firstParagraph
+        .replace(/\*\*/g, '') // Remove bold
+        .replace(/\*/g, '') // Remove italics
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with just the text
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, ''); // Remove images
+      
+      // If we have a heading, use it as the preview with the first few words of text
+      if (firstHeading) {
+        return firstHeading + (firstParagraph ? ` - ${firstParagraph.substring(0, 50)}...` : "");
       }
       
-      if (description.length > 100) {
-        description = description.substring(0, 100) + '...';
-      }
-      
-      return title + (description ? ` - ${description}` : "");
+      // If no heading, just use the first paragraph
+      return firstParagraph.length > 150 
+        ? firstParagraph.substring(0, 150) + '...' 
+        : firstParagraph;
     } catch (err) {
       console.error("Error creating preview:", err);
       return "Preview not available";
     }
   };
 
-  // Render markdown to HTML with improved handling
+  // Render markdown to HTML
   const renderMarkdown = (markdown: string | null) => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      // Pre-process the markdown to handle potential HTML content
-      const processedMarkdown = markdown
-        // Ensure proper line breaks for paragraphs
-        .replace(/<\/p>\s*<p>/g, '</p>\n\n<p>')
-        // Add space after headings
-        .replace(/(<\/h[1-6]>)(<h[1-6]>)/g, '$1\n\n$2')
-        // Make sure lists render properly 
-        .replace(/<\/li>\s*<li>/g, '</li>\n<li>');
-      
-      return marked.parse(processedMarkdown);
+      return marked.parse(markdown);
     } catch (err) {
       console.error("Error rendering markdown:", err);
       return "<p>Error rendering content</p>";
@@ -202,7 +178,7 @@ const Library = () => {
         </div>
       )}
 
-      {/* Newsletter Dialog with improved styling */}
+      {/* Newsletter Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedNewsletter && (
@@ -215,7 +191,7 @@ const Library = () => {
               </DialogHeader>
               
               <div 
-                className="prose dark:prose-invert max-w-none my-6 px-2 newsletter-content" 
+                className="prose dark:prose-invert max-w-none my-6" 
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
               />
               

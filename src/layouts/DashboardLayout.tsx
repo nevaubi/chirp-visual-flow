@@ -11,6 +11,7 @@ import {
   Bell,
   LogOut,
   Menu,
+  Bookmark,
   Book,
   CreditCard,
   TrendingUp,
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 import TweetGenerationPanel from '@/components/tweets/TweetGenerationPanel';
 
 const DashboardLayout = () => {
@@ -26,6 +28,7 @@ const DashboardLayout = () => {
   const [expanded, setExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -41,6 +44,10 @@ const DashboardLayout = () => {
   const isCreatorPlatform = profile?.is_creator_platform;
   const isSubscribed = profile?.subscribed;
   
+  // Check if user has the required subscription tier
+  const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                          profile?.subscription_tier === "Newsletter Premium";
+
   // Check if the current device is mobile
   useEffect(() => {
     const checkIfMobile = () => {
@@ -82,6 +89,25 @@ const DashboardLayout = () => {
 
   const handleSignOut = () => {
     signOut();
+  };
+
+  const handleCreateNewsletter = () => {
+    // Check if user has required subscription tier
+    if (!hasRequiredTier) {
+      toast.error("Subscription Required", {
+        description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
+      });
+      return;
+    }
+    
+    // Check if manual generation is available for the user
+    if (profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0) {
+      setIsManualGenerationOpen(true);
+    } else {
+      toast.error("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+      });
+    }
   };
   
   // Function to handle subscription management or checkout based on subscription status
@@ -171,7 +197,14 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">      
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Manual Newsletter Generation Dialog */}
+      <ManualNewsletterDialog
+        open={isManualGenerationOpen}
+        onOpenChange={setIsManualGenerationOpen}
+        remainingGenerations={profile?.remaining_newsletter_generations || 0}
+      />
+      
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
         <div className="flex items-center gap-2">
@@ -223,6 +256,24 @@ const DashboardLayout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 py-6">
+            {isNewsletterPlatform && (
+              <Button
+                className={cn(
+                  "w-full mb-4 flex items-center gap-3 justify-start px-3",
+                  !expanded && "justify-center px-0",
+                  hasRequiredTier 
+                    ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                    : "bg-amber-500/40 text-white/70 cursor-not-allowed"
+                )}
+                onClick={handleCreateNewsletter}
+                disabled={!hasRequiredTier}
+              >
+                <Bookmark size={20} />
+                {expanded && (
+                  <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
+                )}
+              </Button>
+            )}
             <ul className="space-y-2 px-2">
               {sidebarItems.map((item) => {
                 const isActive = location.pathname === item.path;

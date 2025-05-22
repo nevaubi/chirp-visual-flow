@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 interface ManualNewsletterDialogProps {
   open: boolean;
@@ -59,7 +60,6 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
   const [updatedRemainingGenerations, setUpdatedRemainingGenerations] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const { authState } = useAuth();
-  const [functionTimedOut, setFunctionTimedOut] = useState(false);
 
   // Reset updatedRemainingGenerations and progress when dialog opens/closes
   React.useEffect(() => {
@@ -67,7 +67,6 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       setUpdatedRemainingGenerations(null);
       setProgress(0);
       setIsGenerating(false);
-      setFunctionTimedOut(false);
     }
   }, [open]);
 
@@ -96,84 +95,54 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
     try {
       setIsGenerating(true);
       setProgress(0);
-      setFunctionTimedOut(false);
       
-      // Create an AbortController to handle timeouts manually
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      // Call the Supabase Edge Function to generate the newsletter
+      const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
+        body: { selectedCount },
+      });
       
-      try {
-        // Call the Supabase Edge Function to generate the newsletter
-        const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
-          body: { selectedCount }
+      if (error) {
+        console.error('Error generating newsletter:', error);
+        toast.error('Failed to generate newsletter', {
+          description: error.message || 'Please try again later',
         });
-        
-        // Clear the timeout since the request completed
-        clearTimeout(timeoutId);
-        
-        if (error) {
-          console.error('Error generating newsletter:', error);
-          
-          // Just show the visual failure in the UI, no toast
-          setIsGenerating(false);
-          return;
-        }
-        
-        if (data.error) {
-          console.error('Function returned error:', data.error);
-          setIsGenerating(false);
-          return;
-        }
-        
-        // Success! Update local state with the new remaining generations count
-        if (data.remainingGenerations !== undefined) {
-          setUpdatedRemainingGenerations(data.remainingGenerations);
-        }
-        
-        // Set progress to 100% to show completion
-        setProgress(100);
-        
-        // Keep the completion screen visible for longer (4 seconds)
-        setTimeout(() => {
-          // Close the dialog
-          onOpenChange(false);
-          setIsGenerating(false);
-        }, 4000);
-      } catch (abortError) {
-        // Handle aborted requests (timeouts)
-        clearTimeout(timeoutId);
-        
-        // If this was a timeout abort or other network error
-        console.log('Request timed out or aborted:', abortError);
-        setFunctionTimedOut(true);
-        setProgress(92);
-        
-        // Let the user know the process continues in the background
-        setTimeout(() => {
-          onOpenChange(false);
-          setIsGenerating(false);
-        }, 4000);
-      }
-    } catch (error) {
-      console.error('Error in handleGenerate:', error);
-      
-      // Check if this is a timeout error
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      if (errorMessage.includes('FunctionsFetchError') || errorMessage.includes('timeout') || errorMessage.includes('AbortError')) {
-        console.log('Function timed out but is still running in the background');
-        setFunctionTimedOut(true);
-        setProgress(92);
-        
-        // No toast for timeouts - show the message in the dialog
-        setTimeout(() => {
-          onOpenChange(false);
-          setIsGenerating(false);
-        }, 4000);
-        
+        setIsGenerating(false);
         return;
       }
       
-      // Just show the visual feedback in the UI for errors, no toast
+      if (data.error) {
+        console.error('Function returned error:', data.error);
+        toast.error('Failed to generate newsletter', {
+          description: data.error,
+        });
+        setIsGenerating(false);
+        return;
+      }
+      
+      // Success! Update local state with the new remaining generations count
+      if (data.remainingGenerations !== undefined) {
+        setUpdatedRemainingGenerations(data.remainingGenerations);
+      }
+      
+      // Set progress to 100% to show completion
+      setProgress(100);
+      
+      // Keep the completion screen visible for 2.5 seconds
+      setTimeout(() => {
+        toast.success('Newsletter generated successfully', {
+          description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
+        });
+        
+        // Close the dialog
+        onOpenChange(false);
+        setIsGenerating(false);
+      }, 2500);
+      
+    } catch (error) {
+      console.error('Error in handleGenerate:', error);
+      toast.error('Failed to generate newsletter', {
+        description: 'An unexpected error occurred. Please try again later.',
+      });
       setIsGenerating(false);
     }
   };
@@ -453,15 +422,13 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
               <p className="text-sm text-gray-600 mb-2">
                 {progress >= 100 
                   ? "Newsletter generated successfully!" 
-                  : functionTimedOut
-                    ? "Newsletter generation is continuing in the background..."
-                    : "Analyzing your bookmarks and generating newsletter..."}
+                  : "Analyzing your bookmarks and generating newsletter..."}
               </p>
 
               {/* New message that appears after 40% progress */}
               <p 
                 className={`text-xs text-gray-400 transition-opacity duration-1000 ${
-                  (progress > 40 && progress < 100) || functionTimedOut ? 'opacity-100' : 'opacity-0'
+                  progress > 40 && progress < 100 ? 'opacity-100' : 'opacity-0'
                 }`}
               >
                 You can close this window while the newsletter generates
