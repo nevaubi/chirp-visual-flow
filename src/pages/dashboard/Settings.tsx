@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatusCard } from "@/components/subscription/SubscriptionStatusCard";
 import { NewsletterPreferences } from "@/components/settings/NewsletterPreferences";
 import { useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
 
 const Settings = () => {
   const { authState, checkSubscription } = useAuth();
@@ -16,9 +15,6 @@ const Settings = () => {
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
-
-  // Check if the user has a manual newsletter preference
-  const hasManualPreference = profile?.newsletter_day_preference?.startsWith('Manual:');
 
   return (
     <div className="space-y-6">
@@ -44,43 +40,18 @@ const Settings = () => {
         <TabsContent value="subscription" className="space-y-4">
           <SubscriptionStatusCard />
           
-          {profile?.subscribed && hasManualPreference && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Newsletter Generations</CardTitle>
-                <CardDescription>
-                  You've selected manual newsletter generation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  <p className="text-sm">Remaining this month:</p>
-                  <Badge variant="secondary" className="text-lg px-3 py-1">
-                    {profile.remaining_newsletter_generations || 0}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Your account will be credited with{' '}
-                  {profile.newsletter_day_preference === 'Manual: 8' ? '8' : '4'}{' '}
-                  newsletter generations at the beginning of each billing cycle.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-          
           {!profile?.subscribed && (
             <Card>
               <CardHeader>
                 <CardTitle>Upgrade Your Experience</CardTitle>
                 <CardDescription>
-                  Subscribe to unlock premium newsletter features
+                  Subscribe to unlock premium features
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  You're currently on the free plan. Subscribe to our newsletter 
-                  service to access advanced features like premium templates,
-                  analytics, and more.
+                  You're currently on the free plan. Subscribe to access premium 
+                  features like advanced analytics, automated tools, and more.
                 </p>
               </CardContent>
             </Card>

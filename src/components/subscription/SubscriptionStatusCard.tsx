@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 export function SubscriptionStatusCard() {
@@ -65,7 +65,7 @@ export function SubscriptionStatusCard() {
           Subscription Status
         </CardTitle>
         <CardDescription>
-          Manage your newsletter subscription
+          Manage your subscription
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -113,7 +113,7 @@ export function SubscriptionStatusCard() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">Active Subscription</h3>
                 <div className="mt-1 text-sm text-blue-700">
-                  You have access to all newsletter features. Your subscription will{" "}
+                  You have access to all {subscriptionTier.toLowerCase()} features. Your subscription will{" "}
                   {willCancel ? "cancel" : "renew"} on{" "}
                   {subscriptionEnd ? format(subscriptionEnd, "MMMM d, yyyy") : "N/A"}.
                 </div>
