@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -210,11 +211,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     }));
   };
 
-  // Generate a random engagement percentage for UI display
-  const getRandomEngagement = (): number => {
-    return Math.floor(Math.random() * 30) + 70; // Returns a number between 70-99
-  };
-
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
@@ -266,14 +262,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {showTopics && (
           <div className={`grid ${isCompact ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-4 animate-fade-in`}>
             {trendingTopics.map(topic => {
-              const engagementPercentage = getRandomEngagement();
               return (
                 <div 
                   key={topic.id} 
                   className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 'ring-2 ring-twitter-blue' : ''} 
                     ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
-                    ${isCompact ? 'h-auto' : ''}`}
+                    ${isCompact ? 'min-h-[320px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
@@ -291,9 +286,6 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">
                         {cleanHeader(topic.header)}
                       </h3>
-                      {isCompact && (
-                        <span className="text-xs font-bold text-twitter-blue">{engagementPercentage}%</span>
-                      )}
                     </div>
                   </div>
                   
@@ -327,31 +319,35 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="p-3 bg-white dark:bg-gray-900">
-                      {/* Compact content for grid view */}
-                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{topic.context}</p>
+                    <div className="p-3 bg-white dark:bg-gray-900 flex flex-col flex-grow">
+                      {/* Expanded content for grid view */}
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
-                        <div className="mb-2">
-                          <ul>
-                            {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
+                        <div className="mb-3 flex-grow">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                          <ul className="space-y-1.5">
+                            {topic.subTopics.map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
                                 <span className="text-twitter-blue mr-1 flex-shrink-0 mt-0.5">•</span>
-                                <span className="line-clamp-1">{subtopic}</span>
+                                <span>{subtopic}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
                       
-                      <div className="flex justify-between items-center mt-2">
-                        <div className="flex items-center">
-                          <ChevronRight size={14} className="text-gray-400" />
-                          <span className="text-xs text-gray-500 ml-1">View details</span>
-                        </div>
-                        <div className="text-xs font-medium text-gray-500">
-                          Engagement: <span className="font-bold text-twitter-blue">{engagementPercentage}%</span>
-                        </div>
+                      <div className="mt-auto pt-2">
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUseTopic(topic);
+                          }}
+                          className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4 w-full"
+                        >
+                          Use Topic
+                        </Button>
                       </div>
                     </div>
                   )}

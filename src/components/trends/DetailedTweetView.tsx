@@ -2,7 +2,6 @@
 import React from 'react';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ExampleTweetCard from "./ExampleTweetCard";
@@ -40,7 +39,7 @@ interface DetailedTweetViewProps {
   onUseTopic: (topic: any) => void;
 }
 
-const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic, onUseTopic }) => {
+const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic }) => {
   const isMobile = useIsMobile();
   
   // Clean the topic header
@@ -95,25 +94,9 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic, onUseTopic
       </CardHeader>
       
       <CardContent className="pt-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
-        
-        {topic.subTopics.length > 0 && (
-          <div className="mb-5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
-            <ul className="space-y-2">
-              {topic.subTopics.map((subtopic, idx) => (
-                <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                  <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
-                  <span>{subtopic}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
         {/* Example Tweets Section */}
-        {topic.exampleTweets && topic.exampleTweets.length > 0 && (
-          <div className="mt-5">
+        {topic.exampleTweets && topic.exampleTweets.length > 0 ? (
+          <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
             <div className="space-y-3">
               {topic.exampleTweets.map((tweet, index) => (
@@ -127,16 +110,11 @@ const DetailedTweetView: React.FC<DetailedTweetViewProps> = ({ topic, onUseTopic
               ))}
             </div>
           </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No example tweets available for this topic</p>
+          </div>
         )}
-        
-        <div className="mt-6 flex justify-end">
-          <Button 
-            onClick={() => onUseTopic(topic)}
-            className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
-          >
-            Use Topic
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );

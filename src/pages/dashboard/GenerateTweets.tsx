@@ -72,7 +72,7 @@ const TweetGenerationView = () => {
           ) : (
             <Card className="h-full flex items-center justify-center text-center p-8 text-muted-foreground border border-gray-200 dark:border-gray-800">
               <CardContent>
-                <p>Select a trending topic from the left to view details and example tweets</p>
+                <p>Select a trending topic from the left to view example tweets</p>
               </CardContent>
             </Card>
           )}
