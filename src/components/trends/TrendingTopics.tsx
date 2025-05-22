@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ExampleTweetCard from "./ExampleTweetCard";
 
 interface TweetProfile {
   username: string;
@@ -50,14 +49,21 @@ interface Tag {
 
 interface TrendingTopicsProps {
   onSelectTopic: (topicData: any) => void;
+  selectedTopicId?: string;
+  displayMode?: 'full' | 'compact'; // 'full' for original display, 'compact' for left column
 }
 
-const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
+const TrendingTopics: React.FC<TrendingTopicsProps> = ({ 
+  onSelectTopic, 
+  selectedTopicId,
+  displayMode = 'full'
+}) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
   const isMobile = useIsMobile();
+  const isCompact = displayMode === 'compact';
 
   // Function to clean topic headers by removing "TOPIC HEADER: " prefix
   const cleanHeader = (header: string): string => {
@@ -166,6 +172,17 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
     }
   };
 
+  const handleSelectTopic = (topic: TrendingTopic) => {
+    // Clean the topic header before passing it
+    const cleanedTopic = {
+      ...topic,
+      header: cleanHeader(topic.header)
+    };
+    
+    // Pass the topic data to the parent component
+    onSelectTopic(cleanedTopic);
+  };
+
   const handleUseTopic = (topic: TrendingTopic) => {
     // Clean the topic header before passing it
     const cleanedTopic = {
@@ -243,74 +260,66 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({ onSelectTopic }) => {
         )}
         
         {showTopics && (
-          <div className="grid grid-cols-1 gap-8 animate-fade-in">
+          <div className="grid grid-cols-1 gap-4 animate-fade-in">
             {trendingTopics.map(topic => (
               <div 
                 key={topic.id} 
-                className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className={`border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden 
+                  ${selectedTopicId === topic.id ? 'ring-2 ring-twitter-blue' : ''} 
+                  ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}`}
+                onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
               >
                 {/* Header */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-3">
+                  <div className="flex items-center justify-between mb-1">
                     <Badge variant="outline" className="bg-white dark:bg-gray-800 text-xs font-medium">
                       {topic.tag}
                     </Badge>
-                    <div className={`flex items-center ${topic.sentiment.color} text-sm font-medium px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800`}>
-                      <topic.sentiment.icon size={14} className="mr-1.5" />
+                    <div className={`flex items-center ${topic.sentiment.color} text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800`}>
+                      <topic.sentiment.icon size={12} className="mr-1" />
                       <span className="capitalize">{topic.sentiment.type}</span>
                     </div>
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    {cleanHeader(topic.header)}
-                  </h3>
-                </div>
-                
-                {/* Content */}
-                <div className="p-4 bg-white dark:bg-gray-900">
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
-                  
-                  {topic.subTopics.length > 0 && (
-                    <div className="mb-5">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
-                      <ul className="space-y-2">
-                        {topic.subTopics.map((subtopic, idx) => (
-                          <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                            <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
-                            <span>{subtopic}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {/* Example Tweets Section */}
-                  {topic.exampleTweets && topic.exampleTweets.length > 0 && (
-                    <div className="mt-5">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Example Tweets</h4>
-                      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
-                        {topic.exampleTweets.map((tweet, index) => (
-                          <ExampleTweetCard
-                            key={`${topic.id}-tweet-${index}`}
-                            text={tweet.text}
-                            profile={tweet.profile}
-                            metrics={tweet.metrics}
-                            index={index}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="mt-5 flex justify-end">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleUseTopic(topic)}
-                      className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
-                    >
-                      Use Topic
-                    </Button>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">
+                      {cleanHeader(topic.header)}
+                    </h3>
+                    {isCompact && (
+                      <ChevronRight size={16} className="text-gray-400" />
+                    )}
                   </div>
                 </div>
+                
+                {/* Content - only show in full mode */}
+                {!isCompact && (
+                  <div className="p-4 bg-white dark:bg-gray-900">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
+                    
+                    {topic.subTopics.length > 0 && (
+                      <div className="mb-5">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                        <ul className="space-y-2">
+                          {topic.subTopics.map((subtopic, idx) => (
+                            <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
+                              <span className="text-twitter-blue mr-2 flex-shrink-0 mt-0.5">•</span>
+                              <span>{subtopic}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="mt-5 flex justify-end">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleUseTopic(topic)}
+                        className="bg-twitter-blue hover:bg-twitter-dark text-white rounded-full text-sm px-4"
+                      >
+                        Use Topic
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
