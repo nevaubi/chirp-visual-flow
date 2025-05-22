@@ -2,7 +2,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
@@ -153,44 +152,47 @@ const CreatorDashboard = ({ profile }) => {
   
   // When analysis results are available, show the enhanced dashboard
   return (
-    <div className="space-y-4">
-      {/* Header section with background stripe */}
-      <div className="relative pt-1 pb-6">
-        {/* Decorative background stripe */}
-        <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-r from-[#E5DEFF] via-[#D3E4FD] to-[#F1F0FB] -z-10 rounded-md opacity-70"></div>
-        
-        {/* Welcome header (now sr-only) */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 sr-only">Welcome, {localProfile?.twitter_username || 'User'}</h1>
-        </div>
-      </div>
-
-      {/* Twitter Profile Card - moved to top and centered */}
-      <div className="flex justify-center mb-6">
-        <TwitterProfileCard profile={localProfile} />
-      </div>
-
-      {/* Visualizations - now displayed directly below profile card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Updated CircadianHeatmap */}
-        <div className="lg:col-span-6">
-          <CircadianHeatmap 
-            data={analysisResults?.circadianHeatmap || []} 
-            timezone={localProfile?.timezone} 
-          />
+    <div className="space-y-6">
+      {/* Background gradient decoration */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-[#E5DEFF]/20 via-[#D3E4FD]/20 to-[#F1F0FB]/20 -z-10 rounded-md"></div>
+      
+      {/* Profile Section */}
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        {/* Twitter Profile Card - now left-aligned */}
+        <div className="w-full md:w-auto">
+          <TwitterProfileCard profile={localProfile} />
         </div>
         
-        {/* Hourly Engagement Chart - UPDATED PROPS TO MATCH DATA STRUCTURE */}
-        <div className="lg:col-span-6">
-          <HourlyEngagementChart 
-            hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
-            averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
-            timezone={localProfile?.timezone}
-            bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
-          />
-        </div>
+        {/* Space for future quick stats - can be filled in later */}
+        <div className="flex-1 hidden md:block"></div>
       </div>
       
+      {/* Section Divider */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
+      
+      {/* Weekly Activity Pattern Row */}
+      <div className="w-full">
+        <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">WEEKLY ACTIVITY PATTERN</h3>
+        <CircadianHeatmap 
+          data={analysisResults?.circadianHeatmap || []} 
+          timezone={localProfile?.timezone} 
+        />
+      </div>
+      
+      {/* Section Divider */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
+      
+      {/* Hourly Engagement Row */}
+      <div className="w-full">
+        <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">HOURLY ENGAGEMENT</h3>
+        <HourlyEngagementChart 
+          hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
+          averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
+          timezone={localProfile?.timezone}
+          bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
+        />
+      </div>
+
       {/* Completion popup */}
       <AnalysisCompletePopup 
         open={showCompletionPopup} 
