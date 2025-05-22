@@ -450,7 +450,7 @@ ${formattedTweets}`;
     }
     
     const openaiJson = await openaiRes.json();
-    const analysisResult = openaiJson.choices[0].message.content.trim();
+    let analysisResult = openaiJson.choices[0].message.content.trim();
     logStep("Successfully generated initial topic analysis");
 
     // 10) NEW STEP: Topic Selection and Query Generation for Perplexity
@@ -524,7 +524,7 @@ ${analysisResult}`;
       // 11) Perplexity API Calls for Web Enrichment
       // Parse the search queries
       const topics: { topic: string; query: string; goal: string }[] = [];
-      const regex = /TOPIC \d+: (.*)\nQUERY: (.*)\nENRICHMENT GOAL: (.*?)(?=\n\nTOPIC \d+:|$)/gs;
+      const regex = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
       let match;
       
       while ((match = regex.exec(searchQueries)) !== null) {
@@ -664,7 +664,7 @@ Provide the complete integrated analysis with all main topics and sub-topics, in
           const enhancedAnalysis = integrationJson.choices[0].message.content.trim();
           logStep("Successfully integrated web content with original analysis");
           // Replace the original analysis with the enhanced one
-          const analysisResult = enhancedAnalysis;
+          analysisResult = enhancedAnalysis;
         } else {
           const txt = await integrationRes.text();
           console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
@@ -883,7 +883,7 @@ ${markdownNewsletter}
       return cleaned;
     }
     
-    const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
+    const finalMarkdown = cleanMarkdown( cleanMarkdown(enhancedMarkdownNewsletter) );
     logStep("Cleaned up final markdown");
 
     // 16) Convert final Markdown to HTML & inline CSS
