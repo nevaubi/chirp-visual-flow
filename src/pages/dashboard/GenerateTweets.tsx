@@ -52,7 +52,7 @@ const TweetGenerationView = () => {
 
   return (
     <div className="relative">
-      <div className={`w-full grid gap-6 ${!isMobile ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={`w-full grid gap-5 ${!isMobile ? 'grid-cols-2' : 'grid-cols-1'}`}>
         {/* Left column - Trending Topics */}
         <div className="w-full">
           <TrendingTopics 

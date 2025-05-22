@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -65,6 +64,12 @@ export default {
         chirp: {
           orange: '#FF6B35',
           gray: '#8E9196'
+        },
+        darkPurple: {
+          DEFAULT: '#1A1F2C',
+          light: '#9b87f5',
+          medium: '#7E69AB',
+          dark: '#6E59A5'
         }
 			},
 			borderRadius: {
