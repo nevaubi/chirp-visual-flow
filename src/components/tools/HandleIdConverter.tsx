@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Check, Copy, AlertCircle, Loader2, 
@@ -31,7 +30,7 @@ const HandleIdConverter = () => {
   const [copiedId, setCopiedId] = useState(false);
   const [copiedHandle, setCopiedHandle] = useState(false);
   const [activeTab, setActiveTab] = useState("handle2id");
-  const { toast } = useToast();
+  const [rateLimit, setRateLimit] = useState<{ remaining: number; daily_limit: number } | null>(null);
 
   const resetStates = () => {
     setError("");
@@ -46,17 +45,9 @@ const HandleIdConverter = () => {
     if (type === 'id') {
       setCopiedId(true);
       setTimeout(() => setCopiedId(false), 2000);
-      toast({
-        title: "ID copied!",
-        description: "The ID has been copied to your clipboard."
-      });
     } else {
       setCopiedHandle(true);
       setTimeout(() => setCopiedHandle(false), 2000);
-      toast({
-        title: "Handle copied!",
-        description: "The handle has been copied to your clipboard."
-      });
     }
   };
 
@@ -74,7 +65,7 @@ const HandleIdConverter = () => {
           setIsLoading(false);
           return;
         }
-        payload = { handle: handle.trim() };
+        payload = { handle: handle.trim(), conversionType: "handle2id" };
         functionName = "twitter-handle-to-id";
       } else {
         if (!id.trim()) {
@@ -103,12 +94,9 @@ const HandleIdConverter = () => {
 
       setUserData(data);
       
-      // Show rate limit toast if available
+      // Store rate limit info
       if (data.rate_limit) {
-        toast({
-          title: "Rate limit info",
-          description: `You have ${data.rate_limit.remaining} requests remaining out of ${data.rate_limit.daily_limit} daily limit.`
-        });
+        setRateLimit(data.rate_limit);
       }
     } catch (err: any) {
       setError(err.message || "An error occurred while fetching data");
@@ -122,6 +110,8 @@ const HandleIdConverter = () => {
     resetStates();
   };
 
+  const isRateLimitExceeded = rateLimit && rateLimit.remaining <= 0;
+
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="w-full grid grid-cols-2 mb-4">
@@ -129,7 +119,7 @@ const HandleIdConverter = () => {
           X handle ➡️ ID
         </TabsTrigger>
         <TabsTrigger value="id2handle" className="w-full">
-          User ID -&gt; handle
+          User ID ➡️ handle
         </TabsTrigger>
       </TabsList>
 
@@ -142,12 +132,12 @@ const HandleIdConverter = () => {
             placeholder="@username"
             value={handle}
             onChange={(e) => setHandle(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || isRateLimitExceeded}
           />
           <Button 
             onClick={handleConvert} 
             className="whitespace-nowrap"
-            disabled={isLoading}
+            disabled={isLoading || isRateLimitExceeded}
           >
             {isLoading ? (
               <>
@@ -159,6 +149,15 @@ const HandleIdConverter = () => {
             )}
           </Button>
         </div>
+        {rateLimit && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            {rateLimit.remaining > 0 ? (
+              <span>Remaining uses today: {rateLimit.remaining}/{rateLimit.daily_limit}</span>
+            ) : (
+              <span className="text-red-500 font-medium">No more uses left today. Try again tomorrow.</span>
+            )}
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="id2handle">
@@ -170,12 +169,12 @@ const HandleIdConverter = () => {
             placeholder="1234567890"
             value={id}
             onChange={(e) => setId(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || isRateLimitExceeded}
           />
           <Button 
             onClick={handleConvert} 
             className="whitespace-nowrap"
-            disabled={isLoading}
+            disabled={isLoading || isRateLimitExceeded}
           >
             {isLoading ? (
               <>
@@ -187,6 +186,15 @@ const HandleIdConverter = () => {
             )}
           </Button>
         </div>
+        {rateLimit && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            {rateLimit.remaining > 0 ? (
+              <span>Remaining uses today: {rateLimit.remaining}/{rateLimit.daily_limit}</span>
+            ) : (
+              <span className="text-red-500 font-medium">No more uses left today. Try again tomorrow.</span>
+            )}
+          </div>
+        )}
       </TabsContent>
 
       {error && (

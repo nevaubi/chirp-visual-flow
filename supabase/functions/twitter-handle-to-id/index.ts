@@ -10,6 +10,45 @@ const corsHeaders = {
 const RATE_LIMIT = 10;
 const FEATURE_NAME = "tweet_id_converter";
 
+// Simple in-memory rate limit store
+// Will reset when function is redeployed (which happens daily)
+const rateLimitStore: Record<string, { count: number; expiry: number }> = {};
+
+// Check and update rate limit
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date();
+  dayEnd.setHours(23, 59, 59, 999);
+  
+  // Clean up expired entries
+  for (const key in rateLimitStore) {
+    if (rateLimitStore[key].expiry < now) {
+      delete rateLimitStore[key];
+    }
+  }
+  
+  // Get or create user rate limit
+  if (!rateLimitStore[ip] || rateLimitStore[ip].expiry < now) {
+    rateLimitStore[ip] = {
+      count: 0,
+      expiry: dayEnd.getTime()
+    };
+  }
+  
+  // Check if limit is exceeded
+  if (rateLimitStore[ip].count >= RATE_LIMIT) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  // Increment count and return
+  rateLimitStore[ip].count++;
+  const remaining = RATE_LIMIT - rateLimitStore[ip].count;
+  
+  return { allowed: true, remaining };
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -23,17 +62,8 @@ serve(async (req) => {
     // Get client IP address
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     
-    // Default rate limit response if check fails
-    let rateLimitCheck = { allowed: true, remaining: RATE_LIMIT - 1 };
-    
-    try {
-      // Check rate limit - use a simple in-memory approach since we don't have a full rate-limit function
-      // In a production environment, you would use a database or Redis to track rate limits
-      rateLimitCheck = { allowed: true, remaining: RATE_LIMIT - 1 };
-    } catch (error) {
-      console.error("Rate limit check error:", error);
-      // Continue with default values if rate limit check fails
-    }
+    // Check rate limit
+    const rateLimitCheck = checkRateLimit(clientIP);
     
     // If rate limit exceeded
     if (!rateLimitCheck.allowed) {
@@ -41,7 +71,11 @@ serve(async (req) => {
         error: "Rate limit exceeded",
         message: "You've reached the daily limit of 10 requests. Try again tomorrow.",
         remaining: 0,
-        error_code: "RATE_LIMIT"
+        error_code: "RATE_LIMIT",
+        rate_limit: {
+          remaining: 0,
+          daily_limit: RATE_LIMIT
+        }
       }), {
         status: 429,
         headers: {
