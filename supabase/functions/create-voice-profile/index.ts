@@ -258,27 +258,67 @@ serve(async (req) => {
     
     console.log(`Total tweets extracted: ${tweets.length}`);
     
-    // —— FILTERING & RANKING ——
-    // Verify tweets structure by looking at first item
-    if (tweets.length > 0) {
-      console.log('First tweet structure:', JSON.stringify(tweets[0]).substring(0, 200) + '...');
+    // —— IMPROVED PARSING / FILTERING / RANKING ——
+    // Try to handle tweet format with nested elements structure
+    const parsedTweets = tweets.map(item => {
+      try {
+        // Check if this is a wrapper with elements field
+        if (item.elements && Array.isArray(item.elements) && item.elements.length > 0) {
+          try {
+            // If elements[0] is a string that needs parsing
+            if (typeof item.elements[0] === 'string') {
+              return JSON.parse(item.elements[0]);
+            } 
+            // If elements[0] is already an object
+            return item.elements[0];
+          } catch {
+            return item;
+          }
+        }
+        return item;
+      } catch {
+        return item;
+      }
+    }).filter(Boolean);
+    
+    console.log(`After format normalization: ${parsedTweets.length} tweets remain`);
+    
+    if (parsedTweets.length > 0) {
+      console.log('First tweet structure sample:', JSON.stringify(parsedTweets[0]).substring(0, 200) + '...');
     }
     
-    // Filter non-replies based on the actual structure - check if it's a reply by looking at text
-    const nonReplies = tweets.filter(t => 
-      t && typeof t === 'object' && 
-      typeof t.text === 'string' && 
-      !t.text.startsWith('RT @') && 
-      // Check if it doesn't start with @ (indicating a reply) or if engagement exists (safer approach)
-      (!t.text.startsWith('@') || (t.engagement && Object.keys(t.engagement).length > 0))
-    );
+    // —— IMPROVED REPLY FILTERING ——
+    const nonReplies = parsedTweets.filter(t => {
+      // If "IsReply?" field exists, use it directly
+      if (t && t['IsReply?'] !== undefined) {
+        console.log(`Using 'IsReply?' field which is ${t['IsReply?']}`);
+        return t['IsReply?'] === false;
+      }
+      
+      // Otherwise fall back to the original text-based method
+      const tweetText = t.text || t['text of tweet'] || '';
+      const hasEngagement = t.engagement && Object.keys(t.engagement).length > 0;
+      const hasLikes = (t.Likes !== undefined && t.Likes > 0) || 
+                       (t.likes !== undefined && t.likes > 0) ||
+                       (t.engagement?.likes !== undefined && t.engagement.likes > 0);
+      
+      return (
+        typeof tweetText === 'string' && 
+        !tweetText.startsWith('RT @') && 
+        (!tweetText.startsWith('@') || hasEngagement || hasLikes)
+      );
+    });
     
     console.log(`After filtering replies: ${nonReplies.length} tweets remain`);
     
-    // Sort by engagement - Using the structure from the sample data
+    // —— IMPROVED SORTING BY ENGAGEMENT ——
     nonReplies.sort((a, b) => {
-      // First check if engagement.likes exists
-      if (a.engagement?.likes !== undefined && b.engagement?.likes !== undefined) {
+      // First check if Likes field exists (new format)
+      if (a['Likes'] !== undefined && b['Likes'] !== undefined) {
+        return (b['Likes'] || 0) - (a['Likes'] || 0);
+      }
+      // Check if engagement.likes exists (old format)
+      else if (a.engagement?.likes !== undefined && b.engagement?.likes !== undefined) {
         return (b.engagement.likes || 0) - (a.engagement.likes || 0);
       }
       // Fall back to other possible engagement fields
@@ -291,7 +331,10 @@ serve(async (req) => {
     
     // Get the top 30 tweets and extract their text
     const topTweets = nonReplies.slice(0, 30);
-    const originalTexts = topTweets.map(t => t.text || '').filter(Boolean);
+    const originalTexts = topTweets.map(t => {
+      // Try different possible text field names
+      return t['text of tweet'] || t.text || '';
+    }).filter(Boolean);
     
     console.log(`Selected ${originalTexts.length} top tweets for analysis`);
     
@@ -343,7 +386,7 @@ serve(async (req) => {
       style_analysis: styleAnalysis,
       debug: {
         raw_count: tweets.length,
-        parsed_count: tweets.length,
+        parsed_count: parsedTweets.length,
         non_replies_count: nonReplies.length,
         top30_count: texts.length
       }
