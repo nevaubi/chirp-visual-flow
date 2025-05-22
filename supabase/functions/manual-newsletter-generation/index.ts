@@ -765,13 +765,15 @@ ${markdownNewsletter}
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
 
     // 15) Convert final Markdown to HTML & inline CSS
-// -------------------------------------------------
-// Force all images to be responsive, centred, and capped to the container width
+// -----------------------------------------------
 const renderer = new marked.Renderer();
+
+// Responsive e-mail-safe image
 renderer.image = (href, _title, alt) => `
   <img src="${href}"
        alt="${alt}"
-       style="max-width:100%;height:auto;display:block;margin:12px auto;border-radius:4px;">
+       width="552"
+       style="width:100%;max-width:552px;height:auto;display:block;margin:12px auto;border-radius:4px;">
 `;
 
 const htmlBody = marked(finalMarkdown, { renderer });
@@ -785,6 +787,7 @@ const emailHtml = juice(`
     </div>
   </body>
 `);
+
 
 
     // 16) Send email via Resend
