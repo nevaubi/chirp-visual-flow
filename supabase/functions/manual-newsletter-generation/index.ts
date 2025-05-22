@@ -95,18 +95,10 @@ serve(async (req)=>{
         }
       });
     }
-    const hasManualPlan = profile.newsletter_day_preference === "Manual: 4" || profile.newsletter_day_preference === "Manual: 8";
-    if (!hasManualPlan) {
-      return new Response(JSON.stringify({
-        error: "You must have a manual newsletter plan to use this feature"
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
+    
+    // Removed the check for newsletter_day_preference being "Manual: 4" or "Manual: 8"
+    // This allows all users to generate newsletters manually regardless of their newsletter_day_preference setting
+    
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
       return new Response(JSON.stringify({
         error: "You have no remaining newsletter generations"
