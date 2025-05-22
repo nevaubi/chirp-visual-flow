@@ -260,39 +260,6 @@ const NewsletterDashboard = ({ profile }) => {
   // Number of remaining manual generations
   const remainingGenerations = profile?.remaining_newsletter_generations || 0;
   
-  // Function to handle subscription checkout
-  const handleUpgradeSubscription = async () => {
-    setIsLoading(true);
-    try {
-      // Use the create-checkout edge function with the Newsletter Premium price
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { 
-          priceId: "price_newsletter_premium", // This should be replaced with your actual Stripe price ID
-          frequency: "monthly",
-          metadata: {
-            newsletter_day_preference: "Friday",
-          }
-        }
-      });
-      
-      if (error) {
-        console.error("Error creating checkout session:", error);
-        toast.error("Could not start checkout process");
-        return;
-      }
-      
-      if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error("Error in handleUpgradeSubscription:", error);
-      toast.error("Something went wrong");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Steps for how the newsletter generation works
   const steps = [
     {
@@ -353,7 +320,7 @@ const NewsletterDashboard = ({ profile }) => {
         </CardContent>
       </Card>
 
-      {/* Subscription Card */}
+      {/* Subscription Card - Updated to better reflect user's subscription status */}
       <Card className="border-none shadow-sm hover:shadow transition-shadow overflow-hidden">
         <CardHeader className={cn(
           "relative pb-8",
@@ -367,7 +334,7 @@ const NewsletterDashboard = ({ profile }) => {
           <CardTitle>{isPremium ? "Premium Plan" : "Free Plan"}</CardTitle>
           <CardDescription>
             {isPremium 
-              ? "You're currently on the Newsletter Premium plan" 
+              ? `You're currently on the ${subscriptionTier || "Newsletter Premium"} plan` 
               : "Upgrade to Premium for additional features"}
           </CardDescription>
         </CardHeader>
@@ -380,8 +347,8 @@ const NewsletterDashboard = ({ profile }) => {
                 <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
                 <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
                   <strong>{isPremium ? "30" : "0"}</strong> manual newsletter generations
-                  {isPremium && remainingGenerations > 0 && (
-                    <span className="ml-2 text-sm text-amber-600">
+                  {remainingGenerations > 0 && (
+                    <span className="ml-2 text-sm text-amber-600 font-semibold">
                       ({remainingGenerations} remaining)
                     </span>
                   )}
@@ -404,18 +371,6 @@ const NewsletterDashboard = ({ profile }) => {
             </div>
           </div>
         </CardContent>
-        {!isPremium && (
-          <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 p-4">
-            <Button 
-              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={handleUpgradeSubscription}
-              disabled={isLoading}
-            >
-              <CreditCard size={16} />
-              Upgrade to Premium
-            </Button>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );
