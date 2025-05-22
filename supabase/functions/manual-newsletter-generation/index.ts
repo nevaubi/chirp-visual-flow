@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
@@ -18,130 +19,42 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: corsHeaders
-    });
-  }
+// Main function for newsletter generation - runs in the background
+async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
   try {
-    logStep("Starting newsletter generation process");
-    
-    // 1) Validate selection
-    const { selectedCount } = await req.json();
-    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-      return new Response(JSON.stringify({
-        error: "Invalid selection. Please choose 10, 20, or 30 tweets."
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
-    // 2) Authenticate
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: "No authorization header"
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-    
+    // 2) Set up Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(JSON.stringify({
-        error: "Authentication failed"
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-
     // 3) Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
       
     if (profileError || !profile) {
       console.error("Profile fetch error:", profileError);
-      return new Response(JSON.stringify({
-        error: "Failed to fetch user profile"
-      }), {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("Failed to fetch user profile");
     }
 
     // 4) Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
-      return new Response(JSON.stringify({
-        error: "You must have an active subscription to generate newsletters"
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("You must have an active subscription to generate newsletters");
     }
     
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
-      return new Response(JSON.stringify({
-        error: "You have no remaining newsletter generations"
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("You have no remaining newsletter generations");
     }
     
     if (!profile.twitter_bookmark_access_token) {
-      return new Response(JSON.stringify({
-        error: "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings."
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings.");
     }
     
     const now = Math.floor(Date.now() / 1000);
     if (profile.twitter_bookmark_token_expires_at && profile.twitter_bookmark_token_expires_at < now) {
-      return new Response(JSON.stringify({
-        error: "Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks."
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
     // 5) Ensure numerical_id
@@ -170,7 +83,7 @@ serve(async (req) => {
             .update({
               numerical_id: numericalId
             })
-            .eq("id", user.id);
+            .eq("id", userId);
             
           if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
@@ -178,28 +91,12 @@ serve(async (req) => {
         }
       } catch (err) {
         console.error("Error fetching numerical_id:", err);
-        return new Response(JSON.stringify({
-          error: "Could not retrieve your Twitter ID. Please try again later."
-        }), {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        });
+        throw new Error("Could not retrieve your Twitter ID. Please try again later.");
       }
     }
     
     if (!numericalId) {
-      return new Response(JSON.stringify({
-        error: "Could not determine your Twitter ID. Please update your Twitter handle in settings."
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
+      throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
     // 6) Fetch bookmarks
@@ -217,27 +114,11 @@ serve(async (req) => {
       console.error(`Twitter API error (${bookmarksResp.status}):`, text);
       
       if (bookmarksResp.status === 401) {
-        return new Response(JSON.stringify({
-          error: "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks."
-        }), {
-          status: 401,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        });
+        throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
       }
       
       if (bookmarksResp.status === 429) {
-        return new Response(JSON.stringify({
-          error: "Twitter API rate limit exceeded. Please try again later."
-        }), {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        });
+        throw new Error("Twitter API rate limit exceeded. Please try again later.");
       }
       
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
@@ -248,15 +129,7 @@ serve(async (req) => {
       console.error("Invalid or empty bookmark data:", bookmarksData);
       
       if (bookmarksData.meta?.result_count === 0) {
-        return new Response(JSON.stringify({
-          error: "You don't have any bookmarks. Please save some tweets before generating a newsletter."
-        }), {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        });
+        throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
       }
       
       throw new Error("Failed to retrieve bookmarks from Twitter");
@@ -542,74 +415,71 @@ ${analysisResult}`;
       } else {
         logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
         
-        // ──────────────────────────────────────────────────────────────
-// 11) Perplexity API calls — REPLACE the whole loop with this
-// ──────────────────────────────────────────────────────────────
-const enrichmentResults = [];
+        // 11) Perplexity API calls
+        const enrichmentResults = [];
 
-for (const topic of topics) {
-  try {
-    const perplexityRes = await fetch(
-      "https://api.perplexity.ai/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "sonar-pro",                 // ◀️ search-enabled model
-          messages: [
-            { role: "user", content: topic.query }
-          ],
-          temperature: 0.2,
-          max_tokens: 350,
+        for (const topic of topics) {
+          try {
+            const perplexityRes = await fetch(
+              "https://api.perplexity.ai/chat/completions",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
+                },
+                body: JSON.stringify({
+                  model: "sonar-pro",                 // search-enabled model
+                  messages: [
+                    { role: "user", content: topic.query }
+                  ],
+                  temperature: 0.2,
+                  max_tokens: 350,
 
-          // recency: only results from the last 7 days
-          search_recency_filter: "week"
-        })
-      }
-    );
+                  // recency: only results from the last 7 days
+                  search_recency_filter: "week"
+                })
+              }
+            );
 
-    if (perplexityRes.ok) {
-      const data = await perplexityRes.json();
+            if (perplexityRes.ok) {
+              const data = await perplexityRes.json();
 
-      enrichmentResults.push({
-        topic:      topic.topic,
-        query:      topic.query,
-        goal:       topic.goal,
-        webContent: data.choices[0].message.content,
-        sources:    data.citations ?? []           // ⬅️ updated citations field
-      });
+              enrichmentResults.push({
+                topic:      topic.topic,
+                query:      topic.query,
+                goal:       topic.goal,
+                webContent: data.choices[0].message.content,
+                sources:    data.citations ?? []           // updated citations field
+              });
 
-      logStep(`Successfully enriched topic: ${topic.topic}`);
-    } else {
-      console.error(
-        `Perplexity API error for "${topic.query}":`,
-        await perplexityRes.text()
-      );
+              logStep(`Successfully enriched topic: ${topic.topic}`);
+            } else {
+              console.error(
+                `Perplexity API error for "${topic.query}":`,
+                await perplexityRes.text()
+              );
 
-      enrichmentResults.push({
-        topic: topic.topic,
-        query: topic.query,
-        goal:  topic.goal,
-        webContent: `[Perplexity error ${perplexityRes.status}]`,
-        sources: []
-      });
-    }
-  } catch (err) {
-    console.error(`Perplexity fetch failed for "${topic.query}":`, err);
+              enrichmentResults.push({
+                topic: topic.topic,
+                query: topic.query,
+                goal:  topic.goal,
+                webContent: `[Perplexity error ${perplexityRes.status}]`,
+                sources: []
+              });
+            }
+          } catch (err) {
+            console.error(`Perplexity fetch failed for "${topic.query}":`, err);
 
-    enrichmentResults.push({
-      topic: topic.topic,
-      query: topic.query,
-      goal:  topic.goal,
-      webContent: "[Perplexity request failed]",
-      sources: []
-    });
-  }
-}
-
+            enrichmentResults.push({
+              topic: topic.topic,
+              query: topic.query,
+              goal:  topic.goal,
+              webContent: "[Perplexity request failed]",
+              sources: []
+            });
+          }
+        }
         
         // 12) Integrate Web Content with Original Analysis
         logStep("Integrating web content with original analysis");
@@ -936,7 +806,7 @@ ${markdownNewsletter}
     // 18) Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
-        user_id: user.id,
+        user_id: userId,
         markdown_text: finalMarkdown
       });
       
@@ -954,7 +824,7 @@ ${markdownNewsletter}
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({
         remaining_newsletter_generations: newCount
-      }).eq("id", user.id);
+      }).eq("id", userId);
       
       if (updateError) {
         console.error("Failed to update remaining generations:", updateError);
@@ -966,13 +836,13 @@ ${markdownNewsletter}
     // 20) Final log & response
     const timestamp = new Date().toISOString();
     logStep("Newsletter generation successful", {
-      userId: user.id,
+      userId,
       timestamp,
       tweetCount: selectedCount,
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
     });
-    
-    return new Response(JSON.stringify({
+
+    return {
       status: "success",
       message: "Newsletter generated and emailed successfully",
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
@@ -983,8 +853,86 @@ ${markdownNewsletter}
         enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
         timestamp
       }
+    };
+  } catch (error) {
+    console.error("Error in background newsletter generation process:", error);
+    return {
+      status: "error",
+      message: error.message || "Internal server error"
+    };
+  }
+}
+
+// Main serve function that handles the HTTP request
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: corsHeaders
+    });
+  }
+  try {
+    logStep("Starting newsletter generation process");
+    
+    // 1) Initial validation - fast checks before starting the heavy work
+    const { selectedCount } = await req.json();
+    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
+      return new Response(JSON.stringify({
+        error: "Invalid selection. Please choose 10, 20, or 30 tweets."
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+    // 2) Authenticate - do this synchronously
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({
+        error: "No authorization header"
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      console.error("Authentication error:", userError);
+      return new Response(JSON.stringify({
+        error: "Authentication failed"
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+    // 3) Start async task - this is the core of the optimization
+    const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
+    
+    // Use EdgeRuntime.waitUntil to continue processing after sending response
+    // @ts-ignore - EdgeRuntime exists in Deno Deploy but might not be in type definitions
+    EdgeRuntime.waitUntil(backgroundTask);
+    
+    // 4) Send immediate response to client
+    return new Response(JSON.stringify({
+      status: "processing",
+      message: "Newsletter generation started. You will receive an email when it's ready.",
     }), {
-      status: 200,
+      status: 202, // Accepted - the request has been accepted for processing
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json"

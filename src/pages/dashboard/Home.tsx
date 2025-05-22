@@ -324,6 +324,11 @@ const NewsletterDashboard = ({ profile }) => {
           <p className="text-sm text-gray-600">
             Use the "Create Newsletter" button in the sidebar to generate a newsletter
           </p>
+          {isLoading && (
+            <p className="text-xs text-amber-600">
+              <Clock size={12} className="inline mr-1" /> Newsletter generation in progress...
+            </p>
+          )}
         </div>
       </div>
 
@@ -417,6 +422,23 @@ const NewsletterDashboard = ({ profile }) => {
           </CardFooter>
         )}
       </Card>
+
+      {/* Add processing status card when a newsletter is being generated */}
+      {isLoading && (
+        <Card className="border border-amber-200 bg-amber-50 shadow-sm">
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 border-4 border-t-transparent border-amber-500 rounded-full animate-spin"></div>
+              <div>
+                <h3 className="font-semibold text-amber-800">Newsletter Generation in Progress</h3>
+                <p className="text-amber-700 text-sm">
+                  Your newsletter is being generated in the background. You'll receive an email when it's ready.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
