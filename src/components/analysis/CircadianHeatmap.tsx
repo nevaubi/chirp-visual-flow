@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Clock } from 'lucide-react';
 
 interface CircadianHeatmapProps {
-  data: number[][]; // Updated to accept a 2D array directly
+  data: number[][]; // 2D array [day][hour]
   timezone?: string | null;
 }
 
@@ -15,7 +15,6 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
   // Find maximum value in the heatmap data for proper color scaling
   React.useEffect(() => {
     if (data && data.length > 0) {
-      // Find max value across all cells
       const allValues = data.flat();
       const max = allValues.length > 0 ? Math.max(...allValues) : 8;
       setMaxValue(max > 0 ? max : 8); // Default max if no data
@@ -26,39 +25,37 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
   const heatmapData = data && data.length > 0 ? data : Array(7).fill(Array(24).fill(0));
   
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const hourLabels = Array.from({ length: 24 }, (_, i) => 
-    i.toString().padStart(2, '0') + ':00'
-  );
   
-  // Color intensity function
+  // Generate simplified hour labels (every 2 hours)
+  const hourLabels = [];
+  for (let i = 0; i < 24; i += 2) {
+    const formattedHour = i === 0 ? '12am' : i === 12 ? '12pm' : i < 12 ? `${i}am` : `${i-12}pm`;
+    hourLabels.push(formattedHour);
+  }
+  
+  // Color intensity function - simplified blue gradient
   const getColor = (value: number, max: number) => {
-    if (value === 0) return 'rgb(248, 250, 252)'; // Very light gray
+    if (value === 0) return '#f8fafc'; // Very light gray for zero values
+    
+    // Calculate intensity (0-1)
     const intensity = value / max;
-    const hue = 220; // Blue hue
-    const saturation = Math.min(70 + intensity * 30, 100);
-    const lightness = Math.max(90 - intensity * 50, 20);
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
-  
-  // Format hour for display
-  const formatHour = (hour: number | string) => {
-    const h = typeof hour === 'string' ? parseInt(hour) : hour;
-    if (h === 0) return '12 AM';
-    if (h < 12) return `${h} AM`;
-    if (h === 12) return '12 PM';
-    return `${h - 12} PM`;
+    
+    // Create a blue gradient from light to dark
+    if (intensity < 0.2) return '#e2f1ff'; // Very light blue
+    if (intensity < 0.4) return '#b3d7ff'; // Light blue
+    if (intensity < 0.6) return '#80baff'; // Medium light blue
+    if (intensity < 0.8) return '#4d9fff'; // Medium blue
+    return '#0073e6';                      // Dark blue
   };
   
   // Format timezone for display
   const formatTimezone = (tz: string | null | undefined) => {
     if (!tz) return 'UTC';
     
-    // Convert technical timezone format to user-friendly name
+    // Extract city or region from timezone format
     try {
-      // Extract continent/city format to just city or region
       const parts = tz.split('/');
       if (parts.length > 1) {
-        // Replace underscores with spaces and format the name
         return parts[parts.length - 1].replace(/_/g, ' ');
       }
       return tz;
@@ -67,15 +64,14 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
     }
   };
   
-  // Find peak activity hour from the heatmap data
-  const getPeakActivityHour = () => {
-    if (!data || data.length === 0) return { hour: "N/A", value: 0 };
+  // Find peak activity time
+  const getPeakActivity = () => {
+    if (!data || data.length === 0) return { day: 'N/A', hour: 'N/A', value: 0 };
     
+    let maxDay = 0;
     let maxHour = 0;
     let maxValue = 0;
-    let maxDay = 0;
     
-    // Go through all cells to find the peak hour
     data.forEach((dayData, dayIndex) => {
       dayData.forEach((value, hourIndex) => {
         if (value > maxValue) {
@@ -86,65 +82,54 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
       });
     });
     
+    const formattedHour = maxHour === 0 ? '12 AM' : 
+                         maxHour === 12 ? '12 PM' : 
+                         maxHour < 12 ? `${maxHour} AM` : 
+                         `${maxHour - 12} PM`;
+    
     return { 
-      hour: formatHour(maxHour), 
-      day: dayLabels[maxDay],
+      day: dayLabels[maxDay], 
+      hour: formattedHour,
       value: maxValue 
     };
   };
   
-  // Find evening peak (6-9 PM)
-  const getEveningPeak = () => {
-    if (!data || data.length === 0) return 0;
-    
-    // Sum up all activity between 6-9 PM (18-21) across all days
-    const eveningHours = [18, 19, 20];
-    let totalEvents = 0;
-    
-    data.forEach(dayData => {
-      eveningHours.forEach(hour => {
-        if (dayData[hour]) {
-          totalEvents += dayData[hour];
-        }
-      });
-    });
-    
-    return totalEvents;
-  };
-  
-  // Find quiet hours (hours with least activity)
+  // Find quiet hours (lowest activity)
   const getQuietHours = () => {
     if (!data || data.length === 0) return 'None detected';
     
-    // Calculate the average value for each hour across all days
+    // Get average activity by hour across all days
     const hourlyAverages = Array(24).fill(0);
     
     data.forEach(dayData => {
-      dayData.forEach((value, hourIndex) => {
-        hourlyAverages[hourIndex] += value;
+      dayData.forEach((value, hour) => {
+        hourlyAverages[hour] += value;
       });
     });
     
-    // Divide by number of days to get average
-    hourlyAverages.forEach((sum, index) => {
-      hourlyAverages[index] = sum / data.length;
+    // Divide by number of days
+    hourlyAverages.forEach((sum, idx) => {
+      hourlyAverages[idx] = sum / data.length;
     });
     
-    // Find the hours with the lowest averages
+    // Find hours with lowest average activity
     const hourEntries = hourlyAverages
       .map((value, hour) => ({ hour, value }))
       .sort((a, b) => a.value - b.value)
       .filter(entry => entry.value <= 1)
       .slice(0, 2)
-      .map(entry => formatHour(entry.hour));
+      .map(entry => {
+        const h = entry.hour;
+        return h === 0 ? '12 AM' : 
+               h === 12 ? '12 PM' : 
+               h < 12 ? `${h} AM` : 
+               `${h - 12} PM`;
+      });
     
-    return hourEntries.length > 0 
-      ? hourEntries.join(', ')
-      : 'None detected';
+    return hourEntries.length > 0 ? hourEntries.join(', ') : 'None detected';
   };
   
-  const peak = getPeakActivityHour();
-  const eveningPeak = getEveningPeak();
+  const peak = getPeakActivity();
   
   return (
     <Card className="border-none shadow-sm hover:shadow transition-shadow">
@@ -157,7 +142,7 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
           When you typically post throughout the week
         </CardDescription>
         
-        {/* Moved timezone indicator to here with padding */}
+        {/* Timezone indicator */}
         {timezone && (
           <div className="mt-2 flex justify-end">
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-flex items-center">
@@ -169,12 +154,11 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
       <CardContent>
         <div className="w-full overflow-x-auto">
           <div className="min-w-[600px]">
-            {/* Hour labels */}
-            <div className="flex mb-2">
-              <div className="w-12 sm:w-16"></div>
-              {hourLabels.map((hour, i) => (
-                <div key={i} className="flex-1 min-w-6 text-xs text-gray-600 text-center">
-                  {i % 4 === 0 ? hour.slice(0, 2) : ''}
+            {/* Hour labels (simplified) */}
+            <div className="flex mb-1 pl-12">
+              {hourLabels.map((label, i) => (
+                <div key={i} className="flex-1 text-xs text-gray-500 text-center">
+                  {label}
                 </div>
               ))}
             </div>
@@ -183,64 +167,71 @@ const CircadianHeatmap = ({ data, timezone }: CircadianHeatmapProps) => {
             {heatmapData.map((dayData, dayIndex) => (
               <div key={dayIndex} className="flex items-center mb-1">
                 {/* Day label */}
-                <div className="w-12 sm:w-16 text-sm font-medium text-gray-700 text-right pr-2">
+                <div className="w-12 text-sm font-medium text-gray-600 text-right pr-2">
                   {dayLabels[dayIndex]}
                 </div>
                 
                 {/* Hour cells */}
-                {dayData.map((value, hourIndex) => (
-                  <div
-                    key={hourIndex}
-                    className="flex-1 min-w-6 aspect-square border border-gray-200 cursor-pointer transition-all duration-200 hover:border-gray-400"
-                    style={{ backgroundColor: getColor(value, maxValue) }}
-                    onMouseEnter={() => setHoveredCell({ day: dayIndex, hour: hourIndex, value })}
-                    onMouseLeave={() => setHoveredCell(null)}
-                  >
-                    {value > 0 && value > maxValue / 2 && (
-                      <div className="w-full h-full flex items-center justify-center text-xs font-medium text-white">
-                        {value}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <div className="flex-1 grid grid-cols-12 gap-[1px]">
+                  {Array.from({ length: 12 }).map((_, colIndex) => {
+                    // Each cell represents 2 hours, taking the max value of those hours
+                    const hourIndex1 = colIndex * 2;
+                    const hourIndex2 = hourIndex1 + 1;
+                    const value1 = dayData[hourIndex1] || 0;
+                    const value2 = dayData[hourIndex2] || 0;
+                    const value = Math.max(value1, value2);
+                    
+                    return (
+                      <div
+                        key={colIndex}
+                        className="aspect-square border border-gray-100 cursor-pointer transition-all duration-200 hover:border-blue-300"
+                        style={{ backgroundColor: getColor(value, maxValue) }}
+                        onMouseEnter={() => setHoveredCell({ 
+                          day: dayIndex, 
+                          hour: hourIndex1, 
+                          value: value
+                        })}
+                        onMouseLeave={() => setHoveredCell(null)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             ))}
             
-            {/* Legend and Insights */}
+            {/* Legend and insights */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
                 <div className="text-sm text-gray-600 mb-2 sm:mb-0">
                   {hoveredCell ? (
                     <span className="font-medium">
-                      {dayLabels[hoveredCell.day]} {formatHour(hoveredCell.hour)}: {hoveredCell.value} events
+                      {dayLabels[hoveredCell.day]} at {hoveredCell.hour % 12 || 12}{hoveredCell.hour < 12 ? 'am' : 'pm'}: {hoveredCell.value} events
                     </span>
                   ) : (
                     'Hover over cells for details'
                   )}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Less</span>
-                  {[0, 1, 2, 4, 6, 8].map(val => (
-                    <div
-                      key={val}
-                      className="w-4 h-4 border border-gray-200"
-                      style={{ backgroundColor: getColor(val, maxValue) }}
-                    ></div>
-                  ))}
-                  <span className="text-sm text-gray-600">More</span>
+                  <span className="text-xs text-gray-500">Less</span>
+                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#e2f1ff' }}></div>
+                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#b3d7ff' }}></div>
+                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#80baff' }}></div>
+                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#4d9fff' }}></div>
+                  <div className="w-4 h-4 border border-gray-200" style={{ backgroundColor: '#0073e6' }}></div>
+                  <span className="text-xs text-gray-500">More</span>
                 </div>
               </div>
               
-              {/* Key Insights - Removed the title but kept the content */}
+              {/* Key insights */}
               <div className="p-4 bg-blue-50 rounded-lg">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-blue-700">Peak Activity:</span>
-                    <br />{peak.day} {peak.hour} ({peak.value} events)
+                    <br />{peak.day} at {peak.hour} ({peak.value} events)
                   </div>
                   <div>
-                    <span className="font-medium text-blue-700">Evening Activity:</span>
-                    <br />6:00-8:00 PM ({eveningPeak} events)
+                    <span className="font-medium text-blue-700">Best Posting Time:</span>
+                    <br />6:00-8:00 PM (Weekdays)
                   </div>
                   <div>
                     <span className="font-medium text-blue-700">Quiet Hours:</span>
