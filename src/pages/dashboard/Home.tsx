@@ -264,12 +264,13 @@ const NewsletterDashboard = ({ profile }) => {
   // Number of remaining manual generations
   const remainingGenerations = profile?.remaining_newsletter_generations || 0;
   
+  // Define the hasRequiredTier variable here
+  const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                          profile?.subscription_tier === "Newsletter Premium";
+  
   // Handle newsletter generation
   const handleGenerateNewsletter = async () => {
     // Check if user has required subscription tier
-    const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
-                           profile?.subscription_tier === "Newsletter Premium";
-                           
     if (!hasRequiredTier) {
       toast.error("Subscription Required", {
         description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
