@@ -22,6 +22,9 @@ const ipRequests: Record<string, { count: number, timestamp: number }> = {};
 const RATE_LIMIT = 10; // requests per window
 const RATE_WINDOW = 60 * 1000; // 1 minute window
 
+// Fixed tweet limit
+const MAX_TWEETS = 100;
+
 // Function to check rate limit
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -70,34 +73,6 @@ async function getUserSubscriptionTier(userId: string): Promise<string> {
   } catch (error) {
     console.error(`Error getting subscription tier: ${error.message || error.toString()}`);
     return "Free Lite"; // Default on error
-  }
-}
-
-// Function to get the max tweet count based on subscription tier
-async function getMaxTweetsForAnalysis(tier: string): Promise<number> {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    // Default values if we can't fetch from database
-    return tier === "Growth" ? 1500 : (tier === "Starter" ? 500 : 100);
-  }
-  
-  try {
-    const { data, error } = await supabase
-      .from("subscription_features")
-      .select("max_count")
-      .eq("tier", tier)
-      .eq("feature_name", "profile_analysis_max_items")
-      .single();
-    
-    if (error || !data) {
-      console.log(`No feature limit found for tier ${tier}, using default values`);
-      return tier === "Growth" ? 1500 : (tier === "Starter" ? 500 : 100);
-    }
-    
-    return data.max_count;
-  } catch (error) {
-    console.error(`Error getting max tweets: ${error.message || error.toString()}`);
-    // Default values if database query fails
-    return tier === "Growth" ? 1500 : (tier === "Starter" ? 500 : 100);
   }
 }
 
@@ -297,16 +272,15 @@ Deno.serve(async (req) => {
     
     console.log(`Starting analysis for user ${userId} with Twitter username @${twitterUsername}`);
     
-    // Get the user's subscription tier
+    // Get the user's subscription tier (still useful for analytics)
     const subscriptionTier = await getUserSubscriptionTier(userId);
     console.log(`User ${userId} has subscription tier: ${subscriptionTier}`);
     
-    // Get the max tweets count based on subscription tier
-    const maxTweets = await getMaxTweetsForAnalysis(subscriptionTier);
-    console.log(`Max tweets for analysis: ${maxTweets}`);
+    // Use fixed tweet limit regardless of subscription tier
+    console.log(`Using fixed tweet limit: ${MAX_TWEETS}`);
     
     // Fetch user's tweets using Apify
-    const tweets = await fetchTweets(twitterUsername, maxTweets);
+    const tweets = await fetchTweets(twitterUsername, MAX_TWEETS);
     if (!tweets || tweets.length === 0) {
       return new Response(JSON.stringify({
         error: 'No tweets found or error fetching tweets'
