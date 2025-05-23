@@ -19,8 +19,8 @@ export default function FeaturesSection() {
               />
             </div>
             
-            {/* Arrows between images - one pointing up, one pointing down */}
-            <div className="flex flex-col items-center justify-center w-full gap-2">
+            {/* Arrows between images - side by side */}
+            <div className="flex flex-row items-center justify-center w-full gap-4">
               <ArrowUp className="h-8 w-8 text-white" />
               <ArrowDown className="h-8 w-8 text-white" />
             </div>
