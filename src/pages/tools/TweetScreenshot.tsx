@@ -8,7 +8,7 @@ const TweetScreenshot = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto border rounded-lg p-6 bg-white shadow-sm">
+        <div className="max-w-2xl mx-auto border rounded-lg p-6 bg-white shadow-sm mt-8">
           <TweetScreenshotTool />
         </div>
       </main>
