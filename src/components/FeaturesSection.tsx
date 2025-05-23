@@ -18,7 +18,7 @@ export default function FeaturesSection() {
               {/* Light Theme Card */}
               <div className="relative w-full rounded-xl bg-white/90 border-l-4 border-[#1da1f2] shadow-md p-4">
                 {/* Bookmark Icon */}
-                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-[#1da1f2] text-white shadow-md">
+                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-[#1da1f2] text-white shadow-md z-10">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
@@ -51,7 +51,7 @@ export default function FeaturesSection() {
               {/* Dark Theme Card */}
               <div className="relative w-full rounded-xl bg-[rgba(30,39,50,0.95)] border-l-4 border-[#1da1f2] shadow-md p-4">
                 {/* Bookmark Icon */}
-                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-black text-white shadow-md">
+                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-black text-white shadow-md z-10">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
