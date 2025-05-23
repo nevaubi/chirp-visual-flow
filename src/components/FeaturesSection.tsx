@@ -9,11 +9,11 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="py-20 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16">
-          {/* Tweet Cards Container */}
-          <div className="flex flex-col md:flex-row gap-8 max-w-3xl">
+        <div className="flex justify-start">
+          {/* Tweet Cards Container - Single column stacked */}
+          <div className="flex flex-col gap-8 max-w-[320px]">
             {/* Light Theme Card */}
-            <div className="relative w-full max-w-[320px] rounded-2xl bg-white/90 border-l-4 border-[#1da1f2] shadow-lg p-6">
+            <div className="relative w-full rounded-2xl bg-white/90 border-l-4 border-[#1da1f2] shadow-lg p-6">
               {/* Bookmark Icon */}
               <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full flex items-center justify-center bg-[#1da1f2] text-white shadow-md">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
@@ -45,7 +45,7 @@ export default function FeaturesSection() {
             </div>
 
             {/* Dark Theme Card */}
-            <div className="relative w-full max-w-[320px] rounded-2xl bg-[rgba(30,39,50,0.95)] border-l-4 border-[#1da1f2] shadow-lg p-6">
+            <div className="relative w-full rounded-2xl bg-[rgba(30,39,50,0.95)] border-l-4 border-[#1da1f2] shadow-lg p-6">
               {/* Bookmark Icon */}
               <div className="absolute -top-5 -left-5 w-14 h-14 rounded-full flex items-center justify-center bg-black text-white shadow-md">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
