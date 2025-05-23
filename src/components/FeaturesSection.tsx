@@ -7,13 +7,13 @@ export default function FeaturesSection() {
         <div className="flex flex-col md:flex-row -mt-[100px]">
           {/* Left column with side-by-side images */}
           <div className="flex flex-col md:flex-row items-start justify-start gap-6">
-            {/* Features overview image */}
-            <div className="max-w-[195px] w-full">
+            {/* Features overview image - increased by 15% */}
+            <div className="max-w-[224px] w-full">
               <img src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" alt="Features overview" className="w-full h-auto rounded-lg" loading="lazy" />
             </div>
             
-            {/* Newsletter image */}
-            <div className="max-w-[195px] w-full">
+            {/* Newsletter image - increased by 15% */}
+            <div className="max-w-[224px] w-full">
               <img src="/1c8576dd-211e-4e04-b6d1-be098d655656.png" alt="Email newsletter example" className="w-full h-auto rounded-lg" loading="lazy" />
             </div>
           </div>
