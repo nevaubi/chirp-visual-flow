@@ -4,11 +4,11 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-12 md:py-16 relative bg-[#0087C8]">
+    <section id="features" className="py-8 md:py-12 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex flex-col md:flex-row -mt-[100px]">
           {/* Left column with stacked images */}
-          <div className="flex flex-col items-start justify-start gap-8">
+          <div className="flex flex-col items-start justify-start gap-6">
             {/* Features overview image - increased by 30% */}
             <div className="max-w-[195px] w-full">
               <img 
