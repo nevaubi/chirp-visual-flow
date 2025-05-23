@@ -10,7 +10,7 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="py-20 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8">
-        <div className="flex justify-start">
+        <div className="flex justify-start items-center">
           {/* Silver background container for tweet cards */}
           <div className="bg-gray-100 rounded-2xl p-5 shadow-xl mt-4 md:mt-0 md:-translate-y-20 md:-translate-x-10 scale-95">
             {/* Tweet Cards Container - Single column stacked */}
@@ -18,7 +18,7 @@ export default function FeaturesSection() {
               {/* Light Theme Card */}
               <div className="relative w-full rounded-xl bg-white/90 border-l-4 border-[#1da1f2] shadow-md p-4">
                 {/* Bookmark Icon */}
-                <div className="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center bg-[#1da1f2] text-white shadow-md">
+                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-[#1da1f2] text-white shadow-md">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
@@ -51,7 +51,7 @@ export default function FeaturesSection() {
               {/* Dark Theme Card */}
               <div className="relative w-full rounded-xl bg-[rgba(30,39,50,0.95)] border-l-4 border-[#1da1f2] shadow-md p-4">
                 {/* Bookmark Icon */}
-                <div className="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center bg-black text-white shadow-md">
+                <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full flex items-center justify-center bg-black text-white shadow-md">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
@@ -83,20 +83,20 @@ export default function FeaturesSection() {
             </div>
           </div>
 
-          {/* Custom Arrow SVG pointing to the right - No Animation */}
-          <div className="hidden md:flex items-center ml-12 absolute top-1/2 transform -translate-y-1/2 right-12">
-            <div className="w-32 h-32 bg-[#0087C8] rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+          {/* Custom Arrow SVG pointing to the right - updated to match screenshot */}
+          <div className="hidden md:flex items-center ml-8">
+            <div className="w-32 h-32 bg-[#0087C8] rounded-full flex items-center justify-center border-4 border-white">
               <svg 
-                width="32" 
-                height="32" 
-                viewBox="0 0 24 24" 
+                width="85" 
+                height="85" 
+                viewBox="0 0 200 200" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path 
-                  d="M5 12H19M19 12L12 5M19 12L12 19" 
+                  d="M60 100H140M140 100L105 65M140 100L105 135" 
                   stroke="white" 
-                  strokeWidth="3" 
+                  strokeWidth="22" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
                 />
