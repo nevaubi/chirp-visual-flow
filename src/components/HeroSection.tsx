@@ -13,8 +13,8 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Arrow graphic - positioned directly below the 'Signup for Free' button */}
-      <div className="absolute top-[72px] right-[68px] z-10 hidden md:block">
+      {/* Arrow graphic - positioned to align with the 'Signup for Free' button */}
+      <div className="absolute top-[48px] right-[42px] z-10 hidden md:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
