@@ -14,7 +14,7 @@ export default function FeaturesSection() {
               <img 
                 src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
                 alt="Features overview" 
-                className="w-full h-auto rounded-lg shadow-xl"
+                className="w-full h-auto rounded-lg"
                 loading="lazy"
               />
             </div>
@@ -30,7 +30,7 @@ export default function FeaturesSection() {
               <img 
                 src="/1c8576dd-211e-4e04-b6d1-be098d655656.png" 
                 alt="Email newsletter example" 
-                className="w-full h-auto rounded-lg shadow-xl"
+                className="w-full h-auto rounded-lg"
                 loading="lazy"
               />
             </div>
@@ -41,7 +41,7 @@ export default function FeaturesSection() {
             <img 
               src="/dee.png" 
               alt="Dee" 
-              className="w-full h-auto rounded-lg shadow-xl"
+              className="w-full h-auto rounded-lg"
               loading="lazy"
             />
           </div>
