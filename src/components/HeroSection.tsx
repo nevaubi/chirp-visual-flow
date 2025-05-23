@@ -74,16 +74,16 @@ export default function HeroSection() {
                 <span className="text-[#0f2e47]">?</span>
               </h2>
               
-              <p className="text-xl text-[#0f2e47] mb-6">
-                Choose one - <span className="text-[#FF6B35]">or both</span>.
-              </p>
-              
-              {/* Buttons */}
-              <div className="flex flex-wrap gap-3 mb-8">
-                <Button className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-5 py-2 font-medium">
+              {/* Text and buttons inline */}
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <p className="text-xl text-[#0f2e47]">
+                  Choose one -<span className="text-[#FF6B35]"> or both</span>.
+                </p>
+                
+                <Button className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-md px-5 py-2 font-medium ml-2">
                   Growth Analytics
                 </Button>
-                <Button className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-full px-5 py-2 font-medium">
+                <Button className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-md px-5 py-2 font-medium">
                   Twitter Newsletters
                 </Button>
               </div>
