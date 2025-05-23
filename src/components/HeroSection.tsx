@@ -14,7 +14,7 @@ export default function HeroSection() {
       </div>
 
       {/* Arrow graphic - positioned directly below the 'Signup for Free' button */}
-      <div className="absolute top-[72px] right-8 z-10 hidden md:block">
+      <div className="absolute top-[72px] right-[68px] z-10 hidden md:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
