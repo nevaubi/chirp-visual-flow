@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Check, Twitter, User } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function FeaturesSection() {
   return (
@@ -82,7 +83,28 @@ export default function FeaturesSection() {
             </div>
           </div>
 
-          {/* Right side content could go here if needed */}
+          {/* Custom Arrow SVG pointing to the right */}
+          <div className="hidden md:flex items-center ml-12">
+            <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-lg animate-pulse-subtle">
+              <svg 
+                width="75" 
+                height="75" 
+                viewBox="0 0 200 200" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-[#0087C8]"
+              >
+                <circle cx="100" cy="100" r="100" fill="currentColor" />
+                <path 
+                  d="M60 100H140M140 100L105 65M140 100L105 135" 
+                  stroke="white" 
+                  strokeWidth="18" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     </section>
