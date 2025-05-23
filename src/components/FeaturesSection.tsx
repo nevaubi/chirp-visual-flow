@@ -48,16 +48,16 @@ export default function FeaturesSection() {
                 <span className="underline decoration-2 underline-offset-4">One</span>-click end to end newsletter automation.
               </div>
               
-              {/* Bookmark to publish with icon and further improved animation */}
+              {/* Bookmark to publish with icon and further improved animation - INCREASED TEXT SIZE */}
               <div 
-                className="flex items-center gap-3 text-xl md:text-2xl font-semibold opacity-0" 
+                className="flex items-center gap-3 text-2xl md:text-3xl font-semibold opacity-0" 
                 style={{
                   animation: "fadeInUp 0.7s ease-out forwards",
                   animationDelay: "1s"
                 }}
               >
-                <Bookmark className="h-6 w-6" />
-                <span>→ publish.</span>
+                <Bookmark className="h-7 w-7" /> {/* Increased icon size */}
+                <span className="text-2xl md:text-3xl">→ publish.</span> {/* Increased text size */}
               </div>
             </div>
           </div>
