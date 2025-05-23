@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
@@ -19,9 +19,10 @@ export default function FeaturesSection() {
               />
             </div>
             
-            {/* Arrow pointing right */}
-            <div className="flex justify-center w-full">
-              <ArrowRight className="h-8 w-8 text-white" />
+            {/* Arrows between images - one pointing up, one pointing down */}
+            <div className="flex flex-col items-center justify-center w-full gap-2">
+              <ArrowUp className="h-8 w-8 text-white" />
+              <ArrowDown className="h-8 w-8 text-white" />
             </div>
             
             {/* Newsletter image - reduced size */}
@@ -32,11 +33,6 @@ export default function FeaturesSection() {
                 className="w-full h-auto rounded-lg shadow-xl"
                 loading="lazy"
               />
-            </div>
-            
-            {/* Arrow pointing left */}
-            <div className="flex justify-center w-full">
-              <ArrowLeft className="h-8 w-8 text-white" />
             </div>
           </div>
           
