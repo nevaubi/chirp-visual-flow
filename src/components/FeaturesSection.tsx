@@ -64,8 +64,9 @@ export default function FeaturesSection() {
         </div>
       </div>
       
-      {/* Add custom keyframes for smoother animations */}
-      <style jsx>{`
+      {/* Add custom keyframes for smoother animations as a regular style tag */}
+      <style>
+        {`
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -76,7 +77,8 @@ export default function FeaturesSection() {
             transform: translateY(0) scale(1);
           }
         }
-      `}</style>
+        `}
+      </style>
     </section>
   );
 }
