@@ -83,22 +83,20 @@ export default function FeaturesSection() {
             </div>
           </div>
 
-          {/* Custom Arrow SVG pointing to the right */}
-          <div className="hidden md:flex items-center ml-12">
-            <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-lg animate-pulse-subtle">
+          {/* Custom Arrow SVG pointing to the right - No Animation */}
+          <div className="hidden md:flex items-center ml-12 absolute top-1/2 transform -translate-y-1/2 right-12">
+            <div className="w-32 h-32 bg-[#0087C8] rounded-full flex items-center justify-center border-4 border-white shadow-lg">
               <svg 
-                width="75" 
-                height="75" 
-                viewBox="0 0 200 200" 
+                width="32" 
+                height="32" 
+                viewBox="0 0 24 24" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-[#0087C8]"
               >
-                <circle cx="100" cy="100" r="100" fill="currentColor" />
                 <path 
-                  d="M60 100H140M140 100L105 65M140 100L105 135" 
+                  d="M5 12H19M19 12L12 5M19 12L12 19" 
                   stroke="white" 
-                  strokeWidth="18" 
+                  strokeWidth="3" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
                 />
