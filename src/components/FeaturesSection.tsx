@@ -54,6 +54,16 @@ export default function FeaturesSection() {
               />
             </svg>
           </div>
+          
+          {/* Dee Image */}
+          <div className="max-w-xs w-full">
+            <img 
+              src="/dee.png" 
+              alt="Dee" 
+              className="w-full h-auto rounded-lg shadow-xl"
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     </section>
