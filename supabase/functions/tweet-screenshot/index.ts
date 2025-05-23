@@ -100,7 +100,10 @@ serve(async (req) => {
       });
     }
 
-    const { tweetUrl, theme = "light" } = await req.json();
+    const reqBody = await req.json();
+    const { tweetUrl, theme = "light" } = reqBody;
+
+    console.log("Processing request:", { tweetUrl, theme, clientIP });
 
     // Input validation
     if (!tweetUrl) {
@@ -148,6 +151,7 @@ serve(async (req) => {
     }
     
     const tweetId = match[1];
+    console.log("Extracted tweet ID:", tweetId);
 
     // Call RapidAPI Tweet-Screenshot service
     const rapidUrl = "https://screenshot-twitter-x.p.rapidapi.com/screenshot";
@@ -166,6 +170,11 @@ serve(async (req) => {
         format: "base64",
       }),
     };
+
+    console.log("Calling RapidAPI with options:", {
+      url: tweetUrl,
+      theme: theme === "dark" ? "dim" : "light"
+    });
 
     const rapidRes = await fetch(rapidUrl, rapidOptions);
     if (!rapidRes.ok) {
@@ -186,6 +195,8 @@ serve(async (req) => {
     }
 
     const imageBase64 = await rapidRes.text();
+    console.log("Received base64 image data, length:", imageBase64?.length || 0);
+    console.log("First 100 chars of response:", imageBase64?.substring(0, 100));
 
     // Success response
     return new Response(JSON.stringify({

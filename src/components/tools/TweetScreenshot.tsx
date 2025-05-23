@@ -63,10 +63,18 @@ const TweetScreenshot = () => {
       
       // Parse and clean the image data before storing it
       if (data.image) {
-        data.parsedImage = parseBase64Image(data.image);
+        const parsedImage = parseBase64Image(data.image);
+        console.log("Parsed image data:", parsedImage ? "Data received" : "No data");
+        if (!parsedImage) {
+          throw new Error("Failed to parse image data from the response");
+        }
+        data.parsedImage = parsedImage;
         setTweetData(data);
+      } else {
+        throw new Error("No image data received from the API");
       }
     } catch (err: any) {
+      console.error("Error generating screenshot:", err);
       setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
