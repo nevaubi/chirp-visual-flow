@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Bookmark } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
@@ -22,9 +23,25 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Dee Image - increased size by 20% from the current size */}
-          <div className="max-w-[500px] w-full md:ml-12 mt-8 md:mt-0">
-            
+          {/* Right column with animated text content */}
+          <div className="max-w-[500px] w-full md:ml-12 mt-8 md:mt-0 text-white">
+            <div className="space-y-4">
+              {/* Main heading with animation */}
+              <h2 className="text-3xl md:text-4xl font-bold animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                What's your time worth?
+              </h2>
+              
+              {/* Subheading with underlined "One" and delayed animation */}
+              <div className="text-xl md:text-2xl font-semibold animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                <span className="underline decoration-2 underline-offset-4">One</span>-click end to end newsletter automation.
+              </div>
+              
+              {/* Bookmark to publish with icon and further delayed animation */}
+              <div className="flex items-center gap-2 text-xl md:text-2xl font-semibold animate-fade-in" style={{ animationDelay: '0.9s' }}>
+                <Bookmark className="h-6 w-6" />
+                <span>→ publish.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
