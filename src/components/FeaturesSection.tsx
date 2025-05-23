@@ -23,21 +23,39 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Right column with animated text content */}
-          <div className="max-w-[500px] w-full md:ml-12 mt-8 md:mt-0 text-white">
-            <div className="space-y-4">
-              {/* Main heading with animation */}
-              <h2 className="text-3xl md:text-4xl font-bold animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          {/* Right column with animated text content - improved spacing and animations */}
+          <div className="max-w-[500px] w-full md:ml-20 mt-8 md:mt-0 text-white">
+            <div className="space-y-6 md:space-y-8 pl-2 md:pl-4">
+              {/* Main heading with smoother animation */}
+              <h2 
+                className="text-3xl md:text-4xl font-bold opacity-0" 
+                style={{
+                  animation: "fadeInUp 0.7s ease-out forwards",
+                  animationDelay: "0.2s"
+                }}
+              >
                 What's your time worth?
               </h2>
               
-              {/* Subheading with underlined "One" and delayed animation */}
-              <div className="text-xl md:text-2xl font-semibold animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              {/* Subheading with underlined "One" and improved animation */}
+              <div 
+                className="text-xl md:text-2xl font-semibold opacity-0" 
+                style={{
+                  animation: "fadeInUp 0.7s ease-out forwards",
+                  animationDelay: "0.6s"
+                }}
+              >
                 <span className="underline decoration-2 underline-offset-4">One</span>-click end to end newsletter automation.
               </div>
               
-              {/* Bookmark to publish with icon and further delayed animation */}
-              <div className="flex items-center gap-2 text-xl md:text-2xl font-semibold animate-fade-in" style={{ animationDelay: '0.9s' }}>
+              {/* Bookmark to publish with icon and further improved animation */}
+              <div 
+                className="flex items-center gap-3 text-xl md:text-2xl font-semibold opacity-0" 
+                style={{
+                  animation: "fadeInUp 0.7s ease-out forwards",
+                  animationDelay: "1s"
+                }}
+              >
                 <Bookmark className="h-6 w-6" />
                 <span>→ publish.</span>
               </div>
@@ -45,6 +63,20 @@ export default function FeaturesSection() {
           </div>
         </div>
       </div>
+      
+      {/* Add custom keyframes for smoother animations */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </section>
   );
 }
