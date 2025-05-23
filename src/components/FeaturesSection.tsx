@@ -10,8 +10,8 @@ export default function FeaturesSection() {
     >
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex flex-col md:flex-row -mt-[100px]">
-          {/* Left column with side-by-side images */}
-          <div className="flex flex-col md:flex-row items-start justify-start gap-6">
+          {/* Left column with side-by-side images - moved 50px left */}
+          <div className="flex flex-col md:flex-row items-start justify-start gap-6 -ml-[50px]">
             {/* Features overview image - increased by 15% */}
             <div className="max-w-[280px] w-full">
               <img src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" alt="Features overview" className="w-full h-auto rounded-lg" loading="lazy" />
