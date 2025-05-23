@@ -18,8 +18,8 @@ export default function HeroSection() {
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
-          width="35" 
-          height="35"
+          width="55" 
+          height="55"
         />
       </div>
 
