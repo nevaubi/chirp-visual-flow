@@ -6,7 +6,7 @@ export default function FeaturesSection() {
     <section id="features" className="py-12 md:py-16 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4">
-          <div className="max-w-xs w-full -mt-4 md:-mt-12 md:-ml-6">
+          <div className="max-w-xs w-full">
             <img 
               src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
               alt="Features overview" 
@@ -16,7 +16,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* White Arrow pointing right */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 800 600"
@@ -41,7 +41,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Second White Arrow pointing right */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 800 600"
