@@ -66,37 +66,14 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Newsletter metrics card - positioned on the right with piling effect */}
-          <div className="hidden md:flex absolute right-0 -top-[40px]">
-            {/* First card - slightly behind and rotated */}
+          {/* Newsletter metrics card - positioned on the right bottom with crooked effect */}
+          <div className="hidden md:block absolute right-0 bottom-4">
+            {/* Single card - smaller by 25% and slightly crooked */}
             <NewsletterMetricsCard 
-              className="absolute opacity-0 shadow-sm border border-white/20 bg-white/95" 
+              className="border border-white/20 bg-white/95" 
               style={{
-                transform: "rotate(2deg) translateY(10px)",
-                zIndex: 1,
-                animation: "fadeInUp 0.8s ease-out forwards",
-                animationDelay: "1.4s"
-              }}
-            />
-            
-            {/* Second card - in the middle */}
-            <NewsletterMetricsCard 
-              className="absolute opacity-0 shadow-sm border border-white/20 bg-white/95" 
-              style={{
-                transform: "rotate(-1deg) translateY(5px)",
-                zIndex: 2,
-                animation: "fadeInUp 0.8s ease-out forwards",
-                animationDelay: "1.6s"
-              }}
-            />
-            
-            {/* Main card - on top with full opacity */}
-            <NewsletterMetricsCard 
-              className="opacity-0 border border-white/20 bg-white/95" 
-              style={{
-                zIndex: 3,
-                animation: "fadeInUp 0.8s ease-out forwards",
-                animationDelay: "1.8s",
+                transform: "scale(0.75) rotate(3deg)",
+                transformOrigin: "bottom right",
                 boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08)"
               }}
             />
