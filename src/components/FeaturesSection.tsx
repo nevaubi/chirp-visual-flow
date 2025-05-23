@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Bookmark } from "lucide-react";
-import NewsletterMetricsCard from "./NewsletterMetricsCard";
 
 export default function FeaturesSection() {
   return (
@@ -10,7 +9,7 @@ export default function FeaturesSection() {
       className="py-8 md:py-12 relative bg-[#0087C8] -mt-1" // Added -mt-1 to remove the thin white line
     >
       <div className="container px-4 sm:px-8 mx-auto">
-        <div className="flex flex-col md:flex-row -mt-[100px] relative">
+        <div className="flex flex-col md:flex-row -mt-[100px]">
           {/* Left column with side-by-side images - moved 50px left */}
           <div className="flex flex-col md:flex-row items-start justify-start gap-6 -ml-[50px]">
             {/* Features overview image - increased by 15% */}
@@ -64,19 +63,6 @@ export default function FeaturesSection() {
                 <span className="text-2xl md:text-3xl">→ publish.</span> {/* Kept increased text size */}
               </div>
             </div>
-          </div>
-          
-          {/* Newsletter metrics card - positioned on the right bottom with crooked effect */}
-          <div className="hidden md:block absolute right-0 bottom-4">
-            {/* Single card - smaller by 25% and slightly crooked */}
-            <NewsletterMetricsCard 
-              className="border border-white/20 bg-white/95" 
-              style={{
-                transform: "scale(0.75) rotate(3deg)",
-                transformOrigin: "bottom right",
-                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08)"
-              }}
-            />
           </div>
         </div>
       </div>
