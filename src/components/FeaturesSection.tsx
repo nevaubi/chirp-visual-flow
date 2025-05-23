@@ -1,5 +1,6 @@
 
 import React from "react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
@@ -18,6 +19,11 @@ export default function FeaturesSection() {
               />
             </div>
             
+            {/* Arrow pointing right */}
+            <div className="flex justify-center w-full">
+              <ArrowRight className="h-8 w-8 text-white" />
+            </div>
+            
             {/* Newsletter image - reduced size */}
             <div className="max-w-[150px] w-full">
               <img 
@@ -27,10 +33,15 @@ export default function FeaturesSection() {
                 loading="lazy"
               />
             </div>
+            
+            {/* Arrow pointing left */}
+            <div className="flex justify-center w-full">
+              <ArrowLeft className="h-8 w-8 text-white" />
+            </div>
           </div>
           
-          {/* Dee Image - reduced size by ~30% and placed to the right */}
-          <div className="max-w-[280px] w-full md:ml-12 mt-8 md:mt-0">
+          {/* Dee Image - increased size by ~20% and kept placement */}
+          <div className="max-w-[340px] w-full md:ml-12 mt-8 md:mt-0">
             <img 
               src="/dee.png" 
               alt="Dee" 
