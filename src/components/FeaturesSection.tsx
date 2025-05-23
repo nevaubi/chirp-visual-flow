@@ -56,7 +56,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Dee Image */}
-          <div className="max-w-xs w-full">
+          <div className="max-w-md w-full">
             <img 
               src="/dee.png" 
               alt="Dee" 
