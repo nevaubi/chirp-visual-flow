@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Bookmark } from "lucide-react";
+import NewsletterMetricsCard from "./NewsletterMetricsCard";
 
 export default function FeaturesSection() {
   return (
@@ -9,7 +10,7 @@ export default function FeaturesSection() {
       className="py-8 md:py-12 relative bg-[#0087C8] -mt-1" // Added -mt-1 to remove the thin white line
     >
       <div className="container px-4 sm:px-8 mx-auto">
-        <div className="flex flex-col md:flex-row -mt-[100px]">
+        <div className="flex flex-col md:flex-row -mt-[100px] relative">
           {/* Left column with side-by-side images - moved 50px left */}
           <div className="flex flex-col md:flex-row items-start justify-start gap-6 -ml-[50px]">
             {/* Features overview image - increased by 15% */}
@@ -63,6 +64,42 @@ export default function FeaturesSection() {
                 <span className="text-2xl md:text-3xl">→ publish.</span> {/* Kept increased text size */}
               </div>
             </div>
+          </div>
+          
+          {/* Newsletter metrics card - positioned on the right with piling effect */}
+          <div className="hidden md:flex absolute right-0 -top-[40px]">
+            {/* First card - slightly behind and rotated */}
+            <NewsletterMetricsCard 
+              className="absolute opacity-0 shadow-sm border border-white/20 bg-white/95" 
+              style={{
+                transform: "rotate(2deg) translateY(10px)",
+                zIndex: 1,
+                animation: "fadeInUp 0.8s ease-out forwards",
+                animationDelay: "1.4s"
+              }}
+            />
+            
+            {/* Second card - in the middle */}
+            <NewsletterMetricsCard 
+              className="absolute opacity-0 shadow-sm border border-white/20 bg-white/95" 
+              style={{
+                transform: "rotate(-1deg) translateY(5px)",
+                zIndex: 2,
+                animation: "fadeInUp 0.8s ease-out forwards",
+                animationDelay: "1.6s"
+              }}
+            />
+            
+            {/* Main card - on top with full opacity */}
+            <NewsletterMetricsCard 
+              className="opacity-0 border border-white/20 bg-white/95" 
+              style={{
+                zIndex: 3,
+                animation: "fadeInUp 0.8s ease-out forwards",
+                animationDelay: "1.8s",
+                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08)"
+              }}
+            />
           </div>
         </div>
       </div>
