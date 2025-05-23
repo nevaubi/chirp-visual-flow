@@ -45,15 +45,25 @@ const TweetScreenshot = () => {
     setTweetData(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke("tweet-screenshot", {
+      const { data, error, status } = await supabase.functions.invoke("tweet-screenshot", {
         body: { tweetUrl: url, theme }
       });
       
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Check if it's a rate limit error based on status code
+        if (status === 429) {
+          throw new Error("Daily usage exceeded. Try again tomorrow.");
+        }
+        throw new Error(error.message);
+      }
       
       // Check for error in the response
       if (data && data.error) {
-        throw new Error(data.message || data.error);
+        if (data.error_code === "RATE_LIMIT") {
+          throw new Error("Daily usage exceeded. Try again tomorrow.");
+        } else {
+          throw new Error(data.message || data.error);
+        }
       }
       
       // Store rate limit info if available
@@ -75,7 +85,16 @@ const TweetScreenshot = () => {
       }
     } catch (err: any) {
       console.error("Error generating screenshot:", err);
-      setError(err.message || "An unexpected error occurred");
+      
+      // Customize the error message based on the error
+      if (err.message?.includes("429") || 
+          err.message?.includes("rate limit") || 
+          err.message?.includes("Daily usage exceeded") ||
+          (err.message?.includes("non-2xx status code") && rateLimit?.remaining === 0)) {
+        setError("Daily usage exceeded. Try again tomorrow.");
+      } else {
+        setError(err.message || "An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -89,20 +108,6 @@ const TweetScreenshot = () => {
       <p className="text-sm text-muted-foreground">
         Turn a tweet URL into a shareable screenshot image
       </p>
-      
-      {rateLimit && (
-        <div className="text-sm px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 text-center">
-          {rateLimit.remaining > 0 ? (
-            <p className="text-blue-700 dark:text-blue-300">
-              {rateLimit.remaining} of {rateLimit.daily_limit} daily uses remaining
-            </p>
-          ) : (
-            <p className="text-amber-700 dark:text-amber-300">
-              No more uses left today. Try again tomorrow.
-            </p>
-          )}
-        </div>
-      )}
       
       <div className="space-y-4">
         <div>
