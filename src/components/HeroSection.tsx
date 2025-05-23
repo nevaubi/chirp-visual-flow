@@ -13,8 +13,8 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Arrow graphic - repositioned much further to the left */}
-      <div className="absolute top-[72px] right-[300px] z-10 hidden md:block">
+      {/* Arrow graphic - repositioned down slightly */}
+      <div className="absolute top-[90px] right-[300px] z-10 hidden md:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
