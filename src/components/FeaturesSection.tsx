@@ -31,7 +31,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* Newsletter image */}
-          <div className="max-w-xs w-full">
+          <div className="max-w-xs md:max-w-sm w-full">
             <img 
               src="/Blue Pink Minimalist Business Email Newsletter (794 x 1500 px) (794 x 1600 px) (794 x 2300 px).png" 
               alt="Email newsletter example" 
