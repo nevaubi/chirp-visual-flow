@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -215,12 +215,14 @@ const DashboardLayout = () => {
           >
             <Menu size={20} />
           </Button>
-          <img 
-            src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-            alt="Chirpmetrics Logo" 
-            className="h-8 w-8"
-          />
-          <span className="font-bold text-xl text-[#0087C8]">chirpmetrics</span>
+          <Link to="/" className="flex items-center gap-1.5">
+            <img 
+              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+              alt="Chirpmetrics Logo" 
+              className="h-8 w-8"
+            />
+            <span className="font-bold text-xl text-[#0087C8]">chirpmetrics</span>
+          </Link>
         </div>
         <Avatar className="h-9 w-9 cursor-pointer">
           <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
@@ -246,12 +248,17 @@ const DashboardLayout = () => {
             "flex items-center gap-2 p-4 border-b border-gray-700",
             !expanded && "justify-center"
           )}>
-            <img 
-              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-              alt="Chirpmetrics Logo" 
-              className="h-8 w-8 shrink-0"
-            />
-            {expanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
+            <Link to="/" className={cn(
+              "flex items-center gap-2",
+              !expanded && "justify-center"
+            )}>
+              <img 
+                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
+                alt="Chirpmetrics Logo" 
+                className="h-8 w-8 shrink-0"
+              />
+              {expanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
+            </Link>
           </div>
 
           {/* Navigation */}
