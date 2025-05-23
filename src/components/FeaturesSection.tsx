@@ -9,8 +9,8 @@ export default function FeaturesSection() {
         <div className="flex flex-col md:flex-row -mt-[100px]">
           {/* Left column with stacked images */}
           <div className="flex flex-col items-start justify-start gap-8">
-            {/* Features overview image - reduced size */}
-            <div className="max-w-[150px] w-full">
+            {/* Features overview image - increased by 30% */}
+            <div className="max-w-[195px] w-full">
               <img 
                 src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
                 alt="Features overview" 
@@ -25,8 +25,8 @@ export default function FeaturesSection() {
               <ArrowDown className="h-8 w-8 text-white" />
             </div>
             
-            {/* Newsletter image - reduced size */}
-            <div className="max-w-[150px] w-full">
+            {/* Newsletter image - increased by 30% */}
+            <div className="max-w-[195px] w-full">
               <img 
                 src="/1c8576dd-211e-4e04-b6d1-be098d655656.png" 
                 alt="Email newsletter example" 
@@ -36,8 +36,8 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Dee Image - increased size by ~20% and kept placement */}
-          <div className="max-w-[340px] w-full md:ml-12 mt-8 md:mt-0">
+          {/* Dee Image - increased size by 20% from the current size */}
+          <div className="max-w-[408px] w-full md:ml-12 mt-8 md:mt-0">
             <img 
               src="/dee.png" 
               alt="Dee" 
