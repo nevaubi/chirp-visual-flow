@@ -6,7 +6,7 @@ export default function FeaturesSection() {
     <section id="features" className="py-20 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex justify-center">
-          <div className="max-w-2xl w-full">
+          <div className="max-w-lg w-full">
             <img 
               src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
               alt="Features overview" 
