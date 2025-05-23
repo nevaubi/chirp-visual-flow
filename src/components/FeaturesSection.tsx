@@ -5,7 +5,7 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="py-12 md:py-16 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8 mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 -mt-[100px]">
           <div className="max-w-xs w-full">
             <img 
               src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
