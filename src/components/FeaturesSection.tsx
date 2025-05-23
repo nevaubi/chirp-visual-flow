@@ -39,6 +39,21 @@ export default function FeaturesSection() {
               loading="lazy"
             />
           </div>
+          
+          {/* Second White Arrow pointing right */}
+          <div className="hidden md:block">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 800 600"
+              className="w-24 h-24"
+              aria-hidden="true"
+            >
+              <path 
+                d="M250,250 L250,350 L500,350 L500,425 L700,300 L500,175 L500,250 Z" 
+                fill="white" 
+              />
+            </svg>
+          </div>
         </div>
       </div>
     </section>
