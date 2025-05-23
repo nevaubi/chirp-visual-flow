@@ -5,7 +5,7 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="py-12 md:py-16 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8 mx-auto">
-        <div className="flex items-center md:justify-start justify-center">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4">
           <div className="max-w-xs w-full -mt-4 md:-mt-12 md:-ml-6">
             <img 
               src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" 
@@ -16,7 +16,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* White Arrow pointing right */}
-          <div className="hidden md:block ml-4">
+          <div className="hidden md:block">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 800 600"
@@ -28,6 +28,16 @@ export default function FeaturesSection() {
                 fill="white" 
               />
             </svg>
+          </div>
+
+          {/* Newsletter image */}
+          <div className="max-w-xs w-full">
+            <img 
+              src="/Blue Pink Minimalist Business Email Newsletter (794 x 1500 px) (794 x 1600 px) (794 x 2300 px).png" 
+              alt="Email newsletter example" 
+              className="w-full h-auto rounded-lg shadow-xl"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
