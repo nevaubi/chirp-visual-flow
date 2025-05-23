@@ -45,13 +45,13 @@ const TweetScreenshot = () => {
     setTweetData(null);
     
     try {
-      const { data, error, status } = await supabase.functions.invoke("tweet-screenshot", {
+      const { data, error } = await supabase.functions.invoke("tweet-screenshot", {
         body: { tweetUrl: url, theme }
       });
       
       if (error) {
-        // Check if it's a rate limit error based on status code
-        if (status === 429) {
+        // If the error message suggests a rate limit
+        if (error.message?.includes("429") || error.message?.toLowerCase().includes("rate limit")) {
           throw new Error("Daily usage exceeded. Try again tomorrow.");
         }
         throw new Error(error.message);
