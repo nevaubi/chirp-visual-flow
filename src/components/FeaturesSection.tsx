@@ -56,8 +56,11 @@ export default function FeaturesSection() {
                   animationDelay: "1s"
                 }}
               >
-                <Bookmark className="h-7 w-7" /> {/* Increased icon size */}
-                <span className="text-2xl md:text-3xl">→ publish.</span> {/* Increased text size */}
+                {/* Added square background container for the Bookmark icon */}
+                <div className="w-[50px] h-[50px] bg-[#1A9ADB] rounded-lg flex items-center justify-center hover:bg-[#2EABED] transition-colors">
+                  <Bookmark className="h-9 w-9 text-white" /> {/* Increased icon size */}
+                </div>
+                <span className="text-2xl md:text-3xl">→ publish.</span> {/* Kept increased text size */}
               </div>
             </div>
           </div>
