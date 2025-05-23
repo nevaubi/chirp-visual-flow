@@ -83,8 +83,8 @@ export default function FeaturesSection() {
             </div>
           </div>
 
-          {/* Custom Arrow SVG pointing to the right - updated to match screenshot */}
-          <div className="hidden md:flex items-center ml-8">
+          {/* Custom Arrow SVG pointing to the right - updated to be higher vertically */}
+          <div className="hidden md:flex items-center ml-8 -translate-y-10">
             <div className="w-32 h-32 bg-[#0087C8] rounded-full flex items-center justify-center border-4 border-white">
               <svg 
                 width="85" 
