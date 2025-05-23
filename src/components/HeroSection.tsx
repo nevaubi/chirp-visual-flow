@@ -64,26 +64,27 @@ export default function HeroSection() {
           <div className="w-full lg:w-3/5 pt-[48px] lg:pt-[44px]">
             {/* Main marketing message */}
             <div className="mb-6">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-1">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-4">
                 Need Twitter growth tools?
               </h2>
-              <h2 className="text-3xl sm:text-4xl font-extrabold mb-3 leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
                 <span className="text-[#0087C8]">Automated </span>
                 <span className="text-[#FF6B35]">newsletters</span>
                 <span className="text-[#0087C8]"> from bookmarks</span>
                 <span className="text-[#0f2e47]">?</span>
               </h2>
               
-              {/* Text and buttons inline */}
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <p className="text-xl text-[#0f2e47]">
-                  Choose one -<span className="text-[#FF6B35]"> or both</span>.
-                </p>
-                
-                <Button className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-md px-5 py-2 font-medium ml-2">
+              {/* "Choose one or both" text as separate element */}
+              <p className="text-xl text-[#0f2e47] mb-4">
+                Choose one - <span className="text-[#FF6B35]">or both</span>.
+              </p>
+              
+              {/* Buttons stacked below the text */}
+              <div className="flex flex-wrap gap-3 mb-8">
+                <Button className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium">
                   Growth Analytics
                 </Button>
-                <Button className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-md px-5 py-2 font-medium">
+                <Button className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium">
                   Twitter Newsletters
                 </Button>
               </div>
