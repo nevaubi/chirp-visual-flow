@@ -156,6 +156,9 @@ port = 54321
 port = 54321
 verify_jwt = true
 
+[functions.tweet-screenshot]
+verify_jwt = true
+
 [functions.manual-newsletter-generation]
 verify_jwt = true
 
@@ -220,4 +223,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.get-trending-topics]
+verify_jwt = false
+
+[functions.id-to-twitter-handle]
 verify_jwt = false

@@ -7,7 +7,7 @@ const TweetScreenshot = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-20">
+      <main className="flex-grow container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold text-center mb-8 text-twitter-blue">
           Tweet to Screenshot
         </h1>
