@@ -11,7 +11,7 @@ export default function FeaturesSection() {
       <div className="container px-4 sm:px-8">
         <div className="flex justify-start">
           {/* Silver background container for tweet cards */}
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-xl mt-4 md:mt-0 md:-translate-y-12 md:-translate-x-4">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-xl mt-4 md:mt-0 md:-translate-y-14 md:-translate-x-6">
             {/* Tweet Cards Container - Single column stacked */}
             <div className="flex flex-col gap-6 max-w-[280px]">
               {/* Light Theme Card */}
