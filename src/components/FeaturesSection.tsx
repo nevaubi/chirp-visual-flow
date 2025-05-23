@@ -2,7 +2,11 @@
 import React from "react";
 
 export default function FeaturesSection() {
-  return <section id="features" className="py-8 md:py-12 relative bg-[#0087C8]">
+  return (
+    <section 
+      id="features" 
+      className="py-8 md:py-12 relative bg-[#0087C8] -mt-1" // Added -mt-1 to remove the thin white line
+    >
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex flex-col md:flex-row -mt-[100px]">
           {/* Left column with side-by-side images */}
@@ -24,5 +28,6 @@ export default function FeaturesSection() {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 }
