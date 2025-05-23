@@ -10,10 +10,10 @@ export default function FeaturesSection() {
     <section id="features" className="py-20 relative bg-[#0087C8]">
       <div className="container px-4 sm:px-8">
         <div className="flex justify-start">
-          {/* White background container for tweet cards */}
-          <div className="bg-white rounded-2xl p-6 shadow-xl mt-4 md:mt-0 md:-translate-y-6 md:-translate-x-4">
+          {/* Silver background container for tweet cards */}
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-xl mt-4 md:mt-0 md:-translate-y-12 md:-translate-x-4">
             {/* Tweet Cards Container - Single column stacked */}
-            <div className="flex flex-col gap-6 max-w-[300px]">
+            <div className="flex flex-col gap-6 max-w-[280px]">
               {/* Light Theme Card */}
               <div className="relative w-full rounded-xl bg-white/90 border-l-4 border-[#1da1f2] shadow-md p-5">
                 {/* Bookmark Icon */}
