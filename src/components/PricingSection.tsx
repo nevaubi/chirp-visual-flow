@@ -251,7 +251,7 @@ const PricingSection = () => {
           <div className="space-y-3">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Choose Your Platform</h2>
             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed">
-              Select the perfect solution for your needs. We offer two specialized platforms to help you succeed.
+              Select the perfect solution for your needs.
             </p>
           </div>
 
