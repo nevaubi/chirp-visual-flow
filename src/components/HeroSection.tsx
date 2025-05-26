@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, Star, Bell, ChevronDown, Twitter, Check } from "lucide-react";
+import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 
 export default function HeroSection() {
@@ -144,11 +144,7 @@ export default function HeroSection() {
                 ].map((item, i) => (
                   <div key={i} className="flex items-center p-2 rounded-lg hover:bg-[#FFEEE8] group">
                     <div className="h-6 w-6 rounded-full bg-[#FFEEE8] flex items-center justify-center mr-2">
-                      {i === 2 ? (
-                        <Check className="h-3 w-3 text-[#FF6B35]" />
-                      ) : (
-                        <Star className="h-3 w-3 text-[#FF6B35]" />
-                      )}
+                      <span className="text-xs font-bold text-[#FF6B35]">{i + 1}</span>
                     </div>
                     <span className="text-sm text-[#0f2e47]">{item}</span>
                   </div>
@@ -159,7 +155,7 @@ export default function HeroSection() {
               <div className="flex items-center justify-between px-3 py-2 bg-[#FFEEE8] rounded-xl">
                 <div className="flex items-center text-[#FF6B35]">
                   <Mail className="h-4 w-4 mr-2" />
-                  <span className="text-sm font-medium">Delivered every Monday</span>
+                  <span className="text-sm font-medium">Delivered in your inbox</span>
                 </div>
                 <Button size="sm" variant="ghost" className="h-8 rounded-full px-3 text-[#FF6B35] hover:bg-[#FFEEE8]/80 focus:ring-0">
                   <ChevronDown className="h-4 w-4" />
