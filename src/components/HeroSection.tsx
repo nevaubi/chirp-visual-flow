@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -14,7 +13,7 @@ export default function HeroSection() {
       </div>
 
       {/* Arrow graphic - repositioned down a bit more */}
-      <div className="absolute top-[110px] right-[300px] z-10 hidden md:block">
+      <div className="absolute top-[110px] right-[300px] z-10 hidden lg:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
