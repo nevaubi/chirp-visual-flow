@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -199,9 +198,7 @@ const PricingSection = () => {
       "Automated newsletter generation",
       "Custom templates",
       "Scheduled sending",
-      "Up to 1,000 subscribers",
-      "Email analytics",
-      "Bookmark integration"
+      "Up to 1,000 subscribers"
     ],
     ctaText: "Get Started",
     popular: false,
@@ -223,11 +220,9 @@ const PricingSection = () => {
     description: "Grow your twitter following with high quality tweets created using your voice with current trends and topics",
     features: [
       "Analytics dashboard",
-      "Audience insights", 
+      "Audience insights",
       "Content scheduler",
-      "Engagement tracking",
-      "Best posting time recommendations",
-      "Growth recommendations"
+      "Engagement tracking"
     ],
     ctaText: "Get Started",
     popular: false,
