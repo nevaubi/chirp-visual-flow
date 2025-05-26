@@ -1,8 +1,23 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 
 export default function HeroSection() {
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      const navbarHeight = 80; // Account for navbar height
+      const elementPosition = pricingSection.offsetTop;
+      const offsetPosition = elementPosition - navbarHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section className="pt-28 pb-32 relative overflow-hidden bg-white">
       {/* Blue wavy border at the bottom */}
@@ -83,10 +98,16 @@ export default function HeroSection() {
               
               {/* Buttons stacked below the text */}
               <div className="flex flex-wrap gap-3 mb-8">
-                <Button className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium">
-                  Growth Analytics
+                <Button 
+                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium"
+                  onClick={scrollToPricing}
+                >
+                  Creator Platform
                 </Button>
-                <Button className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium">
+                <Button 
+                  className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium"
+                  onClick={scrollToPricing}
+                >
                   Twitter Newsletters
                 </Button>
               </div>
