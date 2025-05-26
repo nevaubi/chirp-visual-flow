@@ -203,7 +203,7 @@ const PricingSection = () => {
     ],
     ctaText: "Get Started",
     popular: true,
-    buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
+    buttonClassName: "bg-[#FF6B35] hover:bg-[#e05a2c] text-white",
     platformIcon: (
       <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10">
         <Bookmark className="h-10 w-10 text-amber-500" />
@@ -227,7 +227,7 @@ const PricingSection = () => {
     ],
     ctaText: "Get Started",
     popular: false,
-    buttonClassName: "bg-black hover:bg-gray-800 text-white",
+    buttonClassName: "bg-[#0087C8] hover:bg-[#0270A8] text-white",
     platformIcon: (
       <div className="flex items-center justify-center w-14 h-14 rounded-full bg-black/10">
         <svg width="24" height="24" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
