@@ -202,7 +202,7 @@ const PricingSection = () => {
       "Works with any niche or topic"
     ],
     ctaText: "Get Started",
-    popular: false,
+    popular: true,
     buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
     platformIcon: (
       <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10">
