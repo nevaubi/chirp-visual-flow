@@ -7,7 +7,7 @@ const NewsletterTips = () => {
     {
       icon: FileText,
       title: "Choose Detailed Tweets",
-      description: "Bookmark tweets with specific information and substantial content rather than short opinions or casual posts.",
+      description: "Bookmark tweets with specific information and substantial content rather than short opinions.",
       bgColor: "bg-blue-50",
       iconColor: "text-blue-600",
       borderColor: "border-blue-200"
@@ -15,7 +15,7 @@ const NewsletterTips = () => {
     {
       icon: MessageSquare,
       title: "Main Tweets Only",
-      description: "Focus on original tweets discussing news and main topics. Avoid replies - they don't work well for newsletters.",
+      description: "Focus on original tweets discussing news and topics. Avoid replies - they don't work well.",
       bgColor: "bg-green-50",
       iconColor: "text-green-600",
       borderColor: "border-green-200"
@@ -23,7 +23,7 @@ const NewsletterTips = () => {
     {
       icon: Users,
       title: "Multiple Tweets Per Topic",
-      description: "Use several tweets covering the same subject to provide comprehensive coverage and depth in your newsletter.",
+      description: "Use several tweets covering the same subject for comprehensive coverage and depth.",
       bgColor: "bg-purple-50",
       iconColor: "text-purple-600",
       borderColor: "border-purple-200"
@@ -39,7 +39,7 @@ const NewsletterTips = () => {
     {
       icon: AlertCircle,
       title: "Videos & Links Coming Soon",
-      description: "Currently, only tweet text and images are processed. Video and link support will be added in future updates.",
+      description: "Currently, only tweet text and images are processed. Video and link support coming soon.",
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600",
       borderColor: "border-amber-200"
@@ -47,7 +47,7 @@ const NewsletterTips = () => {
     {
       icon: BookmarkPlus,
       title: "More Bookmarks = More Detail",
-      description: "Additional bookmarks provide more information about your topics, not longer newsletters.",
+      description: "Additional bookmarks provide more information about topics, not longer newsletters.",
       bgColor: "bg-indigo-50",
       iconColor: "text-indigo-600",
       borderColor: "border-indigo-200"
@@ -63,9 +63,6 @@ const NewsletterTips = () => {
           </div>
           Newsletter Generation Tips
         </CardTitle>
-        <CardDescription className="text-base">
-          Follow these best practices to create high-quality newsletters from your X bookmarks
-        </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -82,7 +79,7 @@ const NewsletterTips = () => {
                   <h3 className="font-semibold text-gray-900 mb-2 text-sm leading-tight">
                     {tip.title}
                   </h3>
-                  <p className="text-xs text-gray-700 leading-relaxed">
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     {tip.description}
                   </p>
                 </div>
