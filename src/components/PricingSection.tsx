@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -41,48 +40,45 @@ const PricingCard = ({
   isSubscribed = false,
 }: PricingCardProps) => (
   <Card className={cn(
-    "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg h-full max-w-xs mx-auto",
-    popular && "relative border-primary/30 shadow-lg hover:shadow-xl",
+    "relative w-full max-w-[360px] mx-auto bg-white rounded-2xl border border-black/[0.08] shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
   )}>
     {popular && (
-      <div className="absolute -top-3 left-0 right-0 mx-auto w-fit rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
+      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#0ea5e9] text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-[0_2px_6px_rgba(14,165,233,0.3)]">
         Most Popular
       </div>
     )}
     {isSubscribed && (
-      <div className="absolute -top-3 left-0 right-0 mx-auto w-fit rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">
+      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 px-4 py-1.5 rounded-full text-sm font-semibold text-white">
         Your Plan
       </div>
     )}
-    <CardHeader className="pb-6">
-      <div className="flex items-start justify-between gap-3">
-        {platformIcon && (
-          <div className="flex-shrink-0">{platformIcon}</div>
-        )}
-        <CardTitle className="text-lg leading-tight text-right flex-1">{title}</CardTitle>
+    <CardHeader className="pt-8 pb-6 px-6">
+      <div className="mb-5">
+        {platformIcon}
       </div>
-      <div className="mt-3 flex items-baseline gap-1">
-        <span className="text-4xl font-bold">{price}</span>
-        <span className="text-base text-muted-foreground">/month</span>
+      <CardTitle className="text-[22px] font-bold text-[#1a365d] leading-tight mb-2">{title}</CardTitle>
+      <div className="flex items-baseline gap-1 mt-4 mb-1">
+        <span className="text-[42px] font-bold text-[#1a365d]">{price}</span>
+        <span className="text-base text-[#64748b] font-medium">/month</span>
       </div>
-      <CardDescription className="pt-1.5 text-base">{description}</CardDescription>
+      <CardDescription className="text-[#64748b] text-base leading-relaxed min-h-[80px]">{description}</CardDescription>
     </CardHeader>
-    <CardContent className="flex-1">
-      <ul className="space-y-2.5">
+    <CardContent className="px-6 pb-0">
+      <ul className="space-y-4">
         {features.map((feature, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <span className="text-sm">{feature}</span>
+          <li key={i} className="flex items-center gap-3">
+            <Check className="h-5 w-5 shrink-0 text-[#0ea5e9]" />
+            <span className="text-[#4a5568] text-[15px]">{feature}</span>
           </li>
         ))}
       </ul>
     </CardContent>
-    <CardFooter>
+    <CardFooter className="px-6 pt-8 pb-8">
       {isSubscribed ? (
         <Button 
-          className={cn("w-full bg-green-500 hover:bg-green-600 text-white", buttonClassName)}
+          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-lg font-semibold text-base", buttonClassName)}
           onClick={() => handleManageSubscription()}
           disabled={isLoading}
         >
@@ -90,7 +86,7 @@ const PricingCard = ({
         </Button>
       ) : (
         <Button 
-          className={cn("w-full", buttonClassName)}
+          className={cn("w-full py-3.5 rounded-lg font-semibold text-base transition-all duration-300", buttonClassName)}
           onClick={() => onPurchase(priceId)}
           disabled={isLoading}
         >
@@ -203,10 +199,10 @@ const PricingSection = () => {
     ],
     ctaText: "Get Started",
     popular: true,
-    buttonClassName: "bg-[#FF6B35] hover:bg-[#e05a2c] text-white",
+    buttonClassName: "bg-[#ff7720] hover:bg-[#e86612] text-white shadow-[0_2px_6px_rgba(255,119,32,0.3)]",
     platformIcon: (
-      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10">
-        <Bookmark className="h-10 w-10 text-amber-500" />
+      <div className="w-16 h-16 rounded-full bg-[#fff9f0] flex items-center justify-center">
+        <Bookmark className="h-7 w-7 text-[#ff8536]" />
       </div>
     ),
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
@@ -227,10 +223,10 @@ const PricingSection = () => {
     ],
     ctaText: "Get Started",
     popular: false,
-    buttonClassName: "bg-[#0087C8] hover:bg-[#0270A8] text-white",
+    buttonClassName: "bg-[#0ea5e9] hover:bg-[#0284c7] text-white",
     platformIcon: (
-      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-black/10">
-        <svg width="24" height="24" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
+      <div className="w-16 h-16 rounded-full bg-[#f2f2f2] flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
           <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
         </svg>
       </div>
@@ -259,11 +255,11 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8 w-full max-w-2xl">
-            {/* Auto Newsletter Platform Card - Now First (Left Side) */}
+          <div className="flex flex-col md:flex-row gap-6 lg:gap-8 w-full max-w-4xl justify-center items-center md:items-stretch">
+            {/* Auto Newsletter Platform Card */}
             <PricingCard {...newsletterCard} />
             
-            {/* X Creator Platform Card - Now Second (Right Side) */}
+            {/* X Creator Platform Card */}
             <PricingCard {...creatorCard} />
           </div>
         </div>
