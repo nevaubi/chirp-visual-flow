@@ -40,7 +40,8 @@ const PricingCard = ({
   isSubscribed = false,
 }: PricingCardProps) => (
   <Card className={cn(
-    "relative w-full max-w-[360px] mx-auto bg-white rounded-2xl border border-black/[0.08] shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
+    "relative w-full max-w-[360px] mx-auto bg-white border border-black/[0.08] shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
+    "rounded-2xl",
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
   )}>
@@ -78,7 +79,7 @@ const PricingCard = ({
     <CardFooter className="px-6 pt-8 pb-8">
       {isSubscribed ? (
         <Button 
-          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-lg font-semibold text-base", buttonClassName)}
+          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-md font-semibold text-base", buttonClassName)}
           onClick={() => handleManageSubscription()}
           disabled={isLoading}
         >
@@ -86,7 +87,7 @@ const PricingCard = ({
         </Button>
       ) : (
         <Button 
-          className={cn("w-full py-3.5 rounded-lg font-semibold text-base transition-all duration-300", buttonClassName)}
+          className={cn("w-full py-3.5 rounded-md font-semibold text-base transition-all duration-300", buttonClassName)}
           onClick={() => onPurchase(priceId)}
           disabled={isLoading}
         >
@@ -255,7 +256,7 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 lg:gap-8 w-full max-w-4xl justify-center items-center md:items-stretch">
+          <div className="flex flex-col md:flex-row gap-4 lg:gap-4 w-full max-w-4xl justify-center items-center md:items-stretch">
             {/* Auto Newsletter Platform Card */}
             <PricingCard {...newsletterCard} />
             
