@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -219,10 +220,10 @@ const PricingSection = () => {
   const creatorCard = {
     title: "X (Twitter) Creator Platform",
     price: "$19",
-    description: "Everything you need to grow your Twitter presence",
+    description: "Grow your twitter following with high quality tweets created using your voice with current trends and topics",
     features: [
       "Analytics dashboard",
-      "Audience insights",
+      "Audience insights", 
       "Content scheduler",
       "Engagement tracking",
       "Best posting time recommendations",
