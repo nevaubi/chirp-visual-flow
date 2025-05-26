@@ -196,7 +196,7 @@ const PricingSection = () => {
     price: "$10",
     description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
     features: [
-      "Auto bookmarks-to-newsletter generation",
+      "Auto newsletter generation",
       "Seamless X (Twitter) integration",
       "OneClick → professional newsletter",
       "Works with any niche or topic"
@@ -222,7 +222,7 @@ const PricingSection = () => {
     features: [
       "Analytics dashboard",
       "AI 'voice profile' tweet generation",
-      "Realtime trending topics for added context",
+      "Enriches tweets with real-time context",
       "Additional creator tools for content"
     ],
     ctaText: "Get Started",
