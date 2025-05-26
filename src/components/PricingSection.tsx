@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -57,13 +56,15 @@ const PricingCard = ({
       </div>
     )}
     <CardHeader className="pb-6">
-      {platformIcon && (
-        <div className="mb-2">{platformIcon}</div>
-      )}
-      <CardTitle className="text-xl">{title}</CardTitle>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-3xl font-bold">{price}</span>
-        <span className="text-sm text-muted-foreground">/month</span>
+      <div className="flex items-start justify-between gap-3">
+        {platformIcon && (
+          <div className="flex-shrink-0">{platformIcon}</div>
+        )}
+        <CardTitle className="text-lg leading-tight text-right flex-1">{title}</CardTitle>
+      </div>
+      <div className="mt-3 flex items-baseline gap-1">
+        <span className="text-4xl font-bold">{price}</span>
+        <span className="text-base text-muted-foreground">/month</span>
       </div>
       <CardDescription className="pt-1.5">{description}</CardDescription>
     </CardHeader>
@@ -192,7 +193,7 @@ const PricingSection = () => {
   const newsletterCard = {
     title: "Auto Newsletter Platform",
     price: "$10",
-    description: "Transform your bookmarks into engaging newsletters",
+    description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
     features: [
       "Automated newsletter generation",
       "Custom templates",
