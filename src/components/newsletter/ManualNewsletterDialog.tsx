@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { 
@@ -419,20 +420,31 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                 />
               </div>
               
-              <p className="text-sm text-gray-600 mb-2">
-                {progress >= 100 
-                  ? "Newsletter generated successfully!" 
-                  : "Analyzing your bookmarks and generating newsletter..."}
-              </p>
-
-              {/* New message that appears after 40% progress */}
-              <p 
-                className={`text-xs text-gray-400 transition-opacity duration-1000 ${
-                  progress > 40 && progress < 100 ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                You can close this window while the newsletter generates
-              </p>
+              {/* Success message that appears when progress reaches 100% */}
+              {progress >= 100 ? (
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-semibold text-green-700">
+                    Newsletter generating in background - check Library/email in 2-3 mins!
+                  </p>
+                  <p className="text-sm text-green-600">
+                    Your newsletter with {selectedCount} tweets is being processed
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-gray-600">
+                    Analyzing your bookmarks and generating newsletter...
+                  </p>
+                  {/* New message that appears after 40% progress */}
+                  <p 
+                    className={`text-xs text-gray-400 transition-opacity duration-1000 ${
+                      progress > 40 ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    You can close this window while the newsletter generates
+                  </p>
+                </div>
+              )}
             </div>
           )}
           
