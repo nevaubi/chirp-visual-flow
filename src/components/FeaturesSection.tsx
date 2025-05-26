@@ -17,8 +17,8 @@ export default function FeaturesSection() {
               <img src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" alt="Features overview" className="w-full h-auto rounded-lg" loading="lazy" />
             </div>
             
-            {/* Plus icon between images */}
-            <div className="flex items-center justify-center">
+            {/* Plus icon between images - moved down 100px */}
+            <div className="flex items-center justify-center mt-[100px]">
               <Plus className="h-8 w-8 text-white" />
             </div>
             
