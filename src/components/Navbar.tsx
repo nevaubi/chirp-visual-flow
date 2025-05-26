@@ -1,15 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Wrench, LogIn, LogOut, User, ChevronDown } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,29 +57,8 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-[#0087C8] font-medium hover:text-[#0270A8] transition-colors">Home</Link>
-            
-            {/* Free Tools Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="text-[#64748b] font-medium hover:text-[#0087C8] transition-colors flex items-center gap-1.5">
-                  <Wrench className="h-4 w-4" />
-                  <span>Free Tools</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-white">
-                <DropdownMenuItem asChild>
-                  <Link to="/tools/tweet-id-converter" className="flex items-center gap-2 cursor-pointer">
-                    Tweet-ID Converter
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/tools/tweet-screenshot" className="flex items-center gap-2 cursor-pointer">
-                    Tweet to Screenshot
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link to="/tools/tweet-id-converter" className="text-[#64748b] font-medium hover:text-[#0087C8] transition-colors">Tweet-ID Converter</Link>
+            <Link to="/tools/tweet-screenshot" className="text-[#64748b] font-medium hover:text-[#0087C8] transition-colors">Tweet to Screenshot</Link>
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
@@ -161,29 +135,21 @@ export default function Navbar() {
               Home
             </Link>
             
-            {/* Mobile Free Tools Dropdown */}
-            <div className="flex flex-col">
-              <div className="text-[#64748b] font-medium py-2 px-3 rounded-lg flex items-center gap-1.5">
-                <Wrench className="h-4 w-4" />
-                <span>Free Tools</span>
-              </div>
-              <div className="ml-6 flex flex-col">
-                <Link
-                  to="/tools/tweet-id-converter"
-                  className="text-[#64748b] py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Tweet-ID Converter
-                </Link>
-                <Link
-                  to="/tools/tweet-screenshot"
-                  className="text-[#64748b] py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Tweet to Screenshot
-                </Link>
-              </div>
-            </div>
+            <Link
+              to="/tools/tweet-id-converter"
+              className="text-[#64748b] font-medium py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Tweet-ID Converter
+            </Link>
+            
+            <Link
+              to="/tools/tweet-screenshot"
+              className="text-[#64748b] font-medium py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Tweet to Screenshot
+            </Link>
 
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-blue-100">
               {isAuthenticated ? (
