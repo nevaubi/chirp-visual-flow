@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, Star, Bell, ChevronDown, Twitter } from "lucide-react";
+import { Mail, Star, Bell, ChevronDown, Twitter, Check } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 
 export default function HeroSection() {
@@ -121,7 +121,7 @@ export default function HeroSection() {
                   <Twitter className="h-5 w-5 text-[#FF6B35]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#0f2e47]">Twitter Bookmarks Digest</h3>
+                  <h3 className="font-bold text-[#0f2e47]">Auto-Newsletter from Bookmarks</h3>
                   <p className="text-sm text-gray-500">Auto-generated newsletters from your saves</p>
                 </div>
               </div>
@@ -138,13 +138,17 @@ export default function HeroSection() {
               {/* Bookmark items */}
               <div className="space-y-3 mb-4">
                 {[
-                  "Top 10 Marketing Strategies for 2023",
-                  "How AI is Transforming Content Creation",
-                  "The Future of Social Media Engagement"
+                  "Bookmark a few tweets",
+                  "One-click button workflow",
+                  "Professional end-to-end Newsletter"
                 ].map((item, i) => (
                   <div key={i} className="flex items-center p-2 rounded-lg hover:bg-[#FFEEE8] group">
                     <div className="h-6 w-6 rounded-full bg-[#FFEEE8] flex items-center justify-center mr-2">
-                      <Star className="h-3 w-3 text-[#FF6B35]" />
+                      {i === 2 ? (
+                        <Check className="h-3 w-3 text-[#FF6B35]" />
+                      ) : (
+                        <Star className="h-3 w-3 text-[#FF6B35]" />
+                      )}
                     </div>
                     <span className="text-sm text-[#0f2e47]">{item}</span>
                   </div>
