@@ -19,6 +19,7 @@ import HourlyInsights from '@/components/analysis/HourlyInsights';
 import AvgLikesByLengthChart from '@/components/analysis/AvgLikesByLengthChart';
 import ReplyVsPostDonutChart from '@/components/analysis/ReplyVsPostDonutChart';
 import ContentTypeEngagementChart from '@/components/analysis/ContentTypeEngagementChart';
+import NewsletterTips from '@/components/newsletter/NewsletterTips';
 
 // Enhanced Creator Platform Dashboard with profile analysis
 const CreatorDashboard = ({ profile }) => {
@@ -358,70 +359,8 @@ const NewsletterDashboard = ({ profile }) => {
         </CardContent>
       </Card>
 
-      {/* Subscription Card */}
-      <Card className="border-none shadow-sm hover:shadow transition-shadow overflow-hidden">
-        <CardHeader className={cn(
-          "relative pb-8",
-          isPremium ? "bg-gradient-to-r from-amber-100 to-amber-50" : "bg-gray-50"
-        )}>
-          {isPremium && (
-            <div className="absolute top-0 right-0 bg-amber-500 text-white px-4 py-1 transform translate-x-8 translate-y-5 -rotate-45 shadow-md">
-              Premium
-            </div>
-          )}
-          <CardTitle>{isPremium ? "Premium Plan" : "Free Plan"}</CardTitle>
-          <CardDescription>
-            {isPremium 
-              ? "You're currently on the Newsletter Premium plan" 
-              : "Upgrade to Premium for additional features"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <h3 className="font-medium text-lg">Current Features:</h3>
-            
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  <strong>{isPremium ? "30" : "0"}</strong> manual newsletter generations
-                  {isPremium && remainingGenerations > 0 && (
-                    <span className="ml-2 text-sm text-amber-600">
-                      ({remainingGenerations} remaining)
-                    </span>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  Customizable newsletter templates
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Check size={18} className={isPremium ? "text-amber-500" : "text-gray-400"} />
-                <span className={isPremium ? "text-gray-900" : "text-gray-500"}>
-                  Save and edit newsletters
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-        {!isPremium && (
-          <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 p-4">
-            <Button 
-              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={handleUpgradeSubscription}
-              disabled={isLoading}
-            >
-              <CreditCard size={16} />
-              Upgrade to Premium
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+      {/* Newsletter Tips Section - replaces the subscription card */}
+      <NewsletterTips />
 
       {/* Add processing status card when a newsletter is being generated */}
       {isLoading && (
