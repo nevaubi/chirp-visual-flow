@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -195,10 +196,10 @@ const PricingSection = () => {
     price: "$10",
     description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
     features: [
-      "Automated newsletter generation",
-      "Custom templates",
-      "Scheduled sending",
-      "Up to 1,000 subscribers"
+      "Auto bookmarks-to-newsletter generation",
+      "Seamless X (Twitter) integration",
+      "OneClick → professional newsletter",
+      "Works with any niche or topic"
     ],
     ctaText: "Get Started",
     popular: false,
