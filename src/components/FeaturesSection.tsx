@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Plus } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
@@ -15,6 +15,11 @@ export default function FeaturesSection() {
             {/* Features overview image - increased by 15% */}
             <div className="max-w-[280px] w-full">
               <img src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" alt="Features overview" className="w-full h-auto rounded-lg" loading="lazy" />
+            </div>
+            
+            {/* Plus icon between images */}
+            <div className="flex items-center justify-center">
+              <Plus className="h-8 w-8 text-white" />
             </div>
             
             {/* Newsletter image - increased by 15% */}
