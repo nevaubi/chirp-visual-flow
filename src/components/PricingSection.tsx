@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Check, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +41,7 @@ const PricingCard = ({
   isSubscribed = false,
 }: PricingCardProps) => (
   <Card className={cn(
-    "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg h-full",
+    "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg h-full max-w-sm mx-auto",
     popular && "relative border-primary/30 shadow-lg hover:shadow-xl",
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
@@ -205,11 +205,8 @@ const PricingSection = () => {
     popular: false,
     buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
     platformIcon: (
-      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
-          <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2m9 0h-3"></path>
-          <path d="M13 10V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1Z"></path>
-        </svg>
+      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10">
+        <Bookmark className="h-8 w-8 text-amber-500" />
       </div>
     ),
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
@@ -264,7 +261,7 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8 w-full">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8 w-full max-w-2xl">
             {/* Auto Newsletter Platform Card - Now First (Left Side) */}
             <PricingCard {...newsletterCard} />
             
