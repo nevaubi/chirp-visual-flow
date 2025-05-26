@@ -127,16 +127,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       // Set progress to 100% to show completion
       setProgress(100);
       
-      // Keep the completion screen visible for 2.5 seconds
+      // Keep the completion screen visible for 4 seconds
       setTimeout(() => {
-        toast.success('Newsletter generated successfully', {
-          description: `Your newsletter with ${selectedCount} tweets has been analyzed and will be delivered to your email soon.`,
+        toast.success('Newsletter generating in background - check Library/email in 2-3 mins!', {
+          description: `Your newsletter with ${selectedCount} tweets is being processed and will be available soon.`,
         });
         
         // Close the dialog
         onOpenChange(false);
         setIsGenerating(false);
-      }, 2500);
+      }, 4000);
       
     } catch (error) {
       console.error('Error in handleGenerate:', error);
@@ -345,7 +345,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                         return (
                           <div 
                             key={i}
-                            className={`absolute transition-opacity duration-500 ease-in-out ${shouldShow ? 'opacity-100' : 'opacity-0'} filter drop-shadow-lg`}
+                            className={`absolute transition-opacity duration-500 ease-in-out ${shouldShow ? 'opacity-100' : 'opacity-0'}`}
                             style={{ 
                               top: `${topPosition}%`, 
                               left: `${leftPosition}%`,
