@@ -221,9 +221,9 @@ const PricingSection = () => {
     description: "Grow your twitter following with high quality tweets created using your voice with current trends and topics",
     features: [
       "Analytics dashboard",
-      "Audience insights",
-      "Content scheduler",
-      "Engagement tracking"
+      "AI 'voice profile' tweet generation",
+      "Realtime trending topics for added context",
+      "Additional creator tools for content"
     ],
     ctaText: "Get Started",
     popular: false,
