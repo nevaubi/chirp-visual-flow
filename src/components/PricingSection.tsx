@@ -40,7 +40,7 @@ const PricingCard = ({
   isSubscribed = false,
 }: PricingCardProps) => (
   <Card className={cn(
-    "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg h-full max-w-sm mx-auto",
+    "flex flex-col border-border/30 shadow-md transition-all duration-200 hover:shadow-lg h-full max-w-xs mx-auto",
     popular && "relative border-primary/30 shadow-lg hover:shadow-xl",
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
@@ -66,7 +66,7 @@ const PricingCard = ({
         <span className="text-4xl font-bold">{price}</span>
         <span className="text-base text-muted-foreground">/month</span>
       </div>
-      <CardDescription className="pt-1.5">{description}</CardDescription>
+      <CardDescription className="pt-1.5 text-base">{description}</CardDescription>
     </CardHeader>
     <CardContent className="flex-1">
       <ul className="space-y-2.5">
@@ -206,8 +206,8 @@ const PricingSection = () => {
     popular: false,
     buttonClassName: "bg-amber-500 hover:bg-amber-600 text-white",
     platformIcon: (
-      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10">
-        <Bookmark className="h-8 w-8 text-amber-500" />
+      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10">
+        <Bookmark className="h-10 w-10 text-amber-500" />
       </div>
     ),
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
@@ -230,11 +230,11 @@ const PricingSection = () => {
     ],
     ctaText: "Get Started",
     popular: false,
-    buttonClassName: "bg-[#0087C8] hover:bg-[#0077B5] text-white",
+    buttonClassName: "bg-black hover:bg-gray-800 text-white",
     platformIcon: (
-      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#0087C8]/10">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#0087C8]">
-          <path d="M22 4.01C21.9992 3.55 21.8248 3.10929 21.5144 2.78004C21.204 2.45079 20.7759 2.25137 20.32 2.22C19.99 2.2 19.69 2.26 19.42 2.37C18.1079 2.86 16.9779 3.71147 16.16 4.83C16.0663 4.96121 16.0254 5.11742 16.0435 5.27092C16.0615 5.42443 16.1375 5.56567 16.2563 5.66693C16.3751 5.76818 16.5281 5.82233 16.6831 5.81945C16.8381 5.81657 16.9888 5.75686 17.1032 5.65073C17.9622 4.85349 19.0885 4.4422 20.24 4.5C20.39 4.5 20.56 4.5 20.74 4.5C20.94 5.5 18.5 6 17.25 6.5C16.9062 6.64823 16.5865 6.85315 16.3 7.1C15.42 7.8 14.56 9.25 14.25 10C14.1508 10.2517 14.0016 10.4782 13.81 10.67C13.11 11.4 12.35 11.28 11.53 11.16C10.1 10.95 9.46 10.23 8.38 9.75C7.3 9.27 6.12 8.85 4.7 9.05C3.28 9.25 2.19 10.13 1.5 11.5C1.28 12 1.13 12.61 1.03 13.19C1 13.39 1 13.6 1 14C1 14.4 1 15 1 15C1.73491 15.3637 2.5536 15.5531 3.38 15.55C5.3967 15.5359 7.33486 14.8166 8.85 13.52C8.93573 13.4465 9.0097 13.3583 9.07 13.26C9.15803 13.0841 9.1855 12.8835 9.14815 12.689C9.11081 12.4945 9.01077 12.3174 8.86444 12.1844C8.7181 12.0514 8.53392 11.9702 8.33671 11.9538C8.1395 11.9374 7.94271 11.9867 7.78 12.094C7.65973 12.1575 7.55086 12.2412 7.45917 12.3414C7.36748 12.4415 7.29454 12.5568 7.24389 12.6818C7.19323 12.8069 7.16569 12.9399 7.16272 13.0748C7.15974 13.2097 7.18138 13.344 7.22667 13.471C5.74036 14.7325 3.94333 15.5344 2.03 15.8C1.86 15.8 1.73 15.8 1.63 15.8C2.11 16.8667 2.97 17.7333 4.21 18.4C5.8 19.2667 7.66333 19.7 9.8 19.7C12.4667 19.7 14.85 19.0667 16.95 17.8C19.05 16.5333 20.6667 14.8333 21.8 12.7C22.4008 11.5165 22.7759 10.2329 22.91 8.91C22.97 8.3 23 7.81 23 7.5C23 7.19 23 7 23 7C23 6.5 23 6 23 6C23.03 5.7 22.77 5.57 22.5 5.5C22.23 5.43 21.83 5.56 21.5 5.7C21.17 5.84 20.77 6.06 20.3 6.25C19.83 6.44 19.28 6.61 18.8 6.7C20.2 5.25 21.11 3.24 22 4.01Z" fill="currentColor"/>
+      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-black/10">
+        <svg width="24" height="24" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
+          <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
         </svg>
       </div>
     ),
