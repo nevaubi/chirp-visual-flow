@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -323,7 +324,7 @@ const NewsletterDashboard = ({ profile }) => {
         </div>
         <div className="flex flex-col items-end gap-1">
           <p className="text-sm text-gray-600">
-            Use the "Create Newsletter" button in the sidebar to generate a newsletter
+            To generate newsletters you need to 1) Authorize X access via popup 2) Upgrade to subscription
           </p>
           {isLoading && (
             <p className="text-xs text-amber-600">
