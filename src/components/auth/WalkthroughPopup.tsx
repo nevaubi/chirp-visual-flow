@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -54,6 +55,10 @@ const WalkthroughPopup = ({
   const [username, setUsername] = useState<string>("");
   const [permission, setPermission] = useState<boolean>(false);
 
+  // New state for token checking functionality
+  const [hasBookmarkToken, setHasBookmarkToken] = useState<boolean>(false);
+  const [isCheckingToken, setIsCheckingToken] = useState<boolean>(false);
+
   // Reset form when opening the dialog
   useEffect(() => {
     if (open) {
@@ -62,10 +67,64 @@ const WalkthroughPopup = ({
       setPermission(false);
       setVerificationError(null);
       setAnalysisError(null);
+      setHasBookmarkToken(false);
+      setIsCheckingToken(false);
       // Reset currentStep based on platform type
       setCurrentStep(isCreatorPlatform ? 1 : 4);
     }
   }, [open, isCreatorPlatform]);
+
+  // Token checking functionality for newsletter platform
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const checkForBookmarkToken = async () => {
+      if (!authState.user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('twitter_bookmark_access_token')
+          .eq('id', authState.user.id)
+          .single();
+
+        if (error) {
+          console.error('Error checking bookmark token:', error);
+          return;
+        }
+
+        if (data?.twitter_bookmark_access_token) {
+          setHasBookmarkToken(true);
+          setIsCheckingToken(false);
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+      } catch (error) {
+        console.error('Error in token check:', error);
+      }
+    };
+
+    // Only start polling for newsletter platform when popup is open and on step 4
+    if (open && !isCreatorPlatform && currentStep === 4 && !hasBookmarkToken && !isLoading) {
+      setIsCheckingToken(true);
+      
+      // Check immediately
+      checkForBookmarkToken();
+      
+      // Then check every 2 seconds
+      intervalId = setInterval(checkForBookmarkToken, 2000);
+    }
+
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      setIsCheckingToken(false);
+    };
+  }, [open, isCreatorPlatform, currentStep, hasBookmarkToken, isLoading, authState.user?.id]);
 
   // Check if all required fields are filled for creator platform step 4
   const isCreatorFormValid = timezone && username && permission;
@@ -190,6 +249,20 @@ const WalkthroughPopup = ({
           setIsLoading(false);
         }
       }
+    }
+  };
+
+  // Handle successful authorization completion
+  const handleAuthorizationSuccess = async () => {
+    try {
+      await onComplete();
+    } catch (error) {
+      console.error("Error completing authorization:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while completing setup.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -323,13 +396,24 @@ const WalkthroughPopup = ({
               <p className="text-sm text-gray-600 mb-4">
                 This allows us to create newsletters from your bookmarked content automatically.
               </p>
-              <Button 
-                onClick={handleBookmarksConsent} 
-                className="w-full py-3 bg-[#0087C8] hover:bg-[#0087C8]/90 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
-              >
-                <Twitter className="h-5 w-5" />
-                Authorize & Finish
-              </Button>
+              
+              {hasBookmarkToken ? (
+                <Button 
+                  onClick={handleAuthorizationSuccess}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+                >
+                  <Check className="h-5 w-5" />
+                  Authorization Successful
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleBookmarksConsent} 
+                  className="w-full py-3 bg-[#0087C8] hover:bg-[#0087C8]/90 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+                >
+                  <Twitter className="h-5 w-5" />
+                  Authorize & Finish
+                </Button>
+              )}
             </div>
           </div>
         ),
@@ -438,8 +522,8 @@ const WalkthroughPopup = ({
 
           {/* Navigation */}
           <div className="flex justify-between items-center">
-            {/* Show "Maybe Later" button only on step 4 for newsletter platform */}
-            {currentStep === totalSteps && !isCreatorPlatform ? (
+            {/* Show "Maybe Later" button only on step 4 for newsletter platform and only if token not found */}
+            {currentStep === totalSteps && !isCreatorPlatform && !hasBookmarkToken ? (
               <div className="flex justify-end w-full">
                 <Button 
                   onClick={handleNextStep}
