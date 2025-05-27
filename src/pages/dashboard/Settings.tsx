@@ -1,10 +1,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatusCard } from "@/components/subscription/SubscriptionStatusCard";
 import { NewsletterPreferences } from "@/components/settings/NewsletterPreferences";
 import { useEffect } from "react";
+import { Crown, Star } from "lucide-react";
 
 const Settings = () => {
   const { authState, checkSubscription } = useAuth();
@@ -15,6 +17,11 @@ const Settings = () => {
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
+
+  // Get current plan details
+  const isSubscribed = profile?.subscribed;
+  const subscriptionTier = profile?.subscription_tier || "Free";
+  const currentPlan = isSubscribed ? subscriptionTier : "Free";
 
   return (
     <div className="space-y-6">
@@ -43,6 +50,22 @@ const Settings = () => {
           {!profile?.subscribed && (
             <Card>
               <CardHeader>
+                {/* Enhanced Current Plan Indicator */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-gray-100">
+                      <Star className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
+                      <p className="text-2xl font-bold text-gray-900">{currentPlan}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="px-3 py-1 text-sm font-semibold text-gray-600 bg-gray-50 border-gray-200">
+                    {currentPlan.toUpperCase()}
+                  </Badge>
+                </div>
+                
                 <CardTitle>Upgrade Your Experience</CardTitle>
                 <CardDescription>
                   Subscribe to unlock premium features
@@ -52,6 +75,38 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">
                   You're currently on the free plan. Subscribe to access premium 
                   features like advanced analytics, automated tools, and more.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Enhanced Subscribed State */}
+          {profile?.subscribed && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-100">
+                      <Crown className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
+                      <p className="text-2xl font-bold text-green-700">{currentPlan}</p>
+                    </div>
+                  </div>
+                  <Badge className="px-3 py-1 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white">
+                    {currentPlan.toUpperCase()}
+                  </Badge>
+                </div>
+                
+                <CardTitle>Premium Active</CardTitle>
+                <CardDescription>
+                  You have access to all premium features
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Enjoy unlimited access to advanced features, priority support, and more.
                 </p>
               </CardContent>
             </Card>
