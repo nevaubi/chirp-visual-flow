@@ -38,7 +38,9 @@ const WalkthroughPopup = ({
   onComplete,
   isCreatorPlatform
 }: WalkthroughPopupProps) => {
-  const [currentStep, setCurrentStep] = useState(1);
+  // For newsletter platform, start directly at step 4 (the only step they'll see)
+  // For creator platform, start at step 1 as before
+  const [currentStep, setCurrentStep] = useState(isCreatorPlatform ? 1 : 4);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>("Processing...");
   const [verificationError, setVerificationError] = useState<string | null>(null);
@@ -60,8 +62,10 @@ const WalkthroughPopup = ({
       setPermission(false);
       setVerificationError(null);
       setAnalysisError(null);
+      // Reset currentStep based on platform type
+      setCurrentStep(isCreatorPlatform ? 1 : 4);
     }
-  }, [open]);
+  }, [open, isCreatorPlatform]);
 
   // Check if all required fields are filled for creator platform step 4
   const isCreatorFormValid = timezone && username && permission;
@@ -308,78 +312,28 @@ const WalkthroughPopup = ({
           return { icon: null, title: "", description: "" };
       }
     } else {
-      // Newsletter platform walkthrough content
-      switch (currentStep) {
-        case 1:
-          return {
-            icon: <BookOpen className="h-10 w-10 text-amber-500" />,
-            title: "Newsletter Dashboard",
-            description: "Personal use? Paying audience? We've got you. Meet the first auto-newsletter built from your X bookmarks.",
-          };
-        case 2:
-          return {
-            icon: <Twitter className="h-10 w-10 text-[#0087C8]" />,
-            title: "Bookmark Integration",
-            description: (
-              <div className="text-left">
-                <p>Daily, bi-weekly, or weekly. You choose and we do the rest:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>secure auto-sync with your X bookmarks</li>
-                  <li>smart selection for newsletter topics</li>
-                  <li>tailored for either personal use or paid audience</li>
-                </ul>
-                <p className="mt-2">All we need you to do is... bookmark!</p>
-              </div>
-            ),
-          };
-        case 3:
-          return {
-            icon: <BarChart2 className="h-10 w-10 text-purple-500" />,
-            title: "Seamless Workflows",
-            description: (
-              <div className="text-left">
-                <p>We start with a few simple questions to:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>learn your goals and any guidelines</li>
-                  <li>preferences and specifics</li>
-                  <li>preferred frequency, day, and email for delivery</li>
-                </ul>
-                <p className="mt-2 flex items-center">
-                  Want newsletters in your unique writing style? Available to all paid tiers 
-                  <span className="ml-1 inline-flex items-center justify-center">
-                    <Check className="h-4 w-4 text-green-500" />
-                  </span>
-                </p>
-              </div>
-            ),
-          };
-        case 4:
-          return {
-            icon: null,
-            title: "To get started, all we need is...",
-            description: (
-              <div className="text-left space-y-4">
-                {/* Removed timezone selection for newsletter platform */}
-                
-                <div className="mt-4 mb-6">
-                  <p className="text-base font-medium mb-2">Your permission to read (but never write or edit) your bookmarks:</p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    This allows us to create newsletters from your bookmarked content automatically.
-                  </p>
-                  <Button 
-                    onClick={handleBookmarksConsent} 
-                    className="w-full py-3 bg-[#0087C8] hover:bg-[#0087C8]/90 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
-                  >
-                    <Twitter className="h-5 w-5" />
-                    Authorize & Finish
-                  </Button>
-                </div>
-              </div>
-            ),
-          };
-        default:
-          return { icon: null, title: "", description: "" };
-      }
+      // Newsletter platform content - only show step 4 content (the authorization step)
+      return {
+        icon: null,
+        title: "To get started, all we need is...",
+        description: (
+          <div className="text-left space-y-4">
+            <div className="mt-4 mb-6">
+              <p className="text-base font-medium mb-2">Your permission to read (but never write or edit) your bookmarks:</p>
+              <p className="text-sm text-gray-600 mb-4">
+                This allows us to create newsletters from your bookmarked content automatically.
+              </p>
+              <Button 
+                onClick={handleBookmarksConsent} 
+                className="w-full py-3 bg-[#0087C8] hover:bg-[#0087C8]/90 text-white font-medium flex items-center justify-center gap-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+              >
+                <Twitter className="h-5 w-5" />
+                Authorize & Finish
+              </Button>
+            </div>
+          </div>
+        ),
+      };
     }
   };
 
@@ -435,32 +389,34 @@ const WalkthroughPopup = ({
             </h1>
           </div>
 
-          {/* Breadcrumb */}
-          <div className="mb-4 sm:mb-6">
-            <Breadcrumb>
-              <BreadcrumbList className="justify-center">
-                {Array.from({ length: totalSteps }).map((_, index) => (
-                  <>
-                    {index > 0 && <BreadcrumbSeparator />}
-                    <BreadcrumbItem key={index}>
-                      <div 
-                        className={cn(
-                          "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-medium text-xs sm:text-sm",
-                          currentStep > index + 1 ? 
-                            "bg-green-500 text-white" : 
-                            currentStep === index + 1 ? 
-                              (isCreatorPlatform ? "bg-[#0087C8] text-white" : "bg-amber-500 text-white") : 
-                              "bg-gray-200 text-gray-500"
-                        )}
-                      >
-                        {index + 1}
-                      </div>
-                    </BreadcrumbItem>
-                  </>
-                ))}
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          {/* Breadcrumb - only show for creator platform */}
+          {isCreatorPlatform && (
+            <div className="mb-4 sm:mb-6">
+              <Breadcrumb>
+                <BreadcrumbList className="justify-center">
+                  {Array.from({ length: totalSteps }).map((_, index) => (
+                    <>
+                      {index > 0 && <BreadcrumbSeparator />}
+                      <BreadcrumbItem key={index}>
+                        <div 
+                          className={cn(
+                            "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-medium text-xs sm:text-sm",
+                            currentStep > index + 1 ? 
+                              "bg-green-500 text-white" : 
+                              currentStep === index + 1 ? 
+                                "bg-[#0087C8] text-white" : 
+                                "bg-gray-200 text-gray-500"
+                          )}
+                        >
+                          {index + 1}
+                        </div>
+                      </BreadcrumbItem>
+                    </>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          )}
 
           {/* Content */}
           <div className="mb-6 sm:mb-8">
