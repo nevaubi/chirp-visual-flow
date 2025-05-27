@@ -33,6 +33,7 @@ const ProtectedRoute = () => {
     }
   }
 
+  console.log('User authenticated, rendering outlet');
   return <Outlet />;
 };
 
