@@ -7,5 +7,6 @@ import './index.css'
 console.log = () => {};
 console.error = () => {};
 console.warn = () => {};
+/* eslint-enable no-console */
 
 createRoot(document.getElementById('root')!).render(<App />)
