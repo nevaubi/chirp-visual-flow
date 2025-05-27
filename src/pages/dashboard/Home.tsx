@@ -397,15 +397,7 @@ const DashboardHome = () => {
     if (profile) {
       if (isNewsletterPlatform) {
         // For newsletter platform: show walkthrough if twitter_bookmark_access_token is null
-        // BUT don't show it if we just completed authorization (check sessionStorage flag)
-        const justAuthorized = sessionStorage.getItem('twitter_bookmarks_authorized') === 'true';
-        if (justAuthorized) {
-          // Clear the flag and don't show popup
-          sessionStorage.removeItem('twitter_bookmarks_authorized');
-          setShowWalkthrough(false);
-        } else {
-          setShowWalkthrough(profile.twitter_bookmark_access_token === null);
-        }
+        setShowWalkthrough(profile.twitter_bookmark_access_token === null);
       } else {
         // For creator platform: keep the original behavior checking timezone
         setShowWalkthrough(profile.timezone === null);

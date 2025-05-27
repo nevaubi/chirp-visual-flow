@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const BookmarksCallback = () => {
   const navigate = useNavigate();
-  const { authState, updateProfile, refreshProfile } = useAuth();
+  const { authState, updateProfile } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,12 +54,6 @@ const BookmarksCallback = () => {
           sessionStorage.removeItem('selected_timezone');
         }
 
-        // Force profile refresh to ensure the bookmark token is loaded before redirect
-        await refreshProfile();
-        
-        // Add a small delay to ensure the profile data is fully synced
-        await new Promise(resolve => setTimeout(resolve, 500));
-
         sessionStorage.setItem('twitter_bookmarks_authorized', 'true');
         toast({ title: 'Bookmarks connected' });
       } catch (err) {
@@ -74,7 +68,7 @@ const BookmarksCallback = () => {
     };
 
     finishAuth();
-  }, [navigate, authState.user, toast, refreshProfile, updateProfile]);
+  }, [navigate, authState.user, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50">
