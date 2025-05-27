@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +14,7 @@ import {
   Book,
   CreditCard,
   TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 import TweetGenerationPanel from '@/components/tweets/TweetGenerationPanel';
+import FeedbackDialog from '@/components/feedback/FeedbackDialog';
 
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
@@ -309,6 +310,22 @@ const DashboardLayout = () => {
             "mt-auto border-t border-gray-700 p-4",
             !expanded && "flex flex-col items-center"
           )}>
+            {/* Feedback button */}
+            <FeedbackDialog>
+              <Button 
+                variant="ghost" 
+                className={cn(
+                  "w-full mb-4 justify-start text-white hover:bg-white/10",
+                  !expanded && "justify-center px-0"
+                )}
+              >
+                <MessageSquare size={16} className={cn("shrink-0", expanded && "mr-2")} />
+                {expanded && (
+                  <span className="overflow-hidden whitespace-nowrap">Feedback</span>
+                )}
+              </Button>
+            </FeedbackDialog>
+            
             {/* Subscription management button */}
             <Button 
               variant="ghost" 
