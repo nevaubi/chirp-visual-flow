@@ -10,7 +10,6 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log('Auth callback page loaded');
         
         // Set a timeout to prevent users from being stuck on this page
         const timeoutId = setTimeout(() => {
@@ -36,7 +35,6 @@ const AuthCallback = () => {
         }
 
         if (data.session) {
-          console.log('Successfully authenticated with session:', data.session.user.id);
           toast.success('Successfully authenticated');
           
           // Check if this is a new user by fetching their profile
@@ -48,7 +46,6 @@ const AuthCallback = () => {
             
           if (!profileError && profileData && profileData.is_new === null) {
             // This is a new user, redirect to the new user flow
-            console.log('New user detected, redirecting to onboarding');
             navigate('/newuser-direct', { replace: true });
           } else {
             // Regular user, redirect to dashboard
