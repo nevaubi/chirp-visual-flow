@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -55,7 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
         
       if (error) {
-        console.error('Error refreshing profile:', error);
         return null;
       }
       
@@ -68,7 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       return updatedProfile;
     } catch (error) {
-      console.error('Error in refreshProfile:', error);
       return null;
     }
   };
@@ -80,15 +79,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      console.log('Checking subscription status...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        console.error('Error checking subscription:', error);
         return;
       }
-      
-      console.log('Subscription check response:', data);
       
       if (data) {
         // Update profile with subscription details
@@ -110,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error('Error in checkSubscription:', error);
+      // Silent error handling
     }
   };
 
@@ -185,7 +180,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }, 2000);
     } catch (error) {
-      console.error("Error in handleWelcomeOptionSelect:", error);
       toast.error("Something went wrong. Please try again.");
     }
   };
@@ -200,7 +194,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single();
           
         if (error) {
-          console.error('Error fetching profile:', error);
           return null;
         }
         
@@ -212,7 +205,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         return data as Profile;
       } catch (err) {
-        console.error('Error in fetchProfile:', err);
         return null;
       }
     };
@@ -220,8 +212,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
         if (event === 'SIGNED_IN' && session) {
           try {
             // Use setTimeout to defer profile fetch and avoid potential race conditions
@@ -246,7 +236,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             }, 0);
           } catch (error) {
-            console.error('Error handling sign in:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         } else if (event === 'SIGNED_OUT') {
@@ -275,7 +264,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }, 500);
             }, 0);
           } catch (error) {
-            console.error('Error handling session update:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         } else {
@@ -290,11 +278,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth state...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
           setAuthState({
             ...initialState,
             loading: false,
@@ -304,7 +290,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (data.session) {
-          console.log('Session found during initialization:', data.session.user.id);
           setTimeout(async () => {
             const profile = await fetchProfile(data.session.user.id);
             setAuthState({
@@ -326,14 +311,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           }, 0);
         } else {
-          console.log('No session found during initialization');
           setAuthState({
             ...initialState,
             loading: false,
           });
         }
       } catch (error) {
-        console.error('Error in initializeAuth:', error);
         setAuthState({
           ...initialState,
           loading: false,
@@ -384,12 +367,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async (force = false) => {
     try {
-      console.log('Sign out initiated, force:', force);
       setAuthState(prev => ({ ...prev, loading: true }));
       
       // Set a timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
-        console.log('Sign out timeout triggered');
         if (force) {
           clearAuthState();
           navigate('/', { replace: true });
@@ -410,8 +391,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearTimeout(timeoutId);
       
       if (error) {
-        console.error('Error signing out:', error);
-        
         if (force) {
           // Force sign out by clearing local state even though API call failed
           clearAuthState();
@@ -432,7 +411,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       navigate('/', { replace: true });
       toast.success('Signed out successfully');
     } catch (error) {
-      console.error('Exception in signOut:', error);
       const err = error as Error;
       
       if (force) {
