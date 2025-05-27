@@ -64,11 +64,16 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body if present to get session_id
+    // Parse request body safely - only for POST requests
     let sessionId = null;
     if (req.method === "POST") {
-      const requestBody = await req.json();
-      sessionId = requestBody.session_id;
+      try {
+        const requestBody = await req.json();
+        sessionId = requestBody.session_id;
+      } catch (error) {
+        // If JSON parsing fails, continue without session_id
+        // This is normal for GET requests or requests without a body
+      }
     }
 
     // Initialize Supabase client with service role key to update profiles
@@ -249,8 +254,7 @@ serve(async (req) => {
           }
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        // We'll continue with the regular flow below, don't return error response here
+        // Continue with the regular flow below, don't return error response here
       }
     }
 
@@ -303,7 +307,6 @@ serve(async (req) => {
     }
 
     // Retrieve active subscriptions for the customer
-    // FIX: Removed excessive nesting in expansion to avoid the 4-level limit error
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
