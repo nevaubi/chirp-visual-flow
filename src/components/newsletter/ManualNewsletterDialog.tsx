@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { 
@@ -43,11 +42,6 @@ const TweetCountOption = ({
   >
     <div className="text-2xl font-bold mb-2">{count}</div>
     <div className="text-sm text-gray-600">tweets</div>
-    {selected && (
-      <div className="absolute top-2 right-2 text-amber-500">
-        <Check size={16} />
-      </div>
-    )}
   </Card>
 );
 
