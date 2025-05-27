@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap } from 'lucide-react';
+import { BarChart, Check, CreditCard, Clock, LineChart, Users, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import AnalysisCompletePopup from '@/components/auth/AnalysisCompletePopup';
 import { toast } from 'sonner';
@@ -323,9 +323,20 @@ const NewsletterDashboard = ({ profile }) => {
           <p className="text-gray-600">Generate newsletters from your X bookmarks</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <p className="text-sm text-gray-600">
-            To generate newsletters you need to 1) Authorize X access via popup 2) Upgrade to subscription
-          </p>
+          <div className="text-base text-gray-600 flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">
+                <Shield size={12} />
+              </div>
+              <span>Authorize X access via popup</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                <CreditCard size={12} />
+              </div>
+              <span>Upgrade to subscription</span>
+            </div>
+          </div>
           {isLoading && (
             <p className="text-xs text-amber-600">
               <Clock size={12} className="inline mr-1" /> Newsletter generation in progress...
