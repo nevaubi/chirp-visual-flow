@@ -152,7 +152,7 @@ serve(async (req) => {
           try {
             newsletterContentPreferences = JSON.parse(session.metadata.newsletter_content_preferences);
           } catch (error) {
-            console.error("Error parsing newsletter content preferences:", error);
+            // Error parsing newsletter content preferences - continue silently
           }
         }
         
@@ -178,7 +178,6 @@ serve(async (req) => {
             .eq('id', user.id);
             
           if (customerUpdateError) {
-            console.error("Error updating profile with customer ID and preferences:", customerUpdateError);
             // Continue despite error - we want to try retrieving subscription info
           }
           
@@ -251,7 +250,6 @@ serve(async (req) => {
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error("Error processing checkout session:", errorMessage);
         // We'll continue with the regular flow below, don't return error response here
       }
     }
@@ -351,7 +349,6 @@ serve(async (req) => {
         productId = price.product.id;
       }
     } catch (error) {
-      console.error("Error retrieving product:", error);
       // Continue despite product error
     }
     
@@ -407,7 +404,6 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in check-subscription function:", errorMessage);
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
