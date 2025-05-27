@@ -8,28 +8,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper logging function for enhanced debugging
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
-};
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
-
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Authorization header is required" }), {
@@ -38,7 +27,6 @@ serve(async (req) => {
       });
     }
 
-    // Get the user from the token
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
@@ -50,14 +38,11 @@ serve(async (req) => {
     }
 
     const user = userData.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // First try to fetch user profile to get Stripe customer ID
     const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('stripe_customer_id')
@@ -67,26 +52,19 @@ serve(async (req) => {
     let stripeCustomerId = null;
     
     if (profileError) {
-      logStep("Error fetching profile", profileError);
       // Don't return error here, try to find the customer ID from Stripe instead
     } else if (profileData?.stripe_customer_id) {
       stripeCustomerId = typeof profileData.stripe_customer_id === 'string' 
         ? profileData.stripe_customer_id 
         : (profileData.stripe_customer_id as any)?.id || null;
-      
-      logStep("Found Stripe customer ID in profile", { stripeCustomerId });
     }
 
-    // If we couldn't get the customer ID from the profile, try to look it up in Stripe
     if (!stripeCustomerId && user.email) {
-      logStep("Looking up customer in Stripe by email", { email: user.email });
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       
       if (customers.data.length > 0) {
         stripeCustomerId = customers.data[0].id;
-        logStep("Found customer in Stripe", { stripeCustomerId });
         
-        // Update the profile with the found customer ID
         const supabaseAdmin = createClient(
           Deno.env.get("SUPABASE_URL") ?? "",
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -99,15 +77,12 @@ serve(async (req) => {
           .eq('id', user.id);
           
         if (updateError) {
-          logStep("Error updating profile with Stripe ID", updateError);
           // Continue anyway since we found the ID
         }
       }
     }
 
-    // If we still don't have a customer ID, create a new customer
     if (!stripeCustomerId && user.email) {
-      logStep("No existing customer found, creating new customer", { email: user.email });
       try {
         const newCustomer = await stripe.customers.create({
           email: user.email,
@@ -115,9 +90,7 @@ serve(async (req) => {
         });
         
         stripeCustomerId = newCustomer.id;
-        logStep("Created new Stripe customer", { stripeCustomerId });
         
-        // Update the profile with the new customer ID
         const supabaseAdmin = createClient(
           Deno.env.get("SUPABASE_URL") ?? "",
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -130,11 +103,9 @@ serve(async (req) => {
           .eq('id', user.id);
           
         if (updateError) {
-          logStep("Error updating profile with new Stripe ID", updateError);
           // Continue anyway since we have the ID
         }
       } catch (createError) {
-        logStep("Error creating Stripe customer", createError);
         return new Response(JSON.stringify({ error: "Failed to create Stripe customer" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -142,7 +113,6 @@ serve(async (req) => {
       }
     }
 
-    // If we still don't have a customer ID, return an error
     if (!stripeCustomerId) {
       return new Response(JSON.stringify({ error: "Could not find or create Stripe customer ID" }), {
         status: 400,
@@ -150,31 +120,19 @@ serve(async (req) => {
       });
     }
 
-    // Get origin for return URL
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
     try {
-      // Create a Stripe Customer Portal session
       const session = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
         return_url: `${origin}/dashboard/home`,
       });
-
-      logStep("Customer portal session created", { sessionUrl: session.url });
 
       return new Response(JSON.stringify({ url: session.url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     } catch (stripeError) {
-      // Log the specific Stripe error for debugging
-      logStep("Stripe portal creation error", { 
-        message: stripeError.message,
-        type: stripeError.type,
-        code: stripeError.code,
-        param: stripeError.param
-      });
-      
       if (stripeError.message && stripeError.message.includes("No configuration")) {
         return new Response(JSON.stringify({ 
           error: "Stripe Customer Portal is not configured", 
@@ -197,7 +155,6 @@ serve(async (req) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

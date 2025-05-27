@@ -6,27 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 
-// Rate limit: 10 requests per day per IP
 const RATE_LIMIT = 10;
 const FEATURE_NAME = "tweet_id_converter";
-const REDIS_TTL = 86400; // 24 hours in seconds
+const REDIS_TTL = 86400;
 
-// Get Redis connection details from environment
 const UPSTASH_REDIS_REST_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
 const UPSTASH_REDIS_REST_TOKEN = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
 
-// Check and update rate limit using Redis
 async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
   try {
-    // Skip rate limiting if Redis is not configured
     if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {
-      console.warn("Redis not configured, skipping rate limiting");
       return { allowed: true, remaining: RATE_LIMIT };
     }
 
     const redisKey = `${FEATURE_NAME}:${ip}:count`;
     
-    // Use Upstash Redis REST API to increment the counter
     const response = await fetch(`${UPSTASH_REDIS_REST_URL}/incr/${redisKey}`, {
       headers: {
         Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`
@@ -40,7 +34,6 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
     const result = await response.json();
     const count = result.result;
     
-    // If this is the first request, set expiry (TTL)
     if (count === 1) {
       const ttlResponse = await fetch(`${UPSTASH_REDIS_REST_URL}/expire/${redisKey}/${REDIS_TTL}`, {
         headers: {
@@ -49,26 +42,21 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
       });
       
       if (!ttlResponse.ok) {
-        console.error(`Failed to set TTL: ${ttlResponse.status} ${ttlResponse.statusText}`);
+        // Continue anyway
       }
     }
     
-    // Check if rate limit is exceeded
     const allowed = count <= RATE_LIMIT;
     const remaining = Math.max(0, RATE_LIMIT - count);
     
     return { allowed, remaining };
     
   } catch (error) {
-    // Log the error but don't fail the request
-    console.error("Rate limit check failed:", error);
-    // Fallback: allow the request
     return { allowed: true, remaining: RATE_LIMIT };
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -77,13 +65,10 @@ serve(async (req) => {
   }
 
   try {
-    // Get client IP address
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     
-    // Check rate limit
     const rateLimitCheck = await checkRateLimit(clientIP);
     
-    // If rate limit exceeded
     if (!rateLimitCheck.allowed) {
       return new Response(JSON.stringify({
         error: "Rate limit exceeded",
@@ -119,16 +104,11 @@ serve(async (req) => {
       });
     }
 
-    // Get RapidAPI key from environment
     const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
     if (!RAPIDAPI_KEY) {
       throw new Error("Missing RAPIDAPI_KEY in environment");
     }
 
-    // Build the request to the RapidAPI endpoint with the ID
-    // Older working version used the `/user/{id}` endpoint which correctly returns
-    // user details when provided with a numerical ID. The `/user/by/id` path
-    // returned 404 even for valid IDs.
     const url = `https://twitter293.p.rapidapi.com/user/${encodeURIComponent(id)}`;
     const options = {
       method: "GET",
@@ -159,7 +139,6 @@ serve(async (req) => {
 
     const apiResponse = await response.json();
     
-    // Extract the user details from the nested structure
     let userData = null;
     if (apiResponse && apiResponse.user && apiResponse.user.result) {
       const user = apiResponse.user.result;
