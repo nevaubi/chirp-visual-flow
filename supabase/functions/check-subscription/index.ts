@@ -64,16 +64,11 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
-
     // Parse request body if present to get session_id
     let sessionId = null;
     if (req.method === "POST") {
       const requestBody = await req.json();
       sessionId = requestBody.session_id;
-      if (sessionId) {
-        logStep("Received session ID", { sessionId });
-      }
     }
 
     // Initialize Supabase client with service role key to update profiles
@@ -104,7 +99,6 @@ serve(async (req) => {
     }
 
     const user = userData.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -115,13 +109,11 @@ serve(async (req) => {
     if (sessionId) {
       try {
         // Retrieve the checkout session to get customer info
-        logStep("Retrieving checkout session", { sessionId });
         const session = await stripe.checkout.sessions.retrieve(sessionId, {
           expand: ['customer', 'subscription', 'line_items']
         });
         
         if (!session) {
-          logStep("No session found with provided ID");
           return new Response(JSON.stringify({ error: "Session not found" }), {
             status: 404,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -130,7 +122,6 @@ serve(async (req) => {
         
         // Extract proper customer ID, handling both string and object cases
         const customerId = extractCustomerId(session.customer);
-        logStep("Found customer from session", { customerId });
         
         // Get newsletter preferences from session metadata
         const newsletterDayPreference = session.metadata?.newsletter_day_preference;
@@ -157,18 +148,11 @@ serve(async (req) => {
           ? 20 
           : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
         
-        logStep("Newsletter generations determined", { 
-          isNewsletterSubscription, 
-          priceId,
-          remainingNewsletterGenerations 
-        });
-        
         if (session.metadata?.newsletter_content_preferences) {
           try {
             newsletterContentPreferences = JSON.parse(session.metadata.newsletter_content_preferences);
-            logStep("Parsed newsletter content preferences", { newsletterContentPreferences });
           } catch (error) {
-            logStep("Error parsing newsletter content preferences", error);
+            // Silent error handling
           }
         }
         
@@ -194,10 +178,7 @@ serve(async (req) => {
             .eq('id', user.id);
             
           if (customerUpdateError) {
-            logStep("Error updating profile with customer ID and preferences", customerUpdateError);
             // Continue despite error - we want to try retrieving subscription info
-          } else {
-            logStep("Profile updated with customer ID and preferences", { remainingNewsletterGenerations });
           }
           
           // If we have a subscription in the session, we can use it directly
@@ -205,8 +186,6 @@ serve(async (req) => {
             const subscriptionId = typeof session.subscription === 'string' 
               ? session.subscription 
               : session.subscription.id;
-            
-            logStep("Found subscription in session", { subscriptionId });
             
             // Retrieve the full subscription with expanded data
             const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
@@ -245,14 +224,11 @@ serve(async (req) => {
                 .eq('id', user.id);
                 
               if (updateError) {
-                logStep("Error updating profile with subscription details", updateError);
                 return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
                   headers: { ...corsHeaders, "Content-Type": "application/json" },
                   status: 500,
                 });
               }
-              
-              logStep("Profile updated with subscription details from session");
               
               // Return subscription details
               return new Response(JSON.stringify({
@@ -273,8 +249,6 @@ serve(async (req) => {
           }
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logStep("Error processing checkout session", { message: errorMessage });
         // We'll continue with the regular flow below, don't return error response here
       }
     }
@@ -287,7 +261,6 @@ serve(async (req) => {
       .single();
       
     if (profileError) {
-      logStep("Error fetching profile", profileError);
       return new Response(JSON.stringify({ error: "Failed to fetch user profile" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -301,7 +274,6 @@ serve(async (req) => {
       
       // If the extracted ID is different from what's stored, update it
       if (customerId !== profileData.stripe_customer_id) {
-        logStep("Converting object customer_id to string ID", { from: profileData.stripe_customer_id, to: customerId });
         await supabaseAdmin
           .from('profiles')
           .update({ stripe_customer_id: customerId })
@@ -311,7 +283,6 @@ serve(async (req) => {
 
     // If no Stripe customer ID, user has no subscription
     if (!customerId) {
-      logStep("No Stripe customer ID found for user");
       await supabaseAdmin
         .from('profiles')
         .update({
@@ -340,7 +311,6 @@ serve(async (req) => {
 
     // If no active subscriptions, update profile and return
     if (subscriptions.data.length === 0) {
-      logStep("No active subscriptions found for customer");
       await supabaseAdmin
         .from('profiles')
         .update({
@@ -374,12 +344,10 @@ serve(async (req) => {
       if (price.product && typeof price.product === 'string') {
         const product = await stripe.products.retrieve(price.product);
         productId = product.id;
-        logStep("Retrieved product info", { productId });
       } else if (price.product && typeof price.product === 'object') {
         productId = price.product.id;
       }
     } catch (error) {
-      logStep("Error retrieving product", error);
       // Continue despite product error
     }
     
@@ -392,22 +360,12 @@ serve(async (req) => {
     } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
       subscriptionTier = "Newsletter Premium";
     }
-    
-    logStep("Active subscription found", { 
-      subscriptionId: subscription.id, 
-      priceId, 
-      tier: subscriptionTier 
-    });
 
     // Calculate subscription period end
     const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
     
     // Determine remaining newsletter generations based on the user's preference
     const remainingNewsletterGenerations = determineNewsletterGenerationCount(profileData.newsletter_day_preference, priceId);
-    logStep("Determined remaining newsletter generations", { 
-      newsletterDayPreference: profileData.newsletter_day_preference, 
-      remainingNewsletterGenerations 
-    });
     
     // Update the user's profile with subscription details
     const { error: updateError } = await supabaseAdmin
@@ -424,14 +382,11 @@ serve(async (req) => {
       .eq('id', user.id);
       
     if (updateError) {
-      logStep("Error updating profile", updateError);
       return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
-
-    logStep("Profile updated with subscription details");
 
     // Return subscription details
     return new Response(JSON.stringify({
@@ -448,7 +403,6 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
