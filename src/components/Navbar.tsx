@@ -30,11 +30,11 @@ export default function Navbar() {
   }, []);
 
   const handleLoginClick = () => {
-    navigate('/auth');
+    navigate('/auth?tab=login');
   };
 
   const handleSignupClick = () => {
-    navigate('/auth');
+    navigate('/auth?tab=signup');
   };
 
   const handleDashboardClick = () => {
@@ -217,7 +217,7 @@ export default function Navbar() {
                     className="justify-start text-[#0087C8] hover:bg-blue-50/30 flex items-center gap-2"
                     onClick={() => {
                       setIsOpen(false);
-                      navigate('/auth');
+                      navigate('/auth?tab=login');
                     }}
                   >
                     <LogIn size={16} />
@@ -227,7 +227,7 @@ export default function Navbar() {
                     className="bg-[#0087C8] hover:bg-[#0270A8] text-white font-medium"
                     onClick={() => {
                       setIsOpen(false);
-                      navigate('/auth');
+                      navigate('/auth?tab=signup');
                     }}
                   >
                     Signup for Free

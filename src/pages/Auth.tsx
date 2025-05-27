@@ -1,16 +1,27 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import XLoginButton from '@/components/auth/XLoginButton';
 import XAuthButton from '@/components/auth/XAuthButton';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { LogIn, UserPlus } from 'lucide-react';
 
 const Auth = () => {
   const { authState } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('login');
+
+  useEffect(() => {
+    // Set active tab based on URL parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'signup' || tabParam === 'login') {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // If user is already authenticated, redirect to dashboard
@@ -40,10 +51,22 @@ const Auth = () => {
               <p className="text-gray-600">Connect with your Twitter account to get started</p>
             </div>
             
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Log In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger 
+                  value="login" 
+                  className="flex items-center gap-2 data-[state=active]:bg-blue-100 data-[state=active]:text-[#0087C8]"
+                >
+                  <LogIn size={16} />
+                  Log In
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup"
+                  className="flex items-center gap-2 data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
+                >
+                  <UserPlus size={16} />
+                  Sign Up
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="login" className="space-y-4">
