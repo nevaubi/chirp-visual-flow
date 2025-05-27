@@ -70,12 +70,14 @@ const CreateNewsletter = () => {
 
   const handleCreateClick = () => {
     setShowIntro(false);
+    console.log('Create newsletter workflow started');
   };
 
   const handleFrequencySelect = (freq: 'biweekly' | 'weekly') => {
     setSelectedFrequency(freq);
     setWeeklyDay(null);
     setDeliveryOption(null);
+    console.log(`Selected frequency: ${freq}`);
   };
 
   // Get the day preference based on user selections

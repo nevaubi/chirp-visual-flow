@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -81,12 +80,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      console.log('Checking subscription status...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Error checking subscription:', error);
         return;
       }
+      
+      console.log('Subscription check response:', data);
       
       if (data) {
         // Update profile with subscription details
@@ -218,6 +220,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         
         if (event === 'SIGNED_IN' && session) {
           try {
@@ -287,6 +290,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth state...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -300,6 +304,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (data.session) {
+          console.log('Session found during initialization:', data.session.user.id);
           setTimeout(async () => {
             const profile = await fetchProfile(data.session.user.id);
             setAuthState({
@@ -321,6 +326,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           }, 0);
         } else {
+          console.log('No session found during initialization');
           setAuthState({
             ...initialState,
             loading: false,
@@ -378,10 +384,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async (force = false) => {
     try {
+      console.log('Sign out initiated, force:', force);
       setAuthState(prev => ({ ...prev, loading: true }));
       
       // Set a timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
+        console.log('Sign out timeout triggered');
         if (force) {
           clearAuthState();
           navigate('/', { replace: true });

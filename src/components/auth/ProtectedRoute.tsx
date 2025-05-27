@@ -19,18 +19,21 @@ const ProtectedRoute = () => {
   }
 
   if (!authState.user) {
+    console.log('No user found, redirecting to auth from protected route');
     // Redirect to login page and save the location they were trying to access
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Check if this is a new user who should be in the onboarding flow
   if (authState.profile && authState.profile.is_new === null) {
+    console.log('New user detected, redirecting to onboarding');
     // Only redirect if they're not already on the newuser-direct page
     if (location.pathname !== '/newuser-direct') {
       return <Navigate to="/newuser-direct" replace />;
     }
   }
 
+  console.log('User authenticated, rendering outlet');
   return <Outlet />;
 };
 
