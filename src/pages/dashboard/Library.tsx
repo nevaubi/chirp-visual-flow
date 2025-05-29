@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, isWithinInterval, subDays, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import html2pdf from "html2pdf.js";
+import NewsletterDialogContent from "@/components/newsletter/NewsletterDialogContent";
 
 // Define the newsletter structure
 interface Newsletter {
@@ -552,11 +553,7 @@ const Library = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <div 
-                id="newsletter-content"
-                className="prose dark:prose-invert max-w-none my-4" 
-                dangerouslySetInnerHTML={{ __html: await renderMarkdown(selectedNewsletter.markdown_text) }}
-              />
+              <NewsletterDialogContent markdownText={selectedNewsletter.markdown_text} />
               
               <DialogFooter className="flex gap-2 mt-2">
                 <Button 
