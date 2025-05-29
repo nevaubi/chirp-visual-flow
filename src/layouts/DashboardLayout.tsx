@@ -116,6 +116,11 @@ const DashboardLayout = () => {
         description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
       });
     }
+    
+    // Close mobile menu if open
+    if (isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
   };
   
   // Function to handle subscription management or checkout based on subscription status
@@ -193,6 +198,15 @@ const DashboardLayout = () => {
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 
+  // Handle navigation with mobile menu auto-close
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    // Close mobile menu after navigation
+    if (isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  };
+
   // Handle topic selection for Tweet Generation panel
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
@@ -203,6 +217,9 @@ const DashboardLayout = () => {
   const handleCloseTweetPanel = () => {
     setIsTweetPanelOpen(false);
   };
+
+  // Determine if sidebar should show expanded (full text)
+  const shouldShowExpanded = !isMobile ? expanded : mobileMenuOpen;
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -243,8 +260,10 @@ const DashboardLayout = () => {
         <aside 
           className={cn(
             "bg-[#181F2C] text-white z-30 flex flex-col transition-all duration-300 ease-in-out",
-            expanded ? "w-60" : "w-16",
-            isMobile && "fixed inset-y-0 left-0",
+            // On mobile: use full width when open, hide when closed
+            isMobile 
+              ? "fixed inset-y-0 left-0 w-64" 
+              : shouldShowExpanded ? "w-60" : "w-16",
             isMobile && !mobileMenuOpen && "transform -translate-x-full",
             isMobile && mobileMenuOpen && "transform translate-x-0"
           )}
@@ -254,18 +273,18 @@ const DashboardLayout = () => {
           {/* Logo */}
           <div className={cn(
             "flex items-center gap-2 p-4 border-b border-gray-700",
-            !expanded && "justify-center"
+            !shouldShowExpanded && !isMobile && "justify-center"
           )}>
             <Link to="/" className={cn(
               "flex items-center gap-2",
-              !expanded && "justify-center"
+              !shouldShowExpanded && !isMobile && "justify-center"
             )}>
               <img 
                 src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
                 alt="Chirpmetrics Logo" 
                 className="h-8 w-8 shrink-0"
               />
-              {expanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
+              {shouldShowExpanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
             </Link>
           </div>
 
@@ -277,11 +296,11 @@ const DashboardLayout = () => {
                   variant="ghost" 
                   className={cn(
                     "w-full justify-start text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
-                    !expanded && "justify-center px-0"
+                    !shouldShowExpanded && !isMobile && "justify-center px-0"
                   )}
                 >
-                  <MessageSquare size={16} className={cn("shrink-0", expanded && "mr-2")} />
-                  {expanded && (
+                  <MessageSquare size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+                  {shouldShowExpanded && (
                     <span className="overflow-hidden whitespace-nowrap font-medium">Feedback</span>
                   )}
                 </Button>
@@ -297,7 +316,7 @@ const DashboardLayout = () => {
                   <Button
                     className={cn(
                       "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
-                      !expanded && "justify-center px-0",
+                      !shouldShowExpanded && !isMobile && "justify-center px-0",
                       hasRequiredTier 
                         ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
                         : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
@@ -306,7 +325,7 @@ const DashboardLayout = () => {
                     disabled={!hasRequiredTier}
                   >
                     <Bookmark size={20} />
-                    {expanded && (
+                    {shouldShowExpanded && (
                       <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
                     )}
                   </Button>
@@ -321,12 +340,12 @@ const DashboardLayout = () => {
                       className={cn(
                         "w-full flex items-center gap-3 justify-start px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
                         isActive && "bg-[#0087C8] hover:bg-[#0087C8]/90",
-                        !expanded && "justify-center px-0"
+                        !shouldShowExpanded && !isMobile && "justify-center px-0"
                       )}
-                      onClick={() => navigate(item.path)}
+                      onClick={() => handleNavigate(item.path)}
                     >
                       <item.icon size={20} />
-                      {expanded && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
+                      {shouldShowExpanded && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
                     </Button>
                   </li>
                 );
@@ -337,28 +356,28 @@ const DashboardLayout = () => {
           {/* User Profile */}
           <div className={cn(
             "border-t border-gray-700 p-4",
-            !expanded && "flex flex-col items-center"
+            !shouldShowExpanded && !isMobile && "flex flex-col items-center"
           )}>
             {/* Subscription management button */}
             <Button 
               variant="ghost" 
               className={cn(
                 "w-full mb-4 justify-start text-white hover:bg-white/10",
-                !expanded && "justify-center px-0",
+                !shouldShowExpanded && !isMobile && "justify-center px-0",
                 isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
               )}
               onClick={handleManageSubscription}
               disabled={isPortalLoading || isCheckoutLoading}
             >
-              <CreditCard size={16} className={cn("shrink-0", expanded && "mr-2")} />
-              {expanded && (
+              <CreditCard size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+              {shouldShowExpanded && (
                 <span className="overflow-hidden whitespace-nowrap">
                   {isSubscribed ? "Manage Subscription" : "Upgrade Subscription"}
                 </span>
               )}
             </Button>
             
-            {expanded ? (
+            {shouldShowExpanded ? (
               <div className="flex items-center gap-2 mb-4">
                 <Avatar className="h-9 w-9 border border-gray-700">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
@@ -369,7 +388,7 @@ const DashboardLayout = () => {
                   <p className="text-xs text-gray-400 truncate">@{profile?.twitter_handle || 'handle'}</p>
                 </div>
               </div>
-            ) : (
+            ) : !isMobile && (
               <Avatar className="h-9 w-9 border border-gray-700 mb-4">
                 <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                 <AvatarFallback>{initials}</AvatarFallback>
@@ -379,12 +398,12 @@ const DashboardLayout = () => {
               variant="ghost" 
               className={cn(
                 "w-full justify-start text-white hover:bg-white/10",
-                !expanded && "justify-center px-0"
+                !shouldShowExpanded && !isMobile && "justify-center px-0"
               )}
               onClick={handleSignOut}
             >
-              <LogOut size={16} className={cn("shrink-0", expanded && "mr-2")} />
-              {expanded && <span>Sign out</span>}
+              <LogOut size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+              {shouldShowExpanded && <span>Sign out</span>}
             </Button>
           </div>
         </aside>
