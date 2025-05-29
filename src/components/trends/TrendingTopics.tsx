@@ -229,13 +229,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-md border border-blue-200 w-full bg-white">
-      <CardHeader className="pb-3 border-b border-blue-200 bg-blue-500 text-white">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <TrendingUp className="text-white h-5 w-5" />
+    <Card className="shadow-md border border-gray-200 w-full bg-white">
+      <CardHeader className="pb-3 border-b border-gray-200 bg-gray-50">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+          <TrendingUp className="text-gray-700 h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
-        <div className="text-sm text-blue-100">
+        <div className="text-sm text-gray-600">
           Select a category to discover trending topics on Twitter
         </div>
       </CardHeader>
@@ -248,8 +248,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               onClick={() => toggleTag(tag)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedTags.find(t => t.id === tag.id)
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                  ? 'bg-gray-900 text-white shadow-sm'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >
               {tag.name}
@@ -268,7 +268,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              <Loader2 className="h-8 w-8 text-gray-500 animate-spin" />
               <p className="text-sm text-gray-600">Loading trending topics...</p>
             </div>
           </div>
@@ -280,20 +280,20 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               return (
                 <div 
                   key={topic.id} 
-                  className={`border border-blue-200 rounded-xl overflow-hidden 
+                  className={`border border-gray-200 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 
-                      'ring-2 ring-blue-400 shadow-lg bg-blue-50' : 'bg-white'} 
-                    ${isCompact ? 'hover:bg-blue-50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
+                      'ring-2 ring-gray-400 shadow-lg bg-gray-50' : 'bg-white'} 
+                    ${isCompact ? 'hover:bg-gray-50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
                     ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-blue-500 text-white border-b border-blue-200 p-3">
+                  <div className="bg-gray-100 border-b border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <Badge variant="outline" className="bg-blue-400 text-white text-xs font-medium border-blue-300">
+                      <Badge variant="outline" className="bg-gray-200 text-gray-700 text-xs font-medium border-gray-300">
                         {topic.tag}
                       </Badge>
-                      <div className={`flex items-center bg-blue-400 text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
+                      <div className={`flex items-center bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full`}>
                         <topic.sentiment.icon size={12} className={`mr-1 ${topic.sentiment.color}`} />
                         <span className="capitalize">
                           {topic.sentiment.type}
@@ -301,7 +301,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <h3 className="text-base font-semibold text-white truncate pr-2">
+                      <h3 className="text-base font-semibold text-gray-900 truncate pr-2">
                         {cleanHeader(topic.header)}
                       </h3>
                     </div>
@@ -318,7 +318,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                           <ul className="space-y-2">
                             {topic.subTopics.map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700">
-                                <span className="text-blue-500 mr-2 flex-shrink-0 mt-0.5">•</span>
+                                <span className="text-gray-500 mr-2 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -330,7 +330,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <Button 
                           size="sm" 
                           onClick={() => handleUseTopic(topic)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm px-4"
+                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-4"
                         >
                           Use Topic
                         </Button>
@@ -347,7 +347,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                           <ul className="space-y-1.5">
                             {topic.subTopics.map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700 text-[1.05rem]">
-                                <span className="text-blue-500 mr-1 flex-shrink-0 mt-0.5">•</span>
+                                <span className="text-gray-500 mr-1 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -362,7 +362,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                             e.stopPropagation();
                             handleUseTopic(topic);
                           }}
-                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm px-4 w-full"
+                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-4 w-full"
                         >
                           Use Topic
                         </Button>
@@ -378,9 +378,9 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {!showTopics && selectedTags.length > 0 && !isLoading && (
           <div className="flex justify-center my-6">
             <div className="flex space-x-2">
-              <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-              <div className="w-3 h-3 bg-blue-300 rounded-full animate-pulse delay-150"></div>
-              <div className="w-3 h-3 bg-blue-200 rounded-full animate-pulse delay-300"></div>
+              <div className="w-3 h-3 bg-gray-400 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-gray-300 rounded-full animate-pulse delay-150"></div>
+              <div className="w-3 h-3 bg-gray-200 rounded-full animate-pulse delay-300"></div>
             </div>
           </div>
         )}
