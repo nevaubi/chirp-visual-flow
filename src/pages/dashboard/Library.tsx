@@ -257,7 +257,7 @@ const Library = () => {
         throw new Error('Newsletter content not found');
       }
 
-      // Fixed PDF configuration for capturing full content
+      // PDF configuration
       const opt = {
         margin: [10, 10, 10, 10],
         filename: `newsletter-${format(new Date(selectedNewsletter.created_at), 'yyyy-MM-dd')}.pdf`,
@@ -265,20 +265,13 @@ const Library = () => {
         html2canvas: { 
           scale: 2,
           useCORS: true,
-          allowTaint: false,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 1200,
-          removeContainer: true
+          allowTaint: true 
         },
         jsPDF: { 
           unit: 'mm', 
           format: 'a4', 
-          orientation: 'portrait',
-          putOnlyUsedFonts: true,
-          floatPrecision: 16
-        },
-        pagebreak: { mode: 'avoid-all' }
+          orientation: 'portrait' 
+        }
       };
 
       // Generate and download PDF
