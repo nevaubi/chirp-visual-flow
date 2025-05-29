@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
@@ -455,72 +456,23 @@ const WalkthroughPopup = ({
   }
 
   return (
-    <Dialog open={open}>
-      <DialogContent
-        className={cn(
-          "rounded-2xl shadow-xl p-0 font-sans w-[95%]",
+    <>
+      <Dialog open={open}>
+        <DialogContent
+          className={cn(
+            "rounded-2xl shadow-xl p-0 font-sans w-[95%]",
           // Different sizing and overflow behavior for creator vs newsletter platform
-          isCreatorPlatform ? 
-            "max-w-sm max-h-fit overflow-hidden" : 
+          isCreatorPlatform ?
+            "max-w-sm max-h-fit overflow-hidden" :
             "max-w-md sm:max-w-lg max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden"
         )}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
-        {/* Terms Modal Overlay - Positioned to completely cover the dialog */}
-        {showTermsModal && (
-          <div className="absolute inset-0 bg-white z-[100] rounded-2xl flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
-              <h1 className="text-lg font-bold text-[#0087C8]">Terms of Service</h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowTermsModal(false);
-                }}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3">
-              <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
-              <TermsContent />
-            </div>
-          </div>
-        )}
-
-        {/* Privacy Modal Overlay - Positioned to completely cover the dialog */}
-        {showPrivacyModal && (
-          <div className="absolute inset-0 bg-white z-[100] rounded-2xl flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
-              <h1 className="text-lg font-bold text-[#0087C8]">Privacy Policy</h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowPrivacyModal(false);
-                }}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3">
-              <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
-              <PrivacyContent />
-            </div>
-          </div>
-        )}
-
-        {/* Main Walkthrough Content - Hidden when overlays are open */}
+        {/* Main Walkthrough Content */}
         <div className={cn(
-          showTermsModal || showPrivacyModal ? "hidden" : "flex flex-col",
+          "flex flex-col",
           // More compact padding for creator platform
           isCreatorPlatform ? "p-3 min-h-0" : "p-4 sm:p-6 md:p-8"
         )}>
@@ -598,7 +550,50 @@ const WalkthroughPopup = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      {/* Terms Modal */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent
+          className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
+          hideCloseButton={true}
+        >
+          <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
+            <h1 className="text-lg font-bold text-[#0087C8]">Terms of Service</h1>
+            <DialogClose asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogClose>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
+            <TermsContent />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Modal */}
+      <Dialog open={showPrivacyModal} onOpenChange={setShowPrivacyModal}>
+        <DialogContent
+          className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
+          hideCloseButton={true}
+        >
+          <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
+            <h1 className="text-lg font-bold text-[#0087C8]">Privacy Policy</h1>
+            <DialogClose asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogClose>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
+            <PrivacyContent />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
