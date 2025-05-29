@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -272,8 +273,8 @@ const DashboardLayout = () => {
                       "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
                       !expanded && "justify-center px-0",
                       hasRequiredTier 
-                        ? "bg-amber-500 hover:bg-amber-600 text-white" 
-                        : "bg-amber-500/40 text-white/70 cursor-not-allowed"
+                        ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
+                        : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
                     )}
                     onClick={handleCreateNewsletter}
                     disabled={!hasRequiredTier}
