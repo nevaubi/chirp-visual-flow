@@ -163,13 +163,6 @@ const CreatorDashboard = ({ profile }) => {
       {/* Background gradient decoration */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-[#E5DEFF]/20 via-[#D3E4FD]/20 to-[#F1F0FB]/20 -z-10 rounded-md"></div>
       
-      {/* Hover indicator for larger screens only - Creator Platform */}
-      <div className="hidden lg:block text-right mb-2">
-        <p className="text-sm text-gray-500 font-medium">
-          Hover over to tweet →
-        </p>
-      </div>
-      
       {/* Profile Section with Metrics */}
       <div className="w-full">
         <h3 className="text-sm font-medium text-gray-500 mb-3 px-1">PROFILE & METRICS</h3>
