@@ -72,6 +72,11 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     return header.replace(/^TOPIC HEADER:\s*/i, '');
   };
 
+  // Function to clean subtopic text by removing leading dash
+  const cleanSubtopic = (subtopic: string): string => {
+    return subtopic.replace(/^-\s*/, '');
+  };
+
   const availableTags = [
     { id: 1, name: 'AI' },
     { id: 2, name: 'Coding' },
@@ -316,10 +321,10 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <div className="mb-5">
                           <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
                           <ul className="space-y-2">
-                            {topic.subTopics.map((subtopic, idx) => (
+                            {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700">
                                 <span className="text-gray-500 mr-2 flex-shrink-0 mt-0.5">•</span>
-                                <span>{subtopic}</span>
+                                <span>{cleanSubtopic(subtopic)}</span>
                               </li>
                             ))}
                           </ul>
@@ -345,10 +350,10 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <div className="mb-3 flex-grow">
                           <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
                           <ul className="space-y-1.5">
-                            {topic.subTopics.map((subtopic, idx) => (
+                            {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700 text-[1.05rem]">
                                 <span className="text-gray-500 mr-1 flex-shrink-0 mt-0.5">•</span>
-                                <span>{subtopic}</span>
+                                <span>{cleanSubtopic(subtopic)}</span>
                               </li>
                             ))}
                           </ul>
