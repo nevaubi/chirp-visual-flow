@@ -228,11 +228,12 @@ const Library = () => {
   };
 
   // Render markdown to HTML
-  const renderMarkdown = (markdown: string | null) => {
+  const renderMarkdown = async (markdown: string | null): Promise<string> => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      return marked.parse(markdown);
+      const result = await marked.parse(markdown);
+      return typeof result === 'string' ? result : result;
     } catch (err) {
       console.error("Error rendering markdown:", err);
       return "<p>Error rendering content</p>";
@@ -254,7 +255,7 @@ const Library = () => {
       const tempElement = document.createElement('div');
       tempElement.id = 'temp-newsletter-content';
       tempElement.className = 'prose dark:prose-invert max-w-none';
-      tempElement.innerHTML = renderMarkdown(newsletter.markdown_text);
+      tempElement.innerHTML = await renderMarkdown(newsletter.markdown_text);
       tempElement.style.position = 'absolute';
       tempElement.style.left = '-9999px';
       tempElement.style.top = '-9999px';
@@ -554,7 +555,7 @@ const Library = () => {
               <div 
                 id="newsletter-content"
                 className="prose dark:prose-invert max-w-none my-4" 
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
+                dangerouslySetInnerHTML={{ __html: await renderMarkdown(selectedNewsletter.markdown_text) }}
               />
               
               <DialogFooter className="flex gap-2 mt-2">
