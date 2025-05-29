@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, Copy, Check, Twitter, X, Mic } from 'lucide-react';
+import { Loader2, Send, Copy, Check, Twitter, X, Mic, ChevronLeft } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -413,22 +413,32 @@ const TweetGenerationPanel = ({
     );
   }
 
-  // Render desktop view with increased width
+  // Render desktop view with updated handle design
   return (
     <div 
       ref={panelRef}
       className={`fixed top-0 right-0 h-screen z-50 transform transition-all duration-300 ease-in-out ${
-        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-14px)]'
+        isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-20px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
-      {/* Handle for hover - increased width and height */}
+      {/* New Minimal Handle - positioned at top-right */}
       <div 
-        className="w-6 h-20 absolute top-4 -left-6 bg-gradient-to-b from-[#0087C8] to-[#0076b2] rounded-l-lg flex items-center justify-center cursor-pointer shadow-lg border border-r-0 border-[#0087C8]/20 overflow-hidden group"
+        className="w-5 h-12 absolute top-2 -left-5 bg-[#0087C8] rounded-l-md flex flex-col items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all duration-200 hover:w-6 hover:bg-[#0076b2] group"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
-        <div className="w-1 h-10 bg-white/80 rounded-full transition-all duration-200 group-hover:h-12 group-hover:bg-white"></div>
-        {/* Enhanced glow effect overlay */}
-        <div className="absolute inset-0 bg-white/0 animate-glow-pulse group-hover:bg-white/10 transition-all duration-200"></div>
+        {/* Three dots indicator */}
+        <div className="flex flex-col space-y-1">
+          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
+        </div>
+        {/* Subtle chevron icon on hover */}
+        <ChevronLeft 
+          size={12} 
+          className={`text-white mt-1 transition-all duration-200 ${
+            isPanelOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-70'
+          }`} 
+        />
       </div>
 
       <PanelHeader showClose={isOpen} />
