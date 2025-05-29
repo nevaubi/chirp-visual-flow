@@ -215,12 +215,12 @@ const PricingSection = () => {
   const creatorCard = {
     title: "X (Twitter) Creator Platform",
     price: "$19",
-    description: "Grow your twitter following with high quality tweets created using your voice with current trends and topics",
+    description: "For smarter twitter growth",
     features: [
+      <span><strong>450 tweet generations</strong></span>,
       "Analytics dashboard",
-      "AI 'voice profile' tweet generation",
-      "Enriches tweets with real-time context",
-      "Additional creator tools for content"
+      "AI voice profile",
+      "Trending topics insights"
     ],
     ctaText: "Get Started",
     popular: false,
