@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -168,97 +169,72 @@ const Library = () => {
           <h1 className="text-2xl font-bold">Newsletter Library</h1>
         </div>
         
-        {/* Enhanced Date Controls */}
-        <div className="flex items-center gap-4">
+        {/* Date Controls */}
+        <div className="flex items-center gap-2">
           {/* Quick Range Buttons */}
-          <div className="bg-white rounded-lg border border-gray-200 p-1 shadow-sm">
-            <div className="flex gap-1">
-              <Button
-                variant={
-                  dateRange.start.getTime() === subDays(new Date(), 6).getTime() && 
-                  dateRange.end.getTime() === new Date().getTime() ? "default" : "ghost"
-                }
-                size="sm"
-                onClick={() => setQuickRange(7)}
-                className={cn(
-                  "h-8 px-3 text-sm font-medium transition-all",
-                  dateRange.start.getTime() === subDays(new Date(), 6).getTime() && 
-                  dateRange.end.getTime() === new Date().getTime() 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-                )}
-              >
-                7 days
-              </Button>
-              <Button
-                variant={
-                  dateRange.start.getTime() === subDays(new Date(), 29).getTime() && 
-                  dateRange.end.getTime() === new Date().getTime() ? "default" : "ghost"
-                }
-                size="sm"
-                onClick={() => setQuickRange(30)}
-                className="h-8 px-3 text-sm font-medium hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all"
-              >
-                30 days
-              </Button>
-            </div>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQuickRange(7)}
+              className={cn(
+                dateRange.start.getTime() === subDays(new Date(), 6).getTime() && 
+                dateRange.end.getTime() === new Date().getTime() && "bg-primary/10"
+              )}
+            >
+              7 days
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQuickRange(30)}
+            >
+              30 days
+            </Button>
           </div>
 
           {/* Week Navigation */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigateWeek('prev')}
-                className="h-10 w-10 p-0 hover:bg-gray-100 rounded-l-lg rounded-r-none border-r border-gray-200"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-10 px-4 min-w-[160px] justify-center hover:bg-gray-50 rounded-none border-none font-medium text-gray-700"
-                  >
-                    <CalendarIcon className="h-4 w-4 mr-2 text-gray-500" />
-                    {format(selectedDate, 'MMM d, yyyy')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateWeek('prev')}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[140px]">
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {format(selectedDate, 'MMM d, yyyy')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigateWeek('next')}
-                className="h-10 w-10 p-0 hover:bg-gray-100 rounded-r-lg rounded-l-none border-l border-gray-200"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateWeek('next')}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Date Range Display */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg border border-blue-100">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 bg-primary rounded-full"></div>
-          <span className="text-sm font-medium text-gray-700">
-            Showing newsletters from <span className="font-semibold text-primary">{format(dateRange.start, 'MMM d')}</span> to <span className="font-semibold text-primary">{format(dateRange.end, 'MMM d, yyyy')}</span>
-          </span>
-        </div>
+      {/* Date Range Display */}
+      <div className="text-sm text-muted-foreground">
+        Showing newsletters from {format(dateRange.start, 'MMM d')} to {format(dateRange.end, 'MMM d, yyyy')}
       </div>
       
       {isLoading ? (
