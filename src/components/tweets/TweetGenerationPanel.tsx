@@ -1,10 +1,11 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, Copy, Check, Twitter, X, Mic, ChevronLeft } from 'lucide-react';
+import { Loader2, Send, Copy, Check, Twitter, X, Mic, ChevronLeft, CreditCard } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,12 @@ const TweetGenerationPanel = ({
   const panelRef = useRef<HTMLDivElement>(null);
   
   const hasVoiceProfile = authState.profile?.voice_profile_analysis !== null;
+  const remainingGenerations = authState.profile?.remaining_tweet_generations || 0;
+  const isSubscribed = authState.profile?.subscribed;
+  const isCreatorPlatform = authState.profile?.is_creator_platform;
+  
+  // Determine if user can generate tweets
+  const canGenerate = hasVoiceProfile && remainingGenerations > 0;
   
   const form = useForm({
     defaultValues: {
@@ -179,6 +186,18 @@ const TweetGenerationPanel = ({
 
   const handleGenerateTweets = async (values: { prompt: string }) => {
     try {
+      // Check if user has remaining generations
+      if (remainingGenerations <= 0) {
+        toast({
+          title: "Generation limit reached",
+          description: isSubscribed 
+            ? "You've used all your tweet generations for this month." 
+            : "You've reached your free limit. Upgrade to generate more tweets.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Use either the user-provided prompt or the selected topic header as fallback
       const promptText = values.prompt || (selectedTopic ? selectedTopic.header : '');
       
@@ -233,6 +252,9 @@ const TweetGenerationPanel = ({
       }));
       
       setGeneratedTweets(formattedTweets);
+      
+      // Refresh profile to get updated remaining generations
+      await refreshProfile();
       
     } catch (error: any) {
       console.error("Error generating tweets:", error);
@@ -333,6 +355,23 @@ const TweetGenerationPanel = ({
             )}
           </Button>
         )}
+
+        {/* Usage indicator */}
+        {isCreatorPlatform && hasVoiceProfile && (
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center justify-between text-white text-sm">
+              <span>Monthly Generations:</span>
+              <span className="font-semibold">
+                {remainingGenerations} / {isSubscribed ? '150' : '5'} remaining
+              </span>
+            </div>
+            {remainingGenerations <= 0 && !isSubscribed && (
+              <div className="mt-2 text-amber-300 text-xs">
+                Upgrade to get 150 generations per month
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -381,16 +420,41 @@ const TweetGenerationPanel = ({
                           A voice profile is required to generate posts in your authentic voice.
                         </p>
                       </div>
+                    ) : remainingGenerations <= 0 ? (
+                      <div className="p-4 border border-red-200 bg-red-50 rounded-lg mb-4">
+                        <p className="text-sm text-red-800 mb-2">
+                          {isSubscribed 
+                            ? "You've used all your tweet generations for this month."
+                            : "You've reached your free limit of 5 generations this month."}
+                        </p>
+                        {!isSubscribed && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            onClick={() => {
+                              // This would trigger the subscription upgrade flow
+                              toast({
+                                title: "Upgrade to Creator Plan",
+                                description: "Get 150 tweet generations per month with our Creator plan."
+                              });
+                            }}
+                          >
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Upgrade for More Generations
+                          </Button>
+                        )}
+                      </div>
                     ) : null}
 
                     <Button 
                       type="submit" 
                       className={`w-full font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
-                        hasVoiceProfile 
+                        canGenerate 
                           ? "bg-blue-500 hover:bg-blue-600 text-white" 
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
-                      disabled={isLoading || !hasVoiceProfile}
+                      disabled={isLoading || !canGenerate}
                     >
                       {isLoading ? (
                         <>
@@ -494,16 +558,41 @@ const TweetGenerationPanel = ({
                     A voice profile is required to generate posts in your authentic voice.
                   </p>
                 </div>
+              ) : remainingGenerations <= 0 ? (
+                <div className="p-4 border border-red-200 bg-red-50 rounded-lg mb-4">
+                  <p className="text-sm text-red-800 mb-2">
+                    {isSubscribed 
+                      ? "You've used all your tweet generations for this month."
+                      : "You've reached your free limit of 5 generations this month."}
+                  </p>
+                  {!isSubscribed && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => {
+                        // This would trigger the subscription upgrade flow
+                        toast({
+                          title: "Upgrade to Creator Plan",
+                          description: "Get 150 tweet generations per month with our Creator plan."
+                        });
+                      }}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Upgrade for More Generations
+                    </Button>
+                  )}
+                </div>
               ) : null}
 
               <Button 
                 type="submit" 
                 className={`w-full font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
-                  hasVoiceProfile 
+                  canGenerate 
                     ? "bg-blue-500 hover:bg-blue-600 text-white" 
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
-                disabled={isLoading || !hasVoiceProfile}
+                disabled={isLoading || !canGenerate}
               >
                 {isLoading ? (
                   <>
@@ -513,7 +602,7 @@ const TweetGenerationPanel = ({
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    Generate Posts
+                    Generate Posts ({remainingGenerations} left)
                   </>
                 )}
               </Button>

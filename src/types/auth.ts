@@ -50,6 +50,8 @@ export interface Profile {
   // Voice profile and tweet dataset
   voice_profile_analysis: string | null;
   personal_tweet_dataset: string | null;
+  // Tweet generation tracking for Creator platform
+  remaining_tweet_generations: number | null;
 }
 
 export interface AuthState {
