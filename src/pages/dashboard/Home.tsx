@@ -319,7 +319,7 @@ const NewsletterDashboard = ({ profile }) => {
       {/* Restructured header layout */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left side - Generate Newsletter CTA */}
-        <div className="lg:w-1/3">
+        <div className="lg:w-1/4">
           <Card className="border-2 border-[#0087C8] bg-gradient-to-r from-[#0087C8]/5 to-[#0087C8]/10 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6 pb-6">
               <div className="flex items-center gap-3 mb-4">
@@ -348,7 +348,7 @@ const NewsletterDashboard = ({ profile }) => {
         </div>
 
         {/* Center - Welcome section */}
-        <div className="lg:w-2/3 text-center">
+        <div className="lg:w-3/4 text-center">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
             <p className="text-xl text-gray-600 mb-4">Generate newsletters from your X bookmarks</p>
@@ -424,7 +424,7 @@ const NewsletterDashboard = ({ profile }) => {
               </div>
             </div>
           </CardContent>
-        </div>
+        </Card>
       )}
     </div>
   );
