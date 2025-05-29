@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -49,7 +48,7 @@ const WalkthroughPopup = ({
   // For creator platform: 1 step, for newsletter platform: 4 steps
   const totalSteps = isCreatorPlatform ? 1 : 4;
   const { toast } = useToast();
-  const { authState, updateProfile } = useAuth();
+  const { authState, updateProfile, refreshProfile } = useAuth();
 
   // Form state for creator platform step 1 (previously step 4)
   const [timezone, setTimezone] = useState<string>("");
@@ -210,12 +209,19 @@ const WalkthroughPopup = ({
               title: "Analysis complete",
               description: "Your profile has been analyzed and insights are ready",
             });
+
+            // CRITICAL FIX: Refresh the profile in AuthContext to get the latest analysis results
+            console.log("Refreshing profile after analysis completion...");
+            await refreshProfile();
+            console.log("Profile refreshed successfully");
             
           } catch (error) {
             console.error("Error during profile analysis:", error);
             setAnalysisError(error.message || "An error occurred during profile analysis. Your profile is still set up, but we couldn't complete the analysis.");
             
-            // We'll continue with onComplete even if analysis fails
+            // We'll continue with onComplete even if analysis fails, but still refresh profile
+            await refreshProfile();
+            
             toast({
               title: "Profile setup complete",
               description: "Your profile was set up, but we encountered an issue during analysis. You can try again later.",
