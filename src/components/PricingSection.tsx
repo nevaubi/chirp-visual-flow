@@ -203,7 +203,7 @@ const PricingSection = () => {
       "Smart context boost",
       "Any topic or niche"
     ],
-    ctaText: "Get Started",
+    ctaText: "Try It Free",
     popular: true,
     buttonClassName: "bg-[#ff7720] hover:bg-[#e86612] text-white shadow-[0_2px_6px_rgba(255,119,32,0.3)]",
     platformIcon: (
@@ -228,7 +228,7 @@ const PricingSection = () => {
       "AI voice profile",
       "Trending topics insights"
     ],
-    ctaText: "Get Started",
+    ctaText: "Try It Free",
     popular: false,
     buttonClassName: "bg-[#0ea5e9] hover:bg-[#0284c7] text-white",
     platformIcon: (
