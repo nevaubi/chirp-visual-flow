@@ -4,6 +4,12 @@ import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   BarChart2,
   Home,
   Users,
@@ -384,21 +390,31 @@ const DashboardLayout = () => {
           "flex-1 flex flex-col overflow-y-auto bg-gray-50 transition-all duration-300 relative",
           isMobile && mobileMenuOpen && "filter blur-sm"
         )}>
-          {/* Desktop Header - search bar removed */}
+          {/* Desktop Header with enhanced profile dropdown */}
           <header className="hidden lg:flex items-center justify-end p-4 bg-white border-b gap-4">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" className="text-gray-600">
                 <Bell size={20} />
               </Button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {profile?.twitter_username || 'User'}
-                </span>
-                <Avatar className="h-9 w-9 cursor-pointer">
-                  <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                    <span className="text-sm font-medium text-gray-700">
+                      {profile?.twitter_username || 'User'}
+                    </span>
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
