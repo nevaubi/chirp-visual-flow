@@ -229,13 +229,13 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-md border-2 border-gray-300 dark:border-gray-700 w-full bg-white dark:bg-gray-900">
-      <CardHeader className="pb-3 border-b-2 border-gray-300 dark:border-gray-700 bg-navy text-white">
+    <Card className="shadow-md border border-blue-200 w-full bg-white">
+      <CardHeader className="pb-3 border-b border-blue-200 bg-blue-500 text-white">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <TrendingUp className="text-darkBlue-light h-5 w-5" />
+          <TrendingUp className="text-white h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
-        <div className="text-sm text-gray-300">
+        <div className="text-sm text-blue-100">
           Select a category to discover trending topics on Twitter
         </div>
       </CardHeader>
@@ -248,8 +248,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               onClick={() => toggleTag(tag)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedTags.find(t => t.id === tag.id)
-                  ? 'bg-darkBlue-light text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  ? 'bg-blue-500 text-white shadow-sm'
+                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
               }`}
             >
               {tag.name}
@@ -259,7 +259,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         
         {/* Error and loading states */}
         {error && (
-          <div className="flex items-center gap-2 p-4 mb-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-800/30">
+          <div className="flex items-center gap-2 p-4 mb-4 bg-red-50 text-red-600 rounded-lg border border-red-200">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <p className="text-sm">{error}</p>
           </div>
@@ -268,8 +268,8 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 text-darkBlue-light animate-spin" />
-              <p className="text-sm text-muted-foreground">Loading trending topics...</p>
+              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              <p className="text-sm text-gray-600">Loading trending topics...</p>
             </div>
           </div>
         )}
@@ -280,20 +280,20 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               return (
                 <div 
                   key={topic.id} 
-                  className={`border-2 border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden 
+                  className={`border border-blue-200 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 
-                      'ring-4 ring-darkBlue-light/90 shadow-[0_0_15px_rgba(51,162,216,0.4)] dark:shadow-[0_0_15px_rgba(51,162,216,0.3)] animate-pulse-subtle' : ''} 
-                    ${isCompact ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
+                      'ring-2 ring-blue-400 shadow-lg bg-blue-50' : 'bg-white'} 
+                    ${isCompact ? 'hover:bg-blue-50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
                     ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-navy text-white border-b-2 border-gray-300 dark:border-gray-700 p-3">
+                  <div className="bg-blue-500 text-white border-b border-blue-200 p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <Badge variant="outline" className="bg-darkBlue-medium text-white text-xs font-medium border-darkBlue-light">
+                      <Badge variant="outline" className="bg-blue-400 text-white text-xs font-medium border-blue-300">
                         {topic.tag}
                       </Badge>
-                      <div className={`flex items-center bg-darkBlue-medium text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
+                      <div className={`flex items-center bg-blue-400 text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
                         <topic.sentiment.icon size={12} className={`mr-1 ${topic.sentiment.color}`} />
                         <span className="capitalize">
                           {topic.sentiment.type}
@@ -309,16 +309,16 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                   
                   {/* Content */}
                   {!isCompact ? (
-                    <div className="p-4 bg-white dark:bg-gray-900">
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{topic.context}</p>
+                    <div className="p-4 bg-white">
+                      <p className="text-sm text-gray-600 mb-4">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-5">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
                           <ul className="space-y-2">
                             {topic.subTopics.map((subtopic, idx) => (
-                              <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300">
-                                <span className="text-darkBlue-light mr-2 flex-shrink-0 mt-0.5">•</span>
+                              <li key={idx} className="flex items-start text-sm text-gray-700">
+                                <span className="text-blue-500 mr-2 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -330,24 +330,24 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <Button 
                           size="sm" 
                           onClick={() => handleUseTopic(topic)}
-                          className="bg-darkBlue-light hover:bg-darkBlue-medium text-white rounded-full text-sm px-4"
+                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm px-4"
                         >
                           Use Topic
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-3 bg-white dark:bg-gray-900 flex flex-col flex-grow">
+                    <div className="p-3 bg-white flex flex-col flex-grow">
                       {/* Expanded content for grid view */}
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 text-[1.05rem]">{topic.context}</p>
+                      <p className="text-sm text-gray-600 mb-3 text-[1.05rem]">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-3 flex-grow">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Key Points</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
                           <ul className="space-y-1.5">
                             {topic.subTopics.map((subtopic, idx) => (
-                              <li key={idx} className="flex items-start text-sm text-gray-700 dark:text-gray-300 text-[1.05rem]">
-                                <span className="text-darkBlue-light mr-1 flex-shrink-0 mt-0.5">•</span>
+                              <li key={idx} className="flex items-start text-sm text-gray-700 text-[1.05rem]">
+                                <span className="text-blue-500 mr-1 flex-shrink-0 mt-0.5">•</span>
                                 <span>{subtopic}</span>
                               </li>
                             ))}
@@ -362,7 +362,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                             e.stopPropagation();
                             handleUseTopic(topic);
                           }}
-                          className="bg-darkBlue-light hover:bg-darkBlue-medium text-white rounded-full text-sm px-4 w-full"
+                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm px-4 w-full"
                         >
                           Use Topic
                         </Button>
@@ -378,15 +378,15 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         {!showTopics && selectedTags.length > 0 && !isLoading && (
           <div className="flex justify-center my-6">
             <div className="flex space-x-2">
-              <div className="w-3 h-3 bg-darkBlue-light/70 rounded-full animate-pulse"></div>
-              <div className="w-3 h-3 bg-darkBlue-light/50 rounded-full animate-pulse delay-150"></div>
-              <div className="w-3 h-3 bg-darkBlue-light/30 rounded-full animate-pulse delay-300"></div>
+              <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-blue-300 rounded-full animate-pulse delay-150"></div>
+              <div className="w-3 h-3 bg-blue-200 rounded-full animate-pulse delay-300"></div>
             </div>
           </div>
         )}
         
         {!showTopics && selectedTags.length === 0 && !isLoading && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-600">
             <p>Select a category above to see trending topics</p>
           </div>
         )}

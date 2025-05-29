@@ -70,36 +70,36 @@ const ExampleTweetCard: React.FC<ExampleTweetCardProps> = ({ text, profile, metr
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+    <div className="bg-white border border-blue-200 rounded-xl p-4 hover:bg-blue-50 transition-colors">
       <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10 rounded-full flex-shrink-0 border border-gray-200 dark:border-gray-700">
+        <Avatar className="h-10 w-10 rounded-full flex-shrink-0 border border-blue-200">
           <AvatarImage src={profile.avatarUrl} alt={profile.displayName} className="rounded-full" />
-          <AvatarFallback className="bg-darkBlue-light/10 text-darkBlue-light font-semibold">
+          <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
             {getInitials(profile.displayName)}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1">
-            <span className="font-bold text-gray-900 dark:text-white">
+            <span className="font-bold text-gray-900">
               {profile.displayName}
             </span>
             {profile.verified && (
               <span className="text-blue-500 flex-shrink-0 ml-0.5">
-                <Check className="h-4 w-4 bg-darkBlue-light text-white rounded-full p-0.5" />
+                <Check className="h-4 w-4 bg-blue-500 text-white rounded-full p-0.5" />
               </span>
             )}
-            <span className="text-gray-500 dark:text-gray-400 ml-1">@{profile.username}</span>
-            <span className="text-gray-500 dark:text-gray-400 mx-1">·</span>
-            <span className="text-gray-500 dark:text-gray-400">{formatTimestamp(profile.timestamp)}</span>
+            <span className="text-gray-500 ml-1">@{profile.username}</span>
+            <span className="text-gray-500 mx-1">·</span>
+            <span className="text-gray-500">{formatTimestamp(profile.timestamp)}</span>
           </div>
           
-          <p className="mt-2 text-gray-900 dark:text-gray-100 break-words leading-normal text-[15px] text-[1.05rem]">
+          <p className="mt-2 text-gray-900 break-words leading-normal text-[15px] text-[1.05rem]">
             {truncateText(text)}
           </p>
           
           {metrics && (
-            <div className="flex items-center gap-4 mt-3 text-gray-500 dark:text-gray-400 text-sm">
+            <div className="flex items-center gap-4 mt-3 text-gray-500 text-sm">
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
                 <span>{formatNumber(metrics.replies)}</span>
