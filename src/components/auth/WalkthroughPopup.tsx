@@ -329,7 +329,10 @@ const WalkthroughPopup = ({
                   Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
                 </Label>
                 <div className="text-xs text-muted-foreground">
-                  <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
+                  Terms of Service & Privacy Policy
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Find both on the home page
                 </div>
               </div>
             </div>
