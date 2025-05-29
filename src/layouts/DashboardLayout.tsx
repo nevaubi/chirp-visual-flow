@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ import FeedbackDialog from '@/components/feedback/FeedbackDialog';
 const DashboardLayout = () => {
   const { authState, signOut } = useAuth();
   const [expanded, setExpanded] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isManualGenerationOpen, setIsManualGenerationOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
@@ -55,25 +55,6 @@ const DashboardLayout = () => {
   // Check if user has the required subscription tier
   const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
                           profile?.subscription_tier === "Newsletter Premium";
-
-  // Check if the current device is mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth < 1024) {
-        setExpanded(false);
-      }
-    };
-    
-    // Initial check
-    checkIfMobile();
-    
-    // Add event listener
-    window.addEventListener('resize', checkIfMobile);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
 
   // Listen for topic selection events
   useEffect(() => {
