@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -40,7 +39,7 @@ export default function HeroSection() {
 
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Mobile-only text at top */}
-        <div className="block lg:hidden mb-8 pt-[20px]">
+        <div className="block lg:hidden mb-8 pt-[5px]">
           <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
             <span className="text-[#0f2e47]">Want </span>
             <span className="text-[#0087C8]">Twitter </span>
@@ -60,22 +59,6 @@ export default function HeroSection() {
           <p className="text-xl text-[#0f2e47] mb-4">
             Choose one - <span className="text-[#FF6B35]">or both</span>.
           </p>
-          
-          {/* Buttons for mobile */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <Button 
-              className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium"
-              onClick={scrollToPricing}
-            >
-              Creator Platform
-            </Button>
-            <Button 
-              className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium"
-              onClick={scrollToPricing}
-            >
-              Twitter Newsletters
-            </Button>
-          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
