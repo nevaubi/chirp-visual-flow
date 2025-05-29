@@ -229,19 +229,19 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   const showTopics = !isLoading && trendingTopics.length > 0;
 
   return (
-    <Card className="shadow-sm border border-gray-100 w-full bg-white">
-      <CardHeader className="pb-4 border-b border-gray-100 bg-white">
-        <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
+    <Card className="shadow-md border border-gray-200 w-full bg-white">
+      <CardHeader className="pb-3 border-b border-gray-200 bg-gray-50">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
           <TrendingUp className="text-gray-700 h-5 w-5" />
           <span>Trending Topics</span>
         </CardTitle>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-600">
           Select a category to discover trending topics on Twitter
         </div>
       </CardHeader>
       
-      <CardContent className="pt-5">
-        <div className="flex flex-wrap gap-2 mb-6">
+      <CardContent className="pt-4">
+        <div className="flex flex-wrap gap-2 mb-5">
           {availableTags.map(tag => (
             <button
               key={tag.id}
@@ -280,45 +280,46 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
               return (
                 <div 
                   key={topic.id} 
-                  className={`border border-gray-100 rounded-xl overflow-hidden 
+                  className={`border border-gray-200 rounded-xl overflow-hidden 
                     ${selectedTopicId === topic.id ? 
-                      'ring-2 ring-gray-300 shadow-md bg-gray-50' : 'bg-white'} 
-                    ${isCompact ? 'hover:bg-gray-50 transition-colors cursor-pointer' : 'hover:shadow-md transition-shadow'}
-                    ${isCompact ? 'min-h-[280px] flex flex-col' : ''}
-                    shadow-sm`}
+                      'ring-2 ring-gray-400 shadow-lg bg-gray-50' : 'bg-white'} 
+                    ${isCompact ? 'hover:bg-gray-50 transition-colors cursor-pointer' : 'hover:shadow-lg transition-shadow'}
+                    ${isCompact ? 'min-h-[260px] flex flex-col' : ''}`}
                   onClick={isCompact ? () => handleSelectTopic(topic) : undefined}
                 >
                   {/* Header */}
-                  <div className="bg-white p-4 pb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="outline" className="bg-gray-50 text-gray-600 text-xs font-medium border-gray-200 px-2 py-1">
+                  <div className="bg-gray-100 border-b border-gray-200 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="bg-gray-200 text-gray-700 text-xs font-medium border-gray-300">
                         {topic.tag}
                       </Badge>
-                      <div className="flex items-center bg-gray-50 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full border border-gray-200">
-                        <topic.sentiment.icon size={12} className={`mr-1.5 ${topic.sentiment.color}`} />
-                        <span className="capitalize text-xs">
+                      <div className={`flex items-center bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full`}>
+                        <topic.sentiment.icon size={12} className={`mr-1 ${topic.sentiment.color}`} />
+                        <span className="capitalize">
                           {topic.sentiment.type}
                         </span>
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                      {cleanHeader(topic.header)}
-                    </h3>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-base font-semibold text-gray-900 truncate pr-2">
+                        {cleanHeader(topic.header)}
+                      </h3>
+                    </div>
                   </div>
                   
                   {/* Content */}
                   {!isCompact ? (
-                    <div className="px-4 pb-4 bg-white">
-                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">{topic.context}</p>
+                    <div className="p-4 bg-white">
+                      <p className="text-sm text-gray-600 mb-4">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-5">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Key Points</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
                           <ul className="space-y-2">
                             {topic.subTopics.map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700">
-                                <span className="text-gray-400 mr-2 flex-shrink-0 mt-0.5">•</span>
-                                <span className="leading-relaxed">{subtopic}</span>
+                                <span className="text-gray-500 mr-2 flex-shrink-0 mt-0.5">•</span>
+                                <span>{subtopic}</span>
                               </li>
                             ))}
                           </ul>
@@ -329,39 +330,39 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                         <Button 
                           size="sm" 
                           onClick={() => handleUseTopic(topic)}
-                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-6 py-2 font-medium shadow-sm"
+                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-4"
                         >
                           Use Topic
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <div className="px-4 pb-4 bg-white flex flex-col flex-grow">
+                    <div className="p-3 bg-white flex flex-col flex-grow">
                       {/* Expanded content for grid view */}
-                      <p className="text-sm text-gray-600 mb-3 leading-relaxed">{topic.context}</p>
+                      <p className="text-sm text-gray-600 mb-3 text-[1.05rem]">{topic.context}</p>
                       
                       {topic.subTopics.length > 0 && (
-                        <div className="mb-4 flex-grow">
+                        <div className="mb-3 flex-grow">
                           <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Key Points</h4>
-                          <ul className="space-y-2">
+                          <ul className="space-y-1.5">
                             {topic.subTopics.map((subtopic, idx) => (
-                              <li key={idx} className="flex items-start text-sm text-gray-700">
-                                <span className="text-gray-400 mr-2 flex-shrink-0 mt-0.5">•</span>
-                                <span className="leading-relaxed">{subtopic}</span>
+                              <li key={idx} className="flex items-start text-sm text-gray-700 text-[1.05rem]">
+                                <span className="text-gray-500 mr-1 flex-shrink-0 mt-0.5">•</span>
+                                <span>{subtopic}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
                       
-                      <div className="mt-auto pt-3">
+                      <div className="mt-auto pt-2">
                         <Button 
                           size="sm" 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleUseTopic(topic);
                           }}
-                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-6 py-2 font-medium w-full shadow-sm"
+                          className="bg-[#1DA1F2] hover:bg-[#1A91DA] text-white rounded-full text-sm px-4 w-full"
                         >
                           Use Topic
                         </Button>
