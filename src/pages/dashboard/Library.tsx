@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,27 +33,63 @@ interface Newsletter {
   markdown_text: string | null;
 }
 
-// Content parsing utility functions
+// HTML cleaning utility function
+const stripHtmlTags = (text: string): string => {
+  if (!text) return '';
+  
+  // Remove HTML tags
+  let cleaned = text.replace(/<[^>]*>/g, '');
+  
+  // Decode common HTML entities
+  cleaned = cleaned
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+  
+  // Clean up extra whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
+};
+
+// Enhanced content parsing utility functions
 const extractTitle = (markdown: string | null): string => {
   if (!markdown) return "Newsletter";
   
-  // Look for first heading (# Title)
+  // Look for first heading (# Title) and clean it
   const headingMatch = markdown.match(/^#+\s*(.+)$/m);
   if (headingMatch) {
-    return headingMatch[1].trim();
+    const cleanTitle = stripHtmlTags(headingMatch[1].trim());
+    return cleanTitle || "Newsletter";
   }
   
-  // Fallback to first line of substantial text
+  // Fallback to first line of substantial text, but be smarter about it
   const lines = markdown.split('\n').filter(line => line.trim().length > 0);
-  const firstTextLine = lines.find(line => 
-    !line.startsWith('#') && 
-    !line.startsWith('![') && 
-    !line.startsWith('*') &&
-    !line.startsWith('-') &&
-    line.trim().length > 10
-  );
   
-  return firstTextLine ? truncateText(firstTextLine.trim(), 50) : "Newsletter";
+  for (const line of lines) {
+    // Skip lines that are mostly HTML or markdown syntax
+    if (line.startsWith('#') || 
+        line.startsWith('![') || 
+        line.startsWith('*') ||
+        line.startsWith('-') ||
+        line.match(/^<[^>]+>.*<\/[^>]+>$/)) {
+      continue;
+    }
+    
+    // Clean the line and check if it has substantial text
+    const cleanedLine = stripHtmlTags(line.trim());
+    
+    // Only use lines with substantial content (more than 10 characters after cleaning)
+    if (cleanedLine.length > 10) {
+      return truncateText(cleanedLine, 50);
+    }
+  }
+  
+  return "Newsletter";
 };
 
 const extractFirstImage = (markdown: string | null): string | null => {
