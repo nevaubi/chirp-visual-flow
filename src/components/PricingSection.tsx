@@ -55,21 +55,21 @@ const PricingCard = ({
         Your Plan
       </div>
     )}
-    <CardHeader className="pt-8 pb-6 px-6">
+    <CardHeader className="pt-8 pb-6 px-6 text-left">
       <div className="mb-5">
         {platformIcon}
       </div>
-      <CardTitle className="text-[22px] font-bold text-[#1a365d] leading-tight mb-2">{title}</CardTitle>
+      <CardTitle className="text-[22px] font-bold text-[#1a365d] leading-tight mb-2 text-left">{title}</CardTitle>
       <div className="flex items-baseline gap-1 mt-4 mb-1">
         <span className="text-[42px] font-bold text-[#1a365d]">{price}</span>
         <span className="text-base text-[#64748b] font-medium">/month</span>
       </div>
-      <CardDescription className="text-[#64748b] text-base leading-relaxed min-h-[80px]">{description}</CardDescription>
+      <CardDescription className="text-[#64748b] text-base leading-relaxed min-h-[80px] text-left">{description}</CardDescription>
     </CardHeader>
     <CardContent className="px-6 pb-0">
       <ul className="space-y-4">
         {features.map((feature, i) => (
-          <li key={i} className="flex items-center gap-3">
+          <li key={i} className="flex items-center gap-3 text-left">
             <Check className="h-5 w-5 shrink-0 text-[#0ea5e9]" />
             <span className="text-[#4a5568] text-[15px]">{feature}</span>
           </li>
@@ -79,7 +79,7 @@ const PricingCard = ({
     <CardFooter className="px-6 pt-8 pb-8">
       {isSubscribed ? (
         <Button 
-          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-md font-semibold text-base", buttonClassName)}
+          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-md font-semibold text-base text-center", buttonClassName)}
           onClick={() => handleManageSubscription()}
           disabled={isLoading}
         >
@@ -87,7 +87,7 @@ const PricingCard = ({
         </Button>
       ) : (
         <Button 
-          className={cn("w-full py-3.5 rounded-md font-semibold text-base transition-all duration-300", buttonClassName)}
+          className={cn("w-full py-3.5 rounded-md font-semibold text-base transition-all duration-300 text-center", buttonClassName)}
           onClick={() => onPurchase(priceId)}
           disabled={isLoading}
         >
@@ -191,7 +191,7 @@ const PricingSection = () => {
   const newsletterCard = {
     title: "Auto Newsletter Platform",
     price: "$10",
-    description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
+    description: "Your bookmarks → professional newsletters",
     features: [
       <span><strong>20 monthly newsletters</strong></span>,
       "Easy X (Twitter) integration",
