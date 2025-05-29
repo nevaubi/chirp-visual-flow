@@ -244,9 +244,10 @@ const Library = () => {
     setDialogOpen(true);
   };
 
-  // === replace the whole downloadAsPDF function with this ===============
-const downloadAsPDF = async () => {
-  if (!selectedNewsletter) return;
+  // -- downloadAsPDF: works from modal OR card overlay ------------------
+const downloadAsPDF = async (newsletterOverride?: Newsletter) => {
+  const newsletter = newsletterOverride || selectedNewsletter;
+  if (!newsletter) return;
 
   setIsPdfGenerating(true);
 
@@ -254,44 +255,24 @@ const downloadAsPDF = async () => {
     const element = document.getElementById("newsletter-content");
     if (!element) throw new Error("Newsletter content not found");
 
-    /* ------------------------------------------------------------------
-       1.  Work out how tall the rendered element is *in millimetres*.
-           1 CSS pixel  ≈  0.264583 mm
-    ------------------------------------------------------------------ */
-    const rect       = element.getBoundingClientRect();
-    const widthPx    = rect.width;
-    const heightPx   = rect.height;
-    const pxToMm     = (px: number) => px * 0.264583;
-    const widthMm    = pxToMm(widthPx);
-    const heightMm   = pxToMm(heightPx);
+    /* measure the rendered height, pick custom page size */
+    const pxToMm = (px: number) => px * 0.264583;
+    const rect   = element.getBoundingClientRect();
+    const page   = [pxToMm(rect.width), pxToMm(rect.height)]; // [w,h] in mm
+    const tooTall = page[1] > 5080;                           // 200-inch guard
 
-    /* Guard-rail: jsPDF (and some PDF readers) refuse pages > 14 400 pt
-       ≈  5080 mm.  If the page would be taller, fall back to multi-page. */
-    const jsPdfPageMaxMm = 5080;
-    const isTooTall      = heightMm > jsPdfPageMaxMm;
-
-    /* ------------------------------------------------------------------
-       2.  Build the pdf-options object.
-           - custom page size = [ widthMm , heightMm ]
-           - turn off html2pdf’s automatic page-breaking
-    ------------------------------------------------------------------ */
     const opt: html2pdf.Options = {
-      margin:       10,                 // add a small white border
-      filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
-      image:        { type: "jpeg", quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
-      pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
-      jsPDF:        {
-        unit: "mm",
-        // use custom size unless the doc would blow past reader limits
-        format: isTooTall ? "a4" : [widthMm, heightMm],
-        orientation: widthMm >= heightMm ? "landscape" : "portrait"
-      }
+      margin: 10,
+      filename: `newsletter-${format(
+        new Date(newsletter.created_at),
+        "yyyy-MM-dd"
+      )}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+      pagebreak: { mode: tooTall ? ["css", "legacy"] : ["avoid-all"] },
+      jsPDF: { unit: "mm", format: tooTall ? "a4" : page }
     };
 
-    /* ------------------------------------------------------------------
-       3.  Generate and save
-    ------------------------------------------------------------------ */
     await html2pdf().set(opt).from(element).save();
     toast.success("PDF downloaded successfully!");
   } catch (err) {
@@ -301,6 +282,7 @@ const downloadAsPDF = async () => {
     setIsPdfGenerating(false);
   }
 };
+
 
 
   return (
@@ -384,107 +366,73 @@ const downloadAsPDF = async () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
-              <AspectRatio ratio={4/3}>
-                <div className="flex flex-col h-full p-3">
-                  <Skeleton className="h-4 w-16 mb-2" />
-                  <Skeleton className="h-16 w-full mb-2" />
-                  <Skeleton className="h-3 w-full mb-1" />
-                  <Skeleton className="h-3 w-3/4" />
-                </div>
-              </AspectRatio>
-            </Card>
-          ))}
+              <AspectRatio ratio={4 / 3}>
+  <div className="flex flex-col h-full">
+    {/* ─── Date badge ─────────────────────────────────────────────── */}
+    <div className="absolute top-2 right-2 z-10">
+      <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
+        {formatShortDate(newsletter.created_at)}
+      </span>
+    </div>
+
+    {/* ─── Floating download button ──────────────────────────────── */}
+    <Button
+      variant="ghost"
+      size="icon"
+      className="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white"
+      onClick={(e) => {
+        e.stopPropagation();        // keep the card from opening the modal
+        downloadAsPDF(newsletter);  // download THIS newsletter
+      }}
+    >
+      <Download className="h-4 w-4 text-primary" />
+    </Button>
+
+    {/* ─── Image / icon section ──────────────────────────────────── */}
+    <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
+      {firstImage ? (
+        <img
+          src={firstImage}
+          alt="Newsletter preview"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          onError={(e) => {
+            const img      = e.currentTarget as HTMLImageElement;
+            const fallback = img.nextElementSibling as HTMLElement;
+            img.style.display = "none";
+            if (fallback) fallback.style.display = "flex";
+          }}
+        />
+      ) : null}
+      <div className={`${firstImage ? "hidden" : "flex"} items-center justify-center w-full h-full`}>
+        <FileText className="h-8 w-8 text-primary/60" />
+      </div>
+    </div>
+
+    {/* ─── Content section ───────────────────────────────────────── */}
+    <div className="flex-1 p-3 flex flex-col justify-between">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
+          {title}
+        </h3>
+        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+          Newsletter content from {format(new Date(newsletter.created_at), "MMM d")}
+        </p>
+      </div>
+
+      {/* bottom indicator */}
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+          <span className="text-xs text-gray-400 font-medium">Newsletter</span>
         </div>
-      ) : error ? (
-        // Error state
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
-          <p>Unable to load newsletters: {error.message}</p>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="w-1 h-1 bg-primary rounded-full" />
         </div>
-      ) : filteredNewsletters.length === 0 ? (
-        // Empty state
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-          <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-600 mb-1">
-            No newsletters found for this period
-          </h3>
-          <p className="text-gray-500">
-            Try selecting a different date range or generate some newsletters.
-          </p>
-        </div>
-      ) : (
-        // Display newsletters grouped by date
-        <div className="space-y-8">
-          {sortedDates.map((date) => (
-            <div key={date}>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                {formatGroupDate(date)}
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {groupedNewsletters[date].map((newsletter) => {
-                  const title = extractTitle(newsletter.markdown_text);
-                  const firstImage = extractFirstImage(newsletter.markdown_text);
-                  
-                  return (
-                    <Card 
-                      key={newsletter.id} 
-                      className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20 group"
-                      onClick={() => viewNewsletter(newsletter)}
-                    >
-                      <AspectRatio ratio={4/3}>
-                        <div className="flex flex-col h-full">
-                          {/* Date Badge */}
-                          <div className="absolute top-2 right-2 z-10">
-                            <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
-                              {formatShortDate(newsletter.created_at)}
-                            </span>
-                          </div>
-                          
-                          {/* Image/Icon Section */}
-                          <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
-                            {firstImage ? (
-                              <img 
-                                src={firstImage} 
-                                alt="Newsletter preview" 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                onError={(e) => {
-                                  const img = e.currentTarget as HTMLImageElement;
-                                  const fallback = img.nextElementSibling as HTMLElement;
-                                  img.style.display = 'none';
-                                  if (fallback) {
-                                    fallback.style.display = 'flex';
-                                  }
-                                }}
-                              />
-                            ) : null}
-                            <div className={`${firstImage ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
-                              <FileText className="h-8 w-8 text-primary/60" />
-                            </div>
-                          </div>
-                          
-                          {/* Content Section */}
-                          <div className="flex-1 p-3 flex flex-col justify-between">
-                            <div>
-                              <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
-                                {title}
-                              </h3>
-                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-                                Newsletter content from {format(new Date(newsletter.created_at), 'MMM d')}
-                              </p>
-                            </div>
-                            
-                            {/* Bottom indicator */}
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                              <div className="flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                                <span className="text-xs text-gray-400 font-medium">Newsletter</span>
-                              </div>
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="w-1 h-1 bg-primary rounded-full"></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </AspectRatio>
+      </div>
+    </div>
+  </div>
+</AspectRatio>
+
                     </Card>
                   );
                 })}
