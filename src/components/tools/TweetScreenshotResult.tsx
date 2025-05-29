@@ -37,10 +37,10 @@ const TweetScreenshotResult = ({ image }: TweetScreenshotResultProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="border rounded-lg overflow-hidden shadow-sm mx-auto w-10/12 max-w-lg">
-        <img
-          src={image}
-          alt="Tweet Screenshot"
+      <div className="border rounded-lg overflow-hidden shadow-sm mx-auto max-w-md">
+        <img 
+          src={image} 
+          alt="Tweet Screenshot" 
           className="w-full h-auto"
         />
       </div>
