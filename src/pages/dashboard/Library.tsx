@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -305,14 +306,16 @@ const downloadAsPDF = async () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Mobile-optimized header */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        {/* Icon and Title Row */}
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
           <h1 className="text-2xl font-bold">Newsletter Library</h1>
         </div>
         
-        {/* Date Controls */}
-        <div className="flex items-center gap-2">
+        {/* Date Controls Row - Mobile: Full width below title, Desktop: Right side */}
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:gap-2 sm:space-y-0">
           {/* Quick Range Buttons */}
           <div className="flex gap-1">
             <Button
@@ -320,6 +323,7 @@ const downloadAsPDF = async () => {
               size="sm"
               onClick={() => setQuickRange(7)}
               className={cn(
+                "flex-1 sm:flex-none",
                 dateRange.start.getTime() === subDays(new Date(), 6).getTime() && 
                 dateRange.end.getTime() === new Date().getTime() && "bg-primary/10"
               )}
@@ -330,6 +334,7 @@ const downloadAsPDF = async () => {
               variant="outline"
               size="sm"
               onClick={() => setQuickRange(30)}
+              className="flex-1 sm:flex-none"
             >
               30 days
             </Button>
@@ -341,15 +346,16 @@ const downloadAsPDF = async () => {
               variant="outline"
               size="sm"
               onClick={() => navigateWeek('prev')}
+              className="flex-1 sm:flex-none"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="min-w-[140px]">
+                <Button variant="outline" size="sm" className="flex-1 sm:min-w-[140px]">
                   <CalendarIcon className="h-4 w-4 mr-2" />
-                  {format(selectedDate, 'MMM d, yyyy')}
+                  <span className="truncate">{format(selectedDate, 'MMM d, yyyy')}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
@@ -367,6 +373,7 @@ const downloadAsPDF = async () => {
               variant="outline"
               size="sm"
               onClick={() => navigateWeek('next')}
+              className="flex-1 sm:flex-none"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
