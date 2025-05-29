@@ -282,6 +282,19 @@ const WalkthroughPopup = ({
     startPkceAuth();
   };
 
+  // Handle Terms and Privacy link clicks with proper event handling
+  const handleTermsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowTermsModal(true);
+  };
+
+  const handlePrivacyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPrivacyModal(true);
+  };
+
   // Content based on platform and step
   const getContent = () => {
     if (isCreatorPlatform) {
@@ -290,15 +303,15 @@ const WalkthroughPopup = ({
         icon: null,
         title: "All we need to get started is...",
         description: (
-          <div className="text-left space-y-4">
-            {/* Account Information Section - More compact */}
-            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Account Information</h3>
+          <div className="text-left space-y-3">
+            {/* Account Information Section - Compact */}
+            <div className="bg-gray-50 rounded-lg p-2.5 space-y-2.5">
+              <h3 className="text-xs font-semibold text-gray-700">Account Information</h3>
               
-              <div className="space-y-1.5">
-                <Label htmlFor="timezone" className="text-sm font-medium">Your Timezone:</Label>
+              <div className="space-y-1">
+                <Label htmlFor="timezone" className="text-xs font-medium">Your Timezone:</Label>
                 <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger id="timezone" className="w-full bg-white h-9">
+                  <SelectTrigger id="timezone" className="w-full bg-white h-8 text-sm">
                     <SelectValue placeholder="Select timezone" />
                   </SelectTrigger>
                   <SelectContent>
@@ -313,45 +326,45 @@ const WalkthroughPopup = ({
                 </Select>
               </div>
               
-              <div className="space-y-1.5">
-                <Label htmlFor="handle" className="text-sm font-medium">Your account handle '@':</Label>
+              <div className="space-y-1">
+                <Label htmlFor="handle" className="text-xs font-medium">Your account handle '@':</Label>
                 <Input 
                   id="handle" 
                   placeholder="@username" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className={cn("bg-white h-9", verificationError && "border-red-500")}
+                  className={cn("bg-white h-8 text-sm", verificationError && "border-red-500")}
                 />
                 {verificationError && (
-                  <p className="text-sm text-red-500 mt-1">{verificationError}</p>
+                  <p className="text-xs text-red-500 mt-1">{verificationError}</p>
                 )}
               </div>
             </div>
             
-            {/* Permissions Section - More compact */}
-            <div className="border border-gray-200 rounded-lg p-3 bg-blue-50/30">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Permissions</h3>
-              <div className="flex items-start space-x-3">
+            {/* Permissions Section - Compact */}
+            <div className="border border-gray-200 rounded-lg p-2.5 bg-blue-50/30">
+              <h3 className="text-xs font-semibold text-gray-700 mb-2">Permissions</h3>
+              <div className="flex items-start space-x-2.5">
                 <Checkbox 
                   id="permission" 
                   checked={permission}
                   onCheckedChange={(checked) => setPermission(checked as boolean)}
-                  className="mt-0.5"
+                  className="mt-0.5 h-3.5 w-3.5"
                 />
                 <div className="grid gap-1 leading-none">
-                  <Label htmlFor="permission" className="text-sm font-medium leading-relaxed">
+                  <Label htmlFor="permission" className="text-xs font-medium leading-relaxed">
                     Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
                   </Label>
                   <div className="text-xs text-muted-foreground">
                     <button 
                       type="button"
-                      onClick={() => setShowTermsModal(true)}
+                      onClick={handleTermsClick}
                       className="text-blue-600 hover:underline cursor-pointer"
                     >
                       Terms of Service
                     </button> & <button 
                       type="button"
-                      onClick={() => setShowPrivacyModal(true)}
+                      onClick={handlePrivacyClick}
                       className="text-blue-600 hover:underline cursor-pointer"
                     >
                       Privacy Policy
@@ -361,9 +374,9 @@ const WalkthroughPopup = ({
               </div>
             </div>
             
-            {/* Ready Section - More compact */}
-            <div className="bg-[#0087C8]/5 border border-[#0087C8]/20 rounded-lg p-3 text-center">
-              <p className="font-semibold text-gray-800 text-sm">Ready to get started?</p>
+            {/* Ready Section - Compact */}
+            <div className="bg-[#0087C8]/5 border border-[#0087C8]/20 rounded-lg p-2.5 text-center">
+              <p className="font-semibold text-gray-800 text-xs">Ready to get started?</p>
             </div>
           </div>
         ),
@@ -445,51 +458,61 @@ const WalkthroughPopup = ({
     <Dialog open={open}>
       <DialogContent
         className={cn(
-          "rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg",
-          // Remove overflow-y-auto for creator platform to prevent scrolling
-          isCreatorPlatform ? "max-h-[90vh] overflow-x-hidden" : "max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden"
+          "rounded-2xl shadow-xl p-0 font-sans w-[95%]",
+          // Different sizing and overflow behavior for creator vs newsletter platform
+          isCreatorPlatform ? 
+            "max-w-sm max-h-fit overflow-hidden" : 
+            "max-w-md sm:max-w-lg max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden"
         )}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
-        {/* Terms Modal Overlay - Fixed to completely cover content */}
+        {/* Terms Modal Overlay - Positioned to completely cover the dialog */}
         {showTermsModal && (
-          <div className="absolute inset-0 bg-white z-50 rounded-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b bg-white flex-shrink-0">
-              <h1 className="text-xl font-bold text-[#0087C8]">Terms of Service</h1>
+          <div className="absolute inset-0 bg-white z-[100] rounded-2xl flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
+              <h1 className="text-lg font-bold text-[#0087C8]">Terms of Service</h1>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowTermsModal(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowTermsModal(false);
+                }}
                 className="h-8 w-8 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <p className="text-gray-600 mb-6">Last updated: May 15, 2025</p>
+            <div className="flex-1 overflow-y-auto p-3">
+              <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
               <TermsContent />
             </div>
           </div>
         )}
 
-        {/* Privacy Modal Overlay - Fixed to completely cover content */}
+        {/* Privacy Modal Overlay - Positioned to completely cover the dialog */}
         {showPrivacyModal && (
-          <div className="absolute inset-0 bg-white z-50 rounded-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b bg-white flex-shrink-0">
-              <h1 className="text-xl font-bold text-[#0087C8]">Privacy Policy</h1>
+          <div className="absolute inset-0 bg-white z-[100] rounded-2xl flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
+              <h1 className="text-lg font-bold text-[#0087C8]">Privacy Policy</h1>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowPrivacyModal(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowPrivacyModal(false);
+                }}
                 className="h-8 w-8 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <p className="text-gray-600 mb-6">Last updated: May 15, 2025</p>
+            <div className="flex-1 overflow-y-auto p-3">
+              <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
               <PrivacyContent />
             </div>
           </div>
@@ -497,28 +520,29 @@ const WalkthroughPopup = ({
 
         {/* Main Walkthrough Content - Hidden when overlays are open */}
         <div className={cn(
-          showTermsModal || showPrivacyModal ? "hidden" : "block",
+          showTermsModal || showPrivacyModal ? "hidden" : "flex flex-col",
           // More compact padding for creator platform
-          isCreatorPlatform ? "p-4 sm:p-5" : "p-4 sm:p-6 md:p-8"
+          isCreatorPlatform ? "p-3 min-h-0" : "p-4 sm:p-6 md:p-8"
         )}>
-          {/* Header - More compact */}
+          {/* Header - More compact for creator platform */}
           <div className={cn(
-            "text-center",
-            isCreatorPlatform ? "mb-3" : "mb-4 sm:mb-6"
+            "text-center flex-shrink-0",
+            isCreatorPlatform ? "mb-2" : "mb-4 sm:mb-6"
           )}>
             <h1 className={cn(
               "font-bold text-gray-800",
-              isCreatorPlatform ? "text-lg sm:text-xl mb-1" : "text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2"
+              isCreatorPlatform ? "text-base sm:text-lg mb-1" : "text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2"
             )}>
               Welcome to your {platformType}!
             </h1>
           </div>
 
-          {/* Content - More compact */}
+          {/* Content - More compact for creator platform */}
           <div className={cn(
-            isCreatorPlatform ? "mb-4" : "mb-6 sm:mb-8"
+            "flex-1 min-h-0",
+            isCreatorPlatform ? "mb-3" : "mb-6 sm:mb-8"
           )}>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center h-full">
               {content.icon && (
                 <div className={cn(
                   "p-3 sm:p-4 rounded-full mb-4",
@@ -528,20 +552,20 @@ const WalkthroughPopup = ({
                 </div>
               )}
               <h2 className={cn(
-                "font-bold text-center",
-                isCreatorPlatform ? "text-base sm:text-lg mb-2" : "text-lg sm:text-xl mb-2 sm:mb-3"
+                "font-bold text-center flex-shrink-0",
+                isCreatorPlatform ? "text-sm sm:text-base mb-2" : "text-lg sm:text-xl mb-2 sm:mb-3"
               )}>{content.title}</h2>
               <div className={cn(
-                "text-gray-600 w-full",
-                isCreatorPlatform ? "text-sm" : "text-sm sm:text-base"
+                "text-gray-600 w-full flex-1 min-h-0",
+                isCreatorPlatform ? "text-xs" : "text-sm sm:text-base"
               )}>
                 {content.description}
               </div>
             </div>
           </div>
 
-          {/* Navigation - More compact */}
-          <div className="flex justify-between items-center">
+          {/* Navigation - More compact and fixed at bottom */}
+          <div className="flex justify-between items-center flex-shrink-0">
             {!isCreatorPlatform && !hasBookmarkToken ? (
               <div className="flex justify-end w-full">
                 <Button 
@@ -557,10 +581,10 @@ const WalkthroughPopup = ({
                 <Button 
                   onClick={handleNextStep}
                   className={cn(
-                    "px-6 py-2 font-medium",
+                    "font-medium",
                     isCreatorPlatform ? 
-                      "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
-                      "bg-amber-500 hover:bg-amber-600"
+                      "px-4 py-1.5 text-sm bg-[#0087C8] hover:bg-[#0087C8]/90" : 
+                      "px-6 py-2 bg-amber-500 hover:bg-amber-600"
                   )}
                   disabled={isCreatorPlatform && !isCreatorFormValid}
                 >
