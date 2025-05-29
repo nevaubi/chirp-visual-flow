@@ -264,25 +264,27 @@ const DashboardLayout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 py-6">
-            {isNewsletterPlatform && (
-              <Button
-                className={cn(
-                  "w-full mb-4 flex items-center gap-3 justify-start px-3",
-                  !expanded && "justify-center px-0",
-                  hasRequiredTier 
-                    ? "bg-amber-500 hover:bg-amber-600 text-white" 
-                    : "bg-amber-500/40 text-white/70 cursor-not-allowed"
-                )}
-                onClick={handleCreateNewsletter}
-                disabled={!hasRequiredTier}
-              >
-                <Bookmark size={20} />
-                {expanded && (
-                  <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
-                )}
-              </Button>
-            )}
             <ul className="space-y-2 px-2">
+              {isNewsletterPlatform && (
+                <li>
+                  <Button
+                    className={cn(
+                      "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
+                      !expanded && "justify-center px-0",
+                      hasRequiredTier 
+                        ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                        : "bg-amber-500/40 text-white/70 cursor-not-allowed"
+                    )}
+                    onClick={handleCreateNewsletter}
+                    disabled={!hasRequiredTier}
+                  >
+                    <Bookmark size={20} />
+                    {expanded && (
+                      <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
+                    )}
+                  </Button>
+                </li>
+              )}
               {sidebarItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
