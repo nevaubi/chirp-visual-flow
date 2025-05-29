@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -350,8 +351,12 @@ const Library = () => {
                                 alt="Newsletter preview" 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling!.style.display = 'flex';
+                                  const img = e.currentTarget as HTMLImageElement;
+                                  const fallback = img.nextElementSibling as HTMLElement;
+                                  img.style.display = 'none';
+                                  if (fallback) {
+                                    fallback.style.display = 'flex';
+                                  }
                                 }}
                               />
                             ) : null}
