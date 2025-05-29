@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -258,7 +257,7 @@ const Library = () => {
         throw new Error('Newsletter content not found');
       }
 
-      // Enhanced PDF configuration for continuous content
+      // Fixed PDF configuration for capturing full content
       const opt = {
         margin: [10, 10, 10, 10],
         filename: `newsletter-${format(new Date(selectedNewsletter.created_at), 'yyyy-MM-dd')}.pdf`,
@@ -266,13 +265,11 @@ const Library = () => {
         html2canvas: { 
           scale: 2,
           useCORS: true,
-          allowTaint: true,
+          allowTaint: false,
           scrollX: 0,
           scrollY: 0,
           windowWidth: 1200,
-          height: window.innerHeight,
-          removeContainer: true,
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          removeContainer: true
         },
         jsPDF: { 
           unit: 'mm', 
