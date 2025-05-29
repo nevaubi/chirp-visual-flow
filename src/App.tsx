@@ -24,6 +24,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
 import GenerateTweets from "./pages/dashboard/GenerateTweets";
+import TermsOfService from "./pages/dashboard/TermsOfService";
+import PrivacyPolicy from "./pages/dashboard/PrivacyPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +67,8 @@ const App = () => (
                 <Route path="analytics" element={<Library />} />
                 <Route path="community" element={<GenerateTweets />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="termsofservice" element={<TermsOfService />} />
+                <Route path="privacypolicy" element={<PrivacyPolicy />} />
               </Route>
             </Route>
             
