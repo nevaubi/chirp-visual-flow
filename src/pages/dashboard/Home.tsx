@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -318,11 +317,11 @@ const NewsletterDashboard = ({ profile }) => {
     <div className="space-y-6">
       {/* Restructured header layout */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left side - Generate Newsletter CTA */}
+        {/* Left side - Visual indicator only */}
         <div className="lg:w-1/4">
           <Card className="border-2 border-[#0087C8] bg-gradient-to-r from-[#0087C8]/5 to-[#0087C8]/10 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6 pb-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-[#0087C8] text-white">
                   <ArrowLeft size={20} />
                 </div>
@@ -331,52 +330,38 @@ const NewsletterDashboard = ({ profile }) => {
                   <p className="text-sm text-gray-600">Create from your X bookmarks</p>
                 </div>
               </div>
-              <Button 
-                className="w-full bg-[#0087C8] hover:bg-[#0076b2] text-white"
-                disabled={!isSubscribed || remainingGenerations === 0}
-              >
-                <Bookmark className="mr-2 h-4 w-4" />
-                Start Generation
-              </Button>
-              {remainingGenerations > 0 && (
-                <p className="text-xs text-center text-gray-500 mt-2">
-                  {remainingGenerations} generations remaining
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Center - Welcome section */}
-        <div className="lg:w-3/4 text-center">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
-            <p className="text-xl text-gray-600 mb-4">Generate newsletters from your X bookmarks</p>
-            
-            {/* Step-by-step guidance moved below welcome text */}
-            <div className="text-base text-gray-600 flex flex-col items-center gap-2">
-              <p className="mb-2">To generate newsletters you need to:</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <div className="flex items-center gap-2">
+        {/* Center and Right - Welcome and Instructions */}
+        <div className="lg:w-3/4 flex flex-col lg:flex-row gap-6">
+          {/* Center - Welcome text only */}
+          <div className="lg:w-1/2 flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+            </div>
+          </div>
+          
+          {/* Right - Instructions */}
+          <div className="lg:w-1/2 flex items-center justify-end">
+            <div className="text-right">
+              <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-end gap-2">
+                  <span>Authorize X access via popup</span>
                   <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
                     1
                   </div>
-                  <span>Authorize X access via popup</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
+                  <span>Upgrade to subscription</span>
                   <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
                     2
                   </div>
-                  <span>Upgrade to subscription</span>
                 </div>
               </div>
             </div>
-            
-            {isLoading && (
-              <p className="text-sm text-amber-600 mt-3">
-                <Clock size={16} className="inline mr-1" /> Newsletter generation in progress...
-              </p>
-            )}
           </div>
         </div>
       </div>
