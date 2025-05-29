@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Bookmark } from "lucide-react";
@@ -59,9 +60,9 @@ const PricingCard = ({
       <div className="mb-5">
         {platformIcon}
       </div>
-      <CardTitle className="text-[22px] font-bold text-[#1a365d] leading-tight mb-2 text-left">{title}</CardTitle>
+      <CardTitle className="text-[22px] font-normal text-[#1a365d] leading-tight mb-2 text-left">{title}</CardTitle>
       <div className="flex items-baseline gap-1 mt-4 mb-1">
-        <span className="text-[42px] font-bold text-[#1a365d]">{price}</span>
+        <span className="text-[52px] font-bold text-[#4a5568]">{price}</span>
         <span className="text-base text-[#64748b] font-medium">/month</span>
       </div>
       <CardDescription className="text-[#64748b] text-base leading-relaxed min-h-[80px] text-left">{description}</CardDescription>
