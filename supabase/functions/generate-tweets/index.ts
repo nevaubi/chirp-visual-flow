@@ -114,7 +114,7 @@ TWEET GENERATIONS DIFFERENTIATION STRATEGY:
 
 FORMAT REQUIREMENTS:
 - Present each generated tweet inside <tweet1></tweet1>, <tweet2></tweet2>, and <tweet3></tweet3> tags
-- Vary the tweet lengths between 50 and 270 text characters with each tweet iteration a different length
+- Vary the tweet lengths between 200 and 300 text characters with each tweet iteration a different length
 - Include ONLY the tweet text within each tag with no explanations or meta-commentary
 - Remember to follow your personal voice profile and analysis for all three tweet iterations`;
 
@@ -137,12 +137,18 @@ Here is your personal unique voice profile and analysis for you to deeply embody
 ${voiceProfileAnalysis}
 </voice profile>
 
+Here are examples of your top tweets. You must thoroughly read through each tweet example in the list, learning and analyzing as you progress. As you read through your top tweets list, internalize the writing patterns, tone, style, formatting, behaviors, etc (ignore all @ references and urls):
+<top tweets>
+${topTweetsList}
+</top tweets>
+
+
 GUIDELINES FOR YOUR TWEETS:
 - All three tweets must authentically match your personal writing style
 - Each tweet should take a different approach/angle to the topic
-- All tweets must stay within the 280 character limit
+- All tweets must stay within the 200-300 character limit
 - Make each tweet distinct and valuable in different ways
-- Use your exact vocabulary, sentence structure, punctuation, and formatting style
+- Use your exact vocabulary, sentence structure, punctuation, and formatting style that you learned and internalized by reading and studying your top tweets list
 - Incorporate your unique expressions and quirks if applicable
 - DO NOT USE HASHTAGS AT ALL
 - DO NOT USE EM DASHES AT ALL
@@ -174,8 +180,8 @@ Generate three different tweet options in your exact writing style, presenting e
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 1000
+        temperature: 0.5,
+        max_tokens: 1200
       })
     });
 
