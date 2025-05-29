@@ -35,8 +35,8 @@ const TweetCountOption = ({
     className={cn(
       "flex flex-col items-center justify-center p-4 cursor-pointer border-2 transition-all",
       selected 
-        ? "border-amber-500 bg-amber-50" 
-        : "border-gray-200 hover:border-amber-300 hover:bg-amber-50/50"
+        ? "border-[#FF6B35] bg-[#FF6B35]/10" 
+        : "border-gray-200 hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5"
     )}
     onClick={onSelect}
   >
@@ -230,8 +230,8 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                     {/* Newsletter paper */}
                     <div className={`absolute top-0 left-0 w-48 h-64 bg-white border-2 ${progress >= 100 ? 'border-green-400' : 'border-gray-300'} rounded-md shadow-lg overflow-hidden flex flex-col transition-colors duration-300`}>
                       {/* Newsletter header with pulse effect */}
-                      <div className={`h-10 w-full ${progress >= 100 ? 'bg-gradient-to-r from-green-50 to-green-100' : 'bg-gradient-to-r from-amber-50 to-amber-100'} border-b ${progress >= 100 ? 'border-green-200' : 'border-amber-200'} flex items-center justify-center transition-colors duration-300`}>
-                        <div className={`w-24 h-3 ${progress >= 100 ? 'bg-green-400' : 'bg-amber-400'} rounded-full relative overflow-hidden transition-colors duration-300`}>
+                      <div className={`h-10 w-full ${progress >= 100 ? 'bg-gradient-to-r from-green-50 to-green-100' : 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FF6B35]/20'} border-b ${progress >= 100 ? 'border-green-200' : 'border-[#FF6B35]/30'} flex items-center justify-center transition-colors duration-300`}>
+                        <div className={`w-24 h-3 ${progress >= 100 ? 'bg-green-400' : 'bg-[#FF6B35]'} rounded-full relative overflow-hidden transition-colors duration-300`}>
                           <div className="absolute inset-0 overflow-hidden">
                             <div className="h-full w-full animate-shimmer bg-gradient-to-r from-transparent via-white via-20% to-transparent to-40% bg-opacity-20"></div>
                           </div>
@@ -243,11 +243,11 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                         {/* Content lines that appear based on progress - with staggered delays and varied widths */}
                         <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out transform ${progress > 10 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-amber-300 to-amber-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-100 transform ${progress > 20 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-3 transition-all duration-700 ease-out delay-100 transform ${progress > 20 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
                         <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-200 transform ${progress > 30 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-amber-300 to-amber-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-300 transform ${progress > 40 ? 'w-4/5 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-3 transition-all duration-700 ease-out delay-300 transform ${progress > 40 ? 'w-4/5 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
                         <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-400 transform ${progress > 50 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
@@ -271,10 +271,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                           const fallSpeed = 1.5 + Math.random() * 3.5;
                           const delay = Math.random() * 1.2;
                           
-                          // Vibrant colors - yellows and ambers only
+                          // Vibrant colors - now using orange variations
                           const colors = [
-                            'bg-amber-400', 'bg-amber-500',
-                            'bg-yellow-300', 'bg-yellow-400', 'bg-orange-400'
+                            'bg-[#FF6B35]', 'bg-[#FF6B35]/80',
+                            'bg-orange-400', 'bg-orange-500', 'bg-red-400'
                           ];
                           const color = colors[Math.floor(Math.random() * colors.length)];
                           
@@ -328,12 +328,12 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                         // Different sizes for depth effect
                         const size = 32 + (i % 3 * 4);
                         
-                        // Different colors for visual interest
+                        // Different colors for visual interest - using orange variations
                         const colors = [
-                          'text-amber-500', 
-                          'text-amber-400', 
-                          'text-yellow-500',
-                          'text-orange-400'
+                          'text-[#FF6B35]', 
+                          'text-[#FF6B35]/80', 
+                          'text-orange-500',
+                          'text-red-400'
                         ];
                         const colorClass = colors[i % colors.length];
                         
@@ -370,11 +370,11 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                         // Small sizes for background effect
                         const size = 15 + (i % 3 * 2);
                         
-                        // Different colors
+                        // Different colors - using orange variations
                         const colors = [
-                          'text-amber-300 opacity-40', 
-                          'text-amber-200 opacity-30', 
-                          'text-yellow-200 opacity-35'
+                          'text-[#FF6B35]/40 opacity-40', 
+                          'text-orange-300 opacity-30', 
+                          'text-orange-200 opacity-35'
                         ];
                         const colorClass = colors[i % colors.length];
                         
@@ -409,7 +409,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                     "transition-all duration-300",
                     progress >= 100 
                       ? "bg-gradient-to-r from-green-400 via-green-500 to-green-400" 
-                      : "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400"
+                      : "bg-gradient-to-r from-[#FF6B35] via-[#FF6B35]/80 to-[#FF6B35]"
                   )}
                 />
               </div>
@@ -443,7 +443,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
           )}
           
           <div className="py-4 space-y-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+            <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
               <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
             </div>
             
@@ -475,7 +475,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
             </div>
             <Button 
               type="button" 
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
               onClick={handleGenerate}
               disabled={isGenerating || displayRemainingGenerations <= 0}
             >
