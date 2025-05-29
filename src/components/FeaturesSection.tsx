@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Bookmark, Plus } from "lucide-react";
 
@@ -6,7 +5,7 @@ export default function FeaturesSection() {
   return (
     <section 
       id="features" 
-      className="py-4 md:py-12 relative bg-[#0087C8] -mt-1"
+      className="py-2 md:py-12 relative bg-[#0087C8] -mt-1"
     >
       <div className="container px-4 sm:px-8 mx-auto">
         <div className="flex flex-col md:flex-row -mt-[50px] md:-mt-[100px]">
@@ -29,8 +28,8 @@ export default function FeaturesSection() {
           </div>
           
           {/* Right column with animated text content - optimized for mobile */}
-          <div className="max-w-[500px] w-full ml-0 md:ml-20 mt-4 md:mt-0 text-white px-2 md:px-0">
-            <div className="space-y-3 md:space-y-6 md:space-y-8 pl-0 md:pl-2 md:pl-4">
+          <div className="max-w-[500px] w-full ml-0 md:ml-20 mt-2 md:mt-0 text-white px-2 md:px-0">
+            <div className="space-y-2 md:space-y-6 md:space-y-8 pl-0 md:pl-2 md:pl-4">
               <h2 
                 className="text-2xl md:text-3xl md:text-4xl font-bold opacity-0 text-center md:text-left" 
                 style={{
@@ -41,8 +40,9 @@ export default function FeaturesSection() {
                 What's your time worth?
               </h2>
               
+              {/* Hide this text on mobile only */}
               <div 
-                className="text-lg md:text-xl md:text-2xl font-semibold opacity-0 text-center md:text-left" 
+                className="hidden md:block text-lg md:text-xl md:text-2xl font-semibold opacity-0 text-center md:text-left" 
                 style={{
                   animation: "fadeInUp 0.7s ease-out forwards",
                   animationDelay: "0.6s"
