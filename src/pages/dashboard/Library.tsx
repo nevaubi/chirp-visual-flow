@@ -474,7 +474,7 @@ const downloadAsPDF = async () => {
                               <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
                                 {title}
                               </h3>
-                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 hidden sm:block">
                                 Newsletter content from {format(new Date(newsletter.created_at), 'MMM d')}
                               </p>
                             </div>
