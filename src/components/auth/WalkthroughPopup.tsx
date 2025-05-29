@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -291,69 +290,80 @@ const WalkthroughPopup = ({
         icon: null,
         title: "All we need to get started is...",
         description: (
-          <div className="text-left space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
-              <Select value={timezone} onValueChange={setTimezone}>
-                <SelectTrigger id="timezone" className="w-full">
-                  <SelectValue placeholder="Select timezone" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
-                  <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
-                  <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
-                  <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
-                  <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
-                  <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
-                  <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="text-left space-y-6">
+            {/* Account Information Section */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="timezone" className="text-sm font-medium">Your Timezone (for accurate info and posting):</Label>
+                <Select value={timezone} onValueChange={setTimezone}>
+                  <SelectTrigger id="timezone" className="w-full bg-white">
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                    <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                    <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                    <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
+                    <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
+                    <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
+                    <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="handle" className="text-sm font-medium">Your account handle '@' (of account you signed in with, for verification):</Label>
+                <Input 
+                  id="handle" 
+                  placeholder="@username" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className={cn("bg-white", verificationError && "border-red-500")}
+                />
+                {verificationError && (
+                  <p className="text-sm text-red-500 mt-1">{verificationError}</p>
+                )}
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
-              <Input 
-                id="handle" 
-                placeholder="@username" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={cn(verificationError && "border-red-500")}
-              />
-              {verificationError && (
-                <p className="text-sm text-red-500 mt-1">{verificationError}</p>
-              )}
-            </div>
-            
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="permission" 
-                checked={permission}
-                onCheckedChange={(checked) => setPermission(checked as boolean)}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label htmlFor="permission" className="text-sm font-normal">
-                  Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
-                </Label>
-                <div className="text-xs text-muted-foreground">
-                  <button 
-                    type="button"
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-blue-500 hover:underline cursor-pointer"
-                  >
-                    Terms of Service
-                  </button> & <button 
-                    type="button"
-                    onClick={() => setShowPrivacyModal(true)}
-                    className="text-blue-500 hover:underline cursor-pointer"
-                  >
-                    Privacy Policy
-                  </button>
+            {/* Permissions Section */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-blue-50/30">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Permissions</h3>
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="permission" 
+                  checked={permission}
+                  onCheckedChange={(checked) => setPermission(checked as boolean)}
+                  className="mt-0.5"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="permission" className="text-sm font-medium leading-relaxed">
+                    Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
+                  </Label>
+                  <div className="text-xs text-muted-foreground">
+                    <button 
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className="text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Terms of Service
+                    </button> & <button 
+                      type="button"
+                      onClick={() => setShowPrivacyModal(true)}
+                      className="text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Privacy Policy
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center justify-between pt-4">
-              <p className="font-medium">Ready to get started?</p>
+            {/* Ready Section */}
+            <div className="bg-[#0087C8]/5 border border-[#0087C8]/20 rounded-lg p-4 text-center">
+              <p className="font-semibold text-gray-800">Ready to get started?</p>
             </div>
           </div>
         ),
