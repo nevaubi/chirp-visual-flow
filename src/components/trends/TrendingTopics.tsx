@@ -236,7 +236,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   return (
     <Card className="shadow-md border border-gray-200 w-full bg-white">
       <CardHeader className="pb-3 border-b border-gray-200 bg-gray-50">
-        <CardTitle className="flex items-center justify-between text-lg font-semibold text-[#032d42]">
+        <CardTitle className="flex items-center justify-between text-lg font-semibold text-[#043952]">
           <div className="flex items-center gap-2">
             <TrendingUp className="text-gray-700 h-5 w-5" />
             <span>Trending Topics</span>
@@ -312,7 +312,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <h3 className="text-base font-semibold text-[#032d42] truncate pr-2">
+                      <h3 className="text-base font-semibold text-[#043952] truncate pr-2">
                         {cleanHeader(topic.header)}
                       </h3>
                     </div>
@@ -325,7 +325,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-5">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#032d42] mb-2">Key Points</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#043952] mb-2">Key Points</h4>
                           <ul className="space-y-2">
                             {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700">
@@ -354,7 +354,7 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
                       
                       {topic.subTopics.length > 0 && (
                         <div className="mb-3 flex-grow">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#032d42] mb-2">Key Points</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#043952] mb-2">Key Points</h4>
                           <ul className="space-y-1.5">
                             {topic.subTopics.slice(0, 1).map((subtopic, idx) => (
                               <li key={idx} className="flex items-start text-sm text-gray-700 text-[1.05rem]">
