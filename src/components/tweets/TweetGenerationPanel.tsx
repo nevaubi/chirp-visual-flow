@@ -460,7 +460,7 @@ const TweetGenerationPanel = ({
         </div>
       </div>
 
-      <PanelHeader showClose={isOpen} />
+      <PanelHeader showClose={false} />
       
       <div className="flex-1 w-[450px] max-h-full overflow-y-auto scrollbar-thin p-6 space-y-4 bg-gray-50">
         <div className="bg-white rounded-lg p-6 shadow-sm">
