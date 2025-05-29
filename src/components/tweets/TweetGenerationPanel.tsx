@@ -423,12 +423,12 @@ const TweetGenerationPanel = ({
     >
       {/* Handle for hover - increased width and height */}
       <div 
-        className="w-6 h-32 absolute top-20 -left-6 bg-[#0087C8] rounded-l-md flex items-center justify-center cursor-pointer animate-pulse-subtle overflow-hidden"
+        className="w-6 h-20 absolute top-4 -left-6 bg-gradient-to-b from-[#0087C8] to-[#0076b2] rounded-l-lg flex items-center justify-center cursor-pointer shadow-lg border border-r-0 border-[#0087C8]/20 overflow-hidden group"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
-        <div className="w-1 h-16 bg-white/60 rounded-full"></div>
-        {/* Glow effect overlay */}
-        <div className="absolute inset-0 bg-white/0 animate-glow-pulse"></div>
+        <div className="w-1 h-10 bg-white/80 rounded-full transition-all duration-200 group-hover:h-12 group-hover:bg-white"></div>
+        {/* Enhanced glow effect overlay */}
+        <div className="absolute inset-0 bg-white/0 animate-glow-pulse group-hover:bg-white/10 transition-all duration-200"></div>
       </div>
 
       <PanelHeader showClose={isOpen} />
