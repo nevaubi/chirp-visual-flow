@@ -44,17 +44,17 @@ export default function ReviewsSection({ profilePictures }: ReviewsSectionProps)
       {/* Stars and Text - stacked vertically on the right */}
       <div className="flex flex-col gap-1">
         {/* 5 Stars Row */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-0.5 justify-center">
           {[...Array(5)].map((_, index) => (
             <Star 
               key={index} 
-              className="w-4 h-4 fill-yellow-400 text-yellow-400" 
+              className="w-5 h-5 fill-yellow-400 text-yellow-400" 
             />
           ))}
         </div>
         
         {/* Text Content */}
-        <p className="text-sm text-gray-600 font-medium">
+        <p className="text-sm text-gray-600 font-medium text-center">
           5-stars from 100+ creators during pre-launch testing
         </p>
       </div>
