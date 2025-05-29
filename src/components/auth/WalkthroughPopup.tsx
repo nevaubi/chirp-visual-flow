@@ -39,18 +39,19 @@ const WalkthroughPopup = ({
   onComplete,
   isCreatorPlatform
 }: WalkthroughPopupProps) => {
-  // For newsletter platform, start directly at step 4 (the only step they'll see)
-  // For creator platform, start at step 1 as before
+  // For creator platform, start directly at step 1 (which will be the form step)
+  // For newsletter platform, start at step 4 as before
   const [currentStep, setCurrentStep] = useState(isCreatorPlatform ? 1 : 4);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>("Processing...");
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const totalSteps = 4;
+  // For creator platform: 1 step, for newsletter platform: 4 steps
+  const totalSteps = isCreatorPlatform ? 1 : 4;
   const { toast } = useToast();
   const { authState, updateProfile } = useAuth();
 
-  // Form state for creator platform step 4
+  // Form state for creator platform step 1 (previously step 4)
   const [timezone, setTimezone] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [permission, setPermission] = useState<boolean>(false);
@@ -126,7 +127,7 @@ const WalkthroughPopup = ({
     };
   }, [open, isCreatorPlatform, currentStep, hasBookmarkToken, isLoading, authState.user?.id]);
 
-  // Check if all required fields are filled for creator platform step 4
+  // Check if all required fields are filled for creator platform step 1 (previously step 4)
   const isCreatorFormValid = timezone && username && permission;
 
   const handleNextStep = async () => {
@@ -279,111 +280,66 @@ const WalkthroughPopup = ({
   // Content based on platform and step
   const getContent = () => {
     if (isCreatorPlatform) {
-      // Creator platform walkthrough content
-      switch (currentStep) {
-        case 1:
-          return {
-            icon: <Twitter className="h-10 w-10 text-[#0087C8]" />,
-            title: "Dashboard Overview",
-            description: "Profile analysis? Yes, but also, so much more. Let's get started.",
-          };
-        case 2:
-          return {
-            icon: <BarChart2 className="h-10 w-10 text-purple-500" />,
-            title: "Analytics Insights",
-            description: (
-              <div className="text-left">
-                <p>Right away we'll start with a profile scan for instant insights. You'll see:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>your best hour of the day for engagement</li>
-                  <li>performance by tweet type (photo, video, text)</li>
-                  <li>follower mapping and sentiment analysis (if paid)</li>
-                  <li>data driven suggestions for growth</li>
-                  <li>much more</li>
-                </ul>
-              </div>
-            ),
-          };
-        case 3:
-          return {
-            icon: <Activity className="h-10 w-10 text-[#FF6B35]" />,
-            title: "Tweet Generation",
-            description: (
-              <div className="text-left">
-                <p>Our AI learns your 'voice profile' to write tweets you'd be proud to post:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>auto-create high quality tweets in your voice</li>
-                  <li>daily trending topics based on your niche</li>
-                  <li>niche-specific viral tweets to reply to</li>
-                  <li>daily auto-refresh tweet inspiration</li>
-                  <li>seamless and (soon) scheduled posting</li>
-                </ul>
-              </div>
-            ),
-          };
-        case 4:
-          return {
-            icon: null,
-            title: "All we need to get started is...",
-            description: (
-              <div className="text-left space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
-                  <Select value={timezone} onValueChange={setTimezone}>
-                    <SelectTrigger id="timezone" className="w-full">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
-                      <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
-                      <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
-                      <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
-                      <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
-                  <Input 
-                    id="handle" 
-                    placeholder="@username" 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className={cn(verificationError && "border-red-500")}
-                  />
-                  {verificationError && (
-                    <p className="text-sm text-red-500 mt-1">{verificationError}</p>
-                  )}
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <Checkbox 
-                    id="permission" 
-                    checked={permission}
-                    onCheckedChange={(checked) => setPermission(checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label htmlFor="permission" className="text-sm font-normal">
-                      Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
-                    </Label>
-                    <div className="text-xs text-muted-foreground">
-                      <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between pt-4">
-                  <p className="font-medium">Ready to get started?</p>
+      // Creator platform walkthrough content - only show the form step
+      return {
+        icon: null,
+        title: "All we need to get started is...",
+        description: (
+          <div className="text-left space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone" className="w-full">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                  <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                  <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                  <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
+                  <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
+                  <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
+              <Input 
+                id="handle" 
+                placeholder="@username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={cn(verificationError && "border-red-500")}
+              />
+              {verificationError && (
+                <p className="text-sm text-red-500 mt-1">{verificationError}</p>
+              )}
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="permission" 
+                checked={permission}
+                onCheckedChange={(checked) => setPermission(checked as boolean)}
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="permission" className="text-sm font-normal">
+                  Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
+                </Label>
+                <div className="text-xs text-muted-foreground">
+                  <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
                 </div>
               </div>
-            ),
-          };
-        default:
-          return { icon: null, title: "", description: "" };
-      }
+            </div>
+            
+            <div className="flex items-center justify-between pt-4">
+              <p className="font-medium">Ready to get started?</p>
+            </div>
+          </div>
+        ),
+      };
     } else {
       // Newsletter platform content - only show step 4 content (the authorization step)
       return {
@@ -473,35 +429,6 @@ const WalkthroughPopup = ({
             </h1>
           </div>
 
-          {/* Breadcrumb - only show for creator platform */}
-          {isCreatorPlatform && (
-            <div className="mb-4 sm:mb-6">
-              <Breadcrumb>
-                <BreadcrumbList className="justify-center">
-                  {Array.from({ length: totalSteps }).map((_, index) => (
-                    <>
-                      {index > 0 && <BreadcrumbSeparator />}
-                      <BreadcrumbItem key={index}>
-                        <div 
-                          className={cn(
-                            "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-medium text-xs sm:text-sm",
-                            currentStep > index + 1 ? 
-                              "bg-green-500 text-white" : 
-                              currentStep === index + 1 ? 
-                                "bg-[#0087C8] text-white" : 
-                                "bg-gray-200 text-gray-500"
-                          )}
-                        >
-                          {index + 1}
-                        </div>
-                      </BreadcrumbItem>
-                    </>
-                  ))}
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-          )}
-
           {/* Content */}
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col items-center">
@@ -522,8 +449,8 @@ const WalkthroughPopup = ({
 
           {/* Navigation */}
           <div className="flex justify-between items-center">
-            {/* Show "Maybe Later" button only on step 4 for newsletter platform and only if token not found */}
-            {currentStep === totalSteps && !isCreatorPlatform && !hasBookmarkToken ? (
+            {/* Show "Maybe Later" button only for newsletter platform and only if token not found */}
+            {!isCreatorPlatform && !hasBookmarkToken ? (
               <div className="flex justify-end w-full">
                 <Button 
                   onClick={handleNextStep}
@@ -544,10 +471,10 @@ const WalkthroughPopup = ({
                       "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
                       "bg-amber-500 hover:bg-amber-600"
                   )}
-                  disabled={currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid}
+                  disabled={isCreatorPlatform && !isCreatorFormValid}
                 >
-                  {currentStep < totalSteps ? "Next" : "Finish"}
-                  {currentStep === totalSteps && isCreatorPlatform && !isCreatorFormValid && (
+                  Finish
+                  {isCreatorPlatform && !isCreatorFormValid && (
                     <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
                   )}
                 </Button>
