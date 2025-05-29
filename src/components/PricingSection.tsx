@@ -23,6 +23,7 @@ interface PricingCardProps {
   onPurchase: (priceId: string) => Promise<void>;
   isLoading?: boolean;
   isSubscribed?: boolean;
+  borderColor?: string;
 }
 
 const PricingCard = ({
@@ -39,11 +40,13 @@ const PricingCard = ({
   onPurchase,
   isLoading = false,
   isSubscribed = false,
+  borderColor,
 }: PricingCardProps) => (
   <Card className={cn(
-    "relative w-full max-w-[360px] mx-auto bg-white border-2 border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
+    "relative w-full max-w-[360px] mx-auto bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
     "rounded-2xl",
     "mx-4 md:mx-auto", // Add horizontal margin on mobile
+    borderColor || "border-2 border-gray-100",
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
   )}>
@@ -57,7 +60,7 @@ const PricingCard = ({
         Your Plan
       </div>
     )}
-    <CardHeader className="pt-6 pb-4 px-5 md:pt-8 md:pb-6 md:px-6 text-left">
+    <CardHeader className="pt-6 pb-2 px-5 md:pt-8 md:pb-3 md:px-6 text-left">
       <div className="mb-3 md:mb-5">
         {platformIcon}
       </div>
@@ -66,9 +69,9 @@ const PricingCard = ({
         <span className="text-[44px] md:text-[52px] font-bold text-[#4a5568]">{price}</span>
         <span className="text-sm md:text-base text-[#64748b] font-medium">/month</span>
       </div>
-      <CardDescription className="text-[#64748b] text-sm md:text-base leading-relaxed min-h-[60px] md:min-h-[80px] text-left">{description}</CardDescription>
+      <CardDescription className="text-[#64748b] text-sm md:text-base leading-relaxed text-left">{description}</CardDescription>
     </CardHeader>
-    <CardContent className="px-5 md:px-6 pb-0">
+    <CardContent className="px-5 md:px-6 pb-0 pt-2">
       <ul className="space-y-3 md:space-y-4">
         {features.map((feature, i) => (
           <li key={i} className="flex items-center gap-3 text-left">
@@ -211,7 +214,8 @@ const PricingSection = () => {
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
     onPurchase: (priceId: string) => handleCheckout(priceId, 'newsletter'),
     isLoading: isLoadingNewsletter,
-    isSubscribed: isSubscribedToNewsletter
+    isSubscribed: isSubscribedToNewsletter,
+    borderColor: "border-2 border-orange-200"
   };
 
   const creatorCard = {
@@ -237,7 +241,8 @@ const PricingSection = () => {
     priceId: "price_1RRXZ2DBIslKIY5s4gxpBlME",
     onPurchase: (priceId: string) => handleCheckout(priceId, 'creator'),
     isLoading: isLoadingCreator,
-    isSubscribed: isSubscribedToCreator
+    isSubscribed: isSubscribedToCreator,
+    borderColor: "border-2 border-blue-200"
   };
 
   return (
