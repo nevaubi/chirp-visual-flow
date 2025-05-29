@@ -39,6 +39,43 @@ export default function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative">
+        {/* Mobile-only text at top */}
+        <div className="block lg:hidden mb-8 pt-[20px]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f2e47] leading-tight mb-4">
+            Need Twitter growth tools?
+          </h2>
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-5 leading-tight">
+            <span className="block">
+              <span className="text-[#0087C8]">Automated </span>
+              <span className="text-[#FF6B35]">newsletters </span>
+              <span className="text-[#0087C8]">from </span>
+              <span className="text-[#0087C8]">bookmarks</span>
+              <span className="text-[#0f2e47]">?</span>
+            </span>
+          </h2>
+          
+          {/* "Choose one or both" text */}
+          <p className="text-lg text-[#0f2e47] mb-4">
+            Choose one - <span className="text-[#FF6B35]">or both</span>.
+          </p>
+          
+          {/* Buttons for mobile */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <Button 
+              className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium"
+              onClick={scrollToPricing}
+            >
+              Creator Platform
+            </Button>
+            <Button 
+              className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium"
+              onClick={scrollToPricing}
+            >
+              Twitter Newsletters
+            </Button>
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
           {/* Left column with dashboard UI */}
           <div className="w-full lg:w-2/5 pt-[40px]">
@@ -73,8 +110,8 @@ export default function HeroSection() {
           
           {/* Right column with main message and bookmark card */}
           <div className="w-full lg:w-3/5 pt-[48px] lg:pt-[44px]">
-            {/* Main marketing message */}
-            <div className="mb-6">
+            {/* Main marketing message - hidden on mobile */}
+            <div className="mb-6 hidden lg:block">
               <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-4">
                 Need Twitter growth tools?
               </h2>
@@ -93,7 +130,7 @@ export default function HeroSection() {
                 Choose one - <span className="text-[#FF6B35]">or both</span>.
               </p>
               
-              {/* Buttons stacked below the text */}
+              {/* Buttons stacked below the text - hidden on mobile */}
               <div className="flex flex-wrap gap-3 mb-8">
                 <Button 
                   className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium"
