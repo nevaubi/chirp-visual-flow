@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -119,8 +120,31 @@ const DashboardLayout = () => {
         }
         
         if (data?.url) {
-          // Open the customer portal in a new tab
-          window.open(data.url, "_blank");
+          // Close mobile menu before navigation
+          if (isMobile && mobileMenuOpen) {
+            setMobileMenuOpen(false);
+          }
+          
+          // Use different navigation strategy for mobile vs desktop
+          if (isMobile) {
+            // On mobile, navigate in the same tab to avoid popup blocking
+            window.location.href = data.url;
+          } else {
+            // On desktop, try to open in new tab with fallback
+            try {
+              const popup = window.open(data.url, "_blank");
+              if (!popup || popup.closed || typeof popup.closed === "undefined") {
+                // Popup was blocked, fallback to same tab
+                window.location.href = data.url;
+                toast("Popup blocked - redirecting in current tab", {
+                  description: "Please allow popups for this site for better experience."
+                });
+              }
+            } catch (popupError) {
+              // Fallback to same tab navigation
+              window.location.href = data.url;
+            }
+          }
         }
       } catch (error) {
         console.error("Error in handleManageSubscription:", error);
@@ -154,8 +178,35 @@ const DashboardLayout = () => {
         }
         
         if (data?.url) {
-          // Open the checkout page in a new tab
-          window.open(data.url, "_blank");
+          // Close mobile menu before navigation
+          if (isMobile && mobileMenuOpen) {
+            setMobileMenuOpen(false);
+          }
+          
+          // Use different navigation strategy for mobile vs desktop
+          if (isMobile) {
+            // On mobile, navigate in the same tab to avoid popup blocking
+            window.location.href = data.url;
+          } else {
+            // On desktop, try to open in new tab with fallback
+            try {
+              const popup = window.open(data.url, "_blank");
+              if (!popup || popup.closed || typeof popup.closed === "undefined") {
+                // Popup was blocked, fallback to same tab
+                window.location.href = data.url;
+                toast("Popup blocked - redirecting in current tab", {
+                  description: "Please allow popups for this site for better experience."
+                });
+              } else {
+                toast("Checkout opened in a new tab", {
+                  description: "If the checkout window doesn't open, please check your popup blocker."
+                });
+              }
+            } catch (popupError) {
+              // Fallback to same tab navigation
+              window.location.href = data.url;
+            }
+          }
         }
       } catch (error) {
         console.error("Error in handleCheckout:", error);
