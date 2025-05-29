@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,7 @@ import { marked } from "marked";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, isWithinInterval, subDays, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import html2pdf from "html2pdf.js";
 
 // Define the newsletter structure
 interface Newsletter {
@@ -124,6 +125,7 @@ const Library = () => {
     start: subDays(new Date(), 6), // Past 7 days (including today)
     end: new Date()
   });
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
 
   // Fetch newsletters from Supabase
   const { data: newsletters, isLoading, error } = useQuery({
@@ -240,6 +242,48 @@ const Library = () => {
   const viewNewsletter = (newsletter: Newsletter) => {
     setSelectedNewsletter(newsletter);
     setDialogOpen(true);
+  };
+
+  // Download newsletter as PDF
+  const downloadAsPDF = async () => {
+    if (!selectedNewsletter) return;
+    
+    setIsPdfGenerating(true);
+    
+    try {
+      // Get the newsletter content element
+      const element = document.getElementById('newsletter-content');
+      if (!element) {
+        throw new Error('Newsletter content not found');
+      }
+
+      // PDF configuration
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `newsletter-${format(new Date(selectedNewsletter.created_at), 'yyyy-MM-dd')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true 
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        }
+      };
+
+      // Generate and download PDF
+      await html2pdf().set(opt).from(element).save();
+      
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsPdfGenerating(false);
+    }
   };
 
   return (
@@ -446,6 +490,7 @@ const Library = () => {
               </DialogHeader>
               
               <div 
+                id="newsletter-content"
                 className="prose dark:prose-invert max-w-none my-4" 
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
               />
@@ -461,6 +506,15 @@ const Library = () => {
                   }}
                 >
                   Copy Content
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={downloadAsPDF}
+                  disabled={isPdfGenerating}
+                >
+                  <Download size={16} className="mr-2" />
+                  {isPdfGenerating ? "Generating..." : "Download PDF"}
                 </Button>
                 <Button size="sm" onClick={() => setDialogOpen(false)}>Close</Button>
               </DialogFooter>
