@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -198,7 +197,7 @@ const CreatorDashboard = ({ profile }) => {
           <div className="lg:col-span-1">
             <CircadianHeatmap 
               data={analysisResults?.circadianHeatmap || []} 
-              timezone={localProfile?.timezone} 
+              timezone={profile?.timezone} 
             />
           </div>
           
@@ -206,7 +205,7 @@ const CreatorDashboard = ({ profile }) => {
           <div className="lg:col-span-1">
             <CircadianInsights 
               data={analysisResults?.circadianHeatmap || []}
-              timezone={localProfile?.timezone}
+              timezone={profile?.timezone}
             />
           </div>
         </div>
@@ -224,7 +223,7 @@ const CreatorDashboard = ({ profile }) => {
             <HourlyEngagementChart 
               hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
               averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
-              timezone={localProfile?.timezone}
+              timezone={profile?.timezone}
               bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
             />
           </div>
