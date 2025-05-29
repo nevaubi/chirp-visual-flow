@@ -221,7 +221,7 @@ const PricingSection = () => {
   const creatorCard = {
     title: "X (Twitter) Creator Platform",
     price: "$19",
-    description: "For smarter twitter growth",
+    description: "Smarter tweets → faster growth for creators",
     features: [
       <span><strong>450 tweet generations</strong></span>,
       "Analytics dashboard",
