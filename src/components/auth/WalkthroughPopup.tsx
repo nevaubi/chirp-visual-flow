@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,7 +12,7 @@ import {
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { Twitter, BookOpen, BarChart2, Activity, Users, Check, Loader2, X } from "lucide-react";
+import { Twitter, BookOpen, BarChart2, Activity, Users, Check, Loader2 } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -27,8 +27,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startPkceAuth } from "@/integrations/twitterPkce";
-import TermsContent from "./TermsContent";
-import PrivacyContent from "./PrivacyContent";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -61,10 +59,6 @@ const WalkthroughPopup = ({
   // New state for token checking functionality
   const [hasBookmarkToken, setHasBookmarkToken] = useState<boolean>(false);
   const [isCheckingToken, setIsCheckingToken] = useState<boolean>(false);
-
-  // Modal state for Terms and Privacy overlays
-  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
 
   // Reset form when opening the dialog
   useEffect(() => {
@@ -283,19 +277,6 @@ const WalkthroughPopup = ({
     startPkceAuth();
   };
 
-  // Handle Terms and Privacy link clicks with proper event handling
-  const handleTermsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowTermsModal(true);
-  };
-
-  const handlePrivacyClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowPrivacyModal(true);
-  };
-
   // Content based on platform and step
   const getContent = () => {
     if (isCreatorPlatform) {
@@ -304,80 +285,57 @@ const WalkthroughPopup = ({
         icon: null,
         title: "All we need to get started is...",
         description: (
-          <div className="text-left space-y-3">
-            {/* Account Information Section - Compact */}
-            <div className="bg-gray-50 rounded-lg p-2.5 space-y-2.5">
-              <h3 className="text-xs font-semibold text-gray-700">Account Information</h3>
-              
-              <div className="space-y-1">
-                <Label htmlFor="timezone" className="text-xs font-medium">Your Timezone:</Label>
-                <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger id="timezone" className="w-full bg-white h-8 text-sm">
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
-                    <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
-                    <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
-                    <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
-                    <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
-                    <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
-                    <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="handle" className="text-xs font-medium">Your account handle '@':</Label>
-                <Input 
-                  id="handle" 
-                  placeholder="@username" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className={cn("bg-white h-8 text-sm", verificationError && "border-red-500")}
-                />
-                {verificationError && (
-                  <p className="text-xs text-red-500 mt-1">{verificationError}</p>
-                )}
-              </div>
+          <div className="text-left space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="timezone">Your Timezone (for accurate info and posting):</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone" className="w-full">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                  <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                  <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                  <SelectItem value="Europe/London">Greenwich Mean Time (UTC+0)</SelectItem>
+                  <SelectItem value="Europe/Paris">Central European Time (UTC+1)</SelectItem>
+                  <SelectItem value="Asia/Shanghai">China Standard Time (UTC+8)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Japan Standard Time (UTC+9)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
-            {/* Permissions Section - Compact */}
-            <div className="border border-gray-200 rounded-lg p-2.5 bg-blue-50/30">
-              <h3 className="text-xs font-semibold text-gray-700 mb-2">Permissions</h3>
-              <div className="flex items-start space-x-2.5">
-                <Checkbox 
-                  id="permission" 
-                  checked={permission}
-                  onCheckedChange={(checked) => setPermission(checked as boolean)}
-                  className="mt-0.5 h-3.5 w-3.5"
-                />
-                <div className="grid gap-1 leading-none">
-                  <Label htmlFor="permission" className="text-xs font-medium leading-relaxed">
-                    Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
-                  </Label>
-                  <div className="text-xs text-muted-foreground">
-                    <button 
-                      type="button"
-                      onClick={handleTermsClick}
-                      className="text-blue-600 hover:underline cursor-pointer"
-                    >
-                      Terms of Service
-                    </button> & <button 
-                      type="button"
-                      onClick={handlePrivacyClick}
-                      className="text-blue-600 hover:underline cursor-pointer"
-                    >
-                      Privacy Policy
-                    </button>
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="handle">Your account handle '@' (of account you signed in with, for verification):</Label>
+              <Input 
+                id="handle" 
+                placeholder="@username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={cn(verificationError && "border-red-500")}
+              />
+              {verificationError && (
+                <p className="text-sm text-red-500 mt-1">{verificationError}</p>
+              )}
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="permission" 
+                checked={permission}
+                onCheckedChange={(checked) => setPermission(checked as boolean)}
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="permission" className="text-sm font-normal">
+                  Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
+                </Label>
+                <div className="text-xs text-muted-foreground">
+                  <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
                 </div>
               </div>
             </div>
             
-            {/* Ready Section - Compact */}
-            <div className="bg-[#0087C8]/5 border border-[#0087C8]/20 rounded-lg p-2.5 text-center">
-              <p className="font-semibold text-gray-800 text-xs">Ready to get started?</p>
+            <div className="flex items-center justify-between pt-4">
+              <p className="font-medium">Ready to get started?</p>
             </div>
           </div>
         ),
@@ -456,45 +414,24 @@ const WalkthroughPopup = ({
   }
 
   return (
-    <>
-      <Dialog open={open}>
-        <DialogContent
-          className={cn(
-            "rounded-2xl shadow-xl p-0 font-sans w-[95%]",
-          // Different sizing and overflow behavior for creator vs newsletter platform
-          isCreatorPlatform ?
-            "max-w-sm max-h-fit overflow-hidden" :
-            "max-w-md sm:max-w-lg max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden"
-        )}
+    <Dialog open={open}>
+      <DialogContent
+        className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
-        {/* Main Walkthrough Content */}
-        <div className={cn(
-          "flex flex-col",
-          // More compact padding for creator platform
-          isCreatorPlatform ? "p-3 min-h-0" : "p-4 sm:p-6 md:p-8"
-        )}>
-          {/* Header - More compact for creator platform */}
-          <div className={cn(
-            "text-center flex-shrink-0",
-            isCreatorPlatform ? "mb-2" : "mb-4 sm:mb-6"
-          )}>
-            <h1 className={cn(
-              "font-bold text-gray-800",
-              isCreatorPlatform ? "text-base sm:text-lg mb-1" : "text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2"
-            )}>
+        <div className="p-4 sm:p-6 md:p-8">
+          {/* Header */}
+          <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
               Welcome to your {platformType}!
             </h1>
           </div>
 
-          {/* Content - More compact for creator platform */}
-          <div className={cn(
-            "flex-1 min-h-0",
-            isCreatorPlatform ? "mb-3" : "mb-6 sm:mb-8"
-          )}>
-            <div className="flex flex-col items-center h-full">
+          {/* Content */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col items-center">
               {content.icon && (
                 <div className={cn(
                   "p-3 sm:p-4 rounded-full mb-4",
@@ -503,21 +440,16 @@ const WalkthroughPopup = ({
                   {content.icon}
                 </div>
               )}
-              <h2 className={cn(
-                "font-bold text-center flex-shrink-0",
-                isCreatorPlatform ? "text-sm sm:text-base mb-2" : "text-lg sm:text-xl mb-2 sm:mb-3"
-              )}>{content.title}</h2>
-              <div className={cn(
-                "text-gray-600 w-full flex-1 min-h-0",
-                isCreatorPlatform ? "text-xs" : "text-sm sm:text-base"
-              )}>
+              <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">{content.title}</h2>
+              <div className="text-sm sm:text-base text-gray-600 w-full">
                 {content.description}
               </div>
             </div>
           </div>
 
-          {/* Navigation - More compact and fixed at bottom */}
-          <div className="flex justify-between items-center flex-shrink-0">
+          {/* Navigation */}
+          <div className="flex justify-between items-center">
+            {/* Show "Maybe Later" button only for newsletter platform and only if token not found */}
             {!isCreatorPlatform && !hasBookmarkToken ? (
               <div className="flex justify-end w-full">
                 <Button 
@@ -529,14 +461,15 @@ const WalkthroughPopup = ({
                 </Button>
               </div>
             ) : (
+              // Regular navigation button for all other cases
               <div className="flex justify-center w-full">
                 <Button 
                   onClick={handleNextStep}
                   className={cn(
-                    "font-medium",
+                    "px-6 py-2 font-medium",
                     isCreatorPlatform ? 
-                      "px-4 py-1.5 text-sm bg-[#0087C8] hover:bg-[#0087C8]/90" : 
-                      "px-6 py-2 bg-amber-500 hover:bg-amber-600"
+                      "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
+                      "bg-amber-500 hover:bg-amber-600"
                   )}
                   disabled={isCreatorPlatform && !isCreatorFormValid}
                 >
@@ -550,48 +483,7 @@ const WalkthroughPopup = ({
           </div>
         </div>
       </DialogContent>
-      </Dialog>
-
-      {/* Terms Modal */}
-      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
-        <DialogContent
-          className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
-        >
-          <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
-            <h1 className="text-lg font-bold text-[#0087C8]">Terms of Service</h1>
-            <DialogClose asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogClose>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3">
-            <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
-            <TermsContent />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Privacy Modal */}
-      <Dialog open={showPrivacyModal} onOpenChange={setShowPrivacyModal}>
-        <DialogContent
-          className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
-        >
-          <div className="flex items-center justify-between p-3 border-b bg-white flex-shrink-0">
-            <h1 className="text-lg font-bold text-[#0087C8]">Privacy Policy</h1>
-            <DialogClose asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogClose>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3">
-            <p className="text-gray-600 mb-4 text-sm">Last updated: May 15, 2025</p>
-            <PrivacyContent />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    </Dialog>
   );
 };
 
