@@ -13,12 +13,12 @@ interface ReviewsSectionProps {
 }
 
 export default function ReviewsSection({ profilePictures }: ReviewsSectionProps) {
-  // Default profile pictures with fallbacks
+  // Default profile pictures with the uploaded images
   const defaultProfiles: ProfilePicture[] = [
-    { id: "1", fallback: "JD" },
-    { id: "2", fallback: "SM" },
-    { id: "3", fallback: "AL" },
-    { id: "4", fallback: "MK" }
+    { id: "1", imageUrl: "/profilepic1.png", fallback: "JD" },
+    { id: "2", imageUrl: "/profilepic2.png", fallback: "SM" },
+    { id: "3", imageUrl: "/profilepic3.png", fallback: "AL" },
+    { id: "4", imageUrl: "/profilepic4.png", fallback: "MK" }
   ];
 
   const profiles = profilePictures || defaultProfiles;
