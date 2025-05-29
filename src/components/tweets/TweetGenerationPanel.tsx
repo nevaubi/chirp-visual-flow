@@ -36,6 +36,38 @@ interface TweetGenerationPanelProps {
   onClose?: () => void;
 }
 
+// Extract CustomTextarea component outside to prevent recreation on every render
+interface CustomTextareaProps {
+  field: any;
+  selectedTopic: SelectedTopic | null;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  onRemoveTopic: () => void;
+}
+
+const CustomTextarea = ({ field, selectedTopic, textareaRef, onRemoveTopic }: CustomTextareaProps) => {
+  return (
+    <div className="relative">
+      {selectedTopic && (
+        <div className="mb-2">
+          <TrendingTopicPill 
+            header={selectedTopic.header} 
+            onRemove={onRemoveTopic}
+          />
+        </div>
+      )}
+      <Textarea
+        {...field}
+        ref={textareaRef}
+        placeholder={selectedTopic 
+          ? "Add any additional details to your prompt..."
+          : "What would you like to tweet about?"
+        }
+        className="min-h-24 resize-none border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:outline-none px-4 py-3"
+      />
+    </div>
+  );
+};
+
 const TweetGenerationPanel = ({ 
   onTopicSelect, 
   selectedTopic, 
@@ -214,31 +246,6 @@ const TweetGenerationPanel = ({
     }
   };
 
-  // Custom render for the textarea with pill
-  const CustomTextarea = ({ field }: { field: any }) => {
-    return (
-      <div className="relative">
-        {selectedTopic && (
-          <div className="mb-2">
-            <TrendingTopicPill 
-              header={selectedTopic.header} 
-              onRemove={handleRemoveTopic}
-            />
-          </div>
-        )}
-        <Textarea
-          {...field}
-          ref={textareaRef}
-          placeholder={selectedTopic 
-            ? "Add any additional details to your prompt..."
-            : "What would you like to tweet about?"
-          }
-          className="min-h-24 resize-none border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:outline-none px-4 py-3"
-        />
-      </div>
-    );
-  };
-
   // Handle hover events for desktop
   useEffect(() => {
     if (isMobile) return;
@@ -357,7 +364,12 @@ const TweetGenerationPanel = ({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <CustomTextarea field={field} />
+                            <CustomTextarea 
+                              field={field} 
+                              selectedTopic={selectedTopic}
+                              textareaRef={textareaRef}
+                              onRemoveTopic={handleRemoveTopic}
+                            />
                           </FormControl>
                         </FormItem>
                       )}
@@ -464,7 +476,12 @@ const TweetGenerationPanel = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <CustomTextarea field={field} />
+                        <CustomTextarea 
+                          field={field} 
+                          selectedTopic={selectedTopic}
+                          textareaRef={textareaRef}
+                          onRemoveTopic={handleRemoveTopic}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
