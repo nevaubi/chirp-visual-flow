@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Minus, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -236,12 +236,18 @@ const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   return (
     <Card className="shadow-md border border-gray-200 w-full bg-white">
       <CardHeader className="pb-3 border-b border-gray-200 bg-gray-50">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-[#032d42]">
-          <TrendingUp className="text-gray-700 h-5 w-5" />
-          <span>Trending Topics</span>
+        <CardTitle className="flex items-center justify-between text-lg font-semibold text-[#032d42]">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="text-gray-700 h-5 w-5" />
+            <span>Trending Topics</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-normal text-gray-500">
+            <Clock className="h-3 w-3" />
+            <span>Auto refreshes twice daily</span>
+          </div>
         </CardTitle>
         <div className="text-sm text-gray-600">
-          Select a category to discover trending topics on Twitter
+          Trends come with built-in context. Pick one and we've got you covered!
         </div>
       </CardHeader>
       
