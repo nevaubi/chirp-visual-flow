@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import {
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { Twitter, BookOpen, BarChart2, Activity, Users, Check, Loader2 } from "lucide-react";
+import { Twitter, BookOpen, BarChart2, Activity, Users, Check, Loader2, X } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -27,6 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startPkceAuth } from "@/integrations/twitterPkce";
+import TermsContent from "./TermsContent";
+import PrivacyContent from "./PrivacyContent";
 
 interface WalkthroughPopupProps {
   open: boolean;
@@ -59,6 +60,10 @@ const WalkthroughPopup = ({
   // New state for token checking functionality
   const [hasBookmarkToken, setHasBookmarkToken] = useState<boolean>(false);
   const [isCheckingToken, setIsCheckingToken] = useState<boolean>(false);
+
+  // Modal state for Terms and Privacy popups
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
 
   // Reset form when opening the dialog
   useEffect(() => {
@@ -329,7 +334,19 @@ const WalkthroughPopup = ({
                   Your permission to allow Chirpmetrics to use only your public X data to guide your growth on X
                 </Label>
                 <div className="text-xs text-muted-foreground">
-                  <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> & <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
+                  <button 
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-blue-500 hover:underline cursor-pointer"
+                  >
+                    Terms of Service
+                  </button> & <button 
+                    type="button"
+                    onClick={() => setShowPrivacyModal(true)}
+                    className="text-blue-500 hover:underline cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
                 </div>
               </div>
             </div>
@@ -414,76 +431,116 @@ const WalkthroughPopup = ({
   }
 
   return (
-    <Dialog open={open}>
-      <DialogContent
-        className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        hideCloseButton={true}
-      >
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* Header */}
-          <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
-              Welcome to your {platformType}!
-            </h1>
-          </div>
+    <>
+      <Dialog open={open}>
+        <DialogContent
+          className="max-h-[90vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl p-0 font-sans w-[95%] max-w-md sm:max-w-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          hideCloseButton={true}
+        >
+          <div className="p-4 sm:p-6 md:p-8">
+            {/* Header */}
+            <div className="text-center mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+                Welcome to your {platformType}!
+              </h1>
+            </div>
 
-          {/* Content */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col items-center">
-              {content.icon && (
-                <div className={cn(
-                  "p-3 sm:p-4 rounded-full mb-4",
-                  isCreatorPlatform ? "bg-blue-100" : "bg-amber-100"
-                )}>
-                  {content.icon}
+            {/* Content */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col items-center">
+                {content.icon && (
+                  <div className={cn(
+                    "p-3 sm:p-4 rounded-full mb-4",
+                    isCreatorPlatform ? "bg-blue-100" : "bg-amber-100"
+                  )}>
+                    {content.icon}
+                  </div>
+                )}
+                <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">{content.title}</h2>
+                <div className="text-sm sm:text-base text-gray-600 w-full">
+                  {content.description}
                 </div>
-              )}
-              <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">{content.title}</h2>
-              <div className="text-sm sm:text-base text-gray-600 w-full">
-                {content.description}
               </div>
             </div>
-          </div>
 
-          {/* Navigation */}
-          <div className="flex justify-between items-center">
-            {/* Show "Maybe Later" button only for newsletter platform and only if token not found */}
-            {!isCreatorPlatform && !hasBookmarkToken ? (
-              <div className="flex justify-end w-full">
-                <Button 
-                  onClick={handleNextStep}
-                  variant="ghost" 
-                  className="text-gray-500 hover:text-gray-700 text-sm"
-                >
-                  Maybe Later
-                </Button>
-              </div>
-            ) : (
-              // Regular navigation button for all other cases
-              <div className="flex justify-center w-full">
-                <Button 
-                  onClick={handleNextStep}
-                  className={cn(
-                    "px-6 py-2 font-medium",
-                    isCreatorPlatform ? 
-                      "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
-                      "bg-amber-500 hover:bg-amber-600"
-                  )}
-                  disabled={isCreatorPlatform && !isCreatorFormValid}
-                >
-                  Finish
-                  {isCreatorPlatform && !isCreatorFormValid && (
-                    <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
-                  )}
-                </Button>
-              </div>
-            )}
+            {/* Navigation */}
+            <div className="flex justify-between items-center">
+              {/* Show "Maybe Later" button only for newsletter platform and only if token not found */}
+              {!isCreatorPlatform && !hasBookmarkToken ? (
+                <div className="flex justify-end w-full">
+                  <Button 
+                    onClick={handleNextStep}
+                    variant="ghost" 
+                    className="text-gray-500 hover:text-gray-700 text-sm"
+                  >
+                    Maybe Later
+                  </Button>
+                </div>
+              ) : (
+                // Regular navigation button for all other cases
+                <div className="flex justify-center w-full">
+                  <Button 
+                    onClick={handleNextStep}
+                    className={cn(
+                      "px-6 py-2 font-medium",
+                      isCreatorPlatform ? 
+                        "bg-[#0087C8] hover:bg-[#0087C8]/90" : 
+                        "bg-amber-500 hover:bg-amber-600"
+                    )}
+                    disabled={isCreatorPlatform && !isCreatorFormValid}
+                  >
+                    Finish
+                    {isCreatorPlatform && !isCreatorFormValid && (
+                      <span className="ml-2 text-xs opacity-70">(Complete all fields)</span>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Terms of Service Modal */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-[#0087C8]">Terms of Service</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTermsModal(false)}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-gray-600 mb-6">Last updated: May 15, 2025</p>
+          <TermsContent />
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy Modal */}
+      <Dialog open={showPrivacyModal} onOpenChange={setShowPrivacyModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-[#0087C8]">Privacy Policy</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPrivacyModal(false)}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-gray-600 mb-6">Last updated: May 15, 2025</p>
+          <PrivacyContent />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
