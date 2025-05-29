@@ -421,24 +421,31 @@ const TweetGenerationPanel = ({
         isPanelOpen ? 'translate-x-0 shadow-xl' : 'translate-x-[calc(100%-20px)]'
       } bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col`}
     >
-      {/* New Minimal Handle - positioned at top-right */}
+      {/* Beautifully Crafted Rectangular Handle */}
       <div 
-        className="w-5 h-12 absolute top-2 -left-5 bg-[#0087C8] rounded-l-md flex flex-col items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all duration-200 hover:w-6 hover:bg-[#0076b2] group"
+        className="absolute top-4 -left-8 cursor-pointer group"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
       >
-        {/* Three dots indicator */}
-        <div className="flex flex-col space-y-1">
-          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
-          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
-          <div className="w-1 h-1 bg-white rounded-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative">
+          {/* Main handle rectangle */}
+          <div className="w-8 h-16 bg-gradient-to-br from-[#0087C8] to-[#0076b2] rounded-l-xl shadow-lg border border-r-0 border-white/20 flex items-center justify-center transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 group-hover:from-[#0076b2] group-hover:to-[#005a8a]">
+            {/* Arrow icon */}
+            <ChevronLeft 
+              size={16} 
+              className={`text-white transition-all duration-300 ${
+                isPanelOpen 
+                  ? 'rotate-180 opacity-90' 
+                  : 'opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5'
+              }`} 
+            />
+          </div>
+          
+          {/* Subtle glow effect */}
+          <div className="absolute inset-0 w-8 h-16 bg-[#0087C8]/30 rounded-l-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+          
+          {/* Small accent dot */}
+          <div className="absolute top-2 left-1 w-1 h-1 bg-white/60 rounded-full group-hover:bg-white transition-colors duration-300"></div>
         </div>
-        {/* Subtle chevron icon on hover */}
-        <ChevronLeft 
-          size={12} 
-          className={`text-white mt-1 transition-all duration-200 ${
-            isPanelOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-70'
-          }`} 
-        />
       </div>
 
       <PanelHeader showClose={isOpen} />
