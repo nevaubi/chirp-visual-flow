@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -40,8 +41,10 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Mobile-only text at top */}
         <div className="block lg:hidden mb-8 pt-[20px]">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-4">
-            Need Twitter growth tools?
+          <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
+            <span className="text-[#0f2e47]">Want </span>
+            <span className="text-[#0087C8]">Twitter </span>
+            <span className="text-[#0f2e47]">growth?</span>
           </h2>
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
             <span className="block">
@@ -111,8 +114,10 @@ export default function HeroSection() {
           <div className="w-full lg:w-3/5 pt-[48px] lg:pt-[44px]">
             {/* Main marketing message - hidden on mobile */}
             <div className="mb-6 hidden lg:block">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-4">
-                Need Twitter growth tools?
+              <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
+                <span className="text-[#0f2e47]">Want </span>
+                <span className="text-[#0087C8]">Twitter </span>
+                <span className="text-[#0f2e47]">growth?</span>
               </h2>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
                 <span className="whitespace-nowrap md:whitespace-normal">
