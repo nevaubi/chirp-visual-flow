@@ -71,11 +71,14 @@ const PricingCard = ({
       </div>
       <CardDescription className="text-[#64748b] text-sm md:text-base leading-relaxed text-left">{description}</CardDescription>
     </CardHeader>
-    <CardContent className="px-5 md:px-6 pb-0 pt-2">
+    <CardContent className="px-5 md:px-6 pb-0 pt-1">
       <ul className="space-y-3 md:space-y-4">
         {features.map((feature, i) => (
           <li key={i} className="flex items-center gap-3 text-left">
-            <Check className="h-4 w-4 md:h-5 md:w-5 shrink-0 text-[#0ea5e9]" />
+            <Check className={cn(
+              "h-4 w-4 md:h-5 md:w-5 shrink-0",
+              title === "Auto Newsletter Platform" ? "text-[#ff7720]" : "text-[#0ea5e9]"
+            )} />
             <span className="text-[#4a5568] text-[14px] md:text-[15px]">{feature}</span>
           </li>
         ))}
@@ -84,7 +87,7 @@ const PricingCard = ({
     <CardFooter className="px-5 md:px-6 pt-6 md:pt-8 pb-6 md:pb-8">
       {isSubscribed ? (
         <Button 
-          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3 md:py-3.5 rounded-md font-semibold text-sm md:text-base text-center", buttonClassName)}
+          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-4 md:py-4 rounded-md font-semibold text-sm md:text-base text-center", buttonClassName)}
           onClick={() => handleManageSubscription()}
           disabled={isLoading}
         >
@@ -92,7 +95,7 @@ const PricingCard = ({
         </Button>
       ) : (
         <Button 
-          className={cn("w-full py-3 md:py-3.5 rounded-md font-semibold text-sm md:text-base transition-all duration-300 text-center", buttonClassName)}
+          className={cn("w-full py-4 md:py-4 rounded-md font-semibold text-sm md:text-base transition-all duration-300 text-center", buttonClassName)}
           onClick={() => onPurchase(priceId)}
           disabled={isLoading}
         >
