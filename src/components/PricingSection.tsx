@@ -41,8 +41,9 @@ const PricingCard = ({
   isSubscribed = false,
 }: PricingCardProps) => (
   <Card className={cn(
-    "relative w-full max-w-[360px] mx-auto bg-white border border-black/[0.08] shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
+    "relative w-full max-w-[360px] mx-auto bg-white border-2 border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]",
     "rounded-2xl",
+    "mx-4 md:mx-auto", // Add horizontal margin on mobile
     isSubscribed && "border-green-500/50 bg-green-50/30",
     className
   )}>
@@ -56,31 +57,31 @@ const PricingCard = ({
         Your Plan
       </div>
     )}
-    <CardHeader className="pt-8 pb-6 px-6 text-left">
-      <div className="mb-5">
+    <CardHeader className="pt-6 pb-4 px-5 md:pt-8 md:pb-6 md:px-6 text-left">
+      <div className="mb-3 md:mb-5">
         {platformIcon}
       </div>
-      <CardTitle className="text-[22px] font-normal text-[#1a365d] leading-tight mb-2 text-left">{title}</CardTitle>
-      <div className="flex items-baseline gap-1 mt-4 mb-1">
-        <span className="text-[52px] font-bold text-[#4a5568]">{price}</span>
-        <span className="text-base text-[#64748b] font-medium">/month</span>
+      <CardTitle className="text-[20px] md:text-[22px] font-normal text-[#1a365d] leading-tight mb-2 text-left">{title}</CardTitle>
+      <div className="flex items-baseline gap-1 mt-3 md:mt-4 mb-1">
+        <span className="text-[44px] md:text-[52px] font-bold text-[#4a5568]">{price}</span>
+        <span className="text-sm md:text-base text-[#64748b] font-medium">/month</span>
       </div>
-      <CardDescription className="text-[#64748b] text-base leading-relaxed min-h-[80px] text-left">{description}</CardDescription>
+      <CardDescription className="text-[#64748b] text-sm md:text-base leading-relaxed min-h-[60px] md:min-h-[80px] text-left">{description}</CardDescription>
     </CardHeader>
-    <CardContent className="px-6 pb-0">
-      <ul className="space-y-4">
+    <CardContent className="px-5 md:px-6 pb-0">
+      <ul className="space-y-3 md:space-y-4">
         {features.map((feature, i) => (
           <li key={i} className="flex items-center gap-3 text-left">
-            <Check className="h-5 w-5 shrink-0 text-[#0ea5e9]" />
-            <span className="text-[#4a5568] text-[15px]">{feature}</span>
+            <Check className="h-4 w-4 md:h-5 md:w-5 shrink-0 text-[#0ea5e9]" />
+            <span className="text-[#4a5568] text-[14px] md:text-[15px]">{feature}</span>
           </li>
         ))}
       </ul>
     </CardContent>
-    <CardFooter className="px-6 pt-8 pb-8">
+    <CardFooter className="px-5 md:px-6 pt-6 md:pt-8 pb-6 md:pb-8">
       {isSubscribed ? (
         <Button 
-          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-md font-semibold text-base text-center", buttonClassName)}
+          className={cn("w-full bg-green-500 hover:bg-green-600 text-white py-3 md:py-3.5 rounded-md font-semibold text-sm md:text-base text-center", buttonClassName)}
           onClick={() => handleManageSubscription()}
           disabled={isLoading}
         >
@@ -88,7 +89,7 @@ const PricingCard = ({
         </Button>
       ) : (
         <Button 
-          className={cn("w-full py-3.5 rounded-md font-semibold text-base transition-all duration-300 text-center", buttonClassName)}
+          className={cn("w-full py-3 md:py-3.5 rounded-md font-semibold text-sm md:text-base transition-all duration-300 text-center", buttonClassName)}
           onClick={() => onPurchase(priceId)}
           disabled={isLoading}
         >
@@ -257,7 +258,7 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 lg:gap-4 w-full max-w-4xl justify-center items-center md:items-stretch">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-4 lg:gap-4 w-full max-w-4xl justify-center items-center md:items-stretch px-2 md:px-0">
             {/* Auto Newsletter Platform Card */}
             <PricingCard {...newsletterCard} />
             
