@@ -367,72 +367,131 @@ const downloadAsPDF = async (newsletterOverride?: Newsletter) => {
           {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
               <AspectRatio ratio={4 / 3}>
-  <div className="flex flex-col h-full">
-    {/* ─── Date badge ─────────────────────────────────────────────── */}
-    <div className="absolute top-2 right-2 z-10">
-      <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
-        {formatShortDate(newsletter.created_at)}
-      </span>
-    </div>
+                <div className="flex flex-col h-full">
+                  {/* Date badge skeleton */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                  </div>
 
-    {/* ─── Floating download button ──────────────────────────────── */}
-    <Button
-      variant="ghost"
-      size="icon"
-      className="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white"
-      onClick={(e) => {
-        e.stopPropagation();        // keep the card from opening the modal
-        downloadAsPDF(newsletter);  // download THIS newsletter
-      }}
-    >
-      <Download className="h-4 w-4 text-primary" />
-    </Button>
+                  {/* Image section skeleton */}
+                  <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
 
-    {/* ─── Image / icon section ──────────────────────────────────── */}
-    <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
-      {firstImage ? (
-        <img
-          src={firstImage}
-          alt="Newsletter preview"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          onError={(e) => {
-            const img      = e.currentTarget as HTMLImageElement;
-            const fallback = img.nextElementSibling as HTMLElement;
-            img.style.display = "none";
-            if (fallback) fallback.style.display = "flex";
-          }}
-        />
-      ) : null}
-      <div className={`${firstImage ? "hidden" : "flex"} items-center justify-center w-full h-full`}>
-        <FileText className="h-8 w-8 text-primary/60" />
-      </div>
-    </div>
+                  {/* Content section skeleton */}
+                  <div className="flex-1 p-3 flex flex-col justify-between">
+                    <div>
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-3 w-3/4 mb-1" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
 
-    {/* ─── Content section ───────────────────────────────────────── */}
-    <div className="flex-1 p-3 flex flex-col justify-between">
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
-          {title}
-        </h3>
-        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-          Newsletter content from {format(new Date(newsletter.created_at), "MMM d")}
-        </p>
-      </div>
-
-      {/* bottom indicator */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-          <span className="text-xs text-gray-400 font-medium">Newsletter</span>
+                    {/* Bottom indicator skeleton */}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-1">
+                        <Skeleton className="w-1.5 h-1.5 rounded-full" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </AspectRatio>
+            </Card>
+          ))}
         </div>
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-1 h-1 bg-primary rounded-full" />
+      ) : error ? (
+        <div className="text-center py-8">
+          <p className="text-red-600">Error loading newsletters: {error.message}</p>
         </div>
-      </div>
-    </div>
-  </div>
-</AspectRatio>
+      ) : sortedDates.length === 0 ? (
+        <div className="text-center py-8">
+          <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600">No newsletters found for the selected date range.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {sortedDates.map((date) => (
+            <div key={date}>
+              <h2 className="text-lg font-semibold mb-3 text-gray-800">
+                {formatGroupDate(date)}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {groupedNewsletters[date].map((newsletter) => {
+                  const title = extractTitle(newsletter.markdown_text);
+                  const firstImage = extractFirstImage(newsletter.markdown_text);
+                  
+                  return (
+                    <Card 
+                      key={newsletter.id} 
+                      className="group overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
+                      onClick={() => viewNewsletter(newsletter)}
+                    >
+                      <AspectRatio ratio={4 / 3}>
+                        <div className="flex flex-col h-full">
+                          {/* Date badge */}
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
+                              {formatShortDate(newsletter.created_at)}
+                            </span>
+                          </div>
 
+                          {/* Floating download button */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadAsPDF(newsletter);
+                            }}
+                          >
+                            <Download className="h-4 w-4 text-primary" />
+                          </Button>
+
+                          {/* Image / icon section */}
+                          <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
+                            {firstImage ? (
+                              <img
+                                src={firstImage}
+                                alt="Newsletter preview"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                onError={(e) => {
+                                  const img = e.currentTarget as HTMLImageElement;
+                                  const fallback = img.nextElementSibling as HTMLElement;
+                                  img.style.display = "none";
+                                  if (fallback) fallback.style.display = "flex";
+                                }}
+                              />
+                            ) : null}
+                            <div className={`${firstImage ? "hidden" : "flex"} items-center justify-center w-full h-full`}>
+                              <FileText className="h-8 w-8 text-primary/60" />
+                            </div>
+                          </div>
+
+                          {/* Content section */}
+                          <div className="flex-1 p-3 flex flex-col justify-between">
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
+                                {title}
+                              </h3>
+                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                                Newsletter content from {format(new Date(newsletter.created_at), "MMM d")}
+                              </p>
+                            </div>
+
+                            {/* bottom indicator */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                              <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                <span className="text-xs text-gray-400 font-medium">Newsletter</span>
+                              </div>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="w-1 h-1 bg-primary rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </AspectRatio>
                     </Card>
                   );
                 })}
