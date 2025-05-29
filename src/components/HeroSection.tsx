@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -41,10 +40,10 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Mobile-only text at top */}
         <div className="block lg:hidden mb-8 pt-[20px]">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f2e47] leading-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2e47] leading-tight mb-4">
             Need Twitter growth tools?
           </h2>
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-5 leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
             <span className="block">
               <span className="text-[#0087C8]">Automated </span>
               <span className="text-[#FF6B35]">newsletters </span>
@@ -55,7 +54,7 @@ export default function HeroSection() {
           </h2>
           
           {/* "Choose one or both" text */}
-          <p className="text-lg text-[#0f2e47] mb-4">
+          <p className="text-xl text-[#0f2e47] mb-4">
             Choose one - <span className="text-[#FF6B35]">or both</span>.
           </p>
           
