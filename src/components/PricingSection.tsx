@@ -193,7 +193,7 @@ const PricingSection = () => {
     price: "$10",
     description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
     features: [
-      "Auto newsletter generation",
+      "**20 monthly newsletter generations**",
       "Seamless X (Twitter) integration",
       "OneClick → professional newsletter",
       "Works with any niche or topic"
