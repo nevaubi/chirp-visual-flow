@@ -244,47 +244,64 @@ const Library = () => {
     setDialogOpen(true);
   };
 
-  // Download newsletter as PDF
-  const downloadAsPDF = async () => {
-    if (!selectedNewsletter) return;
-    
-    setIsPdfGenerating(true);
-    
-    try {
-      // Get the newsletter content element
-      const element = document.getElementById('newsletter-content');
-      if (!element) {
-        throw new Error('Newsletter content not found');
+  // === replace the whole downloadAsPDF function with this ===============
+const downloadAsPDF = async () => {
+  if (!selectedNewsletter) return;
+
+  setIsPdfGenerating(true);
+
+  try {
+    const element = document.getElementById("newsletter-content");
+    if (!element) throw new Error("Newsletter content not found");
+
+    /* ------------------------------------------------------------------
+       1.  Work out how tall the rendered element is *in millimetres*.
+           1 CSS pixel  ≈  0.264583 mm
+    ------------------------------------------------------------------ */
+    const rect       = element.getBoundingClientRect();
+    const widthPx    = rect.width;
+    const heightPx   = rect.height;
+    const pxToMm     = (px: number) => px * 0.264583;
+    const widthMm    = pxToMm(widthPx);
+    const heightMm   = pxToMm(heightPx);
+
+    /* Guard-rail: jsPDF (and some PDF readers) refuse pages > 14 400 pt
+       ≈  5080 mm.  If the page would be taller, fall back to multi-page. */
+    const jsPdfPageMaxMm = 5080;
+    const isTooTall      = heightMm > jsPdfPageMaxMm;
+
+    /* ------------------------------------------------------------------
+       2.  Build the pdf-options object.
+           - custom page size = [ widthMm , heightMm ]
+           - turn off html2pdf’s automatic page-breaking
+    ------------------------------------------------------------------ */
+    const opt: html2pdf.Options = {
+      margin:       10,                 // add a small white border
+      filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
+      image:        { type: "jpeg", quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
+      pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
+      jsPDF:        {
+        unit: "mm",
+        // use custom size unless the doc would blow past reader limits
+        format: isTooTall ? "a4" : [widthMm, heightMm],
+        orientation: widthMm >= heightMm ? "landscape" : "portrait"
       }
+    };
 
-      // PDF configuration
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `newsletter-${format(new Date(selectedNewsletter.created_at), 'yyyy-MM-dd')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          allowTaint: true 
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait' 
-        }
-      };
+    /* ------------------------------------------------------------------
+       3.  Generate and save
+    ------------------------------------------------------------------ */
+    await html2pdf().set(opt).from(element).save();
+    toast.success("PDF downloaded successfully!");
+  } catch (err) {
+    console.error("Error generating PDF:", err);
+    toast.error("Failed to generate PDF. Please try again.");
+  } finally {
+    setIsPdfGenerating(false);
+  }
+};
 
-      // Generate and download PDF
-      await html2pdf().set(opt).from(element).save();
-      
-      toast.success("PDF downloaded successfully!");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate PDF. Please try again.");
-    } finally {
-      setIsPdfGenerating(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
