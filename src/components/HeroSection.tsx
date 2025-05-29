@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -47,7 +46,7 @@ export default function HeroSection() {
             <span className="text-[#0f2e47]">growth?</span>
           </h2>
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
-            <span className="block">
+            <span className="whitespace-nowrap md:whitespace-normal">
               <span className="text-[#0087C8]">Automated </span>
               <span className="text-[#FF6B35]">newsletters </span>
               <span className="text-[#0087C8]">from </span>
