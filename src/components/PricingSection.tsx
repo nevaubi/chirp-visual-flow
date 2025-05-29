@@ -12,7 +12,7 @@ interface PricingCardProps {
   title: string;
   price: string;
   description: string;
-  features: string[];
+  features: (string | React.ReactNode)[];
   ctaText: string;
   popular?: boolean;
   className?: string;
@@ -193,7 +193,7 @@ const PricingSection = () => {
     price: "$10",
     description: "Use your X (Twitter) bookmarks to auto generate professional newsletters of any topic",
     features: [
-      "**20 monthly newsletter generations**",
+      <span><strong>20 monthly newsletter generations</strong></span>,
       "Seamless X (Twitter) integration",
       "OneClick → professional newsletter",
       "Works with any niche or topic"
