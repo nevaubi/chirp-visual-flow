@@ -269,6 +269,26 @@ const DashboardLayout = () => {
             </Link>
           </div>
 
+          {/* Enhanced Feedback Section */}
+          <div className="border-b border-gray-600">
+            <div className="p-3">
+              <FeedbackDialog>
+                <Button 
+                  variant="ghost" 
+                  className={cn(
+                    "w-full justify-start text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
+                    !expanded && "justify-center px-0"
+                  )}
+                >
+                  <MessageSquare size={16} className={cn("shrink-0", expanded && "mr-2")} />
+                  {expanded && (
+                    <span className="overflow-hidden whitespace-nowrap font-medium">Feedback</span>
+                  )}
+                </Button>
+              </FeedbackDialog>
+            </div>
+          </div>
+
           {/* Navigation */}
           <nav className="flex-1 py-6">
             <ul className="space-y-2 px-2">
@@ -313,26 +333,6 @@ const DashboardLayout = () => {
               })}
             </ul>
           </nav>
-
-          {/* Enhanced Feedback Section */}
-          <div className="border-t border-gray-600">
-            <div className="p-3">
-              <FeedbackDialog>
-                <Button 
-                  variant="ghost" 
-                  className={cn(
-                    "w-full justify-start text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
-                    !expanded && "justify-center px-0"
-                  )}
-                >
-                  <MessageSquare size={16} className={cn("shrink-0", expanded && "mr-2")} />
-                  {expanded && (
-                    <span className="overflow-hidden whitespace-nowrap font-medium">Feedback</span>
-                  )}
-                </Button>
-              </FeedbackDialog>
-            </div>
-          </div>
 
           {/* User Profile */}
           <div className={cn(
