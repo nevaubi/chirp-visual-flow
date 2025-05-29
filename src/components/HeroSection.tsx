@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
+import ReviewsSection from "@/components/ReviewsSection";
 
 export default function HeroSection() {
   const scrollToPricing = () => {
@@ -64,13 +65,9 @@ export default function HeroSection() {
               </div>
             </div>
             
-            {/* Reviews image placed directly below the dashboard card */}
+            {/* Reviews section - replaced image with coded components */}
             <div className="mt-16 flex justify-center">
-              <img 
-                src="/reviews1.png" 
-                alt="Reviews from creators" 
-                className="max-w-full"
-              />
+              <ReviewsSection />
             </div>
           </div>
           
