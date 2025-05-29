@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, isWithinInterval, subDays, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import html2pdf from "html2pdf.js";
-import NewsletterDialogContent from "@/components/newsletter/NewsletterDialogContent";
 
 // Define the newsletter structure
 interface Newsletter {
@@ -127,7 +126,6 @@ const Library = () => {
     end: new Date()
   });
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
-  const [pdfGeneratingIds, setPdfGeneratingIds] = useState<Set<string>>(new Set());
 
   // Fetch newsletters from Supabase
   const { data: newsletters, isLoading, error } = useQuery({
@@ -229,12 +227,11 @@ const Library = () => {
   };
 
   // Render markdown to HTML
-  const renderMarkdown = async (markdown: string | null): Promise<string> => {
+  const renderMarkdown = (markdown: string | null) => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      const result = await marked.parse(markdown);
-      return typeof result === 'string' ? result : result;
+      return marked.parse(markdown);
     } catch (err) {
       console.error("Error rendering markdown:", err);
       return "<p>Error rendering content</p>";
@@ -247,87 +244,64 @@ const Library = () => {
     setDialogOpen(true);
   };
 
-  // Download PDF for any newsletter (generalized function)
-  const downloadNewsletterAsPDF = async (newsletter: Newsletter) => {
-    setPdfGeneratingIds(prev => new Set(prev).add(newsletter.id));
+  // === replace the whole downloadAsPDF function with this ===============
+const downloadAsPDF = async () => {
+  if (!selectedNewsletter) return;
 
-    try {
-      // Create a temporary element with the newsletter content
-      const tempElement = document.createElement('div');
-      tempElement.id = 'temp-newsletter-content';
-      tempElement.className = 'prose dark:prose-invert max-w-none';
-      tempElement.innerHTML = await renderMarkdown(newsletter.markdown_text);
-      tempElement.style.position = 'absolute';
-      tempElement.style.left = '-9999px';
-      tempElement.style.top = '-9999px';
-      tempElement.style.width = '800px'; // Fixed width for consistent rendering
-      document.body.appendChild(tempElement);
+  setIsPdfGenerating(true);
 
-      // Wait for images to load
-      const images = tempElement.querySelectorAll('img');
-      await Promise.all(Array.from(images).map(img => {
-        return new Promise((resolve) => {
-          if (img.complete) {
-            resolve(undefined);
-          } else {
-            img.onload = () => resolve(undefined);
-            img.onerror = () => resolve(undefined);
-          }
-        });
-      }));
+  try {
+    const element = document.getElementById("newsletter-content");
+    if (!element) throw new Error("Newsletter content not found");
 
-      const rect = tempElement.getBoundingClientRect();
-      const widthPx = rect.width;
-      const heightPx = rect.height;
-      const pxToMm = (px: number) => px * 0.264583;
-      const widthMm = pxToMm(widthPx);
-      const heightMm = pxToMm(heightPx);
+    /* ------------------------------------------------------------------
+       1.  Work out how tall the rendered element is *in millimetres*.
+           1 CSS pixel  ≈  0.264583 mm
+    ------------------------------------------------------------------ */
+    const rect       = element.getBoundingClientRect();
+    const widthPx    = rect.width;
+    const heightPx   = rect.height;
+    const pxToMm     = (px: number) => px * 0.264583;
+    const widthMm    = pxToMm(widthPx);
+    const heightMm   = pxToMm(heightPx);
 
-      const jsPdfPageMaxMm = 5080;
-      const isTooTall = heightMm > jsPdfPageMaxMm;
+    /* Guard-rail: jsPDF (and some PDF readers) refuse pages > 14 400 pt
+       ≈  5080 mm.  If the page would be taller, fall back to multi-page. */
+    const jsPdfPageMaxMm = 5080;
+    const isTooTall      = heightMm > jsPdfPageMaxMm;
 
-      const opt: html2pdf.Options = {
-        margin: 10,
-        filename: `newsletter-${format(new Date(newsletter.created_at), 'yyyy-MM-dd')}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        pagebreak: { mode: isTooTall ? ["css", "legacy"] : ["avoid-all"] },
-        jsPDF: {
-          unit: "mm",
-          format: isTooTall ? "a4" : [widthMm, heightMm],
-          orientation: widthMm >= heightMm ? "landscape" : "portrait"
-        }
-      };
+    /* ------------------------------------------------------------------
+       2.  Build the pdf-options object.
+           - custom page size = [ widthMm , heightMm ]
+           - turn off html2pdf’s automatic page-breaking
+    ------------------------------------------------------------------ */
+    const opt: html2pdf.Options = {
+      margin:       10,                 // add a small white border
+      filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
+      image:        { type: "jpeg", quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
+      pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
+      jsPDF:        {
+        unit: "mm",
+        // use custom size unless the doc would blow past reader limits
+        format: isTooTall ? "a4" : [widthMm, heightMm],
+        orientation: widthMm >= heightMm ? "landscape" : "portrait"
+      }
+    };
 
-      await html2pdf().set(opt).from(tempElement).save();
-      
-      // Clean up
-      document.body.removeChild(tempElement);
-      
-      toast.success("PDF downloaded successfully!");
-    } catch (err) {
-      console.error("Error generating PDF:", err);
-      toast.error("Failed to generate PDF. Please try again.");
-    } finally {
-      setPdfGeneratingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(newsletter.id);
-        return newSet;
-      });
-    }
-  };
+    /* ------------------------------------------------------------------
+       3.  Generate and save
+    ------------------------------------------------------------------ */
+    await html2pdf().set(opt).from(element).save();
+    toast.success("PDF downloaded successfully!");
+  } catch (err) {
+    console.error("Error generating PDF:", err);
+    toast.error("Failed to generate PDF. Please try again.");
+  } finally {
+    setIsPdfGenerating(false);
+  }
+};
 
-  // Original download function for dialog (keeps existing functionality)
-  const downloadAsPDF = async () => {
-    if (!selectedNewsletter) return;
-    setIsPdfGenerating(true);
-    
-    try {
-      await downloadNewsletterAsPDF(selectedNewsletter);
-    } finally {
-      setIsPdfGenerating(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -449,12 +423,11 @@ const Library = () => {
                 {groupedNewsletters[date].map((newsletter) => {
                   const title = extractTitle(newsletter.markdown_text);
                   const firstImage = extractFirstImage(newsletter.markdown_text);
-                  const isGeneratingPdf = pdfGeneratingIds.has(newsletter.id);
                   
                   return (
                     <Card 
                       key={newsletter.id} 
-                      className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20 group relative"
+                      className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20 group"
                       onClick={() => viewNewsletter(newsletter)}
                     >
                       <AspectRatio ratio={4/3}>
@@ -464,26 +437,6 @@ const Library = () => {
                             <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
                               {formatShortDate(newsletter.created_at)}
                             </span>
-                          </div>
-                          
-                          {/* Download PDF Button */}
-                          <div className="absolute bottom-2 right-2 z-20">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-8 w-8 p-0 rounded-full shadow-md hover:shadow-lg transition-all opacity-0 group-hover:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadNewsletterAsPDF(newsletter);
-                              }}
-                              disabled={isGeneratingPdf}
-                            >
-                              {isGeneratingPdf ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600" />
-                              ) : (
-                                <Download className="h-4 w-4" />
-                              )}
-                            </Button>
                           </div>
                           
                           {/* Image/Icon Section */}
@@ -553,7 +506,11 @@ const Library = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <NewsletterDialogContent markdownText={selectedNewsletter.markdown_text} />
+              <div 
+                id="newsletter-content"
+                className="prose dark:prose-invert max-w-none my-4" 
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedNewsletter.markdown_text) }}
+              />
               
               <DialogFooter className="flex gap-2 mt-2">
                 <Button 
