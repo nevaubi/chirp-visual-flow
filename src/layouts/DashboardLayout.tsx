@@ -269,7 +269,7 @@ const DashboardLayout = () => {
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 justify-start px-3 py-4 text-white rounded-md transition-colors",
+                      "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
                       !expanded && "justify-center px-0",
                       hasRequiredTier 
                         ? "bg-amber-500 hover:bg-amber-600 text-white" 
