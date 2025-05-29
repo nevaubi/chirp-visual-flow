@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +32,52 @@ interface Newsletter {
   created_at: string;
   markdown_text: string | null;
 }
+
+// Content parsing utility functions
+const extractTitle = (markdown: string | null): string => {
+  if (!markdown) return "Newsletter";
+  
+  // Look for first heading (# Title)
+  const headingMatch = markdown.match(/^#+\s*(.+)$/m);
+  if (headingMatch) {
+    return headingMatch[1].trim();
+  }
+  
+  // Fallback to first line of substantial text
+  const lines = markdown.split('\n').filter(line => line.trim().length > 0);
+  const firstTextLine = lines.find(line => 
+    !line.startsWith('#') && 
+    !line.startsWith('![') && 
+    !line.startsWith('*') &&
+    !line.startsWith('-') &&
+    line.trim().length > 10
+  );
+  
+  return firstTextLine ? truncateText(firstTextLine.trim(), 50) : "Newsletter";
+};
+
+const extractFirstImage = (markdown: string | null): string | null => {
+  if (!markdown) return null;
+  
+  // Look for markdown image syntax ![alt](url)
+  const imageMatch = markdown.match(/!\[.*?\]\((.*?)\)/);
+  if (imageMatch) {
+    return imageMatch[1];
+  }
+  
+  // Look for direct image URLs
+  const urlMatch = markdown.match(/(https?:\/\/.*?\.(jpg|jpeg|png|gif|webp))/i);
+  if (urlMatch) {
+    return urlMatch[1];
+  }
+  
+  return null;
+};
+
+const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + '...';
+};
 
 const Library = () => {
   const { authState } = useAuth();
@@ -243,9 +288,11 @@ const Library = () => {
           {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
               <AspectRatio ratio={4/3}>
-                <div className="flex flex-col items-center justify-center h-full p-4">
-                  <Skeleton className="h-6 w-20 mb-3" />
-                  <Skeleton className="h-16 w-16 rounded-full" />
+                <div className="flex flex-col h-full p-3">
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <Skeleton className="h-16 w-full mb-2" />
+                  <Skeleton className="h-3 w-full mb-1" />
+                  <Skeleton className="h-3 w-3/4" />
                 </div>
               </AspectRatio>
             </Card>
@@ -276,24 +323,70 @@ const Library = () => {
                 {formatGroupDate(date)}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {groupedNewsletters[date].map((newsletter) => (
-                  <Card 
-                    key={newsletter.id} 
-                    className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20"
-                    onClick={() => viewNewsletter(newsletter)}
-                  >
-                    <AspectRatio ratio={4/3}>
-                      <div className="flex flex-col items-center justify-center h-full p-4">
-                        <span className="text-sm font-medium text-primary mb-3 text-center">
-                          {formatShortDate(newsletter.created_at)}
-                        </span>
-                        <div className="bg-primary/10 p-4 rounded-full">
-                          <FileText className="h-12 w-12 text-primary" />
+                {groupedNewsletters[date].map((newsletter) => {
+                  const title = extractTitle(newsletter.markdown_text);
+                  const firstImage = extractFirstImage(newsletter.markdown_text);
+                  
+                  return (
+                    <Card 
+                      key={newsletter.id} 
+                      className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20 group"
+                      onClick={() => viewNewsletter(newsletter)}
+                    >
+                      <AspectRatio ratio={4/3}>
+                        <div className="flex flex-col h-full">
+                          {/* Date Badge */}
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
+                              {formatShortDate(newsletter.created_at)}
+                            </span>
+                          </div>
+                          
+                          {/* Image/Icon Section */}
+                          <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
+                            {firstImage ? (
+                              <img 
+                                src={firstImage} 
+                                alt="Newsletter preview" 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling!.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div className={`${firstImage ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                              <FileText className="h-8 w-8 text-primary/60" />
+                            </div>
+                          </div>
+                          
+                          {/* Content Section */}
+                          <div className="flex-1 p-3 flex flex-col justify-between">
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
+                                {title}
+                              </h3>
+                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                                Newsletter content from {format(new Date(newsletter.created_at), 'MMM d')}
+                              </p>
+                            </div>
+                            
+                            {/* Bottom indicator */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                              <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                <span className="text-xs text-gray-400 font-medium">Newsletter</span>
+                              </div>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="w-1 h-1 bg-primary rounded-full"></div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </AspectRatio>
-                  </Card>
-                ))}
+                      </AspectRatio>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           ))}
