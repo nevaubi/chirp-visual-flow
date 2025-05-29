@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Bookmark, Plus } from "lucide-react";
 
@@ -11,8 +12,8 @@ export default function FeaturesSection() {
         <div className="flex flex-col md:flex-row -mt-[50px] md:-mt-[100px]">
           {/* Left column with side-by-side images - changed to horizontal on mobile */}
           <div className="flex flex-row md:flex-row items-center md:items-start justify-center md:justify-start gap-3 md:gap-6 ml-0 md:-ml-[50px]">
-            {/* Features overview image - smaller on mobile for side-by-side layout */}
-            <div className="max-w-[120px] md:max-w-[280px] w-full">
+            {/* Features overview image - enlarged on mobile for better visibility */}
+            <div className="max-w-[145px] md:max-w-[280px] w-full">
               <img src="/ChatGPT Image May 22, 2025, 09_59_40 PM.png" alt="Features overview" className="w-full h-auto rounded-lg" loading="lazy" />
             </div>
             
@@ -21,8 +22,8 @@ export default function FeaturesSection() {
               <Plus className="h-6 w-6 md:h-8 md:w-8 text-white" />
             </div>
             
-            {/* Newsletter image - smaller on mobile for side-by-side layout */}
-            <div className="max-w-[120px] md:max-w-[280px] w-full">
+            {/* Newsletter image - enlarged on mobile for better visibility */}
+            <div className="max-w-[145px] md:max-w-[280px] w-full">
               <img src="/1c8576dd-211e-4e04-b6d1-be098d655656.png" alt="Email newsletter example" className="w-full h-auto rounded-lg" loading="lazy" />
             </div>
           </div>

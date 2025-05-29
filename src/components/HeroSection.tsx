@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -20,10 +21,10 @@ export default function HeroSection() {
 
   return (
     <section className="pt-28 pb-32 relative overflow-hidden bg-white">
-      {/* Blue wavy border at the bottom */}
+      {/* Blue wavy border at the bottom - improved curve smoothness */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg width="100%" height="auto" viewBox="0 0 1440 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 30C240 90 480 120 720 30C960 -60 1200 60 1440 30V200H0V30Z" fill="#0087C8"/>
+          <path d="M0 40C120 80 240 100 360 85C480 70 600 45 720 30C840 15 960 40 1080 55C1200 70 1320 60 1440 40V200H0V40Z" fill="#0087C8"/>
         </svg>
       </div>
 
