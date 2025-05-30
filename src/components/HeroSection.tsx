@@ -45,97 +45,90 @@ export default function HeroSection() {
         />
       </div>
 
-      {/* Reviews section - positioned strategically above blue wave */}
-      <div className="absolute bottom-32 right-12 z-20 hidden lg:block transform scale-125 hover:scale-130 transition-transform duration-300">
+      {/* Reviews section - positioned strategically */}
+      <div className="absolute top-20 right-12 z-20 hidden lg:block transform scale-110 hover:scale-115 transition-transform duration-300">
         <ReviewsSection />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-32">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center min-h-[calc(100vh-200px)]">
+        <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center">
           
-          {/* Left column - Main content */}
-          <div className="w-full lg:w-3/5 lg:pr-8">
-            {/* Mobile reviews section */}
-            <div className="flex justify-center mb-8 lg:hidden">
-              <ReviewsSection />
-            </div>
+          {/* Mobile reviews section */}
+          <div className="flex justify-center mb-8 lg:hidden">
+            <ReviewsSection />
+          </div>
 
-            {/* Main headline */}
-            <div className="text-center lg:text-left mb-8">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
-                <span className="block text-gray-900">Transform your</span>
-                <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
-                  Twitter bookmarks
-                </span>
-                <span className="block text-gray-900">into stunning</span>
-                <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">
-                  newsletters
-                </span>
-              </h1>
-              
-              <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Stop letting great content get lost in your bookmarks. 
-                <span className="block mt-2 font-semibold text-[#0087C8]">
-                  Automatically curate and send beautiful newsletters to your audience.
-                </span>
-              </p>
-            </div>
+          {/* Main headline - simplified to 2 rows */}
+          <div className="mb-8">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
+              <span className="block text-gray-900">Turn X Bookmarks into</span>
+              <span className="block bg-gradient-to-r from-[#0087C8] to-[#FF6B35] bg-clip-text text-transparent">
+                Professional Newsletters
+              </span>
+            </h1>
+            
+            <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+              Stop letting great content get lost in your bookmarks. 
+              <span className="block mt-2 font-semibold text-[#0087C8]">
+                Automatically curate and send beautiful newsletters to your audience.
+              </span>
+            </p>
+          </div>
 
-            {/* Key value propositions */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-              <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#0087C8] to-[#0066CC] rounded-xl flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Automated</div>
-                  <div className="text-sm text-gray-600">Zero writing needed</div>
-                </div>
+          {/* Key value propositions */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 max-w-4xl">
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0087C8] to-[#0066CC] rounded-xl flex items-center justify-center">
+                <Zap className="w-6 h-6 text-white" />
               </div>
-              
-              <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8C42] rounded-xl flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Beautiful</div>
-                  <div className="text-sm text-gray-600">Professional design</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Engaging</div>
-                  <div className="text-sm text-gray-600">High open rates</div>
-                </div>
+              <div>
+                <div className="font-semibold text-gray-900">Automated</div>
+                <div className="text-sm text-gray-600">Zero writing needed</div>
               </div>
             </div>
             
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button 
-                className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#e05a2c] hover:to-[#e07a35] text-white rounded-2xl px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                onClick={scrollToPricing}
-              >
-                <Mail size={22} />
-                Start Creating Newsletters
-                <ArrowRight size={20} />
-              </Button>
-              <Button 
-                variant="outline"
-                className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white rounded-2xl px-8 py-4 font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200"
-                onClick={scrollToPricing}
-              >
-                View Pricing
-              </Button>
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8C42] rounded-xl flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">Beautiful</div>
+                <div className="text-sm text-gray-600">Professional design</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">Engaging</div>
+                <div className="text-sm text-gray-600">High open rates</div>
+              </div>
             </div>
           </div>
           
-          {/* Right column - Dashboard preview */}
-          <div className="w-full lg:w-2/5 relative">
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Button 
+              className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#e05a2c] hover:to-[#e07a35] text-white rounded-2xl px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              onClick={scrollToPricing}
+            >
+              <Mail size={22} />
+              Start Creating Newsletters
+              <ArrowRight size={20} />
+            </Button>
+            <Button 
+              variant="outline"
+              className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white rounded-2xl px-8 py-4 font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200"
+              onClick={scrollToPricing}
+            >
+              View Pricing
+            </Button>
+          </div>
+
+          {/* Dashboard preview - centered */}
+          <div className="relative max-w-4xl w-full">
             <div className="relative transform hover:scale-105 transition-transform duration-500">
               {/* Dashboard component with enhanced styling */}
               <div className="relative z-10">
@@ -143,7 +136,7 @@ export default function HeroSection() {
               </div>
               
               {/* Enhanced floating newsletter success card */}
-              <div className="absolute -bottom-8 -left-8 z-20">
+              <div className="absolute -bottom-8 -left-8 z-20 hidden lg:block">
                 <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 max-w-[320px] transform rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mr-3">
