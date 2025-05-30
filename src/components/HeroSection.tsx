@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, ArrowRight, Bookmark, Zap, Send } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -31,40 +31,104 @@ export default function HeroSection() {
 
       {/* Floating UI Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Newsletter mockup - top left */}
-        <div className="absolute top-32 left-8 transform -rotate-6 hover:rotate-0 transition-transform duration-700">
-          <Card className="w-64 h-80 shadow-xl border-2 border-gray-100">
-            <CardContent className="p-4">
-              <div className="h-8 bg-[#0087C8] rounded mb-3"></div>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        {/* Enhanced Newsletter mockup - top left */}
+        <div className="absolute top-20 left-4 transform -rotate-6 hover:rotate-0 transition-transform duration-700">
+          <Card className="w-80 h-[500px] shadow-2xl border-2 border-gray-200 bg-white relative overflow-hidden">
+            <CardContent className="p-0 h-full">
+              {/* Newsletter Header */}
+              <div className="h-16 bg-[#0087C8] flex items-center px-6">
+                <div className="w-8 h-8 bg-white rounded-full mr-3"></div>
+                <div className="text-white font-bold text-lg">Weekly Tech Digest</div>
               </div>
-              <div className="mt-4 h-24 bg-gray-100 rounded"></div>
-              <div className="mt-3 space-y-1">
-                <div className="h-2 bg-gray-200 rounded w-full"></div>
-                <div className="h-2 bg-gray-200 rounded w-5/6"></div>
+              
+              {/* Newsletter Content */}
+              <div className="p-6 space-y-4">
+                <div className="border-b border-gray-200 pb-4">
+                  <h3 className="font-bold text-lg text-gray-900 mb-2">🚀 This Week's Top Stories</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="h-3 bg-gray-800 rounded w-5/6 mb-1"></div>
+                      <div className="h-2 bg-gray-400 rounded w-full"></div>
+                      <div className="h-2 bg-gray-400 rounded w-3/4"></div>
+                    </div>
+                    <div>
+                      <div className="h-3 bg-gray-800 rounded w-4/5 mb-1"></div>
+                      <div className="h-2 bg-gray-400 rounded w-full"></div>
+                      <div className="h-2 bg-gray-400 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tweet Section */}
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center mb-2">
+                    <div className="w-6 h-6 bg-blue-400 rounded-full mr-2"></div>
+                    <div className="h-2 bg-gray-600 rounded w-20"></div>
+                  </div>
+                  <div className="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                  <div className="h-2 bg-gray-300 rounded w-4/5"></div>
+                </div>
+                
+                {/* More Content */}
+                <div className="space-y-2">
+                  <div className="h-2 bg-gray-300 rounded w-full"></div>
+                  <div className="h-2 bg-gray-300 rounded w-5/6"></div>
+                  <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+                </div>
               </div>
+              
+              {/* Fade effect at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Email preview - top right */}
-        <div className="absolute top-40 right-12 transform rotate-3 hover:rotate-0 transition-transform duration-700">
-          <Card className="w-56 h-64 shadow-lg border border-gray-200">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-orange-400 rounded-full"></div>
-                <div className="h-2 bg-gray-300 rounded w-20"></div>
+        {/* Enhanced Email client preview - top right */}
+        <div className="absolute top-32 right-8 transform rotate-3 hover:rotate-0 transition-transform duration-700">
+          <Card className="w-96 h-[420px] shadow-xl border border-gray-300 bg-white relative overflow-hidden">
+            <CardContent className="p-0 h-full">
+              {/* Email Header */}
+              <div className="bg-gray-50 border-b border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full mr-2"></div>
+                    <div className="text-sm font-medium text-gray-900">Weekly Newsletter</div>
+                  </div>
+                  <div className="text-xs text-gray-500">2h ago</div>
+                </div>
+                <div className="text-sm text-gray-600">news@yourcompany.com</div>
+                <div className="font-semibold text-gray-900 mt-1">Your curated content is ready! 📧</div>
               </div>
-              <div className="h-3 bg-gray-800 rounded w-3/4 mb-2"></div>
-              <div className="space-y-1">
-                <div className="h-2 bg-gray-200 rounded w-full"></div>
-                <div className="h-2 bg-gray-200 rounded w-4/5"></div>
-                <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+              
+              {/* Email Body */}
+              <div className="p-4 space-y-4">
+                <div className="text-sm text-gray-700">
+                  <div className="h-3 bg-gray-800 rounded w-3/4 mb-2"></div>
+                  <div className="h-2 bg-gray-400 rounded w-full mb-1"></div>
+                  <div className="h-2 bg-gray-400 rounded w-5/6"></div>
+                </div>
+                
+                {/* Content Preview */}
+                <div className="bg-blue-50 rounded-lg p-3 border-l-4 border-blue-400">
+                  <div className="h-2 bg-blue-600 rounded w-1/2 mb-2"></div>
+                  <div className="h-2 bg-gray-500 rounded w-full mb-1"></div>
+                  <div className="h-2 bg-gray-500 rounded w-4/5"></div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-2 bg-gray-300 rounded w-full"></div>
+                  <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-2 bg-gray-300 rounded w-5/6"></div>
+                </div>
+                
+                {/* CTA Button */}
+                <div className="bg-[#0087C8] text-white text-center py-2 px-4 rounded text-sm font-medium">
+                  Read Full Newsletter
+                </div>
               </div>
-              <div className="mt-3 h-16 bg-blue-50 rounded border-2 border-dashed border-blue-200"></div>
+              
+              {/* Fade effect at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"></div>
             </CardContent>
           </Card>
         </div>
@@ -112,42 +176,6 @@ export default function HeroSection() {
                 Automatically curate and send beautiful newsletters to your audience.
               </span>
             </p>
-          </div>
-
-          {/* Visual Process Flow */}
-          <div className="flex flex-col lg:flex-row items-center gap-8 mb-12 max-w-4xl mx-auto">
-            {/* Step 1 */}
-            <div className="flex flex-col items-center group">
-              <Card className="w-32 h-32 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border-2">
-                <Bookmark className="w-12 h-12 text-[#0087C8]" />
-              </Card>
-              <h3 className="font-semibold text-gray-900 mb-2">Bookmark Content</h3>
-              <p className="text-sm text-gray-600 text-center max-w-32">Save interesting tweets and threads</p>
-            </div>
-
-            {/* Arrow */}
-            <ArrowRight className="w-8 h-8 text-gray-400 hidden lg:block" />
-
-            {/* Step 2 */}
-            <div className="flex flex-col items-center group">
-              <Card className="w-32 h-32 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border-2">
-                <Zap className="w-12 h-12 text-orange-500" />
-              </Card>
-              <h3 className="font-semibold text-gray-900 mb-2">AI Curation</h3>
-              <p className="text-sm text-gray-600 text-center max-w-32">Smart AI organizes and formats</p>
-            </div>
-
-            {/* Arrow */}
-            <ArrowRight className="w-8 h-8 text-gray-400 hidden lg:block" />
-
-            {/* Step 3 */}
-            <div className="flex flex-col items-center group">
-              <Card className="w-32 h-32 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border-2">
-                <Send className="w-12 h-12 text-green-600" />
-              </Card>
-              <h3 className="font-semibold text-gray-900 mb-2">Send Newsletter</h3>
-              <p className="text-sm text-gray-600 text-center max-w-32">Beautiful emails to your audience</p>
-            </div>
           </div>
 
           {/* Reviews section */}
