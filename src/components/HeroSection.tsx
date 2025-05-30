@@ -20,7 +20,7 @@ export default function HeroSection() {
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
       {/* Vertically scrolling newsletter columns - all parallel and same speed */}
       <div className="absolute inset-0 z-0">
-        {/* Left outer column - slow upward scroll */}
+        {/* Left outer column */}
         <div className="absolute left-32 top-0 w-48 h-[200vh] opacity-12">
           <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
@@ -36,9 +36,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Left inner column - slow upward scroll with delay */}
+        {/* Left inner column */}
         <div className="absolute left-64 top-0 w-48 h-[200vh] opacity-10">
-          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '10s' }}>
+          <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -52,9 +52,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Right inner column - slow upward scroll with different delay */}
+        {/* Right inner column */}
         <div className="absolute right-64 top-0 w-48 h-[200vh] opacity-10">
-          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '20s' }}>
+          <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -68,9 +68,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Right outer column - slow upward scroll with different delay */}
+        {/* Right outer column */}
         <div className="absolute right-32 top-0 w-48 h-[200vh] opacity-12">
-          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '30s' }}>
+          <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
