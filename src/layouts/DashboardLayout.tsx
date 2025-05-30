@@ -220,10 +220,7 @@ const DashboardLayout = () => {
   // Create sidebar items array conditionally based on platform type
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
-    // Only show Library for Newsletter platform, hide for Creator platform
-    ...(isNewsletterPlatform 
-        ? [{ icon: Book, label: 'Library', path: '/dashboard/analytics' }] 
-        : []),
+    { icon: Book, label: 'Library', path: '/dashboard/analytics' },
     // For Creator platform, show "Trending Topics" instead of "Community"
     ...(isCreatorPlatform 
         ? [{ icon: TrendingUp, label: 'Trending Topics', path: '/dashboard/community' }] 

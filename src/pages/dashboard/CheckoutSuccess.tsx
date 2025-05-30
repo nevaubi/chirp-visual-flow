@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,6 @@ const CheckoutSuccess = () => {
   const sessionId = searchParams.get("session_id");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [subscriptionType, setSubscriptionType] = useState<'newsletter' | 'creator' | null>(null);
   const { authState, refreshProfile } = useAuth();
   
   // Use refs to prevent multiple executions
@@ -100,40 +100,11 @@ const CheckoutSuccess = () => {
           toast.error("Error checking subscription status");
           setIsLoading(false);
         } else if (isMounted) {
-          // Refresh profile first to get the latest data
-          await refreshProfile();
+          toast.success("Subscription activated successfully!");
           
-          // Wait a moment for the profile to be updated
-          setTimeout(async () => {
-            // Get fresh profile data after refresh
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('is_creator_platform, is_newsletter_platform, subscription_tier')
-              .eq('id', authState.user?.id)
-              .single();
-            
-            console.log("Profile data after refresh:", profileData);
-            
-            // Determine subscription type based on profile data and subscription response
-            if (profileData?.is_creator_platform || data?.subscription_tier === "Creator") {
-              setSubscriptionType('creator');
-              toast.success("Creator subscription activated successfully!");
-            } else if (profileData?.is_newsletter_platform || data?.subscription_tier?.includes("Newsletter")) {
-              setSubscriptionType('newsletter');
-              toast.success("Newsletter subscription activated successfully!");
-            } else {
-              // Fallback logic
-              if (data?.subscription_tier === "Creator") {
-                setSubscriptionType('creator');
-                toast.success("Creator subscription activated successfully!");
-              } else {
-                setSubscriptionType('newsletter');
-                toast.success("Newsletter subscription activated successfully!");
-              }
-            }
-            
-            setIsLoading(false);
-          }, 1000);
+          // After successful subscription check, refresh the user's profile to get updated preferences
+          await refreshProfile();
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error in checkout success:", error);
@@ -162,7 +133,7 @@ const CheckoutSuccess = () => {
     };
   }, [sessionId, authState.user, authState.loading, refreshProfile]);
 
-  // Handle form submission for newsletter platform
+  // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!authState.user) {
       toast.error("You must be logged in to update your profile");
@@ -199,11 +170,6 @@ const CheckoutSuccess = () => {
     }
   };
 
-  // Handle Creator platform redirect
-  const handleCreatorRedirect = () => {
-    navigate("/dashboard/home");
-  };
-
   // Function to render newsletter generations info
   const renderNewsletterGenerations = () => {
     if (authState.profile?.remaining_newsletter_generations) {
@@ -212,20 +178,6 @@ const CheckoutSuccess = () => {
           <span className="font-semibold text-green-600">
             {authState.profile.remaining_newsletter_generations} Newsletter Generations
           </span> included with your subscription
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Function to render tweet generations info for Creator platform
-  const renderTweetGenerations = () => {
-    if (authState.profile?.remaining_tweet_generations) {
-      return (
-        <div className="mt-2">
-          <span className="font-semibold text-green-600">
-            {authState.profile.remaining_tweet_generations} Tweet Generations
-          </span> included with your subscription this month
         </div>
       );
     }
@@ -241,101 +193,65 @@ const CheckoutSuccess = () => {
         
         <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
         
-        {subscriptionType === 'creator' ? (
-          // Creator Platform Success
-          <>
-            <p className="text-muted-foreground mb-2">
-              Your Creator subscription is activated! You now have access to advanced tweet generation features.
-            </p>
-            
-            {/* Display tweet generations */}
-            {renderTweetGenerations()}
-            
+        <p className="text-muted-foreground mb-2">
+          Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
+        </p>
+        
+        {/* Display newsletter generations */}
+        {renderNewsletterGenerations()}
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email for Newsletter Delivery</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="your@email.com" 
+                      type="email"
+                      {...field} 
+                      disabled={isSubmitting}
+                      className="text-base"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button 
-              onClick={handleCreatorRedirect}
-              className="w-full bg-green-500 hover:bg-green-600 text-lg py-6 mt-6"
+              type="submit" 
+              className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
+              disabled={isSubmitting}
             >
-              Go to Dashboard
+              {isSubmitting ? "Saving..." : "Save Email & Continue"}
             </Button>
-            
-            {authState.profile?.subscription_tier && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Your Creator Subscription</h3>
-                <p className="text-sm text-muted-foreground">
-                  Plan: <span className="font-medium">{authState.profile.subscription_tier}</span>
-                </p>
-                {authState.profile.remaining_tweet_generations > 0 && (
-                  <p className="text-sm text-green-600 font-medium mt-1">
-                    {authState.profile.remaining_tweet_generations} Tweet Generations Available This Month
-                  </p>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          // Newsletter Platform Success (existing logic)
-          <>
-            <p className="text-muted-foreground mb-2">
-              Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
+          </form>
+        </Form>
+        
+        {authState.profile?.newsletter_day_preference && (
+          <div className="mt-6 p-4 bg-amber-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
+            <p className="text-sm text-muted-foreground">
+              Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
             </p>
-            
-            {/* Display newsletter generations */}
-            {renderNewsletterGenerations()}
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email for Newsletter Delivery</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="your@email.com" 
-                          type="email"
-                          {...field} 
-                          disabled={isSubmitting}
-                          className="text-base"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Saving..." : "Save Email & Continue"}
-                </Button>
-              </form>
-            </Form>
-            
-            {authState.profile?.newsletter_day_preference && (
-              <div className="mt-6 p-4 bg-amber-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
-                <p className="text-sm text-muted-foreground">
-                  Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
-                </p>
-                {authState.profile.newsletter_content_preferences && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Type: <span className="font-medium">
-                      {authState.profile.newsletter_content_preferences.audience === 'personal' 
-                        ? 'Personal Newsletter' 
-                        : 'Audience Newsletter'}
-                    </span>
-                  </p>
-                )}
-                {authState.profile.remaining_newsletter_generations > 0 && (
-                  <p className="text-sm text-green-600 font-medium mt-1">
-                    {authState.profile.remaining_newsletter_generations} Newsletter Generations Available
-                  </p>
-                )}
-              </div>
+            {authState.profile.newsletter_content_preferences && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Type: <span className="font-medium">
+                  {authState.profile.newsletter_content_preferences.audience === 'personal' 
+                    ? 'Personal Newsletter' 
+                    : 'Audience Newsletter'}
+                </span>
+              </p>
             )}
-          </>
+            {authState.profile.remaining_newsletter_generations > 0 && (
+              <p className="text-sm text-green-600 font-medium mt-1">
+                {authState.profile.remaining_newsletter_generations} Newsletter Generations Available
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>

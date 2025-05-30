@@ -118,7 +118,6 @@ export type Database = {
           personal_tweet_dataset: string | null
           profile_analysis_results: Json | null
           remaining_newsletter_generations: number | null
-          remaining_tweet_generations: number | null
           sending_email: string | null
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -156,7 +155,6 @@ export type Database = {
           personal_tweet_dataset?: string | null
           profile_analysis_results?: Json | null
           remaining_newsletter_generations?: number | null
-          remaining_tweet_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -194,7 +192,6 @@ export type Database = {
           personal_tweet_dataset?: string | null
           profile_analysis_results?: Json | null
           remaining_newsletter_generations?: number | null
-          remaining_tweet_generations?: number | null
           sending_email?: string | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null

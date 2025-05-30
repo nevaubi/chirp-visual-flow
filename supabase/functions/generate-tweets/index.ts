@@ -1,9 +1,7 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
-// Force redeployment - 2025-01-29
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -32,26 +30,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get user's profile and check remaining generations
+    // Get user's voice profile and top tweets from profiles table
     const { data: userProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('voice_profile_analysis, personal_tweet_dataset, twitter_username, twitter_profilepic_url, remaining_tweet_generations, is_creator_platform, subscribed')
+      .select('voice_profile_analysis, personal_tweet_dataset, twitter_username, twitter_profilepic_url')
       .eq('id', userId)
       .single();
 
     if (profileError || !userProfile) {
       throw new Error('User profile not found or error fetching profile');
-    }
-
-    // Check if user is on Creator platform
-    if (!userProfile.is_creator_platform) {
-      throw new Error('Tweet generation is only available for Creator platform users');
-    }
-
-    // Check remaining generations
-    const remainingGenerations = userProfile.remaining_tweet_generations || 0;
-    if (remainingGenerations <= 0) {
-      throw new Error('No tweet generations remaining for this month');
     }
     
     const voiceProfileAnalysis = userProfile.voice_profile_analysis || 'No voice profile analysis available.';
@@ -183,7 +170,7 @@ Generate three different tweet options in your exact writing style, presenting e
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -211,24 +198,10 @@ Generate three different tweet options in your exact writing style, presenting e
     const tweet2 = tweet2Match ? tweet2Match[1].trim() : 'No tweet generated';
     const tweet3 = tweet3Match ? tweet3Match[1].trim() : 'No tweet generated';
 
-    // Decrement remaining generations after successful generation
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ 
-        remaining_tweet_generations: remainingGenerations - 1 
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('Error updating remaining generations:', updateError);
-      // Don't throw error here as tweets were successfully generated
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         tweets: [tweet1, tweet2, tweet3],
-        remainingGenerations: remainingGenerations - 1,
         userProfile: {
           username: userProfile.twitter_username,
           profilePic: userProfile.twitter_profilepic_url

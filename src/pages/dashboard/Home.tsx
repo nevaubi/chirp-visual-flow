@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -25,25 +26,22 @@ import NewsletterTips from '@/components/newsletter/NewsletterTips';
 const CreatorDashboard = ({ profile }) => {
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [localProfile, setLocalProfile] = useState(profile);
   const { refreshProfile } = useAuth();
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   
-  // CRITICAL FIX: Use profile directly from props and watch for changes
-  const analysisResults = profile?.profile_analysis_results;
-  const hasAnalysisResults = !!analysisResults;
-  
-  // Add console logging to track state changes
+  // Update local profile when the parent profile changes
   useEffect(() => {
-    console.log("CreatorDashboard: Profile updated", {
-      hasProfile: !!profile,
-      hasAnalysisResults: !!analysisResults,
-      profileId: profile?.id
-    });
-  }, [profile, analysisResults]);
+    setLocalProfile(profile);
+  }, [profile]);
+  
+  // Extract profile analysis results from local state
+  const analysisResults = localProfile?.profile_analysis_results;
+  const hasAnalysisResults = !!analysisResults;
   
   // Trigger a new analysis if needed
   const handleRefreshAnalysis = async () => {
-    if (!profile?.twitter_username || !profile?.timezone) {
+    if (!localProfile?.twitter_username || !localProfile?.timezone) {
       toast.error("Missing Twitter username or timezone. Please update your profile settings.");
       return;
     }
@@ -54,9 +52,9 @@ const CreatorDashboard = ({ profile }) => {
     try {
       const { data, error } = await supabase.functions.invoke('initial-profile-analysis', {
         body: {
-          userId: profile.id,
-          twitterUsername: profile.twitter_username,
-          timezone: profile.timezone
+          userId: localProfile.id,
+          twitterUsername: localProfile.twitter_username,
+          timezone: localProfile.timezone
         }
       });
       
@@ -69,7 +67,10 @@ const CreatorDashboard = ({ profile }) => {
       }
       
       // Refresh profile to get the updated analysis results
-      await refreshProfile();
+      const updatedProfile = await refreshProfile();
+      
+      // Force component update with the new profile data
+      setLocalProfile(updatedProfile);
       
       // Show the completion popup
       setShowCompletionPopup(true);
@@ -168,7 +169,7 @@ const CreatorDashboard = ({ profile }) => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Twitter Profile Card - now in a responsive grid */}
           <div className="lg:col-span-1">
-            <TwitterProfileCard profile={profile} />
+            <TwitterProfileCard profile={localProfile} />
           </div>
           
           {/* New charts in the remaining space */}
@@ -197,7 +198,7 @@ const CreatorDashboard = ({ profile }) => {
           <div className="lg:col-span-1">
             <CircadianHeatmap 
               data={analysisResults?.circadianHeatmap || []} 
-              timezone={profile?.timezone} 
+              timezone={localProfile?.timezone} 
             />
           </div>
           
@@ -205,7 +206,7 @@ const CreatorDashboard = ({ profile }) => {
           <div className="lg:col-span-1">
             <CircadianInsights 
               data={analysisResults?.circadianHeatmap || []}
-              timezone={profile?.timezone}
+              timezone={localProfile?.timezone}
             />
           </div>
         </div>
@@ -223,7 +224,7 @@ const CreatorDashboard = ({ profile }) => {
             <HourlyEngagementChart 
               hourlyAvgLikes={analysisResults?.hourlyAvgLikes || {}} 
               averageTweetsPerHour={analysisResults?.averageTweetsPerHour || {}} 
-              timezone={profile?.timezone}
+              timezone={localProfile?.timezone}
               bestHour={parseInt(analysisResults?.bestHourByAvgLikes?.hour?.toString() || "0")}
             />
           </div>
@@ -442,11 +443,6 @@ const DashboardHome = () => {
     try {
       // Simply close the walkthrough popup without modifying any profile data
       setShowWalkthrough(false);
-      
-      // Add a small delay to ensure state updates are processed
-      setTimeout(() => {
-        console.log("Walkthrough completed, profile should be updated");
-      }, 100);
     } catch (error) {
       console.error("Error updating timezone:", error);
     }

@@ -43,17 +43,20 @@ async function analyzeWithOpenAI(tweets: string[]): Promise<string> {
       Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-2024-11-20",
+      model: "gpt-4.1",
       temperature: 0.6,
-      max_tokens: 700,
       messages: [
         {
           role: "system",
           content: `You are a specialized linguistic analysis system designed to extract comprehensive writing style patterns from Twitter content. Your task is to analyze a set of top-performing tweets from a single user and identify all elements that constitute their unique voice.
 
-Analyze the tweets with extreme attention to detail. Produce a structured text output containing all style elements organized by category. Your analysis must be exhaustive yet precisely and accurately create an effective voice profile. Your output must be in this exact format:
+Analyze the tweets with extreme attention to detail. Produce a structured text output containing all style elements organized by category. Your analysis must be exhaustive yet precise. Your output must be in this exact format:
 
 Output Format:
+  "core_vocabulary": [...],
+  "frequent_phrases": [...],
+  "unique_terms": [...],
+  "word_choice_patterns": [...],
   "avg_sentence_length": [...],
   "sentence_structures": [...],
   "fragment_patterns": [...],
