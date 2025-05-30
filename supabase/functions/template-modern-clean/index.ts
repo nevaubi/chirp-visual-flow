@@ -1,570 +1,479 @@
+// =========================================================================================
+//  manual-newsletter-generation.ts — FULL PRODUCTION VERSION
+//  (includes Perplexity enrichment, query-generation, UI/UX enhancer, HTML conversion, etc.)
+// =========================================================================================
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { serve }        from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { marked }       from "https://esm.sh/marked@4.3.0";
+import  juice           from "https://esm.sh/juice@11.0.0";
+import { Resend }       from "npm:resend@2.0.0";
 
+// ────────────────────────────────────────────────────────────────────────────────
+//  CORS
+// ────────────────────────────────────────────────────────────────────────────────
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type"
 };
 
+// ────────────────────────────────────────────────────────────────────────────────
+//  RESEND INITIALISATION
+// ────────────────────────────────────────────────────────────────────────────────
+const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
+
+// ────────────────────────────────────────────────────────────────────────────────
+//  LOGGING HELPER
+// ────────────────────────────────────────────────────────────────────────────────
+const logStep = (step: string, details?: any) => {
+  console.log(
+    `[NEWSLETTER] ${step}${details ? ` – ${JSON.stringify(details, null, 2)}` : ""}`
+  );
+};
+
+// ────────────────────────────────────────────────────────────────────────────────
+//  MAIN EDGE SERVE HANDLER
+// ────────────────────────────────────────────────────────────────────────────────
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get the authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get user from auth token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid auth token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // ░░ Parse body
     const { selectedCount } = await req.json();
-
-    // Validate selectedCount
     if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid selectedCount. Must be 10, 20, or 30.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return json(400, { error: "Invalid selectedCount; must be 10, 20, or 30." });
     }
 
-    console.log(`Modern Clean Template: Starting newsletter generation for user ${user.id} with ${selectedCount} bookmarks`);
+    // ░░ Auth header → JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json(401, { error: "Missing Authorization header" });
+    const jwt = authHeader.replace("Bearer ", "");
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    // ░░ Supabase client (service role)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase    = createClient(supabaseUrl, supabaseKey);
 
-    if (profileError || !profile) {
-      console.error('Error fetching user profile:', profileError);
-      return new Response(
-        JSON.stringify({ error: 'User profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(jwt);
+    if (authErr || !user) return json(401, { error: "Invalid token" });
 
-    // Check if user has remaining generations
-    if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
-      return new Response(
-        JSON.stringify({ error: 'No remaining newsletter generations available' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // ░░ Fire off background task
+    const task = generateNewsletter(user.id, selectedCount, jwt);
+    // @ts-ignore – EdgeRuntime global exists in Deno Deploy
+    EdgeRuntime.waitUntil(task);
 
-    // Check if user has required subscription tier
-    const hasRequiredTier = profile.subscription_tier === "Newsletter Standard" || 
-                            profile.subscription_tier === "Newsletter Premium";
-    
-    if (!hasRequiredTier) {
-      return new Response(
-        JSON.stringify({ error: 'Subscription tier insufficient. Newsletter Standard or Premium required.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    return json(202, { status: "processing", message: "Newsletter generation started" });
 
-    // Check if user has Twitter bookmark tokens
-    if (!profile.twitter_bookmark_access_token) {
-      return new Response(
-        JSON.stringify({ error: 'Twitter bookmark access not available. Please reconnect your Twitter account.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Decrement remaining generations immediately
-    const newRemainingGenerations = profile.remaining_newsletter_generations - 1;
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ remaining_newsletter_generations: newRemainingGenerations })
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Error updating remaining generations:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update generation count' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Modern Clean Template: Updated remaining generations to ${newRemainingGenerations} for user ${user.id}`);
-
-    // 6) Fetch bookmarks directly from Twitter API first
-console.log('Modern Clean Template: Fetching bookmarks', { count: selectedCount, userId: profile.numerical_id });
-const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${profile.numerical_id}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
-  method: "GET",
-  headers: {
-    Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
-    "Content-Type": "application/json"
+  } catch (err) {
+    console.error("Top-level error", err);
+    return json(500, { error: "Internal error" });
   }
 });
 
-if (!bookmarksResp.ok) {
-  const text = await bookmarksResp.text();
-  console.error(`Twitter API error (${bookmarksResp.status}):`, text);
-  
-  if (bookmarksResp.status === 401) {
-    throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
+// ────────────────────────────────────────────────────────────────────────────────
+//  BACKGROUND NEWSLETTER GENERATION
+// ────────────────────────────────────────────────────────────────────────────────
+async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
+  logStep("Background task start", { userId, selectedCount });
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 1. Supabase profile + plan validation                                   │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  const supabaseUrl  = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabase     = createClient(supabaseUrl, supabaseKey);
+
+  const { data: profile, error: profErr } = await supabase
+    .from("profiles")
+    .select(`subscription_tier,
+             remaining_newsletter_generations,
+             twitter_bookmark_access_token,
+             twitter_bookmark_refresh_token,
+             twitter_bookmark_token_expires_at,
+             numerical_id,
+             twitter_handle,
+             sending_email,
+             newsletter_content_preferences`)
+    .eq("id", userId)
+    .single();
+
+  if (profErr || !profile) {
+    console.error("Profile error", profErr);
+    return;
   }
-  
-  if (bookmarksResp.status === 429) {
-    throw new Error("Twitter API rate limit exceeded. Please try again later.");
+
+  if (!profile.remaining_newsletter_generations ||
+       profile.remaining_newsletter_generations <= 0) {
+    console.error("No remaining generations");
+    return;
   }
-  
-  throw new Error(`Twitter API error: ${bookmarksResp.status}`);
-}
 
-const bookmarksData = await bookmarksResp.json();
-if (!bookmarksData?.data) {
-  console.error("Invalid or empty bookmark data:", bookmarksData);
-  
-  if (bookmarksData.meta?.result_count === 0) {
-    throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
+  if (!profile.twitter_bookmark_access_token) {
+    console.error("Twitter not connected");
+    return;
   }
-  
-  throw new Error("Failed to retrieve bookmarks from Twitter");
-}
 
-const tweetIds = bookmarksData.data.map((t) => t.id);
-console.log(`Modern Clean Template: Successfully fetched bookmarks - ${tweetIds.length} tweets`);
+  if (profile.twitter_bookmark_token_expires_at &&
+      profile.twitter_bookmark_token_expires_at < Math.floor(Date.now()/1000)) {
+    console.error("Twitter token expired");
+    return;
+  }
 
-// 7) Fetch detailed tweets via Apify using the tweet IDs
-console.log('Modern Clean Template: Fetching detailed tweet data via Apify');
-const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
-
-const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    "filter:blue_verified": false,
-    "filter:consumer_video": false,
-    "filter:has_engagement": false,
-    "filter:hashtags": false,
-    "filter:images": false,
-    "filter:links": false,
-    "filter:media": false,
-    "filter:mentions": false,
-    "filter:native_video": false,
-    "filter:nativeretweets": false,
-    "filter:news": false,
-    "filter:pro_video": false,
-    "filter:quote": false,
-    "filter:replies": false,
-    "filter:safe": false,
-    "filter:spaces": false,
-    "filter:twimg": false,
-    "filter:videos": false,
-    "filter:vine": false,
-    lang: "en",
-    maxItems: selectedCount,
-    tweetIDs: tweetIds
-  })
-});
-
-if (!apifyResp.ok) {
-  const text = await apifyResp.text();
-  console.error(`Apify API error (${apifyResp.status}):`, text);
-  throw new Error(`Apify API error: ${apifyResp.status}`);
-}
-
-const apifyData = await apifyResp.json();
-console.log('Modern Clean Template: Successfully fetched detailed tweet data', { tweetCount: apifyData.length || 0 });
-
-// 8) Format tweets for OpenAI
-function parseToOpenAI(data) {
-  const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
-  let out = "";
-  
-  arr.forEach((t, i) => {
-    const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-    let dateStr = "N/A";
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 2. Ensure numerical_id                                                  │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  let twitterId: string = profile.numerical_id;
+  if (!twitterId && profile.twitter_handle) {
     try {
-      dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-    } catch {}
-    
-    const photo = t.extendedEntities?.media?.find((m) => m.type === "photo")?.media_url_https;
-    
-    out += `Tweet ${i + 1}\n`;
-    out += `Tweet ID: ${t.id}\n`;
-    out += `Tweet text: ${txt}\n`;
-    out += `ReplyAmount: ${t.replyCount || 0}\n`;
-    out += `LikesAmount: ${t.likeCount || 0}\n`;
-    out += `Impressions: ${t.viewCount || 0}\n`;
-    out += `Date: ${dateStr}\n`;
-    out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
-    out += `PhotoUrl: ${photo || "N/A"}\n`;
-    
+      const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+      if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY");
+
+      const handle = profile.twitter_handle.replace("@", "").trim();
+      const r = await fetch(
+        `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(handle)}`,
+        { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "twitter293.p.rapidapi.com" } }
+      );
+
+      if (!r.ok) throw new Error(`RapidAPI ${r.status}`);
+      const j = await r.json();
+      twitterId = j?.user?.result?.rest_id;
+      if (!twitterId) throw new Error("No rest_id");
+
+      await supabase.from("profiles").update({ numerical_id: twitterId }).eq("id", userId);
+    } catch (err) {
+      console.error("Twitter ID fetch error", err);
+      return;
+    }
+  }
+  if (!twitterId) {
+    console.error("Missing twitterId");
+    return;
+  }
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 3. Twitter API → bookmarks                                              │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Fetching bookmarks");
+  const twRes = await fetch(
+    `https://api.twitter.com/2/users/${twitterId}/bookmarks` +
+    `?max_results=${selectedCount}&expansions=author_id,attachments.media_keys` +
+    `&tweet.fields=created_at,text,public_metrics,entities` +
+    `&user.fields=name,username,profile_image_url`,
+    { headers: { Authorization: `Bearer ${profile.twitter_bookmark_access_token}` } }
+  );
+  if (!twRes.ok) {
+    console.error("Twitter API error", twRes.status, await twRes.text());
+    return;
+  }
+  const twJson = await twRes.json();
+  const tweetIds = twJson?.data?.map((t: any) => t.id) ?? [];
+  if (!tweetIds.length) {
+    console.error("No bookmarks");
+    return;
+  }
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 4. Apify detailed tweet data                                            │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Apify scrape");
+  const APIFY_KEY = Deno.env.get("APIFY_API_KEY");
+  if (!APIFY_KEY) { console.error("Missing APIFY_KEY"); return; }
+
+  const apifyRes = await fetch(
+    `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang: "en", maxItems: selectedCount, tweetIDs: tweetIds })
+    }
+  );
+  if (!apifyRes.ok) {
+    console.error("Apify error", apifyRes.status, await apifyRes.text());
+    return;
+  }
+  const apifyData = await apifyRes.json();
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 5. Format tweets for OpenAI                                             │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  const tweetsForAI = formatTweetsForAI(apifyData);
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 6. OpenAI – analysis JSON                                               │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("OpenAI analysis");
+  const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
+  if (!OPENAI_KEY) { console.error("Missing OPENAI_KEY"); return; }
+
+  const analysisPrompt = buildAnalysisPrompt(selectedCount, tweetsForAI);
+  const analysisJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.7, 2000,
+    "You are an expert content analyst specializing in social media content curation and newsletter creation.",
+    analysisPrompt
+  );
+  let analysisContent = analysisJson.choices[0].message.content.trim();
+  // remove ```json fences if present
+  analysisContent = analysisContent.replace(/```json\n?/, "").replace(/```$/, "");
+
+  let analysisParsed: any;
+  try { analysisParsed = JSON.parse(analysisContent); }
+  catch {
+    console.warn("Failed to parse analysis JSON – using fallback skeleton");
+    analysisParsed = {
+      mainTopics: ["Topic A", "Topic B", "Topic C"],
+      keyInsights: ["Insight 1", "Insight 2"],
+      contentSummary: "Summary...",
+      recommendedSections: []
+    };
+  }
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 7. Query-generation → Perplexity enrichment → Integration               │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Generating search queries for Perplexity");
+  const queryGenPrompt = buildQueryGenPrompt(analysisContent);
+  const queryJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.3, 800,
+    "You are a search-query optimisation specialist.",
+    queryGenPrompt
+  );
+  const queryText = queryJson.choices[0].message.content.trim();
+
+  const parsedQueries: { topic: string; query: string; goal: string }[] = [];
+  const re = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
+  let m; while ((m = re.exec(queryText)) !== null) {
+    parsedQueries.push({ topic: m[1].trim(), query: m[2].trim(), goal: m[3].trim() });
+  }
+
+  const PERPLEXITY_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+  const enrichmentResults: any[] = [];
+  if (PERPLEXITY_KEY) {
+    logStep("Perplexity enrichment", { count: parsedQueries.length });
+    for (const topic of parsedQueries) {
+      try {
+        const pRes = await fetch(
+          "https://api.perplexity.ai/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${PERPLEXITY_KEY}`,
+              "Content-Type":  "application/json"
+            },
+            body: JSON.stringify({
+              model: "sonar-pro",
+              messages: [ { role: "user", content: topic.query } ],
+              temperature: 0.2,
+              max_tokens: 350,
+              search_recency_filter: "week"
+            })
+          }
+        );
+        if (pRes.ok) {
+          const pJson = await pRes.json();
+          enrichmentResults.push({
+            topic: topic.topic,
+            query: topic.query,
+            goal:  topic.goal,
+            webContent: pJson.choices[0].message.content,
+            sources:    pJson.citations ?? []
+          });
+        } else {
+          enrichmentResults.push({ ...topic, webContent: `[Error ${pRes.status}]`, sources: [] });
+        }
+      } catch (err) {
+        enrichmentResults.push({ ...topic, webContent: "[Request failed]", sources: [] });
+      }
+    }
+  } else {
+    logStep("No PERPLEXITY_API_KEY – skipping web enrichment");
+  }
+
+  // Integration step
+  logStep("Integrating web enrichment");
+  const integrationPrompt = buildIntegrationPrompt(analysisContent, enrichmentResults);
+  const integrationJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.3, 4000,
+    "You integrate web-sourced information into existing analyses seamlessly.",
+    integrationPrompt
+  );
+  const integratedAnalysis = integrationJson.choices[0].message.content.trim();
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 8. OpenAI – initial markdown newsletter                                 │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Generating newsletter markdown");
+  const newsletterPrompt = buildNewsletterPrompt(integratedAnalysis, tweetsForAI);
+  const markdownJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.2, 4000,
+    "You are a professional newsletter editor who formats content into clean, beautiful markdown.",
+    newsletterPrompt
+  );
+  let markdownNewsletter = markdownJson.choices[0].message.content.trim();
+  markdownNewsletter = markdownNewsletter.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 9. UI/UX enhancement pass (markdown → enhanced markdown)                │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Enhancing UI/UX markdown");
+  const enhancedPrompt = buildEnhancedPrompt(markdownNewsletter);
+  const enhancedJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.4, 4000,
+    "You are a newsletter UI/UX specialist and markdown designer.",
+    enhancedPrompt
+  );
+  let enhancedMarkdown = enhancedJson.choices[0].message.content.trim();
+  enhancedMarkdown = enhancedMarkdown.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 10. Markdown → responsive HTML                                          │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Converting markdown → HTML");
+  const emailHtml = markdownToHtml(enhancedMarkdown);
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 11. Store in newsletter_storage                                         │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Storing newsletter");
+  const { data: stored, error: storeErr } = await supabase
+    .from("newsletter_storage")
+    .insert({
+      user_id:      userId,
+      markdown_text: enhancedMarkdown,
+      html_text:     emailHtml
+    })
+    .select()
+    .single();
+  if (storeErr) console.error("Storage error", storeErr);
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 12. Decrement remaining generations                                     │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  await supabase
+    .from("profiles")
+    .update({ remaining_newsletter_generations: profile.remaining_newsletter_generations - 1 })
+    .eq("id", userId);
+
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 13. Send email via Resend                                               │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  if (profile.sending_email) {
+    try {
+      logStep("Sending email");
+      await resend.emails.send({
+        from:    Deno.env.get("FROM_EMAIL") || "Letternest <newsletters@letternest.com>",
+        to:      [profile.sending_email],
+        subject: `Your Newsletter • ${new Date().toLocaleDateString()}`,
+        html:    emailHtml,
+        text:    enhancedMarkdown
+      });
+      logStep("Email sent");
+    } catch (err) {
+      console.error("Resend error", err);
+    }
+  }
+
+  logStep("Background task complete", { storedId: stored?.id });
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+//  Utility: standard JSON Response
+// ────────────────────────────────────────────────────────────────────────────────
+function json(status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+//  Helper: format tweets for OpenAI
+// ────────────────────────────────────────────────────────────────────────────────
+function formatTweetsForAI(arr: any[]): string {
+  let out = "";
+  arr.forEach((t, i) => {
+    const cleanText = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+    const date = new Date(t.createdAt).toISOString().split("T")[0];
+    const photo = t.extendedEntities?.media?.find((m: any) => m.type === "photo")?.media_url_https;
+    out += `Tweet ${i + 1}
+Tweet ID: ${t.id}
+Tweet text: ${cleanText}
+ReplyAmount: ${t.replyCount || 0}
+LikesAmount: ${t.likeCount || 0}
+Impressions: ${t.viewCount || 0}
+Date: ${date}
+Tweet Author: ${t.author?.name || "Unknown"}
+PhotoUrl: ${photo || "N/A"}
+`;
     if (i < arr.length - 1) out += "\n---\n\n";
   });
-  
   return out;
 }
 
-const tweetsForAnalysis = parseToOpenAI(apifyData);
-console.log('Modern Clean Template: Formatted tweets for analysis');
-
-    console.log('Modern Clean Template: Starting AI analysis...');
-
-    // AI Analysis with OpenAI
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
-    }
-
-    const analysisPrompt = `You are an expert content analyst. Analyze these ${selectedCount} bookmarked tweets and create a comprehensive newsletter.
-
-TWEETS DATA:
-${JSON.stringify(tweetsForAnalysis, null, 2)}
-
-Please provide a detailed analysis in the following JSON format:
-{
-  "mainTopics": ["topic1", "topic2", "topic3"],
-  "keyInsights": ["insight1", "insight2", "insight3"],
-  "trendingThemes": ["theme1", "theme2"],
-  "contentSummary": "A comprehensive summary of the content",
-  "recommendedSections": [
-    {
-      "title": "Section Title",
-      "tweets": ["tweet_id1", "tweet_id2"],
-      "summary": "Why these tweets are grouped together"
-    }
-  ]
+// ────────────────────────────────────────────────────────────────────────────────
+//  Helper: OpenAI chat wrapper
+// ────────────────────────────────────────────────────────────────────────────────
+async function chat(apiKey: string, model: string,
+                    temperature: number, max_tokens: number,
+                    systemMsg: string, userMsg: string) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model,
+      temperature,
+      max_tokens,
+      messages: [
+        { role: "system", content: systemMsg },
+        { role: "user",   content: userMsg   }
+      ]
+    })
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+  return res.json();
 }
 
-Focus on identifying patterns, themes, and valuable insights from the bookmarked content.`;
+// ────────────────────────────────────────────────────────────────────────────────
+//  Helper: build prompts
+// ────────────────────────────────────────────────────────────────────────────────
+function buildAnalysisPrompt(count: number, tweets: string) {
+  return `You are an expert content analyst. Analyze these ${count} bookmarked tweets and create a comprehensive newsletter.\n\nTWEETS:\n${tweets}\n\nReturn JSON with mainTopics, keyInsights, trendingThemes, contentSummary, recommendedSections.`;
+}
 
-    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert content analyst specializing in social media content curation and newsletter creation.'
-          },
-          {
-            role: 'user',
-            content: analysisPrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      }),
-    });
+function buildQueryGenPrompt(analysis: string) {
+  return `Select the 3 most significant topics from this analysis and craft search queries.\n\n${analysis}`;
+}
 
-    if (!analysisResponse.ok) {
-      const errorText = await analysisResponse.text();
-      console.error('OpenAI Analysis API error:', analysisResponse.status, errorText);
-      throw new Error(`OpenAI Analysis API error: ${analysisResponse.status}`);
-    }
+function buildIntegrationPrompt(analysis: string, enrichment: any[]) {
+  return `Integrate the following web content into the existing analysis.\n\nORIGINAL ANALYSIS:\n${analysis}\n\nWEB CONTENT:\n${JSON.stringify(enrichment, null, 2)}\n\nReturn the fully integrated analysis.`;
+}
 
-    const analysisData = await analysisResponse.json();
-    let analysisContent = analysisData.choices[0].message.content;
+function buildNewsletterPrompt(integrated: string, tweets: string) {
+  return `Create a beautifully formatted markdown newsletter (Modern Clean style) using this integrated analysis and the underlying tweets.\n\nANALYSIS:\n${integrated}\n\nTWEETS:\n${tweets}`;
+}
 
-    console.log('Modern Clean Template: AI analysis completed');
+function buildEnhancedPrompt(rawMarkdown: string) {
+  return `Improve this markdown newsletter’s UI/UX: better spacing, color accents via inline spans, centered images, callout boxes, etc., but keep content unchanged.\n\n${rawMarkdown}`;
+}
 
-    // Clean up JSON if it has markdown code blocks
-    if (analysisContent.includes('```json')) {
-      analysisContent = analysisContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
-    }
-    if (analysisContent.includes('```')) {
-      analysisContent = analysisContent.replace(/```\n?/, '').replace(/\n?```$/, '');
-    }
-
-    let parsedAnalysis;
-    try {
-      parsedAnalysis = JSON.parse(analysisContent);
-    } catch (parseError) {
-      console.error('Error parsing AI analysis:', parseError);
-      // Fallback analysis - use apifyData array instead of tweetsForAnalysis string
-      parsedAnalysis = {
-        mainTopics: ["Technology", "Business", "Innovation"],
-        keyInsights: ["Emerging trends in the industry", "Market developments", "Thought leadership"],
-        trendingThemes: ["AI/ML", "Productivity"],
-        contentSummary: "A curated collection of valuable insights from your bookmarked content.",
-        recommendedSections: [
-          {
-            title: "Featured Insights",
-            tweets: apifyData.slice(0, 5).map(t => t.id),
-            summary: "Top insights from your bookmarks"
-          }
-        ]
-      };
-    }
-
-    console.log('Modern Clean Template: Starting web enrichment...');
-
-    // Web enrichment with Perplexity for additional context
-    const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
-    let webEnrichment = "Additional insights not available.";
-    
-    if (perplexityApiKey && parsedAnalysis.mainTopics && parsedAnalysis.mainTopics.length > 0) {
-      try {
-        const enrichmentPrompt = `Based on these main topics: ${parsedAnalysis.mainTopics.join(', ')}, provide current market insights, recent developments, and context that would be valuable for a newsletter audience. Keep it concise and actionable.`;
-
-        const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${perplexityApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'llama-3.1-sonar-small-128k-online',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a market research analyst providing current insights and context for newsletter content.'
-              },
-              {
-                role: 'user',
-                content: enrichmentPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 800
-          }),
-        });
-
-        if (perplexityResponse.ok) {
-          const perplexityData = await perplexityResponse.json();
-          webEnrichment = perplexityData.choices[0].message.content;
-          console.log('Modern Clean Template: Web enrichment completed');
-        }
-      } catch (enrichmentError) {
-        console.error('Web enrichment error:', enrichmentError);
-      }
-    }
-
-    console.log('Modern Clean Template: Generating newsletter content...');
-
-    // Generate newsletter content with Modern Clean styling
-    const newsletterPrompt = `Create a beautifully formatted newsletter using this analyzed content and web enrichment data.
-
-ANALYSIS DATA:
-${JSON.stringify(parsedAnalysis, null, 2)}
-
-WEB ENRICHMENT:
-${webEnrichment}
-
-ORIGINAL TWEETS:
-${JSON.stringify(tweetsForAnalysis, null, 2)}
-
-TEMPLATE: Modern Clean
-- Use clean, minimalist design principles
-- Focus on plenty of white space and readable typography
-- Use a simplified color palette (blacks, whites, subtle grays)
-- Keep visual elements minimal and purposeful
-
-Create a comprehensive newsletter in markdown format that includes:
-1. Engaging headline and introduction
-2. Well-organized sections based on the analysis
-3. Key insights and takeaways
-4. Selected tweet highlights with proper attribution
-5. Actionable conclusions
-6. Clean, professional formatting throughout
-
-Make it informative, engaging, and valuable for the reader. Focus on insights and synthesis rather than just listing tweets.`;
-
-    const newsletterResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert newsletter writer specializing in clean, minimalist design and compelling content curation. Create content that follows Modern Clean design principles with excellent readability and professional presentation.'
-          },
-          {
-            role: 'user',
-            content: newsletterPrompt
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 3000
-      }),
-    });
-
-    if (!newsletterResponse.ok) {
-      const errorText = await newsletterResponse.text();
-      console.error('OpenAI Newsletter API error:', newsletterResponse.status, errorText);
-      throw new Error(`OpenAI Newsletter API error: ${newsletterResponse.status}`);
-    }
-
-    const newsletterData = await newsletterResponse.json();
-    const newsletterMarkdown = newsletterData.choices[0].message.content;
-
-    console.log('Modern Clean Template: Newsletter content generated');
-
-    // Enhanced UI/UX generation for Modern Clean template
-    const enhancedPrompt = `Transform this newsletter into a beautifully designed HTML email with Modern Clean aesthetics:
-
-NEWSLETTER CONTENT:
-${newsletterMarkdown}
-
-MODERN CLEAN DESIGN REQUIREMENTS:
-- Minimalist design with plenty of white space
-- Clean typography hierarchy
-- Simplified color palette (primary: #000000, secondary: #666666, accent: #f8f9fa)
-- Maximum width: 600px for email compatibility
-- Professional, readable layout
-- Subtle borders and spacing
-- No unnecessary visual elements
-- Focus on content readability
-
-Create a complete HTML email template with:
-1. Inline CSS for email compatibility
-2. Responsive design principles
-3. Clean, modern typography
-4. Proper spacing and hierarchy
-5. Professional header and footer
-6. Modern Clean aesthetic throughout
-
-Output only the complete HTML code ready for email sending.`;
-
-    const enhancedResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert email designer specializing in Modern Clean aesthetics and HTML email development. Create beautiful, minimalist designs with excellent email client compatibility.'
-          },
-          {
-            role: 'user',
-            content: enhancedPrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
-      }),
-    });
-
-    if (!enhancedResponse.ok) {
-      const errorText = await enhancedResponse.text();
-      console.error('OpenAI Enhanced API error:', enhancedResponse.status, errorText);
-      throw new Error(`OpenAI Enhanced API error: ${enhancedResponse.status}`);
-    }
-
-    const enhancedData = await enhancedResponse.json();
-    let newsletterHtml = enhancedData.choices[0].message.content;
-
-    // Clean up HTML if it has markdown code blocks
-    if (newsletterHtml.includes('```html')) {
-      newsletterHtml = newsletterHtml.replace(/```html\n?/, '').replace(/\n?```$/, '');
-    }
-
-    console.log('Modern Clean Template: Enhanced HTML newsletter generated');
-
-    // Store the newsletter
-    const { data: storedNewsletter, error: storageError } = await supabase
-      .from('newsletter_storage')
-      .insert({
-        user_id: user.id,
-        markdown_text: newsletterMarkdown
-      })
-      .select()
-      .single();
-
-    if (storageError) {
-      console.error('Error storing newsletter:', storageError);
-      throw new Error('Failed to store newsletter');
-    }
-
-    console.log('Modern Clean Template: Newsletter stored in database');
-
-    // Send email if user has sending email configured
-    if (profile.sending_email) {
-      console.log('Modern Clean Template: Sending newsletter email...');
-      
-      const resendApiKey = Deno.env.get('RESEND_API_KEY');
-      if (!resendApiKey) {
-        console.error('RESEND_API_KEY not configured');
-      } else {
-        try {
-          const emailResponse = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: 'Letternest <newsletters@letternest.com>',
-              to: [profile.sending_email],
-              subject: `Your Modern Clean Newsletter - ${new Date().toLocaleDateString()}`,
-              html: newsletterHtml,
-            }),
-          });
-
-          if (emailResponse.ok) {
-            console.log('Modern Clean Template: Newsletter email sent successfully');
-          } else {
-            const emailError = await emailResponse.text();
-            console.error('Email sending error:', emailError);
-          }
-        } catch (emailError) {
-          console.error('Email sending error:', emailError);
-        }
-      }
-    }
-
-    console.log('Modern Clean Template: Newsletter generation completed successfully');
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Modern Clean newsletter generated successfully',
-        newsletterId: storedNewsletter.id,
-        remainingGenerations: newRemainingGenerations
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-
-  } catch (error) {
-    console.error('Modern Clean Template Error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred during Modern Clean template generation' 
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-  }
-});
+// ────────────────────────────────────────────────────────────────────────────────
+//  Helper: markdown → responsive HTML
+// ────────────────────────────────────────────────────────────────────────────────
+function markdownToHtml(md: string): string {
+  const renderer = new marked.Renderer();
+  renderer.image = (href, _title, alt) => `
+    <div style="text-align:center;">
+      <img src="${href}" alt="${alt}"
+           style="max-width:400px;width:100%;height:auto;border-radius:4px;display:inline-block;">
+    </div>`;
+  const html = marked(md, { renderer });
+  return juice(`
+    <body style="background:#f5f7fa;margin:0;padding:24px;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;">
+        <div style="padding:24px;font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#222;">
+          ${html}
+        </div>
+      </div>
+    </body>
+  `);
+}
