@@ -13,6 +13,7 @@ import NewUserDirect from "./pages/NewUserDirect";
 import FreeTools from "./pages/FreeTools";
 import TweetIdConverter from "./pages/tools/TweetIdConverter";
 import TweetScreenshot from "./pages/tools/TweetScreenshot";
+import TickerDrop from "./pages/TickerDrop";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/bookmarks/callback" element={<BookmarksCallback />} />
             <Route path="/newuser-direct" element={<NewUserDirect />} />
             <Route path="/free-tools" element={<FreeTools />} />
+            <Route path="/ticker-drop" element={<TickerDrop />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             

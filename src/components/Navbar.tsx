@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -61,6 +61,15 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
+            <Link 
+              to="/ticker-drop" 
+              className="flex items-center gap-2 text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-4 py-2 font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
+            >
+              <FileText size={18} />
+              <span>The Ticker Drop</span>
+              <span className="text-sm italic text-gray-500 ml-1">bi-weekly</span>
+            </Link>
+            
             {isAuthenticated ? (
               <>
                 <Button 
@@ -126,7 +135,17 @@ export default function Navbar() {
       {isOpen && (
         <div className="bg-white shadow-lg p-4 md:hidden animate-fade-in border-t border-blue-100">
           <nav className="max-w-7xl mx-auto flex flex-col gap-2">
-            <div className="flex flex-col gap-2 mt-2 pt-2">
+            <Link 
+              to="/ticker-drop" 
+              className="flex items-center gap-2 text-[#0087C8] hover:bg-blue-50/30 p-2 rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <FileText size={16} />
+              <span>The Ticker Drop</span>
+              <span className="text-sm italic text-gray-500 ml-1">bi-weekly</span>
+            </Link>
+            
+            <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
               {isAuthenticated ? (
                 <>
                   <Button 
