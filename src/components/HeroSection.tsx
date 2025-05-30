@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
+
 export default function HeroSection() {
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -15,7 +17,9 @@ export default function HeroSection() {
       });
     }
   };
-  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+
+  return (
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-purple-200/20 rounded-full blur-3xl"></div>
@@ -27,11 +31,6 @@ export default function HeroSection() {
         <svg width="100%" height="120" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
           <path d="M0 20C120 60 240 80 360 70C480 60 600 35 720 25C840 15 960 35 1080 45C1200 55 1320 50 1440 35V120H0V20Z" fill="#0087C8" />
         </svg>
-      </div>
-
-      {/* Arrow graphic */}
-      <div className="absolute top-32 right-80 z-10 hidden xl:block animate-bounce">
-        <img src="/arrow1.png" alt="Arrow graphic" width="60" height="60" className="opacity-80" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-32">
@@ -82,5 +81,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 }
