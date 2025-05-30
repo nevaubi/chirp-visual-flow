@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -455,8 +454,8 @@ const DashboardLayout = () => {
           "flex-1 flex flex-col overflow-y-auto bg-gray-50 transition-all duration-300 relative",
           isMobile && mobileMenuOpen && "filter blur-sm"
         )}>
-          {/* Desktop Header with centered profile elements */}
-          <header className="hidden lg:flex items-center justify-center p-4 bg-white border-b gap-4">
+          {/* Desktop Header with notification bell and avatar moved to top right */}
+          <header className="hidden lg:flex items-center justify-end p-4 bg-white border-b gap-4">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" className="text-gray-600">
                 <Bell size={20} />
