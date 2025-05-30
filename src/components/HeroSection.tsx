@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
-import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
 
 export default function HeroSection() {
@@ -60,24 +59,6 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             
             
-          </div>
-
-          {/* Dashboard preview - centered */}
-          <div className="relative max-w-4xl w-full">
-            <div className="relative transform hover:scale-105 transition-transform duration-500">
-              {/* Dashboard component with enhanced styling */}
-              <div className="relative z-10">
-                <ChirpmetricsDashboard />
-              </div>
-              
-              {/* Enhanced floating newsletter success card */}
-              <div className="absolute -bottom-8 -left-8 z-20 hidden lg:block">
-                
-              </div>
-
-              {/* Decorative gradient blur behind dashboard */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0087C8]/10 to-[#FF6B35]/10 rounded-3xl blur-2xl transform scale-110 -z-10"></div>
-            </div>
           </div>
         </div>
       </div>
