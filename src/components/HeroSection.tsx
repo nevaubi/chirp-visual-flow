@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight, BookOpen, Zap, Users } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
@@ -39,7 +40,7 @@ export default function HeroSection() {
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
                 Turn X Bookmarks into
               </span>
-              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">Professional Newsletters</span>
+              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent tracking-wide">Professional Newsletters</span>
             </h1>
             
             {/* Updated subtext */}
