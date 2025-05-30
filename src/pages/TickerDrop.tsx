@@ -1,8 +1,9 @@
+
 import React from "react";
 import { FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
+import TickerDropSignup from "@/components/newsletter/TickerDropSignup";
 
 export default function TickerDrop() {
   return (
@@ -26,6 +27,13 @@ export default function TickerDrop() {
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed">
             Twice a week, get the stock insights and market updates that actually matter. Macro trends, expert commentary, biggest headlines - every Tuesday & Friday.
           </p>
+        </div>
+      </section>
+
+      {/* Newsletter Signup Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <TickerDropSignup />
         </div>
       </section>
 
