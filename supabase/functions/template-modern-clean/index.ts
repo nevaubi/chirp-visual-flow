@@ -1,6 +1,6 @@
 // =========================================================================================
-//  manual-newsletter-generation.ts — FULL PRODUCTION VERSION
-//  (includes Perplexity enrichment, query-generation, UI/UX enhancer, HTML conversion, etc.)
+//  manual-newsletter-generation.ts — ENHANCED PRODUCTION VERSION
+//  (includes images, videos, rich layouts, author info, engagement metrics)
 // =========================================================================================
 
 import { serve }        from "https://deno.land/std@0.168.0/http/server.ts";
@@ -161,7 +161,8 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     `https://api.twitter.com/2/users/${twitterId}/bookmarks` +
     `?max_results=${selectedCount}&expansions=author_id,attachments.media_keys` +
     `&tweet.fields=created_at,text,public_metrics,entities` +
-    `&user.fields=name,username,profile_image_url`,
+    `&user.fields=name,username,profile_image_url` +
+    `&media.fields=preview_image_url,url,variants`,
     { headers: { Authorization: `Bearer ${profile.twitter_bookmark_access_token}` } }
   );
   if (!twRes.ok) {
@@ -197,7 +198,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   const apifyData = await apifyRes.json();
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 5. Format tweets for OpenAI                                             │
+  // │ 5. Format tweets for OpenAI (ENHANCED)                                  │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   const tweetsForAI = formatTweetsForAI(apifyData);
 
@@ -209,8 +210,8 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   if (!OPENAI_KEY) { console.error("Missing OPENAI_KEY"); return; }
 
   const analysisPrompt = buildAnalysisPrompt(selectedCount, tweetsForAI);
-  const analysisJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.7, 2000,
-    "You are an expert content analyst specializing in social media content curation and newsletter creation.",
+  const analysisJson = await chat(OPENAI_KEY, "gpt-4o", 0.7, 3000,
+    "You are an expert content analyst specializing in social media content curation and newsletter creation. You excel at identifying visual content and creating engaging narratives.",
     analysisPrompt
   );
   let analysisContent = analysisJson.choices[0].message.content.trim();
@@ -234,7 +235,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   // ╰──────────────────────────────────────────────────────────────────────────╯
   logStep("Generating search queries for Perplexity");
   const queryGenPrompt = buildQueryGenPrompt(analysisContent);
-  const queryJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.3, 800,
+  const queryJson = await chat(OPENAI_KEY, "gpt-4o", 0.3, 800,
     "You are a search-query optimisation specialist.",
     queryGenPrompt
   );
@@ -292,19 +293,19 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   // Integration step
   logStep("Integrating web enrichment");
   const integrationPrompt = buildIntegrationPrompt(analysisContent, enrichmentResults);
-  const integrationJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.3, 4000,
-    "You integrate web-sourced information into existing analyses seamlessly.",
+  const integrationJson = await chat(OPENAI_KEY, "gpt-4o", 0.3, 4000,
+    "You integrate web-sourced information into existing analyses seamlessly while maintaining visual richness.",
     integrationPrompt
   );
   const integratedAnalysis = integrationJson.choices[0].message.content.trim();
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 8. OpenAI – initial markdown newsletter                                 │
+  // │ 8. OpenAI – RICH visual newsletter markdown                             │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Generating newsletter markdown");
-  const newsletterPrompt = buildNewsletterPrompt(integratedAnalysis, tweetsForAI);
-  const markdownJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.2, 4000,
-    "You are a professional newsletter editor who formats content into clean, beautiful markdown.",
+  logStep("Generating visual newsletter markdown");
+  const newsletterPrompt = buildVisualNewsletterPrompt(integratedAnalysis, tweetsForAI);
+  const markdownJson = await chat(OPENAI_KEY, "gpt-4o", 0.2, 6000,
+    "You are a professional visual newsletter designer who creates stunning, magazine-quality newsletters with rich visual elements, images, and engaging layouts.",
     newsletterPrompt
   );
   let markdownNewsletter = markdownJson.choices[0].message.content.trim();
@@ -315,18 +316,18 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   // ╰──────────────────────────────────────────────────────────────────────────╯
   logStep("Enhancing UI/UX markdown");
   const enhancedPrompt = buildEnhancedPrompt(markdownNewsletter);
-  const enhancedJson = await chat(OPENAI_KEY, "gpt-4o-mini", 0.4, 4000,
-    "You are a newsletter UI/UX specialist and markdown designer.",
+  const enhancedJson = await chat(OPENAI_KEY, "gpt-4o", 0.4, 6000,
+    "You are a newsletter UI/UX specialist who creates visually stunning, modern newsletters with beautiful layouts, color schemes, and visual hierarchy.",
     enhancedPrompt
   );
   let enhancedMarkdown = enhancedJson.choices[0].message.content.trim();
   enhancedMarkdown = enhancedMarkdown.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 10. Markdown → responsive HTML                                          │
+  // │ 10. Markdown → RICH responsive HTML                                     │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Converting markdown → HTML");
-  const emailHtml = markdownToHtml(enhancedMarkdown);
+  logStep("Converting markdown → rich HTML");
+  const emailHtml = markdownToRichHtml(enhancedMarkdown);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
   // │ 11. Store in newsletter_storage                                         │
@@ -360,7 +361,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       await resend.emails.send({
         from:    Deno.env.get("FROM_EMAIL") || "Letternest <newsletters@letternest.com>",
         to:      [profile.sending_email],
-        subject: `Your Newsletter • ${new Date().toLocaleDateString()}`,
+        subject: `Your Newsletter • ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`,
         html:    emailHtml,
         text:    enhancedMarkdown
       });
@@ -384,23 +385,51 @@ function json(status: number, body: Record<string, unknown>) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  Helper: format tweets for OpenAI
+//  ENHANCED Helper: format tweets with ALL visual data
 // ────────────────────────────────────────────────────────────────────────────────
 function formatTweetsForAI(arr: any[]): string {
   let out = "";
   arr.forEach((t, i) => {
     const cleanText = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
     const date = new Date(t.createdAt).toISOString().split("T")[0];
-    const photo = t.extendedEntities?.media?.find((m: any) => m.type === "photo")?.media_url_https;
+    
+    // Extract ALL media properly
+    const media = t.extendedEntities?.media || [];
+    const photos = media
+      .filter((m: any) => m.type === "photo")
+      .map((m: any) => m.media_url_https || m.media_url);
+    
+    const videos = media
+      .filter((m: any) => m.type === "video" || m.type === "animated_gif")
+      .map((m: any) => ({
+        thumbnail: m.media_url_https || m.media_url,
+        duration: m.video_info?.duration_millis || 0,
+        aspectRatio: m.video_info?.aspect_ratio?.join(":") || "16:9"
+      }));
+    
+    // Author info with avatar
+    const authorName = t.author?.name || t.user?.name || "Unknown";
+    const authorHandle = t.author?.username || t.user?.screen_name || "unknown";
+    const authorAvatar = t.author?.profile_image_url || t.user?.profile_image_url_https || "";
+    
     out += `Tweet ${i + 1}
 Tweet ID: ${t.id}
-Tweet text: ${cleanText}
-ReplyAmount: ${t.replyCount || 0}
-LikesAmount: ${t.likeCount || 0}
-Impressions: ${t.viewCount || 0}
+Tweet URL: https://twitter.com/${authorHandle}/status/${t.id}
+Author Name: ${authorName}
+Author Handle: @${authorHandle}
+Author Avatar: ${authorAvatar}
+Author Verified: ${t.author?.verified || false}
+Tweet Text: ${cleanText}
+Engagement Score: ${(t.likeCount || 0) + (t.retweetCount || 0) * 2 + (t.replyCount || 0) * 3}
+Likes: ${t.likeCount || 0}
+Retweets: ${t.retweetCount || 0}
+Replies: ${t.replyCount || 0}
+Views: ${t.viewCount || 0}
 Date: ${date}
-Tweet Author: ${t.author?.name || "Unknown"}
-PhotoUrl: ${photo || "N/A"}
+Photos: ${photos.length > 0 ? photos.join(", ") : "None"}
+Videos: ${videos.length > 0 ? JSON.stringify(videos) : "None"}
+Quote Tweet: ${t.quotedStatus ? "Yes" : "No"}
+Thread: ${t.in_reply_to_status_id ? "Part of thread" : "Standalone"}
 `;
     if (i < arr.length - 1) out += "\n---\n\n";
   });
@@ -434,46 +463,340 @@ async function chat(apiKey: string, model: string,
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  Helper: build prompts
+//  ENHANCED Helper: build prompts with visual focus
 // ────────────────────────────────────────────────────────────────────────────────
 function buildAnalysisPrompt(count: number, tweets: string) {
-  return `You are an expert content analyst. Analyze these ${count} bookmarked tweets and create a comprehensive newsletter.\n\nTWEETS:\n${tweets}\n\nReturn JSON with mainTopics, keyInsights, trendingThemes, contentSummary, recommendedSections.`;
+  return `Analyze these ${count} bookmarked tweets to create a comprehensive, visually-rich newsletter analysis.
+
+IMPORTANT: Pay special attention to:
+1. Which tweets have images/videos (prioritize these for visual impact)
+2. Engagement metrics (likes, retweets, views) to identify most popular content
+3. Author information for credibility and visual attribution
+4. Threads and conversations for deeper context
+
+TWEETS:
+${tweets}
+
+Return a detailed JSON analysis with:
+{
+  "mainTopics": [
+    {
+      "title": "Topic title",
+      "description": "Detailed description",
+      "featuredTweetId": "ID of most engaging/visual tweet for this topic",
+      "keyPoints": ["point1", "point2", "point3"],
+      "relatedImages": ["image_url1", "image_url2"],
+      "topAuthors": [{"name": "Author Name", "handle": "@handle", "avatar": "url"}]
+    }
+  ],
+  "visualHighlights": [
+    {
+      "tweetId": "123",
+      "imageUrl": "url",
+      "caption": "Why this is significant",
+      "engagement": 12500
+    }
+  ],
+  "keyInsights": ["insight1", "insight2", "insight3"],
+  "trendingThemes": ["theme1", "theme2"],
+  "contentSummary": "Executive summary of all content",
+  "recommendedSections": [
+    {
+      "title": "Section title",
+      "content": "What to include",
+      "suggestedVisuals": ["tweet_id1", "tweet_id2"]
+    }
+  ]
+}`;
 }
 
 function buildQueryGenPrompt(analysis: string) {
-  return `Select the 3 most significant topics from this analysis and craft search queries.\n\n${analysis}`;
+  return `Select the 3 most significant topics from this analysis that would benefit from additional context. Create precise search queries optimized for current information.
+
+Format as:
+TOPIC 1: [Topic Name]
+QUERY: [Specific search query]
+ENRICHMENT GOAL: [What information to add]
+
+TOPIC 2: [Topic Name]
+QUERY: [Specific search query]
+ENRICHMENT GOAL: [What information to add]
+
+TOPIC 3: [Topic Name]
+QUERY: [Specific search query]
+ENRICHMENT GOAL: [What information to add]
+
+ANALYSIS:
+${analysis}`;
 }
 
 function buildIntegrationPrompt(analysis: string, enrichment: any[]) {
-  return `Integrate the following web content into the existing analysis.\n\nORIGINAL ANALYSIS:\n${analysis}\n\nWEB CONTENT:\n${JSON.stringify(enrichment, null, 2)}\n\nReturn the fully integrated analysis.`;
+  return `Seamlessly integrate the web-sourced information into the existing analysis while maintaining focus on visual elements and engagement.
+
+ORIGINAL ANALYSIS:
+${analysis}
+
+WEB ENRICHMENT:
+${JSON.stringify(enrichment, null, 2)}
+
+Return the fully integrated analysis maintaining the same JSON structure but with enriched content.`;
 }
 
-function buildNewsletterPrompt(integrated: string, tweets: string) {
-  return `Create a beautifully formatted markdown newsletter (Modern Clean style) using this integrated analysis and the underlying tweets.\n\nANALYSIS:\n${integrated}\n\nTWEETS:\n${tweets}`;
+function buildVisualNewsletterPrompt(integrated: string, tweets: string) {
+  return `Create a visually stunning, magazine-quality newsletter using the provided analysis and tweets.
+
+CRITICAL REQUIREMENTS:
+1. Include ALL images from tweets in appropriate sections
+2. Create visual tweet cards showing author info and engagement
+3. Use a modern, visually appealing layout with sections
+4. Include emojis for visual appeal and better scanning
+5. Feature high-engagement content prominently
+6. Create visual hierarchy with varied section styles
+
+NEWSLETTER STRUCTURE:
+
+# 🌟 [Compelling Title Based on Main Theme]
+
+> *[Date] • [Estimated read time] • Curated from [X] bookmarks*
+
+---
+
+## 📸 Today's Visual Highlight
+
+[Feature the most engaging visual content - full width image with caption]
+[Include author attribution and engagement metrics]
+
+---
+
+## 🔥 Main Story: [Primary Topic]
+
+[Hero image if available]
+
+[2-3 paragraph engaging introduction]
+
+### 💡 Key Insights
+[Visual callout boxes with key points]
+
+### 📊 Notable Voices
+[Tweet cards with author avatars, names, and key quotes]
+
+### 🔗 Deep Dive
+[Expanded analysis with supporting visuals]
+
+---
+
+## 🚀 Trending Topics
+
+### 1. [Topic with icon]
+[Brief description with supporting tweet/image]
+
+### 2. [Topic with icon]
+[Brief description with supporting tweet/image]
+
+### 3. [Topic with icon]
+[Brief description with supporting tweet/image]
+
+---
+
+## 💬 Community Pulse
+
+[Grid layout of 3-4 high-engagement tweets with:
+- Author avatar and name
+- Tweet text
+- Engagement metrics
+- Any images]
+
+---
+
+## 📈 By The Numbers
+
+[Visual statistics about the curated content:
+- Total engagement
+- Most liked tweet
+- Most discussed topic
+- Top contributors]
+
+---
+
+## 🎯 Quick Takes
+
+[Bullet points of smaller interesting findings with mini images]
+
+---
+
+## 🔮 What's Next
+
+[Forward-looking section based on trends identified]
+
+---
+
+*💌 Curated with AI assistance • Made possible by Chirpmetrics*
+
+ANALYSIS:
+${integrated}
+
+ORIGINAL TWEETS:
+${tweets}
+
+Create the newsletter in clean, properly formatted Markdown with:
+- Proper image syntax: ![alt text](url)
+- Visual dividers between sections
+- Consistent emoji usage
+- Author attributions with @ handles
+- Engagement metrics where relevant
+- Mix of content types (quotes, images, analysis)`;
 }
 
 function buildEnhancedPrompt(rawMarkdown: string) {
-  return `Improve this markdown newsletter’s UI/UX: better spacing, color accents via inline spans, centered images, callout boxes, etc., but keep content unchanged.\n\n${rawMarkdown}`;
+  return `Transform this newsletter into a visually stunning, email-optimized version with enhanced UI/UX.
+
+ENHANCEMENTS TO APPLY:
+
+1. **Visual Headers**: Add gradient backgrounds or colored accents to section headers
+2. **Image Styling**: Center images, add rounded corners, ensure proper sizing
+3. **Tweet Cards**: Create visually distinct cards for tweet quotes with:
+   - Author avatar (if URL provided)
+   - Colored border or background
+   - Engagement metrics in a visual way
+4. **Callout Boxes**: Use colored backgrounds for important information
+5. **Spacing**: Add proper vertical spacing between sections
+6. **Color Scheme**: Use a cohesive color palette (blues, purples, greens)
+7. **Typography**: Vary font sizes for hierarchy
+8. **Mobile Optimization**: Ensure everything looks good on mobile
+
+USE INLINE STYLES like:
+- <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px;">
+- <span style="color: #667eea; font-weight: bold;">
+- <img style="max-width: 100%; border-radius: 12px; margin: 20px auto; display: block;">
+
+CURRENT MARKDOWN:
+${rawMarkdown}
+
+Output the enhanced markdown with all visual improvements applied.`;
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  Helper: markdown → responsive HTML
+//  ENHANCED Helper: markdown → RICH responsive HTML
 // ────────────────────────────────────────────────────────────────────────────────
-function markdownToHtml(md: string): string {
+function markdownToRichHtml(md: string): string {
   const renderer = new marked.Renderer();
-  renderer.image = (href, _title, alt) => `
-    <div style="text-align:center;">
-      <img src="${href}" alt="${alt}"
-           style="max-width:400px;width:100%;height:auto;border-radius:4px;display:inline-block;">
+  
+  // Enhanced image rendering with proper styling
+  renderer.image = (href, title, alt) => `
+    <div style="text-align: center; margin: 25px 0;">
+      <img src="${href}" 
+           alt="${alt}"
+           title="${title || alt}"
+           style="max-width: 100%; width: auto; max-height: 400px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+      ${title ? `<p style="margin-top: 10px; font-size: 14px; color: #666; font-style: italic;">${title}</p>` : ''}
     </div>`;
+  
+  // Enhanced heading rendering
+  renderer.heading = (text, level) => {
+    const sizes = ['32px', '28px', '24px', '20px', '18px', '16px'];
+    const colors = ['#1a1a1a', '#2d3748', '#4a5568', '#718096', '#a0aec0', '#cbd5e0'];
+    return `<h${level} style="
+      font-size: ${sizes[level - 1]}; 
+      color: ${colors[level - 1]}; 
+      margin: ${level === 1 ? '30px' : '20px'} 0 15px 0;
+      font-weight: ${level <= 2 ? '800' : '600'};
+      line-height: 1.3;
+      ${level === 1 ? 'text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;' : ''}
+    ">${text}</h${level}>`;
+  };
+  
+  // Enhanced blockquote rendering
+  renderer.blockquote = (quote) => `
+    <blockquote style="
+      margin: 20px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      border-left: 4px solid #667eea;
+      border-radius: 8px;
+      font-style: italic;
+      color: #2d3748;
+    ">${quote}</blockquote>`;
+  
+  // Enhanced list rendering
+  renderer.list = (body, ordered) => {
+    const tag = ordered ? 'ol' : 'ul';
+    return `<${tag} style="
+      margin: 15px 0;
+      padding-left: 25px;
+      line-height: 1.8;
+      color: #4a5568;
+    ">${body}</${tag}>`;
+  };
+  
+  // Enhanced paragraph rendering
+  renderer.paragraph = (text) => {
+    // Check if it's a centered text (starts with > *)
+    if (text.includes('style=')) {
+      return `<p>${text}</p>`;
+    }
+    return `<p style="margin: 15px 0; line-height: 1.7; color: #2d3748; font-size: 16px;">${text}</p>`;
+  };
+  
+  // Enhanced horizontal rule
+  renderer.hr = () => `
+    <hr style="
+      margin: 30px 0;
+      border: none;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+    ">`;
+  
   const html = marked(md, { renderer });
+  
+  // Wrap in beautiful email template
   return juice(`
-    <body style="background:#f5f7fa;margin:0;padding:24px;">
-      <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-        <div style="padding:24px;font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#222;">
-          ${html}
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Newsletter</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f7fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 100%; background-color: #f7fafc; padding: 20px 10px;">
+        <!-- Header -->
+        <div style="max-width: 650px; margin: 0 auto 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 300; letter-spacing: 2px;">YOUR CURATED</h1>
+            <h1 style="color: white; margin: 5px 0 0 0; font-size: 36px; font-weight: 800;">NEWSLETTER</h1>
+          </div>
+        </div>
+        
+        <!-- Main Content Container -->
+        <div style="max-width: 650px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07); overflow: hidden;">
+          <div style="padding: 40px 30px;">
+            ${html}
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #f7fafc; padding: 30px; text-align: center; border-top: 2px solid #e2e8f0;">
+            <p style="margin: 0 0 10px 0; color: #718096; font-size: 14px;">
+              Curated with ❤️ by Chirpmetrics
+            </p>
+            <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+              Transform your Twitter bookmarks into beautiful newsletters
+            </p>
+            <div style="margin-top: 20px;">
+              <a href="https://chirpmetrics.com" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 14px;">
+                Create Your Own Newsletter →
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Email Footer -->
+        <div style="max-width: 650px; margin: 20px auto 0; text-align: center;">
+          <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} Chirpmetrics. All rights reserved.
+          </p>
         </div>
       </div>
     </body>
+    </html>
   `);
 }
