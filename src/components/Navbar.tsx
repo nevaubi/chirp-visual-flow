@@ -36,7 +36,6 @@ export default function Navbar() {
     navigate('/dashboard/home');
   };
 
-  // Fix: Wrap signOut in a proper event handler
   const handleSignOut = () => {
     signOut();
   };
@@ -47,13 +46,13 @@ export default function Navbar() {
         ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-100/50' 
         : 'bg-transparent'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 lg:py-8">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-3 group">
             <img 
               src="/thisone.png" 
               alt="Letternest Logo" 
-              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
+              className="h-9 w-9 transition-transform duration-300 group-hover:scale-110"
             />
             <span className="font-black text-2xl lg:text-3xl tracking-tight">
               <span className="text-black">letter</span>
@@ -61,29 +60,19 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link 
-              to="/" 
-              className="text-[#0087C8] font-semibold hover:text-[#0270A8] transition-all duration-300 hover:scale-105 px-3 py-2 rounded-lg hover:bg-blue-50/50"
-            >
-              Home
-            </Link>
-          </nav>
-
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-6">
             {isAuthenticated ? (
               <>
                 <Button 
                   variant="ghost" 
-                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-6 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
+                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-8 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
                   onClick={handleDashboardClick}
                 >
                   <User size={18} />
                   <span>Dashboard</span>
                 </Button>
                 <Button 
-                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-6 py-3 font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md"
+                  className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] hover:from-[#0270A8] hover:to-[#005082] text-white rounded-full px-8 py-3 font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg backdrop-blur-sm"
                   onClick={handleSignOut}
                 >
                   <LogOut size={18} />
@@ -94,14 +83,14 @@ export default function Navbar() {
               <>
                 <Button 
                   variant="ghost" 
-                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-6 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
+                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-8 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
                   onClick={handleLoginClick}
                 >
                   <LogIn size={18} />
                   <span>Sign in</span>
                 </Button>
                 <Button 
-                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-6 py-3 font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md"
+                  className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] hover:from-[#0270A8] hover:to-[#005082] text-white rounded-full px-8 py-3 font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg backdrop-blur-sm hover:glow-pulse"
                   onClick={handleSignupClick}
                 >
                   Signup for Free
@@ -137,15 +126,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="bg-white shadow-lg p-4 md:hidden animate-fade-in border-t border-blue-100">
           <nav className="max-w-7xl mx-auto flex flex-col gap-2">
-            <Link 
-              to="/" 
-              className="text-[#0087C8] font-medium py-2 px-3 rounded-lg hover:bg-blue-50/30 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </Link>
-
-            <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-blue-100">
+            <div className="flex flex-col gap-2 mt-2 pt-2">
               {isAuthenticated ? (
                 <>
                   <Button 
