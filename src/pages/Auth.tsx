@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,7 +42,10 @@ const Auth = () => {
                 alt="Letternest Logo" 
                 className="h-10 w-10 mr-2"
               />
-              <h1 className="text-2xl font-bold text-[#0087C8]">letternest</h1>
+              <h1 className="text-2xl font-bold">
+                <span className="text-black">letter</span>
+                <span className="text-[#0087C8]">nest</span>
+              </h1>
             </div>
             
             <div className="text-center mb-6">

@@ -57,7 +57,10 @@ export default function Navbar() {
               alt="Letternest Logo" 
               className="h-7 w-7"
             />
-            <span className="font-bold text-2xl text-[#0087C8]">letternest</span>
+            <span className="font-bold text-2xl">
+              <span className="text-black">letter</span>
+              <span className="text-[#0087C8]">nest</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -15,7 +15,10 @@ const Footer = () => {
               alt="Letternest Logo" 
               className="h-8 w-8" 
             />
-            <span className="text-twitter-blue font-semibold text-xl">letternest</span>
+            <span className="font-semibold text-xl">
+              <span className="text-black">letter</span>
+              <span className="text-[#0087C8]">nest</span>
+            </span>
           </Link>
 
           {/* Terms and Privacy Links */}

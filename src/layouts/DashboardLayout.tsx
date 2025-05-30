@@ -277,7 +277,10 @@ const DashboardLayout = () => {
               alt="Letternest Logo" 
               className="h-8 w-8"
             />
-            <span className="font-bold text-xl text-[#0087C8]">letternest</span>
+            <span className="font-bold text-xl">
+              <span className="text-black">letter</span>
+              <span className="text-[#0087C8]">nest</span>
+            </span>
           </Link>
         </div>
         <DropdownMenu>
@@ -325,7 +328,12 @@ const DashboardLayout = () => {
                 alt="Letternest Logo" 
                 className="h-8 w-8 shrink-0"
               />
-              {shouldShowExpanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">letternest</span>}
+              {shouldShowExpanded && (
+                <span className="font-bold text-xl whitespace-nowrap overflow-hidden">
+                  <span className="text-white">letter</span>
+                  <span className="text-white">nest</span>
+                </span>
+              )}
             </Link>
           </div>
 
