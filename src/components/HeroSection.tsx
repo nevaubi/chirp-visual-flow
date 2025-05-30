@@ -38,6 +38,11 @@ export default function HeroSection() {
         />
       </div>
 
+      {/* Reviews section - positioned on the right side above blue wave */}
+      <div className="absolute bottom-24 right-8 z-10 hidden lg:block transform scale-110">
+        <ReviewsSection />
+      </div>
+
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Mobile-only text at top */}
         <div className="block lg:hidden mb-8 pt-[5px]">
@@ -60,6 +65,11 @@ export default function HeroSection() {
           <p className="text-xl text-[#0f2e47] mb-4">
             Choose one - <span className="text-[#FF6B35]">or both</span>.
           </p>
+
+          {/* Mobile reviews section */}
+          <div className="flex justify-center mb-6">
+            <ReviewsSection />
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
@@ -86,11 +96,6 @@ export default function HeroSection() {
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Reviews section - replaced image with coded components */}
-            <div className="mt-16 flex justify-center">
-              <ReviewsSection />
             </div>
           </div>
           
