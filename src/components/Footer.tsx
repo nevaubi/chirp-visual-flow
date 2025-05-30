@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Logo and Name (side by side) */}
           <Link to="/" className="mb-6 flex items-center gap-2">
             <img 
-              src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+              src="/thisone.png" 
               alt="Letternest Logo" 
               className="h-8 w-8" 
             />

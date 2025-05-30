@@ -53,7 +53,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5">
             <img 
-              src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+              src="/thisone.png" 
               alt="Letternest Logo" 
               className="h-7 w-7"
             />
