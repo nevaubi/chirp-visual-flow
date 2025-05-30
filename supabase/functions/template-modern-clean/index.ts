@@ -520,37 +520,60 @@ ${markdownNewsletter}
             return text.trim() + '\n';
         }
          // Apply specific styling for paragraphs originating from the "Deeper Dive" or general text
-        return `<p style="margin-bottom: 1.2em; line-height: 1.7;">${text}</p>\n`;
+          return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px;">${text}</p>\n`;
+
     };
     // Custom list item rendering for styled bullets
-    renderer.listitem = (text, task, checked) => {
-        if (task) { // for task lists, not used here but good practice
-            return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
-        }
-        // Apply color to bullet via pseudo-element or a span if more complex styling is needed and can be handled by juice
-        // Simpler: style the <li> text color, bullet will inherit or use a default.
-        // For specific bullet color as requested in prompt:
-        // This is tricky with pure markdown-to-HTML for email. The prompt asked for <li style="color: #40827D..."><span style="color:#333">text</span></li>
-        // 'marked' doesn't easily allow injecting spans like that directly into listitem text.
-        // A more robust way for email would be to use HTML tables for lists or unicode bullets with color spans.
-        // For now, we'll style the <li> which will color both bullet and text, then the UI prompt can try to wrap text in a span.
-        // The UI prompt's instruction to wrap the list item text in a span with default color is better.
-        return `<li style="margin-bottom: 0.6em;">${text}</li>\n`; // The UI styling step (14) is prompted to handle the inner span for text color.
-    };
-    renderer.image = (href, _title, alt) => `
-      <div style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
-        <img src="${href}"
-             alt="${alt || 'Newsletter image'}"
-             style="max-width:100%; width:auto; max-height:480px; height:auto; border-radius:10px; display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
-      </div>`; 
+renderer.listitem = (text, task, checked) => {
+  if (task) { // keeps task-list behaviour intact
+    return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
+  }
+  return `<li style="margin: 0 0 0.8em 0; font-size: 16px; line-height: 1.6;">${text}</li>\n`;
+};
+
+// Custom heading rendering — colour, size & spacing
+renderer.heading = (text, level) => {
+  const color = level <= 2 ? '#0A417A' : '#40827D';          // deep blue for H1/H2, muted teal for H3+
+  const size  = level === 1 ? '28px'
+               : level === 2 ? '22px'
+               : level === 3 ? '18px' : '16px';
+  return `<h${level} style="color:${color};
+                             font-size:${size};
+                             margin:1.2em 0 0.6em;
+                             font-weight:600;">${text}</h${level}>\n`;
+};
+
+renderer.image = (href, _title, alt) => `
+  <div style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
+    <img src="${href}"
+         alt="${alt || 'Newsletter image'}"
+         style="max-width:100%; width:auto; max-height:480px; height:auto; border-radius:10px;
+                display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+  </div>`;
+
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
     const emailHtml = juice(`
       <body style="background-color:#E8EFF5; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: Arial, sans-serif;">
+
+        <!-- ✱✱ add this once ✱✱ -->
+    <style>
+      /* keep everything on one long sheet when “Save as PDF” is used */
+      @media print {
+        body, html { width: 100%; height: auto; }
+        table, tr, td, div, p, img { page-break-inside: avoid !important; }
+      }
+    </style>
+    <!-- ✱✱ end insertion ✱✱ -->
+
         <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#E8EFF5;">
           <tr><td align="center" style="padding:25px 0;">
-            <table width="680" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:680px; margin:0 auto; background-color:#ffffff; border-radius:12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1);">
+            <table width="680" border="0" cellpadding="0" cellspacing="0" role="presentation"
+       style="max-width:680px; margin:0 auto; background-color:#ffffff; border-radius:12px;
+              box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+              page-break-inside: avoid; page-break-before: auto; page-break-after: auto;">
+
               <tr><td style="padding:40px 45px; line-height:1.7; color:#333333; font-size:16px;">
                 ${htmlBody}
               </td></tr>
