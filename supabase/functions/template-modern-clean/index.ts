@@ -215,13 +215,15 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     analysisPrompt
   );
   let analysisContent = analysisJson.choices[0].message.content.trim();
-  // remove ```json fences if present
-  analysisContent = analysisContent.replace(/```json\n?/, "").replace(/```$/, "");
+  
+  // Strip markdown code blocks if present
+  analysisContent = analysisContent.replace(/^```json\n?/gm, "").replace(/\n?```$/gm, "");
 
   let analysisParsed: any;
-  try { analysisParsed = JSON.parse(analysisContent); }
-  catch {
-    console.warn("Failed to parse analysis JSON – using fallback skeleton");
+  try { 
+    analysisParsed = JSON.parse(analysisContent); 
+  } catch (parseErr) {
+    console.warn("Failed to parse analysis JSON – using fallback skeleton", parseErr);
     analysisParsed = {
       mainTopics: ["Topic A", "Topic B", "Topic C"],
       keyInsights: ["Insight 1", "Insight 2"],
@@ -330,15 +332,14 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   const emailHtml = markdownToRichHtml(enhancedMarkdown);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 11. Store in newsletter_storage                                         │
+  // │ 11. Store in newsletter_storage (using markdown_text column)            │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   logStep("Storing newsletter");
   const { data: stored, error: storeErr } = await supabase
     .from("newsletter_storage")
     .insert({
       user_id:      userId,
-      markdown_text: enhancedMarkdown,
-      html_text:     emailHtml
+      markdown_text: enhancedMarkdown
     })
     .select()
     .single();
