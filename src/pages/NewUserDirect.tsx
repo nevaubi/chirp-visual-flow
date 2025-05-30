@@ -2,13 +2,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import WelcomePopup from "@/components/auth/WelcomePopup";
 import { Profile } from "@/types/auth";
 
 const NewUserDirect = () => {
   const { authState, updateProfile } = useAuth();
   const navigate = useNavigate();
-  const [showAnimation, setShowAnimation] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // Check if user is actually new, redirect otherwise
   useEffect(() => {
@@ -21,61 +20,48 @@ const NewUserDirect = () => {
       if (authState.profile && authState.profile.is_new === false) {
         // User is not new, redirect to dashboard
         navigate('/dashboard/home', { replace: true });
-      } else {
-        // Trigger animation after a short delay
-        setTimeout(() => {
-          setShowAnimation(true);
-        }, 300);
+      } else if (authState.profile && authState.profile.is_new === true) {
+        // Automatically set user to newsletter platform
+        handleAutoSetup();
       }
     }
   }, [authState.loading, authState.user, authState.profile, navigate]);
 
-  // Handle welcome option selection
-  const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
+  // Automatically set up user for newsletter platform
+  const handleAutoSetup = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
     try {
-      // Prepare updates based on selected option
+      // Set user to newsletter platform automatically
       const updates: Partial<Profile> = {
         is_new: false,
+        is_newsletter_platform: true,
+        is_creator_platform: false,
       };
-      
-      // Set the appropriate platform flag
-      if (option === "newsletters") {
-        updates.is_newsletter_platform = true;
-        updates.is_creator_platform = false;
-      } else {
-        updates.is_creator_platform = true;
-        updates.is_newsletter_platform = false;
-      }
       
       // Update the profile
       await updateProfile(updates);
       
-      // Wait for the animation and redirect
+      // Redirect to dashboard
       setTimeout(() => {
         navigate('/dashboard/home', { replace: true });
-      }, 1500);
+      }, 1000);
     } catch (error) {
-      console.error("Error in handleWelcomeOptionSelect:", error);
+      console.error("Error in handleAutoSetup:", error);
       // Redirect to dashboard even if there's an error
       navigate('/dashboard/home', { replace: true });
+    } finally {
+      setIsProcessing(false);
     }
   };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50">
-      <div 
-        className={`transition-all duration-700 ease-in-out ${
-          showAnimation ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        }`}
-      >
-        <WelcomePopup 
-          open={true} 
-          onOptionSelect={handleWelcomeOptionSelect}
-          disableClose={true}
-          fullscreen={true}
-          profilePicUrl={authState.profile?.twitter_profilepic_url}
-          username={authState.profile?.twitter_username}
-        />
+      <div className="text-center">
+        <div className="w-8 h-8 border-4 border-t-transparent border-[#0087C8] rounded-full animate-spin mx-auto mb-4"></div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Setting up your account...</h3>
+        <p className="text-gray-600">Taking you to the Newsletter platform.</p>
       </div>
     </div>
   );
