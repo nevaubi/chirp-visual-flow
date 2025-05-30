@@ -212,7 +212,7 @@ export default function VideoPlayer({
                   step="0.1"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="w-16 h-1 bg-white/20 rounded-lg appearance-none slider"
+                  className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#0087C8] [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#0087C8] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none"
                 />
               </div>
             </div>
@@ -227,25 +227,6 @@ export default function VideoPlayer({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 12px;
-          width: 12px;
-          border-radius: 50%;
-          background: #0087C8;
-          cursor: pointer;
-        }
-        .slider::-moz-range-thumb {
-          height: 12px;
-          width: 12px;
-          border-radius: 50%;
-          background: #0087C8;
-          cursor: pointer;
-          border: none;
-        }
-      `}</style>
     </div>
   );
 }
