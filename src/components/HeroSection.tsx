@@ -41,10 +41,10 @@ export default function HeroSection() {
           <div className="text-center max-w-4xl mx-auto mb-12">
             {/* Main headline - updated to show "Turn X Bookmarks into" and "Professional Newsletters" */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
-              <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
                 Turn X Bookmarks into
               </span>
-              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">
                 Professional Newsletters
               </span>
             </h1>
