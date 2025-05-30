@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -134,17 +135,17 @@ export default function HeroSection() {
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
-      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-32">
-        <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
+      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-24 sm:pt-32">
+        <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
           {/* Headline ------------------------------------------------------ */}
-          <div className="mb-8 relative z-20 w-full">
+          <div className="mb-6 sm:mb-8 relative z-20 w-full">
             <h1 className="text-6xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
               <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                 Professional Newsletters
               </span>
             </h1>
-            <p className="text-xl sm:text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl sm:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto">
               <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
               <span className="block mt-2 font-semibold text-[#0087C8]">
                 <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
@@ -156,7 +157,7 @@ export default function HeroSection() {
           {/* Two-column layout for desktop ------------------------------- */}
           <div className="w-full lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
             {/* Left Column: Social proof + CTA button */}
-            <div className="flex flex-col items-center lg:items-start space-y-10 lg:pl-12 xl:pl-20">
+            <div className="flex flex-col items-center lg:items-start space-y-8 sm:space-y-10 lg:pl-12 xl:pl-20">
               {/* Social proof -------------------------------------------------- */}
               <div className="flex justify-center lg:justify-start relative z-20">
                 <ReviewsSection />
@@ -176,7 +177,7 @@ export default function HeroSection() {
             </div>
 
             {/* Right Column: Custom Video Player */}
-            <div className="mt-12 lg:mt-0 relative z-20">
+            <div className="mt-10 sm:mt-12 lg:mt-0 relative z-20">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
                 <VideoPlayer
                   src="/final.mp4"
