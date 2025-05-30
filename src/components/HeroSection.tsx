@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
 import ReviewsSection from "@/components/ReviewsSection";
+import ProductStepsSection from "@/components/ProductStepsSection";
 
 export default function HeroSection() {
   /* -------------------------------------------------- */
@@ -144,6 +145,9 @@ export default function HeroSection() {
               </span>
             </p>
           </div>
+
+          {/* Product Steps Section ----------------------------------------- */}
+          <ProductStepsSection />
 
           {/* Social proof -------------------------------------------------- */}
           <div className="flex justify-center mb-10 relative z-20">
