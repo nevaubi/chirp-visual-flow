@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight, BookOpen, Zap, Users } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
+
 export default function HeroSection() {
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -10,13 +11,16 @@ export default function HeroSection() {
       const navbarHeight = 80;
       const elementPosition = pricingSection.offsetTop;
       const offsetPosition = elementPosition - navbarHeight;
+
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
       });
     }
   };
-  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-100 via-white to-blue-100">
+
+  return (
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-100 via-white to-blue-100">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-purple-200/40 to-blue-200/30 rounded-full blur-3xl"></div>
@@ -26,7 +30,7 @@ export default function HeroSection() {
       {/* Blue wavy border at the bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
         <svg width="100%" height="120" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 20C120 60 240 80 360 70C480 60 600 35 720 25C840 15 960 35 1080 45C1200 55 1320 50 1440 35V120H0V20Z" fill="#0087C8" />
+          <path d="M0 20C120 60 240 80 360 70C480 60 600 35 720 25C840 15 960 35 1080 45C1200 55 1320 50 1440 35V120H0V20Z" fill="#0087C8"/>
         </svg>
       </div>
 
@@ -40,7 +44,9 @@ export default function HeroSection() {
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
                 Turn X Bookmarks into
               </span>
-              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent tracking-wide">Professional Newsletters</span>
+              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">
+                Professional Newsletters
+              </span>
             </h1>
             
             {/* Updated subtext */}
@@ -50,11 +56,18 @@ export default function HeroSection() {
 
             {/* CTA buttons - matching screenshot dual button layout */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Button className="bg-gradient-to-r from-[#0087C8] to-[#0066CC] hover:from-[#006ba3] hover:to-[#0052a3] text-white rounded-full px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" onClick={scrollToPricing}>
+              <Button 
+                className="bg-gradient-to-r from-[#0087C8] to-[#0066CC] hover:from-[#006ba3] hover:to-[#0052a3] text-white rounded-full px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                onClick={scrollToPricing}
+              >
                 Get Started
                 <ArrowRight size={20} />
               </Button>
-              <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-8 py-4 font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200" onClick={scrollToPricing}>
+              <Button 
+                variant="outline"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-8 py-4 font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200"
+                onClick={scrollToPricing}
+              >
                 Learn More
                 <ArrowRight size={20} />
               </Button>
@@ -133,5 +146,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 }
