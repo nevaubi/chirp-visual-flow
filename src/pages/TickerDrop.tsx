@@ -7,6 +7,13 @@ import Footer from "@/components/Footer";
 import TickerDropSignup from "@/components/newsletter/TickerDropSignup";
 
 export default function TickerDrop() {
+  const scrollToNewsletter = () => {
+    document.getElementById('newsletter-signup')?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'center'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 to-white">
       <Navbar />
@@ -32,7 +39,7 @@ export default function TickerDrop() {
       </section>
 
       {/* Newsletter Signup Section */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8">
+      <section id="newsletter-signup" className="py-4 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <TickerDropSignup />
         </div>
@@ -100,10 +107,8 @@ export default function TickerDrop() {
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Level Up Your Investment Game?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of investors who trust The Ticker Drop for market insights and profitable opportunities.
-          </p>
           <Button 
+            onClick={scrollToNewsletter}
             size="lg"
             className="bg-white text-[#0087C8] hover:bg-gray-100 px-12 py-4 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
           >
