@@ -147,6 +147,22 @@ export default {
 					'0%': { boxShadow: '0 0 0 0 rgba(0, 135, 200, 0)' },
 					'50%': { boxShadow: '0 0 10px 3px rgba(0, 135, 200, 0.4)' },
 					'100%': { boxShadow: '0 0 0 0 rgba(0, 135, 200, 0)' }
+				},
+				'scroll-up': {
+					'0%': { transform: 'translateY(0)' },
+					'100%': { transform: 'translateY(-50%)' }
+				},
+				'scroll-down': {
+					'0%': { transform: 'translateY(-50%)' },
+					'100%': { transform: 'translateY(0)' }
+				},
+				'scroll-up-slow': {
+					'0%': { transform: 'translateY(0)' },
+					'100%': { transform: 'translateY(-50%)' }
+				},
+				'scroll-down-slow': {
+					'0%': { transform: 'translateY(-50%)' },
+					'100%': { transform: 'translateY(0)' }
 				}
 			},
 			animation: {
@@ -156,7 +172,11 @@ export default {
 				'fade-in-slow': 'fade-in 0.8s ease-out',
 				'wave': 'wave 3s ease-in-out infinite',
 				'pulse-subtle': 'pulse-subtle 4s ease-in-out infinite',
-				'glow-pulse': 'glow-pulse 8s ease-in-out infinite'
+				'glow-pulse': 'glow-pulse 8s ease-in-out infinite',
+				'scroll-up': 'scroll-up 30s linear infinite',
+				'scroll-down': 'scroll-down 25s linear infinite',
+				'scroll-up-slow': 'scroll-up-slow 40s linear infinite',
+				'scroll-down-slow': 'scroll-down-slow 35s linear infinite'
 			}
 		}
 	},

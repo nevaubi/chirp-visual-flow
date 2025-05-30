@@ -234,6 +234,47 @@
   .animate-glow-pulse {
     animation: glow-pulse 8s ease-in-out infinite;
   }
+
+  /* Vertical scrolling animations for newsletter background */
+  @keyframes scroll-up {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+  
+  @keyframes scroll-down {
+    0% { transform: translateY(-50%); }
+    100% { transform: translateY(0); }
+  }
+  
+  @keyframes scroll-up-slow {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+  
+  @keyframes scroll-down-slow {
+    0% { transform: translateY(-50%); }
+    100% { transform: translateY(0); }
+  }
+  
+  .animate-scroll-up {
+    animation: scroll-up 30s linear infinite;
+    will-change: transform;
+  }
+  
+  .animate-scroll-down {
+    animation: scroll-down 25s linear infinite;
+    will-change: transform;
+  }
+  
+  .animate-scroll-up-slow {
+    animation: scroll-up-slow 40s linear infinite;
+    will-change: transform;
+  }
+  
+  .animate-scroll-down-slow {
+    animation: scroll-down-slow 35s linear infinite;
+    will-change: transform;
+  }
 }
 
 .bg-pattern-dots {

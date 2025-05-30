@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight, Bookmark } from "lucide-react";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -19,66 +18,91 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
-      {/* Newsletter mockups positioned around the edges with better masking */}
+      {/* Vertically scrolling newsletter columns */}
       <div className="absolute inset-0 z-0">
-        {/* Left newsletter - positioned more towards edge */}
-        <div className="absolute -left-20 top-20 transform -rotate-12 opacity-25">
-          <div className="relative">
-            <img 
-              src="/1.png" 
-              alt="Sports Newsletter" 
-              className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50"
-              style={{
-                maskImage: 'linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)'
-              }}
-            />
+        {/* Left scrolling column - upward */}
+        <div className="absolute -left-16 top-0 w-48 h-[200vh] opacity-15">
+          <div className="animate-scroll-up flex flex-col gap-8">
+            {/* First set of newsletters */}
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set for seamless loop */}
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Third set for extra smoothness */}
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Right newsletter - positioned more towards edge */}
-        <div className="absolute -right-20 top-32 transform rotate-12 opacity-25">
-          <div className="relative">
-            <img 
-              src="/3.png" 
-              alt="AI Newsletter" 
-              className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50"
-              style={{
-                maskImage: 'linear-gradient(-45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(-45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)'
-              }}
-            />
+        {/* Right scrolling column - downward with delay */}
+        <div className="absolute -right-16 top-0 w-48 h-[200vh] opacity-15">
+          <div className="animate-scroll-down flex flex-col gap-8">
+            {/* First set of newsletters */}
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set for seamless loop */}
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Third set for extra smoothness */}
+            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Bottom center newsletter - subtle background element */}
-        <div className="absolute left-1/2 bottom-10 transform -translate-x-1/2 rotate-1 opacity-15">
-          <div className="relative">
-            <img 
-              src="/2.png" 
-              alt="Tech Newsletter" 
-              className="w-56 h-auto rounded-lg shadow-lg border border-gray-200/50"
-              style={{
-                maskImage: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 100%)'
-              }}
-            />
+        {/* Middle left column - slower upward */}
+        <div className="absolute left-8 top-0 w-40 h-[200vh] opacity-10">
+          <div className="animate-scroll-up-slow flex flex-col gap-12">
+            {/* First set */}
+            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set */}
+            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
+
+        {/* Middle right column - slower downward */}
+        <div className="absolute right-8 top-0 w-40 h-[200vh] opacity-10">
+          <div className="animate-scroll-down-slow flex flex-col gap-12">
+            {/* First set */}
+            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set */}
+            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+          </div>
+        </div>
+
+        {/* Gradient overlays to fade edges */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-blue-50/80 to-transparent z-10"></div>
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent z-10"></div>
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-blue-50/60 to-transparent z-10"></div>
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-blue-50/60 to-transparent z-10"></div>
 
         {/* Subtle floating bookmark icons */}
-        <div className="absolute top-24 left-1/5">
+        <div className="absolute top-24 left-1/5 z-20">
           <Bookmark className="w-4 h-4 text-[#0087C8] opacity-20 animate-pulse-subtle" fill="currentColor" />
         </div>
-        <div className="absolute top-36 right-1/4">
+        <div className="absolute top-36 right-1/4 z-20">
           <Bookmark className="w-3 h-3 text-[#0087C8] opacity-15 animate-pulse-subtle" fill="currentColor" style={{ animationDelay: '1s' }} />
         </div>
-        <div className="absolute bottom-40 left-1/3">
+        <div className="absolute bottom-40 left-1/3 z-20">
           <Bookmark className="w-5 h-5 text-[#0087C8] opacity-10 animate-pulse-subtle" fill="currentColor" style={{ animationDelay: '2s' }} />
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-32">
+      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-32">
         <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-5xl mx-auto">
           
           {/* Main headline - clean and prominent */}
