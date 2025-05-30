@@ -1,9 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
-
 export default function HeroSection() {
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -11,16 +9,13 @@ export default function HeroSection() {
       const navbarHeight = 80; // Account for navbar height
       const elementPosition = pricingSection.offsetTop;
       const offsetPosition = elementPosition - navbarHeight;
-
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
       });
     }
   };
-
-  return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-purple-200/20 rounded-full blur-3xl"></div>
@@ -30,19 +25,13 @@ export default function HeroSection() {
       {/* Blue wavy border at the bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
         <svg width="100%" height="120" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 20C120 60 240 80 360 70C480 60 600 35 720 25C840 15 960 35 1080 45C1200 55 1320 50 1440 35V120H0V20Z" fill="#0087C8"/>
+          <path d="M0 20C120 60 240 80 360 70C480 60 600 35 720 25C840 15 960 35 1080 45C1200 55 1320 50 1440 35V120H0V20Z" fill="#0087C8" />
         </svg>
       </div>
 
       {/* Arrow graphic */}
       <div className="absolute top-32 right-80 z-10 hidden xl:block animate-bounce">
-        <img 
-          src="/arrow1.png" 
-          alt="Arrow graphic" 
-          width="60" 
-          height="60"
-          className="opacity-80"
-        />
+        <img src="/arrow1.png" alt="Arrow graphic" width="60" height="60" className="opacity-80" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-32">
@@ -70,21 +59,8 @@ export default function HeroSection() {
           
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button 
-              className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#e05a2c] hover:to-[#e07a35] text-white rounded-2xl px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              onClick={scrollToPricing}
-            >
-              <Mail size={22} />
-              Start Creating Newsletters
-              <ArrowRight size={20} />
-            </Button>
-            <Button 
-              variant="outline"
-              className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white rounded-2xl px-8 py-4 font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200"
-              onClick={scrollToPricing}
-            >
-              View Pricing
-            </Button>
+            
+            
           </div>
 
           {/* Dashboard preview - centered */}
@@ -97,27 +73,7 @@ export default function HeroSection() {
               
               {/* Enhanced floating newsletter success card */}
               <div className="absolute -bottom-8 -left-8 z-20 hidden lg:block">
-                <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 max-w-[320px] transform rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mr-3">
-                      <Mail size={18} className="text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-gray-900">Newsletter Sent!</div>
-                      <div className="text-xs text-gray-500">Just now</div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-700 mb-3">
-                    "Weekly Tech Digest" delivered to <span className="font-semibold text-[#0087C8]">1,847 subscribers</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-green-600 font-semibold">96% open rate</span>
-                    </div>
-                    <span className="text-xs text-gray-500">from bookmarks</span>
-                  </div>
-                </div>
+                
               </div>
 
               {/* Decorative gradient blur behind dashboard */}
@@ -126,6 +82,5 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
