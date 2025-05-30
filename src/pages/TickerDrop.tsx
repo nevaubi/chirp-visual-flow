@@ -1,6 +1,7 @@
 
 import React from "react";
 import { FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TickerDropSignup from "@/components/newsletter/TickerDropSignup";
