@@ -161,7 +161,7 @@ export default {
 				'wave': 'wave 3s ease-in-out infinite',
 				'pulse-subtle': 'pulse-subtle 4s ease-in-out infinite',
 				'glow-pulse': 'glow-pulse 8s ease-in-out infinite',
-				'scroll-slow': 'scroll-slow 80s linear infinite'
+				'scroll-slow': 'scroll-slow 120s linear infinite'
 			}
 		}
 	},

@@ -21,7 +21,7 @@ export default function HeroSection() {
       {/* Vertically scrolling newsletter columns - all parallel and same speed */}
       <div className="absolute inset-0 z-0">
         {/* Left outer column */}
-        <div className="absolute left-32 top-0 w-48 h-[200vh] opacity-10">
+        <div className="absolute left-16 top-0 w-48 h-[200vh] opacity-10">
           <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -37,7 +37,7 @@ export default function HeroSection() {
         </div>
 
         {/* Left inner column */}
-        <div className="absolute left-64 top-0 w-48 h-[200vh] opacity-10">
+        <div className="absolute left-80 top-0 w-48 h-[200vh] opacity-10">
           <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -53,7 +53,7 @@ export default function HeroSection() {
         </div>
 
         {/* Right inner column */}
-        <div className="absolute right-64 top-0 w-48 h-[200vh] opacity-10">
+        <div className="absolute right-80 top-0 w-48 h-[200vh] opacity-10">
           <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -69,7 +69,7 @@ export default function HeroSection() {
         </div>
 
         {/* Right outer column */}
-        <div className="absolute right-32 top-0 w-48 h-[200vh] opacity-10">
+        <div className="absolute right-16 top-0 w-48 h-[200vh] opacity-10">
           <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />

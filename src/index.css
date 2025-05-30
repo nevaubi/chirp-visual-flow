@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -235,18 +234,16 @@
     animation: glow-pulse 8s ease-in-out infinite;
   }
 
-  /* Unified very slow scrolling animation for all newsletter columns */
+  /* Unified very slow scrolling animation for all newsletter columns - slowed down from 80s to 120s */
   @keyframes scroll-slow {
     0% { transform: translateY(0); }
     100% { transform: translateY(-50%); }
   }
   
   .animate-scroll-slow {
-    animation: scroll-slow 80s linear infinite;
+    animation: scroll-slow 120s linear infinite;
     will-change: transform;
   }
-
-  /* Remove old faster animations - they are replaced by the slow one above */
 }
 
 .bg-pattern-dots {
