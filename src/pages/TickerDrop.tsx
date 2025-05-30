@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -46,7 +45,7 @@ export default function TickerDrop() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Newsletter 1 */}
             <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-white border border-gray-200">
+              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-102 bg-white border border-gray-200">
                 <img
                   src="/picone.png"
                   alt="The Ticker Drop Newsletter Example 1"
@@ -55,15 +54,11 @@ export default function TickerDrop() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
-              <div className="mt-4 text-center">
-                <h3 className="text-lg font-semibold text-gray-900">Market Analysis</h3>
-                <p className="text-gray-600">Weekly market trends and insights</p>
-              </div>
             </div>
 
             {/* Newsletter 2 */}
             <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-white border border-gray-200">
+              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-102 bg-white border border-gray-200">
                 <img
                   src="/pictwo.png"
                   alt="The Ticker Drop Newsletter Example 2"
@@ -72,15 +67,11 @@ export default function TickerDrop() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
-              <div className="mt-4 text-center">
-                <h3 className="text-lg font-semibold text-gray-900">Stock Picks</h3>
-                <p className="text-gray-600">Curated investment opportunities</p>
-              </div>
             </div>
 
             {/* Newsletter 3 */}
             <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-white border border-gray-200">
+              <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-102 bg-white border border-gray-200">
                 <img
                   src="/picthree.png"
                   alt="The Ticker Drop Newsletter Example 3"
@@ -88,10 +79,6 @@ export default function TickerDrop() {
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-              <div className="mt-4 text-center">
-                <h3 className="text-lg font-semibold text-gray-900">Economic Update</h3>
-                <p className="text-gray-600">Key economic indicators and impacts</p>
               </div>
             </div>
           </div>
