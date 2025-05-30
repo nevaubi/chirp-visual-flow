@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -29,10 +28,15 @@ const determineNewsletterGenerationCount = (preference: string | null | undefine
 };
 
 // Helper function to determine tweet generation count for Creator platform
-const determineTweetGenerationCount = (priceId: string | null | undefined, subscribed: boolean): number => {
+const determineTweetGenerationCount = (priceId: string | null | undefined, subscribed: boolean, isNewCreatorUser: boolean = false): number => {
   // If it's a Creator platform subscription
   if (priceId === "price_1RRXZ2DBIslKIY5s4gxpBlME") {
     return subscribed ? 150 : 5; // 150 for paid, 5 for free
+  }
+  
+  // If this is a new Creator user (setting is_creator_platform for the first time), give them 5 free generations
+  if (isNewCreatorUser) {
+    return 5;
   }
   
   return 0; // Not a Creator platform subscription
@@ -172,6 +176,20 @@ serve(async (req) => {
         // Determine subscription details
         const { subscriptionTier, isCreatorPlatform, isNewsletterPlatform } = determineSubscriptionDetails(priceId);
         
+        // Get current profile to check if user was already on Creator platform
+        let currentProfile = null;
+        if (userId) {
+          const { data: profileData } = await supabaseAdmin
+            .from('profiles')
+            .select('is_creator_platform, remaining_tweet_generations')
+            .eq('id', userId)
+            .single();
+          currentProfile = profileData;
+        }
+        
+        // Check if this is a new Creator platform user
+        const isNewCreatorUser = isCreatorPlatform && !currentProfile?.is_creator_platform;
+        
         // Set appropriate generation counts
         let remainingNewsletterGenerations = 0;
         let remainingTweetGenerations = null;
@@ -180,11 +198,15 @@ serve(async (req) => {
           remainingNewsletterGenerations = 20; // Fixed value for newsletter subscriptions
         } else if (isCreatorPlatform) {
           remainingTweetGenerations = 150; // 150 for paid Creator subscription
+        } else if (isNewCreatorUser) {
+          // New Creator platform user gets 5 free generations
+          remainingTweetGenerations = 5;
         }
         
         logStep("Platform and generations determined", { 
           isNewsletterPlatform,
           isCreatorPlatform,
+          isNewCreatorUser,
           priceId,
           remainingNewsletterGenerations,
           remainingTweetGenerations
@@ -223,6 +245,7 @@ serve(async (req) => {
           } else {
             logStep("Profile updated with checkout session data", { 
               isCreatorPlatform,
+              isNewCreatorUser,
               remainingTweetGenerations,
               remainingNewsletterGenerations 
             });
@@ -260,7 +283,7 @@ serve(async (req) => {
         // Find profiles with this customer ID
         const { data: profiles, error: profilesError } = await supabaseAdmin
           .from('profiles')
-          .select('id, newsletter_day_preference')
+          .select('id, newsletter_day_preference, is_creator_platform, remaining_tweet_generations')
           .eq('stripe_customer_id', customerId);
           
         if (profilesError) {
@@ -275,6 +298,9 @@ serve(async (req) => {
         
         // Update each profile
         for (const profile of profiles) {
+          // Check if this is a new Creator platform user
+          const isNewCreatorUser = isCreatorPlatform && !profile.is_creator_platform;
+          
           // Determine the generation counts based on platform
           let remainingNewsletterGenerations = 0;
           let remainingTweetGenerations = null;
@@ -283,12 +309,16 @@ serve(async (req) => {
             remainingNewsletterGenerations = 20;
           } else if (isCreatorPlatform) {
             remainingTweetGenerations = subscription.status === 'active' ? 150 : 5;
+          } else if (isNewCreatorUser) {
+            // New Creator platform user gets 5 free generations
+            remainingTweetGenerations = 5;
           }
           
           logStep("Setting platform generations", { 
             profileId: profile.id, 
             isCreatorPlatform,
             isNewsletterPlatform,
+            isNewCreatorUser,
             remainingNewsletterGenerations,
             remainingTweetGenerations
           });
@@ -323,6 +353,7 @@ serve(async (req) => {
               profileId: profile.id, 
               subscriptionTier,
               isCreatorPlatform,
+              isNewCreatorUser,
               remainingTweetGenerations,
               remainingNewsletterGenerations 
             });

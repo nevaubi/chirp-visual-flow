@@ -160,6 +160,24 @@ const PricingSection = () => {
         return;
       }
       
+      // If this is a Creator platform checkout and user is not already on Creator platform,
+      // initialize them with 5 free generations
+      if (platform === 'creator' && !authState.profile?.is_creator_platform) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            is_creator_platform: true,
+            remaining_tweet_generations: 5 // Give new Creator users 5 free generations
+          })
+          .eq('id', authState.user.id);
+          
+        if (updateError) {
+          console.error("Error initializing Creator profile:", updateError);
+          toast.error("Could not initialize Creator profile. Please try again.");
+          return;
+        }
+      }
+      
       // Call the create-checkout edge function
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { 

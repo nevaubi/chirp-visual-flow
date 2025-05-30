@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,27 +100,40 @@ const CheckoutSuccess = () => {
           toast.error("Error checking subscription status");
           setIsLoading(false);
         } else if (isMounted) {
-          // Determine subscription type based on the response
-          if (data?.subscription_tier === "Creator") {
-            setSubscriptionType('creator');
-            toast.success("Creator subscription activated successfully!");
-          } else if (data?.subscription_tier?.includes("Newsletter")) {
-            setSubscriptionType('newsletter');
-            toast.success("Newsletter subscription activated successfully!");
-          } else {
-            // Fallback - check profile to determine platform
-            if (authState.profile?.is_creator_platform) {
+          // Refresh profile first to get the latest data
+          await refreshProfile();
+          
+          // Wait a moment for the profile to be updated
+          setTimeout(async () => {
+            // Get fresh profile data after refresh
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('is_creator_platform, is_newsletter_platform, subscription_tier')
+              .eq('id', authState.user?.id)
+              .single();
+            
+            console.log("Profile data after refresh:", profileData);
+            
+            // Determine subscription type based on profile data and subscription response
+            if (profileData?.is_creator_platform || data?.subscription_tier === "Creator") {
               setSubscriptionType('creator');
               toast.success("Creator subscription activated successfully!");
-            } else {
+            } else if (profileData?.is_newsletter_platform || data?.subscription_tier?.includes("Newsletter")) {
               setSubscriptionType('newsletter');
               toast.success("Newsletter subscription activated successfully!");
+            } else {
+              // Fallback logic
+              if (data?.subscription_tier === "Creator") {
+                setSubscriptionType('creator');
+                toast.success("Creator subscription activated successfully!");
+              } else {
+                setSubscriptionType('newsletter');
+                toast.success("Newsletter subscription activated successfully!");
+              }
             }
-          }
-          
-          // After successful subscription check, refresh the user's profile to get updated preferences
-          await refreshProfile();
-          setIsLoading(false);
+            
+            setIsLoading(false);
+          }, 1000);
         }
       } catch (error) {
         console.error("Error in checkout success:", error);
@@ -148,7 +160,7 @@ const CheckoutSuccess = () => {
     return () => {
       isMounted = false;
     };
-  }, [sessionId, authState.user, authState.loading, authState.profile, refreshProfile]);
+  }, [sessionId, authState.user, authState.loading, refreshProfile]);
 
   // Handle form submission for newsletter platform
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
