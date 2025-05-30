@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
@@ -154,38 +153,29 @@ export default function HeroSection() {
           </div>
 
           {/* Two-column layout for desktop ------------------------------- */}
-          <div className="w-full lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
-            {/* Left Column: Social proof + CTA buttons */}
-            <div className="flex flex-col items-center lg:items-start space-y-8">
+          <div className="w-full lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
+            {/* Left Column: Social proof + CTA button */}
+            <div className="flex flex-col items-center lg:items-start space-y-10">
               {/* Social proof -------------------------------------------------- */}
-              <div className="flex justify-center lg:justify-start mb-2 lg:mb-0 relative z-20">
+              <div className="flex justify-center lg:justify-start relative z-20">
                 <ReviewsSection />
               </div>
 
-              {/* CTA buttons --------------------------------------------------- */}
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-4 justify-center lg:justify-start relative z-20">
+              {/* CTA button --------------------------------------------------- */}
+              <div className="flex justify-center lg:justify-start relative z-20 w-full">
                 <Button
                   size="lg"
-                  className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                  className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full sm:w-auto lg:w-full max-w-sm"
                   onClick={scrollToPricing}
                 >
                   Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white px-8 py-4 text-lg font-semibold rounded-full transition-all transform hover:scale-105"
-                >
-                  <Mail className="mr-2 h-5 w-5" />
-                  See Live Demo
+                  <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </div>
             </div>
 
             {/* Right Column: Video */}
-            <div className="mt-8 lg:mt-0 relative z-20">
+            <div className="mt-12 lg:mt-0 relative z-20">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
                 <video
                   autoPlay
