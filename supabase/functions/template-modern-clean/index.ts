@@ -283,16 +283,24 @@ Focus on identifying patterns, themes, and valuable insights from the bookmarked
     }
 
     const analysisData = await analysisResponse.json();
-    const analysisContent = analysisData.choices[0].message.content;
+    let analysisContent = analysisData.choices[0].message.content;
 
     console.log('Modern Clean Template: AI analysis completed');
+
+    // Clean up JSON if it has markdown code blocks
+    if (analysisContent.includes('```json')) {
+      analysisContent = analysisContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    }
+    if (analysisContent.includes('```')) {
+      analysisContent = analysisContent.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
 
     let parsedAnalysis;
     try {
       parsedAnalysis = JSON.parse(analysisContent);
     } catch (parseError) {
       console.error('Error parsing AI analysis:', parseError);
-      // Fallback analysis
+      // Fallback analysis - use apifyData array instead of tweetsForAnalysis string
       parsedAnalysis = {
         mainTopics: ["Technology", "Business", "Innovation"],
         keyInsights: ["Emerging trends in the industry", "Market developments", "Thought leadership"],
@@ -301,7 +309,7 @@ Focus on identifying patterns, themes, and valuable insights from the bookmarked
         recommendedSections: [
           {
             title: "Featured Insights",
-            tweets: tweetsForAnalysis.slice(0, 5).map(t => t.id),
+            tweets: apifyData.slice(0, 5).map(t => t.id),
             summary: "Top insights from your bookmarks"
           }
         ]
