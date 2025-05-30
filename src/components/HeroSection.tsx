@@ -1,6 +1,7 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
-import { Mail, ArrowRight, Bookmark } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
 import ReviewsSection from "@/components/ReviewsSection";
 
 export default function HeroSection() {
@@ -122,28 +123,6 @@ export default function HeroSection() {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent z-10" />
         <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-blue-50/60 to-transparent z-10" />
         <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-blue-50/60 to-transparent z-10" />
-
-        {/* -- FLOATING BOOKMARK ICONS ------------------------------------- */}
-        <div className="absolute top-24 left-1/5 z-20">
-          <Bookmark
-            className="w-4 h-4 text-[#0087C8] opacity-20 animate-pulse-subtle"
-            fill="currentColor"
-          />
-        </div>
-        <div className="absolute top-36 right-1/4 z-20">
-          <Bookmark
-            className="w-3 h-3 text-[#0087C8] opacity-15 animate-pulse-subtle"
-            fill="currentColor"
-            style={{ animationDelay: "1s" }}
-          />
-        </div>
-        <div className="absolute bottom-40 left-1/3 z-20">
-          <Bookmark
-            className="w-5 h-5 text-[#0087C8] opacity-10 animate-pulse-subtle"
-            fill="currentColor"
-            style={{ animationDelay: "2s" }}
-          />
-        </div>
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
