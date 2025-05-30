@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -156,7 +157,7 @@ export default function HeroSection() {
           {/* Two-column layout for desktop ------------------------------- */}
           <div className="w-full lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
             {/* Left Column: Social proof + CTA button */}
-            <div className="flex flex-col items-center lg:items-start space-y-10">
+            <div className="flex flex-col items-center lg:items-start space-y-10 lg:pl-12 xl:pl-20">
               {/* Social proof -------------------------------------------------- */}
               <div className="flex justify-center lg:justify-start relative z-20">
                 <ReviewsSection />
