@@ -20,67 +20,67 @@ export default function HeroSection() {
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
       {/* Vertically scrolling newsletter columns */}
       <div className="absolute inset-0 z-0">
-        {/* Left scrolling column - upward */}
-        <div className="absolute -left-16 top-0 w-48 h-[200vh] opacity-15">
+        {/* Far left scrolling column - upward */}
+        <div className="absolute -left-20 top-0 w-48 h-[200vh] opacity-15">
           <div className="animate-scroll-up flex flex-col gap-8">
             {/* First set of newsletters */}
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             {/* Duplicate set for seamless loop */}
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            {/* Third set for extra smoothness */}
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Right scrolling column - downward with delay */}
-        <div className="absolute -right-16 top-0 w-48 h-[200vh] opacity-15">
+        {/* Far right scrolling column - downward with delay */}
+        <div className="absolute -right-20 top-0 w-48 h-[200vh] opacity-15">
           <div className="animate-scroll-down flex flex-col gap-8">
             {/* First set of newsletters */}
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             {/* Duplicate set for seamless loop */}
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            {/* Third set for extra smoothness */}
-            <img src="/2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Middle left column - slower upward */}
-        <div className="absolute left-8 top-0 w-40 h-[200vh] opacity-10">
+        {/* Inner left column - slower upward */}
+        <div className="absolute left-4 top-0 w-40 h-[200vh] opacity-10">
           <div className="animate-scroll-up-slow flex flex-col gap-12">
             {/* First set */}
-            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             {/* Duplicate set */}
-            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Middle right column - slower downward */}
-        <div className="absolute right-8 top-0 w-40 h-[200vh] opacity-10">
+        {/* Inner right column - slower downward */}
+        <div className="absolute right-4 top-0 w-40 h-[200vh] opacity-10">
           <div className="animate-scroll-down-slow flex flex-col gap-12">
             {/* First set */}
-            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             {/* Duplicate set */}
-            <img src="/1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
