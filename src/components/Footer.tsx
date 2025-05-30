@@ -11,11 +11,11 @@ const Footer = () => {
           {/* Logo and Name (side by side) */}
           <Link to="/" className="mb-6 flex items-center gap-2">
             <img 
-              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-              alt="Chirpmetrics Logo" 
+              src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+              alt="Letternest Logo" 
               className="h-8 w-8" 
             />
-            <span className="text-twitter-blue font-semibold text-xl">chirpmetrics</span>
+            <span className="text-twitter-blue font-semibold text-xl">letternest</span>
           </Link>
 
           {/* Terms and Privacy Links */}
@@ -30,7 +30,7 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-            <p>© {currentYear} Chirpmetrics. All rights reserved.</p>
+            <p>© {currentYear} Letternest. All rights reserved.</p>
           </div>
         </div>
       </div>

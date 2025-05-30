@@ -39,15 +39,15 @@ const Auth = () => {
           <div className="p-8">
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-                alt="Chirpmetrics Logo" 
+                src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+                alt="Letternest Logo" 
                 className="h-10 w-10 mr-2"
               />
-              <h1 className="text-2xl font-bold text-[#0087C8]">chirpmetrics</h1>
+              <h1 className="text-2xl font-bold text-[#0087C8]">letternest</h1>
             </div>
             
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Chirpmetrics</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Letternest</h2>
               <p className="text-gray-600">Connect with your Twitter account to get started</p>
             </div>
             
@@ -93,7 +93,7 @@ const Auth = () => {
           
           <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-600">
-              By continuing, you agree to Chirpmetrics' <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+              By continuing, you agree to Letternest's <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
             </p>
           </div>
         </div>

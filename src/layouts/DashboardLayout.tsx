@@ -47,7 +47,7 @@ const DashboardLayout = () => {
   const profile = authState.profile;
   const initials = profile?.twitter_username
     ? profile.twitter_username.substring(0, 2).toUpperCase()
-    : 'CM';
+    : 'LN';
   const isNewsletterPlatform = profile?.is_newsletter_platform;
   const isCreatorPlatform = profile?.is_creator_platform;
   const isSubscribed = profile?.subscribed;
@@ -273,11 +273,11 @@ const DashboardLayout = () => {
           </Button>
           <Link to="/" className="flex items-center gap-1.5">
             <img 
-              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-              alt="Chirpmetrics Logo" 
+              src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+              alt="Letternest Logo" 
               className="h-8 w-8"
             />
-            <span className="font-bold text-xl text-[#0087C8]">chirpmetrics</span>
+            <span className="font-bold text-xl text-[#0087C8]">letternest</span>
           </Link>
         </div>
         <DropdownMenu>
@@ -321,11 +321,11 @@ const DashboardLayout = () => {
               !shouldShowExpanded && !isMobile && "justify-center"
             )}>
               <img 
-                src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-                alt="Chirpmetrics Logo" 
+                src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+                alt="Letternest Logo" 
                 className="h-8 w-8 shrink-0"
               />
-              {shouldShowExpanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">chirpmetrics</span>}
+              {shouldShowExpanded && <span className="font-bold text-xl text-white whitespace-nowrap overflow-hidden">letternest</span>}
             </Link>
           </div>
 

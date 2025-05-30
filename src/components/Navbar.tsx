@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,11 +53,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5">
             <img 
-              src="/lovable-uploads/5ffc42ed-bb49-42fc-8cf1-ccc074cc3622.png" 
-              alt="Chirpmetrics Logo" 
+              src="/lovable-uploads/5c7cfe64-ece6-4722-95af-7bb3d634b723.png" 
+              alt="Letternest Logo" 
               className="h-7 w-7"
             />
-            <span className="font-bold text-2xl text-[#0087C8]">chirpmetrics</span>
+            <span className="font-bold text-2xl text-[#0087C8]">letternest</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -132,7 +133,7 @@ export default function Navbar() {
               <Avatar className="h-8 w-8 border border-gray-200 mr-2">
                 <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                 <AvatarFallback>
-                  {profile?.twitter_username ? profile.twitter_username.substring(0, 2).toUpperCase() : 'CM'}
+                  {profile?.twitter_username ? profile.twitter_username.substring(0, 2).toUpperCase() : 'LN'}
                 </AvatarFallback>
               </Avatar>
             )}
