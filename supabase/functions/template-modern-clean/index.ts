@@ -1,6 +1,6 @@
 // =========================================================================================
-//  manual-newsletter-generation.ts — ENHANCED PRODUCTION VERSION
-//  (includes images, videos, rich layouts, author info, engagement metrics)
+//  professional-newsletter-generation.ts — ENHANCED PROFESSIONAL VERSION
+//  (focuses on text density, professional layout, minimal colors, business-like presentation)
 // =========================================================================================
 
 import { serve }        from "https://deno.land/std@0.168.0/http/server.ts";
@@ -198,20 +198,20 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   const apifyData = await apifyRes.json();
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 5. Format tweets for OpenAI (ENHANCED)                                  │
+  // │ 5. Format tweets for OpenAI (CONTENT-FOCUSED)                           │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  const tweetsForAI = formatTweetsForAI(apifyData);
+  const tweetsForAI = formatTweetsForAnalysis(apifyData);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 6. OpenAI – analysis JSON                                               │
+  // │ 6. OpenAI – deep content analysis                                       │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   logStep("OpenAI analysis");
   const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
   if (!OPENAI_KEY) { console.error("Missing OPENAI_KEY"); return; }
 
-  const analysisPrompt = buildAnalysisPrompt(selectedCount, tweetsForAI);
-  const analysisJson = await chat(OPENAI_KEY, "gpt-4o", 0.7, 3000,
-    "You are an expert content analyst specializing in social media content curation and newsletter creation. You excel at identifying visual content and creating engaging narratives.",
+  const analysisPrompt = buildContentAnalysisPrompt(selectedCount, tweetsForAI);
+  const analysisJson = await chat(OPENAI_KEY, "gpt-4o", 0.3, 4000,
+    "You are a senior business analyst and content strategist specializing in extracting actionable insights from social media discourse for professional audiences.",
     analysisPrompt
   );
   let analysisContent = analysisJson.choices[0].message.content.trim();
@@ -225,26 +225,26 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   } catch (parseErr) {
     console.warn("Failed to parse analysis JSON – using fallback skeleton", parseErr);
     analysisParsed = {
-      mainTopics: ["Topic A", "Topic B", "Topic C"],
-      keyInsights: ["Insight 1", "Insight 2"],
-      contentSummary: "Summary...",
-      recommendedSections: []
+      executiveSummary: "Summary...",
+      keyThemes: [],
+      marketImplications: [],
+      actionableInsights: []
     };
   }
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 7. Query-generation → Perplexity enrichment → Integration               │
+  // │ 7. Strategic query generation → Perplexity enrichment                   │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Generating search queries for Perplexity");
-  const queryGenPrompt = buildQueryGenPrompt(analysisContent);
-  const queryJson = await chat(OPENAI_KEY, "gpt-4o", 0.3, 800,
-    "You are a search-query optimisation specialist.",
+  logStep("Generating strategic research queries");
+  const queryGenPrompt = buildStrategicQueryPrompt(analysisContent);
+  const queryJson = await chat(OPENAI_KEY, "gpt-4o", 0.2, 1000,
+    "You are a research strategist who identifies the most critical information gaps for business decision-making.",
     queryGenPrompt
   );
   const queryText = queryJson.choices[0].message.content.trim();
 
   const parsedQueries: { topic: string; query: string; goal: string }[] = [];
-  const re = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
+  const re = /RESEARCH \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*OBJECTIVE:\s*(.+?)(?=\n\s*RESEARCH \d+:|$)/gis;
   let m; while ((m = re.exec(queryText)) !== null) {
     parsedQueries.push({ topic: m[1].trim(), query: m[2].trim(), goal: m[3].trim() });
   }
@@ -252,8 +252,8 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
   const PERPLEXITY_KEY = Deno.env.get("PERPLEXITY_API_KEY");
   const enrichmentResults: any[] = [];
   if (PERPLEXITY_KEY) {
-    logStep("Perplexity enrichment", { count: parsedQueries.length });
-    for (const topic of parsedQueries) {
+    logStep("Strategic research enrichment", { count: parsedQueries.length });
+    for (const research of parsedQueries) {
       try {
         const pRes = await fetch(
           "https://api.perplexity.ai/chat/completions",
@@ -265,9 +265,9 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
             },
             body: JSON.stringify({
               model: "sonar-pro",
-              messages: [ { role: "user", content: topic.query } ],
-              temperature: 0.2,
-              max_tokens: 350,
+              messages: [ { role: "user", content: research.query } ],
+              temperature: 0.1,
+              max_tokens: 500,
               search_recency_filter: "week"
             })
           }
@@ -275,78 +275,80 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         if (pRes.ok) {
           const pJson = await pRes.json();
           enrichmentResults.push({
-            topic: topic.topic,
-            query: topic.query,
-            goal:  topic.goal,
-            webContent: pJson.choices[0].message.content,
-            sources:    pJson.citations ?? []
+            topic: research.topic,
+            query: research.query,
+            goal:  research.goal,
+            analysis: pJson.choices[0].message.content,
+            sources: pJson.citations ?? []
           });
         } else {
-          enrichmentResults.push({ ...topic, webContent: `[Error ${pRes.status}]`, sources: [] });
+          enrichmentResults.push({ ...research, analysis: `[Research unavailable - ${pRes.status}]`, sources: [] });
         }
       } catch (err) {
-        enrichmentResults.push({ ...topic, webContent: "[Request failed]", sources: [] });
+        enrichmentResults.push({ ...research, analysis: "[Research failed]", sources: [] });
       }
     }
   } else {
-    logStep("No PERPLEXITY_API_KEY – skipping web enrichment");
+    logStep("No PERPLEXITY_API_KEY – skipping strategic research");
   }
 
-  // Integration step
-  logStep("Integrating web enrichment");
-  const integrationPrompt = buildIntegrationPrompt(analysisContent, enrichmentResults);
-  const integrationJson = await chat(OPENAI_KEY, "gpt-4o", 0.3, 4000,
-    "You integrate web-sourced information into existing analyses seamlessly while maintaining visual richness.",
-    integrationPrompt
+  // ╭──────────────────────────────────────────────────────────────────────────╮
+  // │ 8. Integration and synthesis                                             │
+  // ╰──────────────────────────────────────────────────────────────────────────╯
+  logStep("Synthesizing comprehensive analysis");
+  const synthesisPrompt = buildSynthesisPrompt(analysisContent, enrichmentResults);
+  const synthesisJson = await chat(OPENAI_KEY, "gpt-4o", 0.2, 4000,
+    "You are a senior strategic analyst who synthesizes complex information into actionable business intelligence.",
+    synthesisPrompt
   );
-  const integratedAnalysis = integrationJson.choices[0].message.content.trim();
+  const synthesizedAnalysis = synthesisJson.choices[0].message.content.trim();
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 8. OpenAI – RICH visual newsletter markdown                             │
+  // │ 9. Professional newsletter generation                                   │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Generating visual newsletter markdown");
-  const newsletterPrompt = buildVisualNewsletterPrompt(integratedAnalysis, tweetsForAI);
-  const markdownJson = await chat(OPENAI_KEY, "gpt-4o", 0.2, 6000,
-    "You are a professional visual newsletter designer who creates stunning, magazine-quality newsletters with rich visual elements, images, and engaging layouts.",
+  logStep("Generating professional newsletter");
+  const newsletterPrompt = buildProfessionalNewsletterPrompt(synthesizedAnalysis, tweetsForAI);
+  const markdownJson = await chat(OPENAI_KEY, "gpt-4o", 0.1, 6000,
+    "You are a professional newsletter editor for a premium business publication, specializing in dense, informative content that delivers maximum value to busy executives and decision-makers.",
     newsletterPrompt
   );
   let markdownNewsletter = markdownJson.choices[0].message.content.trim();
   markdownNewsletter = markdownNewsletter.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 9. UI/UX enhancement pass (markdown → enhanced markdown)                │
+  // │ 10. Professional formatting pass                                        │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Enhancing UI/UX markdown");
-  const enhancedPrompt = buildEnhancedPrompt(markdownNewsletter);
-  const enhancedJson = await chat(OPENAI_KEY, "gpt-4o", 0.4, 6000,
-    "You are a newsletter UI/UX specialist who creates visually stunning, modern newsletters with beautiful layouts, color schemes, and visual hierarchy.",
-    enhancedPrompt
+  logStep("Applying professional formatting");
+  const formattedPrompt = buildFormattingPrompt(markdownNewsletter);
+  const formattedJson = await chat(OPENAI_KEY, "gpt-4o", 0.1, 6000,
+    "You are a professional newsletter formatter who creates clean, scannable, business-appropriate layouts that prioritize readability and information density.",
+    formattedPrompt
   );
-  let enhancedMarkdown = enhancedJson.choices[0].message.content.trim();
-  enhancedMarkdown = enhancedMarkdown.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
+  let formattedMarkdown = formattedJson.choices[0].message.content.trim();
+  formattedMarkdown = formattedMarkdown.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 10. Markdown → RICH responsive HTML                                     │
+  // │ 11. Markdown → Professional HTML                                        │
   // ╰──────────────────────────────────────────────────────────────────────────╯
-  logStep("Converting markdown → rich HTML");
-  const emailHtml = markdownToRichHtml(enhancedMarkdown);
+  logStep("Converting to professional HTML");
+  const emailHtml = markdownToProfessionalHtml(formattedMarkdown);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 11. Store in newsletter_storage (using markdown_text column)            │
+  // │ 12. Store in newsletter_storage                                         │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   logStep("Storing newsletter");
   const { data: stored, error: storeErr } = await supabase
     .from("newsletter_storage")
     .insert({
       user_id:      userId,
-      markdown_text: enhancedMarkdown
+      markdown_text: formattedMarkdown
     })
     .select()
     .single();
   if (storeErr) console.error("Storage error", storeErr);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 12. Decrement remaining generations                                     │
+  // │ 13. Decrement remaining generations                                     │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   await supabase
     .from("profiles")
@@ -354,17 +356,17 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     .eq("id", userId);
 
   // ╭──────────────────────────────────────────────────────────────────────────╮
-  // │ 13. Send email via Resend                                               │
+  // │ 14. Send email via Resend                                               │
   // ╰──────────────────────────────────────────────────────────────────────────╯
   if (profile.sending_email) {
     try {
       logStep("Sending email");
       await resend.emails.send({
-        from:    Deno.env.get("FROM_EMAIL") || "Letternest <newsletters@letternest.com>",
+        from:    Deno.env.get("FROM_EMAIL") || "Chirpmetrics <newsletters@chirpmetrics.com>",
         to:      [profile.sending_email],
-        subject: `Your Newsletter • ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`,
+        subject: `Strategic Brief • ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`,
         html:    emailHtml,
-        text:    enhancedMarkdown
+        text:    formattedMarkdown
       });
       logStep("Email sent");
     } catch (err) {
@@ -386,53 +388,36 @@ function json(status: number, body: Record<string, unknown>) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  ENHANCED Helper: format tweets with ALL visual data
+//  PROFESSIONAL Helper: format tweets for business analysis
 // ────────────────────────────────────────────────────────────────────────────────
-function formatTweetsForAI(arr: any[]): string {
+function formatTweetsForAnalysis(arr: any[]): string {
   let out = "";
   arr.forEach((t, i) => {
     const cleanText = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
     const date = new Date(t.createdAt).toISOString().split("T")[0];
     
-    // Extract ALL media properly
-    const media = t.extendedEntities?.media || [];
-    const photos = media
-      .filter((m: any) => m.type === "photo")
-      .map((m: any) => m.media_url_https || m.media_url);
-    
-    const videos = media
-      .filter((m: any) => m.type === "video" || m.type === "animated_gif")
-      .map((m: any) => ({
-        thumbnail: m.media_url_https || m.media_url,
-        duration: m.video_info?.duration_millis || 0,
-        aspectRatio: m.video_info?.aspect_ratio?.join(":") || "16:9"
-      }));
-    
-    // Author info with avatar
+    // Focus on author credibility and content substance
     const authorName = t.author?.name || t.user?.name || "Unknown";
     const authorHandle = t.author?.username || t.user?.screen_name || "unknown";
-    const authorAvatar = t.author?.profile_image_url || t.user?.profile_image_url_https || "";
+    const verified = t.author?.verified || false;
+    const followerCount = t.author?.public_metrics?.followers_count || 0;
     
-    out += `Tweet ${i + 1}
-Tweet ID: ${t.id}
-Tweet URL: https://twitter.com/${authorHandle}/status/${t.id}
-Author Name: ${authorName}
-Author Handle: @${authorHandle}
-Author Avatar: ${authorAvatar}
-Author Verified: ${t.author?.verified || false}
-Tweet Text: ${cleanText}
-Engagement Score: ${(t.likeCount || 0) + (t.retweetCount || 0) * 2 + (t.replyCount || 0) * 3}
-Likes: ${t.likeCount || 0}
-Retweets: ${t.retweetCount || 0}
-Replies: ${t.replyCount || 0}
-Views: ${t.viewCount || 0}
-Date: ${date}
-Photos: ${photos.length > 0 ? photos.join(", ") : "None"}
-Videos: ${videos.length > 0 ? JSON.stringify(videos) : "None"}
-Quote Tweet: ${t.quotedStatus ? "Yes" : "No"}
-Thread: ${t.in_reply_to_status_id ? "Part of thread" : "Standalone"}
+    // Calculate engagement rate for credibility assessment
+    const totalEngagement = (t.likeCount || 0) + (t.retweetCount || 0) + (t.replyCount || 0);
+    const engagementRate = followerCount > 0 ? (totalEngagement / followerCount * 100).toFixed(2) : "0";
+    
+    out += `TWEET ${i + 1}
+Content: ${cleanText}
+Author: ${authorName} (@${authorHandle})
+Verification Status: ${verified ? "Verified" : "Unverified"}
+Follower Count: ${followerCount.toLocaleString()}
+Engagement Metrics: ${t.likeCount || 0} likes, ${t.retweetCount || 0} retweets, ${t.replyCount || 0} replies
+Engagement Rate: ${engagementRate}%
+Publication Date: ${date}
+Thread Context: ${t.in_reply_to_status_id ? "Part of conversation thread" : "Standalone tweet"}
+Content Type: ${t.quotedStatus ? "Quote tweet with commentary" : "Original content"}
 `;
-    if (i < arr.length - 1) out += "\n---\n\n";
+    if (i < arr.length - 1) out += "\n────────────────────────────────────────\n\n";
   });
   return out;
 }
@@ -464,336 +449,299 @@ async function chat(apiKey: string, model: string,
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  ENHANCED Helper: build prompts with visual focus
+//  PROFESSIONAL PROMPT BUILDERS
 // ────────────────────────────────────────────────────────────────────────────────
-function buildAnalysisPrompt(count: number, tweets: string) {
-  return `Analyze these ${count} bookmarked tweets to create a comprehensive, visually-rich newsletter analysis.
+function buildContentAnalysisPrompt(count: number, tweets: string) {
+  return `Analyze these ${count} curated tweets to extract strategic business intelligence and actionable insights.
 
-IMPORTANT: Pay special attention to:
-1. Which tweets have images/videos (prioritize these for visual impact)
-2. Engagement metrics (likes, retweets, views) to identify most popular content
-3. Author information for credibility and visual attribution
-4. Threads and conversations for deeper context
+ANALYSIS FRAMEWORK:
+1. Identify recurring themes with business implications
+2. Assess source credibility and reach
+3. Extract actionable intelligence for decision-makers
+4. Identify emerging trends and market signals
+5. Synthesize key takeaways for strategic planning
 
-TWEETS:
+TWEETS TO ANALYZE:
 ${tweets}
 
-Return a detailed JSON analysis with:
+Provide comprehensive JSON analysis:
 {
-  "mainTopics": [
+  "executiveSummary": "2-3 sentence high-level overview of the most critical findings",
+  "keyThemes": [
     {
-      "title": "Topic title",
-      "description": "Detailed description",
-      "featuredTweetId": "ID of most engaging/visual tweet for this topic",
-      "keyPoints": ["point1", "point2", "point3"],
-      "relatedImages": ["image_url1", "image_url2"],
-      "topAuthors": [{"name": "Author Name", "handle": "@handle", "avatar": "url"}]
+      "theme": "Theme name",
+      "description": "Detailed explanation",
+      "businessImplications": "What this means for organizations",
+      "supportingEvidence": ["key tweet excerpts"],
+      "confidence": "high/medium/low based on source quality and consensus"
     }
   ],
-  "visualHighlights": [
+  "marketSignals": [
     {
-      "tweetId": "123",
-      "imageUrl": "url",
-      "caption": "Why this is significant",
-      "engagement": 12500
+      "signal": "Emerging trend or shift",
+      "evidence": "Supporting data points",
+      "timeframe": "When this might impact markets",
+      "sectors": ["affected industries"]
     }
   ],
-  "keyInsights": ["insight1", "insight2", "insight3"],
-  "trendingThemes": ["theme1", "theme2"],
-  "contentSummary": "Executive summary of all content",
-  "recommendedSections": [
+  "thoughtLeaders": [
     {
-      "title": "Section title",
-      "content": "What to include",
-      "suggestedVisuals": ["tweet_id1", "tweet_id2"]
+      "author": "Name and credentials",
+      "keyInsight": "Most important point they made",
+      "credibility": "follower count and verification status"
     }
+  ],
+  "actionableInsights": [
+    {
+      "insight": "Specific recommendation",
+      "rationale": "Why this matters",
+      "urgency": "immediate/short-term/long-term"
+    }
+  ],
+  "informationGaps": [
+    "Areas requiring additional research for complete understanding"
   ]
 }`;
 }
 
-function buildQueryGenPrompt(analysis: string) {
-  return `Select the 3 most significant topics from this analysis that would benefit from additional context. Create precise search queries optimized for current information.
+function buildStrategicQueryPrompt(analysis: string) {
+  return `Based on this analysis, identify the 3 most critical information gaps that require current market data to make informed strategic decisions.
+
+Create research queries focused on:
+1. Market implications and business impact
+2. Latest developments in identified trends
+3. Competitive landscape changes
 
 Format as:
-TOPIC 1: [Topic Name]
-QUERY: [Specific search query]
-ENRICHMENT GOAL: [What information to add]
+RESEARCH 1: [Strategic Topic]
+QUERY: [Specific business-focused search query]
+OBJECTIVE: [What strategic decision this informs]
 
-TOPIC 2: [Topic Name]
-QUERY: [Specific search query]
-ENRICHMENT GOAL: [What information to add]
+RESEARCH 2: [Strategic Topic]
+QUERY: [Specific business-focused search query]
+OBJECTIVE: [What strategic decision this informs]
 
-TOPIC 3: [Topic Name]
-QUERY: [Specific search query]
-ENRICHMENT GOAL: [What information to add]
+RESEARCH 3: [Strategic Topic]
+QUERY: [Specific business-focused search query]
+OBJECTIVE: [What strategic decision this informs]
 
 ANALYSIS:
 ${analysis}`;
 }
 
-function buildIntegrationPrompt(analysis: string, enrichment: any[]) {
-  return `Seamlessly integrate the web-sourced information into the existing analysis while maintaining focus on visual elements and engagement.
+function buildSynthesisPrompt(analysis: string, enrichment: any[]) {
+  return `Synthesize the social media analysis with current market research to create a comprehensive strategic brief.
 
 ORIGINAL ANALYSIS:
 ${analysis}
 
-WEB ENRICHMENT:
+CURRENT MARKET RESEARCH:
 ${JSON.stringify(enrichment, null, 2)}
 
-Return the fully integrated analysis maintaining the same JSON structure but with enriched content.`;
+Integrate findings to create enhanced analysis that:
+1. Validates or challenges initial insights with current data
+2. Provides broader market context
+3. Identifies concrete business opportunities and risks
+4. Delivers actionable strategic recommendations
+
+Return the enhanced analysis in the same JSON structure but with enriched, validated content.`;
 }
 
-function buildVisualNewsletterPrompt(integrated: string, tweets: string) {
-  return `Create a visually stunning, magazine-quality newsletter using the provided analysis and tweets.
+function buildProfessionalNewsletterPrompt(analysis: string, tweets: string) {
+  return `Create a professional, text-dense strategic brief in the style of premium business publications (Bloomberg Intelligence, McKinsey Insights, or Harvard Business Review).
 
-CRITICAL REQUIREMENTS:
-1. Include ALL images from tweets in appropriate sections
-2. Create visual tweet cards showing author info and engagement
-3. Use a modern, visually appealing layout with sections
-4. Include emojis for visual appeal and better scanning
-5. Feature high-engagement content prominently
-6. Create visual hierarchy with varied section styles
+REQUIREMENTS:
+- Maximum information density - every sentence should deliver value
+- Professional tone suitable for C-suite executives
+- NO images, emojis, or visual elements 
+- Focus on strategic implications and actionable insights
+- Use data and specific examples to support points
+- Include direct quotes only when they add substantial analytical value
+- Structure for rapid scanning while maintaining depth
 
 NEWSLETTER STRUCTURE:
 
-# 🌟 [Compelling Title Based on Main Theme]
+# Strategic Brief • [Date]
 
-> *[Date] • [Estimated read time] • Curated from [X] bookmarks*
+## Executive Summary
+[2-3 sentences capturing the most critical insights and their business implications]
 
----
+## Key Developments
 
-## 📸 Today's Visual Highlight
+### [Primary Theme/Trend Name]
+[3-4 paragraphs of dense analysis including:
+- What's happening and why it matters
+- Supporting evidence and data points
+- Business implications
+- Strategic considerations for organizations]
 
-[Feature the most engaging visual content - full width image with caption]
-[Include author attribution and engagement metrics]
+### [Secondary Theme/Trend Name]
+[Similar structure - substantive analysis with concrete details]
 
----
+### [Tertiary Theme/Trend Name]
+[Focused analysis of emerging trends or signals]
 
-## 🔥 Main Story: [Primary Topic]
+## Market Intelligence
 
-[Hero image if available]
+### Industry Dynamics
+[Analysis of sector-specific implications]
 
-[2-3 paragraph engaging introduction]
+### Competitive Landscape
+[Shifts in competitive positioning or new entrants]
 
-### 💡 Key Insights
-[Visual callout boxes with key points]
+### Regulatory Environment
+[Policy changes or regulatory trends affecting business]
 
-### 📊 Notable Voices
-[Tweet cards with author avatars, names, and key quotes]
+## Strategic Implications
 
-### 🔗 Deep Dive
-[Expanded analysis with supporting visuals]
+### Immediate Actions
+[What organizations should do in the next 30-90 days]
 
----
+### Medium-term Planning
+[Strategic considerations for 6-12 month horizon]
 
-## 🚀 Trending Topics
+### Long-term Positioning
+[Implications for 2-3 year strategic planning]
 
-### 1. [Topic with icon]
-[Brief description with supporting tweet/image]
+## Notable Perspectives
+[Selected insights from credible sources with analysis of their significance]
 
-### 2. [Topic with icon]
-[Brief description with supporting tweet/image]
-
-### 3. [Topic with icon]
-[Brief description with supporting tweet/image]
-
----
-
-## 💬 Community Pulse
-
-[Grid layout of 3-4 high-engagement tweets with:
-- Author avatar and name
-- Tweet text
-- Engagement metrics
-- Any images]
+## Research Methodology
+[Brief note on data sources and analysis framework]
 
 ---
 
-## 📈 By The Numbers
+*This brief synthesizes insights from [X] curated sources and current market analysis. Strategic recommendations based on observed trends and verified market intelligence.*
 
-[Visual statistics about the curated content:
-- Total engagement
-- Most liked tweet
-- Most discussed topic
-- Top contributors]
+ANALYSIS TO SYNTHESIZE:
+${analysis}
 
----
-
-## 🎯 Quick Takes
-
-[Bullet points of smaller interesting findings with mini images]
-
----
-
-## 🔮 What's Next
-
-[Forward-looking section based on trends identified]
-
----
-
-*💌 Curated with AI assistance • Made possible by Chirpmetrics*
-
-ANALYSIS:
-${integrated}
-
-ORIGINAL TWEETS:
+ORIGINAL SOURCES:
 ${tweets}
 
-Create the newsletter in clean, properly formatted Markdown with:
-- Proper image syntax: ![alt text](url)
-- Visual dividers between sections
-- Consistent emoji usage
-- Author attributions with @ handles
-- Engagement metrics where relevant
-- Mix of content types (quotes, images, analysis)`;
+Create substantive, information-dense content that delivers maximum strategic value per word. Avoid fluff, maintain professional tone, and focus on actionable intelligence.`;
 }
 
-function buildEnhancedPrompt(rawMarkdown: string) {
-  return `Transform this newsletter into a visually stunning, email-optimized version with enhanced UI/UX.
+function buildFormattingPrompt(newsletter: string) {
+  return `Polish this newsletter for professional presentation while maintaining information density.
 
-ENHANCEMENTS TO APPLY:
+FORMATTING REQUIREMENTS:
+- Clean, scannable structure with consistent hierarchy
+- Professional section headers without decorative elements
+- Proper paragraph breaks for readability
+- Bulleted lists only for specific action items
+- No visual elements, colors, or emojis
+- Business-appropriate language throughout
+- Ensure smooth transitions between sections
 
-1. **Visual Headers**: Add gradient backgrounds or colored accents to section headers
-2. **Image Styling**: Center images, add rounded corners, ensure proper sizing
-3. **Tweet Cards**: Create visually distinct cards for tweet quotes with:
-   - Author avatar (if URL provided)
-   - Colored border or background
-   - Engagement metrics in a visual way
-4. **Callout Boxes**: Use colored backgrounds for important information
-5. **Spacing**: Add proper vertical spacing between sections
-6. **Color Scheme**: Use a cohesive color palette (blues, purples, greens)
-7. **Typography**: Vary font sizes for hierarchy
-8. **Mobile Optimization**: Ensure everything looks good on mobile
+CURRENT NEWSLETTER:
+${newsletter}
 
-USE INLINE STYLES like:
-- <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px;">
-- <span style="color: #667eea; font-weight: bold;">
-- <img style="max-width: 100%; border-radius: 12px; margin: 20px auto; display: block;">
-
-CURRENT MARKDOWN:
-${rawMarkdown}
-
-Output the enhanced markdown with all visual improvements applied.`;
+Return the polished version with improved formatting and flow while preserving all analytical content.`;
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-//  ENHANCED Helper: markdown → RICH responsive HTML
+//  PROFESSIONAL Helper: markdown → clean business HTML
 // ────────────────────────────────────────────────────────────────────────────────
-function markdownToRichHtml(md: string): string {
+function markdownToProfessionalHtml(md: string): string {
   const renderer = new marked.Renderer();
   
-  // Enhanced image rendering with proper styling
-  renderer.image = (href, title, alt) => `
-    <div style="text-align: center; margin: 25px 0;">
-      <img src="${href}" 
-           alt="${alt}"
-           title="${title || alt}"
-           style="max-width: 100%; width: auto; max-height: 400px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-      ${title ? `<p style="margin-top: 10px; font-size: 14px; color: #666; font-style: italic;">${title}</p>` : ''}
-    </div>`;
-  
-  // Enhanced heading rendering
+  // Clean, professional heading styling
   renderer.heading = (text, level) => {
-    const sizes = ['32px', '28px', '24px', '20px', '18px', '16px'];
-    const colors = ['#1a1a1a', '#2d3748', '#4a5568', '#718096', '#a0aec0', '#cbd5e0'];
+    const sizes = ['28px', '22px', '18px', '16px', '14px', '13px'];
+    const margins = ['35px 0 20px 0', '25px 0 15px 0', '20px 0 12px 0', '15px 0 10px 0', '12px 0 8px 0', '10px 0 6px 0'];
+    const weights = ['700', '600', '600', '500', '500', '400'];
+    
     return `<h${level} style="
       font-size: ${sizes[level - 1]}; 
-      color: ${colors[level - 1]}; 
-      margin: ${level === 1 ? '30px' : '20px'} 0 15px 0;
-      font-weight: ${level <= 2 ? '800' : '600'};
+      color: #1a202c; 
+      margin: ${margins[level - 1]};
+      font-weight: ${weights[level - 1]};
       line-height: 1.3;
-      ${level === 1 ? 'text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;' : ''}
+      border-bottom: ${level <= 2 ? '1px solid #e2e8f0;' : 'none'}
+      padding-bottom: ${level <= 2 ? '8px;' : '0;'}
     ">${text}</h${level}>`;
   };
   
-  // Enhanced blockquote rendering
-  renderer.blockquote = (quote) => `
-    <blockquote style="
-      margin: 20px 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-      border-left: 4px solid #667eea;
-      border-radius: 8px;
-      font-style: italic;
-      color: #2d3748;
-    ">${quote}</blockquote>`;
+  // Professional paragraph styling
+  renderer.paragraph = (text) => {
+    return `<p style="
+      margin: 0 0 16px 0; 
+      line-height: 1.6; 
+      color: #2d3748; 
+      font-size: 15px;
+    ">${text}</p>`;
+  };
   
-  // Enhanced list rendering
+  // Clean list styling
   renderer.list = (body, ordered) => {
     const tag = ordered ? 'ol' : 'ul';
     return `<${tag} style="
-      margin: 15px 0;
-      padding-left: 25px;
-      line-height: 1.8;
-      color: #4a5568;
+      margin: 16px 0;
+      padding-left: 20px;
+      line-height: 1.6;
+      color: #2d3748;
     ">${body}</${tag}>`;
   };
   
-  // Enhanced paragraph rendering
-  renderer.paragraph = (text) => {
-    // Check if it's a centered text (starts with > *)
-    if (text.includes('style=')) {
-      return `<p>${text}</p>`;
-    }
-    return `<p style="margin: 15px 0; line-height: 1.7; color: #2d3748; font-size: 16px;">${text}</p>`;
-  };
+  // Minimal blockquote styling
+  renderer.blockquote = (quote) => `
+    <blockquote style="
+      margin: 20px 0;
+      padding: 15px 20px;
+      background: #f7fafc;
+      border-left: 3px solid #4a5568;
+      font-style: italic;
+      color: #4a5568;
+    ">${quote}</blockquote>`;
   
-  // Enhanced horizontal rule
+  // Clean horizontal rule
   renderer.hr = () => `
     <hr style="
       margin: 30px 0;
       border: none;
-      height: 2px;
-      background: linear-gradient(to right, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+      height: 1px;
+      background-color: #e2e8f0;
     ">`;
+  
+  // Remove image rendering to discourage visual content
+  renderer.image = (href, title, alt) => `<em style="color: #718096; font-size: 14px;">[Referenced content: ${alt}]</em>`;
   
   const html = marked(md, { renderer });
   
-  // Wrap in beautiful email template
+  // Wrap in clean, professional email template
   return juice(`
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Your Newsletter</title>
+      <title>Strategic Brief</title>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #f7fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 100%; background-color: #f7fafc; padding: 20px 10px;">
+    <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">
+      <div style="max-width: 680px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
-        <div style="max-width: 650px; margin: 0 auto 20px; text-align: center;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 300; letter-spacing: 2px;">YOUR CURATED</h1>
-            <h1 style="color: white; margin: 5px 0 0 0; font-size: 36px; font-weight: 800;">NEWSLETTER</h1>
-          </div>
+        <div style="border-bottom: 2px solid #1a202c; padding: 30px 0 20px 0; margin-bottom: 30px;">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #1a202c; text-align: center; letter-spacing: 1px;">
+            STRATEGIC BRIEF
+          </h1>
+          <p style="margin: 8px 0 0 0; text-align: center; color: #718096; font-size: 14px;">
+            ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
         </div>
         
-        <!-- Main Content Container -->
-        <div style="max-width: 650px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07); overflow: hidden;">
-          <div style="padding: 40px 30px;">
-            ${html}
-          </div>
-          
-          <!-- Footer -->
-          <div style="background: #f7fafc; padding: 30px; text-align: center; border-top: 2px solid #e2e8f0;">
-            <p style="margin: 0 0 10px 0; color: #718096; font-size: 14px;">
-              Curated with ❤️ by Chirpmetrics
-            </p>
-            <p style="margin: 0; color: #a0aec0; font-size: 12px;">
-              Transform your Twitter bookmarks into beautiful newsletters
-            </p>
-            <div style="margin-top: 20px;">
-              <a href="https://chirpmetrics.com" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 14px;">
-                Create Your Own Newsletter →
-              </a>
-            </div>
-          </div>
+        <!-- Content -->
+        <div style="padding: 0 30px;">
+          ${html}
         </div>
         
-        <!-- Email Footer -->
-        <div style="max-width: 650px; margin: 20px auto 0; text-align: center;">
-          <p style="color: #a0aec0; font-size: 12px; margin: 0;">
-            © ${new Date().getFullYear()} Chirpmetrics. All rights reserved.
+        <!-- Footer -->
+        <div style="margin-top: 50px; padding: 25px 30px; border-top: 1px solid #e2e8f0; background-color: #f7fafc;">
+          <p style="margin: 0; text-align: center; color: #718096; font-size: 13px;">
+            Generated by Chirpmetrics • Professional newsletter intelligence
+          </p>
+          <p style="margin: 8px 0 0 0; text-align: center; color: #a0aec0; font-size: 12px;">
+            This analysis is based on curated social media intelligence and current market research
           </p>
         </div>
       </div>
