@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
@@ -134,9 +135,9 @@ export default function HeroSection() {
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
       <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-32">
-        <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-5xl mx-auto">
+        <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
           {/* Headline ------------------------------------------------------ */}
-          <div className="mb-8 relative z-20">
+          <div className="mb-8 relative z-20 w-full">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
               <span className="block">Turn X Bookmarks into</span>
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
@@ -152,30 +153,53 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Social proof -------------------------------------------------- */}
-          <div className="flex justify-center mb-10 relative z-20">
-            <ReviewsSection />
-          </div>
+          {/* Two-column layout for desktop ------------------------------- */}
+          <div className="w-full lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
+            {/* Left Column: Social proof + CTA buttons */}
+            <div className="flex flex-col items-center lg:items-start space-y-8">
+              {/* Social proof -------------------------------------------------- */}
+              <div className="flex justify-center lg:justify-start mb-2 lg:mb-0 relative z-20">
+                <ReviewsSection />
+              </div>
 
-          {/* CTA buttons --------------------------------------------------- */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 relative z-20">
-            <Button
-              size="lg"
-              className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              onClick={scrollToPricing}
-            >
-              Get Started Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+              {/* CTA buttons --------------------------------------------------- */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-4 justify-center lg:justify-start relative z-20">
+                <Button
+                  size="lg"
+                  className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                  onClick={scrollToPricing}
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white px-8 py-4 text-lg font-semibold rounded-full transition-all transform hover:scale-105"
-            >
-              <Mail className="mr-2 h-5 w-5" />
-              See Live Demo
-            </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white px-8 py-4 text-lg font-semibold rounded-full transition-all transform hover:scale-105"
+                >
+                  <Mail className="mr-2 h-5 w-5" />
+                  See Live Demo
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Column: Video */}
+            <div className="mt-8 lg:mt-0 relative z-20">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="w-full h-auto"
+                >
+                  <source src="/final.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
           </div>
         </div>
       </div>
