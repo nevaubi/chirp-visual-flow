@@ -3,8 +3,86 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const ProFeatures = () => {
+  const { authState } = useAuth();
+  const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
+  
+  const profile = authState.profile;
+  const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                          profile?.subscription_tier === "Newsletter Premium";
+
+  const handleUseTemplate = async (templateId: number, templateName: string) => {
+    // Check if user has required subscription tier
+    if (!hasRequiredTier) {
+      toast.error("Subscription Required", {
+        description: "Please upgrade to Newsletter Standard or Premium to use templates.",
+      });
+      return;
+    }
+
+    // Check if user has remaining generations
+    if (!profile?.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
+      toast.error("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+      });
+      return;
+    }
+
+    // For now, only Modern Clean (id: 1) is implemented
+    if (templateId !== 1) {
+      toast.error("Coming Soon", {
+        description: `The ${templateName} template is not yet available. Modern Clean is currently the only implemented template.`,
+      });
+      return;
+    }
+
+    setLoadingTemplate(templateName);
+
+    try {
+      // For Modern Clean template, use default of 20 bookmarks
+      const selectedCount = 20;
+
+      console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
+
+      const { data, error } = await supabase.functions.invoke('template-modern-clean', {
+        body: { selectedCount },
+      });
+
+      if (error) {
+        console.error(`Error generating ${templateName} newsletter:`, error);
+        toast.error(`Failed to generate ${templateName} newsletter`, {
+          description: error.message || 'Please try again later',
+        });
+        return;
+      }
+
+      if (data.error) {
+        console.error(`Function returned error:`, data.error);
+        toast.error(`Failed to generate ${templateName} newsletter`, {
+          description: data.error,
+        });
+        return;
+      }
+
+      toast.success(`${templateName} Newsletter Generated!`, {
+        description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
+      });
+
+    } catch (error) {
+      console.error(`Error in handleUseTemplate for ${templateName}:`, error);
+      toast.error(`Failed to generate ${templateName} newsletter`, {
+        description: 'An unexpected error occurred. Please try again later.',
+      });
+    } finally {
+      setLoadingTemplate(null);
+    }
+  };
+
   const templates = [
     {
       id: 1,
@@ -78,8 +156,19 @@ const ProFeatures = () => {
                     ))}
                   </ul>
                 </div>
-                <Button className="w-full bg-[#0087C8] hover:bg-[#006CA1]">
-                  Use Template
+                <Button 
+                  className="w-full bg-[#0087C8] hover:bg-[#006CA1]"
+                  onClick={() => handleUseTemplate(template.id, template.name)}
+                  disabled={loadingTemplate === template.name}
+                >
+                  {loadingTemplate === template.name ? (
+                    <>
+                      <span className="mr-2">Generating...</span>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </>
+                  ) : (
+                    'Use Template'
+                  )}
                 </Button>
               </div>
             </CardContent>
