@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, Bell, ChevronDown, Twitter } from "lucide-react";
+import { Mail, Bell, ChevronDown, ArrowRight } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
 
@@ -20,7 +20,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="pt-28 pb-32 relative overflow-hidden bg-white">
+    <section className="pt-28 pb-32 relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white">
       {/* Blue wavy border at the bottom - improved curve smoothness */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg width="100%" height="auto" viewBox="0 0 1440 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -28,8 +28,8 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Arrow graphic - repositioned down a bit more */}
-      <div className="absolute top-[110px] right-[300px] z-10 hidden lg:block">
+      {/* Arrow graphic - repositioned */}
+      <div className="absolute top-[120px] right-[280px] z-10 hidden lg:block">
         <img 
           src="/arrow1.png" 
           alt="Arrow graphic" 
@@ -46,29 +46,40 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Mobile-only text at top */}
         <div className="block lg:hidden mb-8 pt-[5px]">
-          <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
-            <span className="text-[#0f2e47]">Want </span>
-            <span className="text-[#0087C8]">Twitter </span>
-            <span className="text-[#0f2e47]">growth?</span>
-          </h2>
-          <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
-            <span className="block">
-              <span className="text-[#0087C8]">Automated </span>
-              <span className="text-[#FF6B35]">newsletters </span>
-              <span className="text-[#0087C8]">from </span>
-              <span className="text-[#0087C8]">bookmarks</span>
-              <span className="text-[#0f2e47]">?</span>
-            </span>
-          </h2>
+          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
+            <span className="text-[#0f2e47]">Turn your </span>
+            <span className="text-[#0087C8]">Twitter bookmarks </span>
+            <span className="text-[#0f2e47]">into </span>
+            <span className="text-[#FF6B35]">beautiful newsletters</span>
+          </h1>
           
-          {/* "Choose one or both" text */}
-          <p className="text-xl text-[#0f2e47] mb-4">
-            Choose one - <span className="text-[#FF6B35]">or both</span>.
+          <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+            Automatically generate and send newsletters from your saved Twitter content. 
+            <span className="text-[#0087C8] font-semibold"> No writing required.</span>
           </p>
 
           {/* Mobile reviews section */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-8">
             <ReviewsSection />
+          </div>
+
+          {/* Mobile CTA buttons */}
+          <div className="flex flex-col gap-3 mb-8">
+            <Button 
+              className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-6 py-3 font-semibold text-lg flex items-center justify-center gap-2"
+              onClick={scrollToPricing}
+            >
+              <Mail size={20} />
+              Start Creating Newsletters
+              <ArrowRight size={18} />
+            </Button>
+            <Button 
+              variant="outline"
+              className="border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white rounded-xl px-6 py-3 font-medium"
+              onClick={scrollToPricing}
+            >
+              View Pricing
+            </Button>
           </div>
         </div>
 
@@ -76,23 +87,22 @@ export default function HeroSection() {
           {/* Left column with dashboard UI */}
           <div className="w-full lg:w-2/5 pt-[40px]">
             <div className="relative">
-              {/* Replace Daily Audience card with ChirpmetricsDashboard */}
+              {/* Dashboard component */}
               <ChirpmetricsDashboard />
               
-              {/* Floating followers card */}
+              {/* Floating newsletter card */}
               <div className="absolute -bottom-12 left-4">
-                <div className="bg-white rounded-xl shadow-md p-3 border border-gray-100">
-                  <div className="flex items-center mb-1">
-                    <Bell size={14} className="text-[#0087C8] mr-1" />
-                    <span className="text-xs font-medium text-gray-600">New Followers</span>
+                <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100 max-w-[280px]">
+                  <div className="flex items-center mb-2">
+                    <Mail size={16} className="text-[#FF6B35] mr-2" />
+                    <span className="text-sm font-semibold text-gray-700">Newsletter Sent</span>
                   </div>
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2 mr-2">
-                      <div className="w-6 h-6 rounded-full border-2 border-white bg-[#E8F4FB] flex items-center justify-center text-[10px] text-[#0087C8] font-bold">A</div>
-                      <div className="w-6 h-6 rounded-full border-2 border-white bg-[#E8F4FB] flex items-center justify-center text-[10px] text-[#0087C8] font-bold">B</div>
-                      <div className="w-6 h-6 rounded-full border-2 border-white bg-[#E8F4FB] flex items-center justify-center text-[10px] text-[#0087C8] font-bold">C</div>
-                    </div>
-                    <span className="text-xs font-semibold text-[#0087C8]">+28</span>
+                  <div className="text-xs text-gray-600 mb-2">
+                    "Weekly Tech Roundup" sent to 1,247 subscribers
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-green-600 font-medium">✓ 94% open rate</span>
+                    <span className="text-xs text-[#0087C8]">2 min ago</span>
                   </div>
                 </div>
               </div>
@@ -102,40 +112,55 @@ export default function HeroSection() {
           {/* Right column with main message */}
           <div className="w-full lg:w-3/5 pt-[48px] lg:pt-[44px]">
             {/* Main marketing message - hidden on mobile */}
-            <div className="mb-6 hidden lg:block">
-              <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
-                <span className="text-[#0f2e47]">Want </span>
-                <span className="text-[#0087C8]">Twitter </span>
-                <span className="text-[#0f2e47]">growth?</span>
-              </h2>
-              <h2 className="text-3xl sm:text-4xl font-extrabold mb-5 leading-tight">
-                <span className="whitespace-nowrap md:whitespace-normal">
-                  <span className="text-[#0087C8]">Automated </span>
-                  <span className="text-[#FF6B35]">newsletters </span>
-                  <span className="text-[#0087C8]">from </span>
-                  <span className="text-[#0087C8]">bookmarks</span>
-                  <span className="text-[#0f2e47]">?</span>
-                </span>
-              </h2>
+            <div className="mb-8 hidden lg:block">
+              <h1 className="text-4xl xl:text-5xl font-extrabold leading-tight mb-6">
+                <span className="text-[#0f2e47]">Turn your </span>
+                <span className="text-[#0087C8]">Twitter bookmarks </span>
+                <span className="text-[#0f2e47]">into </span>
+                <span className="text-[#FF6B35]">beautiful newsletters</span>
+              </h1>
               
-              {/* "Choose one or both" text as separate element */}
-              <p className="text-xl text-[#0f2e47] mb-4">
-                Choose one - <span className="text-[#FF6B35]">or both</span>.
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
+                Automatically generate and send newsletters from your saved Twitter content. 
+                <span className="text-[#0087C8] font-semibold"> No writing required.</span>
               </p>
               
-              {/* Buttons stacked below the text - hidden on mobile */}
-              <div className="flex flex-wrap gap-3 mb-8">
+              {/* Key benefits */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#FF6B35] rounded-full"></div>
+                  <span className="text-gray-700">Automated content curation</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#0087C8] rounded-full"></div>
+                  <span className="text-gray-700">Professional newsletter design</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#FF6B35] rounded-full"></div>
+                  <span className="text-gray-700">Scheduled delivery</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#0087C8] rounded-full"></div>
+                  <span className="text-gray-700">Audience analytics</span>
+                </div>
+              </div>
+              
+              {/* CTA buttons */}
+              <div className="flex flex-wrap gap-4">
                 <Button 
-                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-xl px-5 py-2 font-medium"
+                  className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-8 py-3 font-semibold text-lg flex items-center gap-2"
                   onClick={scrollToPricing}
                 >
-                  Creator Platform
+                  <Mail size={20} />
+                  Start Creating Newsletters
+                  <ArrowRight size={18} />
                 </Button>
                 <Button 
-                  className="bg-[#FF6B35] hover:bg-[#e05a2c] text-white rounded-xl px-5 py-2 font-medium"
+                  variant="outline"
+                  className="border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white rounded-xl px-6 py-3 font-medium"
                   onClick={scrollToPricing}
                 >
-                  Twitter Newsletters
+                  View Pricing
                 </Button>
               </div>
             </div>
