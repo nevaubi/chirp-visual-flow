@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Bookmark, Plus } from "lucide-react";
 
@@ -5,10 +6,10 @@ export default function FeaturesSection() {
   return (
     <section 
       id="features" 
-      className="py-2 md:py-12 relative bg-[#0087C8] -mt-1"
+      className="py-2 md:py-12 relative bg-[#0087C8] -mt-1 pt-8 md:pt-2"
     >
       <div className="container px-4 sm:px-8 mx-auto">
-        <div className="flex flex-col md:flex-row -mt-[50px] md:-mt-[100px]">
+        <div className="flex flex-col md:flex-row -mt-[20px] md:-mt-[100px]">
           {/* Left column with side-by-side images - changed to horizontal on mobile */}
           <div className="flex flex-row md:flex-row items-center md:items-start justify-center md:justify-start gap-3 md:gap-6 ml-0 md:-ml-[50px]">
             {/* Features overview image - enlarged on mobile for better visibility */}
