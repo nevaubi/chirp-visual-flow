@@ -39,7 +39,7 @@ export default function HeroSection() {
           
           {/* Main centered content */}
           <div className="text-center max-w-4xl mx-auto mb-12">
-            {/* Main headline - updated to 2 rows */}
+            {/* Main headline - updated to show "Turn X Bookmarks into" and "Professional Newsletters" */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
                 Turn X Bookmarks into
@@ -79,7 +79,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Bottom section with flanking cards - matching screenshot layout */}
+          {/* Bottom section with flanking cards - simplified layout */}
           <div className="w-full max-w-7xl mx-auto flex items-center justify-between relative">
             
             {/* Left showcase card */}
@@ -111,19 +111,8 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Center section with arrow and text */}
-            <div className="text-center">
-              <div className="hidden lg:block mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ArrowRight size={24} className="text-white" />
-                </div>
-              </div>
-              <div className="text-lg font-semibold text-gray-700">See How</div>
-              <div className="text-lg font-semibold text-gray-700">It's Done</div>
-            </div>
-
             {/* Right showcase card */}
-            <div className="hidden lg:block relative">
+            <div className="hidden lg:block relative ml-auto">
               <div className="transform rotate-[8deg] hover:rotate-[4deg] transition-transform duration-500">
                 <div className="relative z-10">
                   <ChirpmetricsDashboard />
