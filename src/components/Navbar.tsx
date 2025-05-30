@@ -42,16 +42,20 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full ${scrolled ? 'bg-white/95 shadow-sm' : 'bg-transparent'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 w-full ${
+      scrolled 
+        ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-100/50' 
+        : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-1.5">
+          <Link to="/" className="flex items-center gap-2 group">
             <img 
               src="/thisone.png" 
               alt="Letternest Logo" 
-              className="h-7 w-7"
+              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
             />
-            <span className="font-bold text-2xl">
+            <span className="font-black text-2xl lg:text-3xl tracking-tight">
               <span className="text-black">letter</span>
               <span className="text-[#0087C8]">nest</span>
             </span>
@@ -59,25 +63,30 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-[#0087C8] font-medium hover:text-[#0270A8] transition-colors">Home</Link>
+            <Link 
+              to="/" 
+              className="text-[#0087C8] font-semibold hover:text-[#0270A8] transition-all duration-300 hover:scale-105 px-3 py-2 rounded-lg hover:bg-blue-50/50"
+            >
+              Home
+            </Link>
           </nav>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
                 <Button 
                   variant="ghost" 
-                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/30 px-4 font-medium flex items-center gap-2"
+                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-6 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
                   onClick={handleDashboardClick}
                 >
-                  <User size={16} />
+                  <User size={18} />
                   <span>Dashboard</span>
                 </Button>
                 <Button 
-                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-4 font-medium flex items-center gap-2"
+                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-6 py-3 font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md"
                   onClick={handleSignOut}
                 >
-                  <LogOut size={16} />
+                  <LogOut size={18} />
                   <span>Sign out</span>
                 </Button>
               </>
@@ -85,14 +94,14 @@ export default function Navbar() {
               <>
                 <Button 
                   variant="ghost" 
-                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/30 px-4 font-medium flex items-center gap-2"
+                  className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-6 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
                   onClick={handleLoginClick}
                 >
-                  <LogIn size={16} />
+                  <LogIn size={18} />
                   <span>Sign in</span>
                 </Button>
                 <Button 
-                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-4 font-medium"
+                  className="bg-[#0087C8] hover:bg-[#0270A8] text-white rounded-full px-6 py-3 font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md"
                   onClick={handleSignupClick}
                 >
                   Signup for Free
