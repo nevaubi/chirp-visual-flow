@@ -39,37 +39,23 @@ export default function HeroSection() {
           
           {/* Main centered content */}
           <div className="text-center max-w-4xl mx-auto mb-12">
-            {/* Main headline */}
+            {/* Main headline - updated to 2 rows */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
-              <span className="block text-gray-900">Transform Your</span>
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#0066CC] bg-clip-text text-transparent">
-                Twitter Bookmarks
+                Turn X Bookmarks into
               </span>
-              <span className="block text-gray-900">Into Beautiful</span>
               <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] bg-clip-text text-transparent">
-                Newsletters
+                Professional Newsletters
               </span>
             </h1>
             
-            <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Stop letting great content get lost in your bookmarks. Automatically curate and send 
-              <span className="block mt-2 font-semibold text-[#0087C8]">
-                beautiful newsletters to your audience with zero writing needed.
-              </span>
+            {/* Updated subtext */}
+            <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto font-semibold">
+              Never waste a good bookmark again.
             </p>
 
-            {/* Team avatars - matching screenshot style */}
-            <div className="flex justify-center mb-8">
-              <div className="flex -space-x-3">
-                <img src="/profilepic1.png" alt="User 1" className="w-12 h-12 rounded-full border-3 border-white shadow-lg" />
-                <img src="/profilepic2.png" alt="User 2" className="w-12 h-12 rounded-full border-3 border-white shadow-lg" />
-                <img src="/profilepic3.png" alt="User 3" className="w-12 h-12 rounded-full border-3 border-white shadow-lg" />
-                <img src="/profilepic4.png" alt="User 4" className="w-12 h-12 rounded-full border-3 border-white shadow-lg" />
-              </div>
-            </div>
-            
             {/* CTA buttons - matching screenshot dual button layout */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button 
                 className="bg-gradient-to-r from-[#0087C8] to-[#0066CC] hover:from-[#006ba3] hover:to-[#0052a3] text-white rounded-full px-8 py-4 font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 onClick={scrollToPricing}
@@ -85,6 +71,11 @@ export default function HeroSection() {
                 Learn More
                 <ArrowRight size={20} />
               </Button>
+            </div>
+
+            {/* Centered Reviews Section */}
+            <div className="flex justify-center">
+              <ReviewsSection />
             </div>
           </div>
 
@@ -163,16 +154,6 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Reviews section positioned above blue wave */}
-          <div className="absolute bottom-32 right-12 z-20 hidden xl:block transform scale-110 hover:scale-115 transition-transform duration-300">
-            <ReviewsSection />
-          </div>
-
-          {/* Mobile reviews section */}
-          <div className="flex justify-center mt-12 lg:hidden">
-            <ReviewsSection />
           </div>
         </div>
       </div>
