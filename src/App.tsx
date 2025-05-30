@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
-            {/* Tool routes */}
+            {/* New routes for individual tools */}
             <Route path="/tools/tweet-id-converter" element={<TweetIdConverter />} />
             <Route path="/tools/tweet-screenshot" element={<TweetScreenshot />} />
             
