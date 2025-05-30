@@ -94,7 +94,7 @@ export default function HeroSection() {
             </div>
           </div>
           
-          {/* Right column with main message and bookmark card */}
+          {/* Right column with main message */}
           <div className="w-full lg:w-3/5 pt-[48px] lg:pt-[44px]">
             {/* Main marketing message - hidden on mobile */}
             <div className="mb-6 hidden lg:block">
@@ -131,56 +131,6 @@ export default function HeroSection() {
                   onClick={scrollToPricing}
                 >
                   Twitter Newsletters
-                </Button>
-              </div>
-            </div>
-            
-            {/* Twitter Bookmarks Digest card */}
-            <div className="bg-white rounded-3xl shadow-md p-5 border border-gray-200 relative">
-              {/* Card header */}
-              <div className="flex items-center mb-4">
-                <div className="h-10 w-10 rounded-full bg-[#FFEEE8] flex items-center justify-center mr-3">
-                  <Twitter className="h-5 w-5 text-[#FF6B35]" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#0f2e47]">Auto-Newsletter from Bookmarks</h3>
-                  <p className="text-sm text-gray-500">Auto-generated newsletters from your saves</p>
-                </div>
-              </div>
-              
-              {/* Bookmark icon */}
-              <div className="absolute top-5 right-5">
-                <div className="h-10 w-10 rounded-full bg-[#FFEEE8] flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" fill="#FF6B35" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Bookmark items */}
-              <div className="space-y-3 mb-4">
-                {[
-                  "Bookmark a few tweets",
-                  "One-click button workflow",
-                  "Professional end-to-end Newsletter"
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center p-2 rounded-lg hover:bg-[#FFEEE8] group">
-                    <div className="h-6 w-6 rounded-full bg-[#FFEEE8] flex items-center justify-center mr-2">
-                      <span className="text-xs font-bold text-[#FF6B35]">{i + 1}</span>
-                    </div>
-                    <span className="text-sm text-[#0f2e47]">{item}</span>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Card footer */}
-              <div className="flex items-center justify-between px-3 py-2 bg-[#FFEEE8] rounded-xl">
-                <div className="flex items-center text-[#FF6B35]">
-                  <Mail className="h-4 w-4 mr-2" />
-                  <span className="text-sm font-medium">Delivered in your inbox</span>
-                </div>
-                <Button size="sm" variant="ghost" className="h-8 rounded-full px-3 text-[#FF6B35] hover:bg-[#FFEEE8]/80 focus:ring-0">
-                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
             </div>
