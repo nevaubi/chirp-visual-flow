@@ -67,7 +67,6 @@ export default function Navbar() {
             >
               <FileText size={18} />
               <span>The Ticker Drop</span>
-              <span className="text-sm italic text-gray-500 ml-1">bi-weekly</span>
             </Link>
             
             {isAuthenticated ? (
@@ -142,7 +141,6 @@ export default function Navbar() {
             >
               <FileText size={16} />
               <span>The Ticker Drop</span>
-              <span className="text-sm italic text-gray-500 ml-1">bi-weekly</span>
             </Link>
             
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">

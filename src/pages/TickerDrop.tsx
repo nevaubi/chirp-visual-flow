@@ -25,7 +25,7 @@ export default function TickerDrop() {
           </p>
           
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Stay ahead of the market with curated stock insights, market analysis, and investment opportunities delivered straight to your inbox.
+            Twice a week, get the stock insights and market updates that actually matter. Macro trends, expert commentary, biggest headlines - every Tuesday & Friday.
           </p>
         </div>
       </section>
