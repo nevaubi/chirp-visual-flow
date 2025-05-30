@@ -24,7 +24,7 @@ export default function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(muted);
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true); // Start with controls visible
   const [hideControlsTimeout, setHideControlsTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -33,14 +33,20 @@ export default function VideoPlayer({
 
     const updateTime = () => setCurrentTime(video.currentTime);
     const updateDuration = () => setDuration(video.duration);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
 
     video.addEventListener('timeupdate', updateTime);
     video.addEventListener('loadedmetadata', updateDuration);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
     video.addEventListener('ended', () => setIsPlaying(false));
 
     return () => {
       video.removeEventListener('timeupdate', updateTime);
       video.removeEventListener('loadedmetadata', updateDuration);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
       video.removeEventListener('ended', () => setIsPlaying(false));
     };
   }, []);
@@ -54,7 +60,6 @@ export default function VideoPlayer({
     } else {
       video.play();
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -102,7 +107,9 @@ export default function VideoPlayer({
       clearTimeout(hideControlsTimeout);
     }
     const timeout = setTimeout(() => {
-      setShowControls(false);
+      if (isPlaying) {
+        setShowControls(false);
+      }
     }, 3000);
     setHideControlsTimeout(timeout);
   };
@@ -111,7 +118,9 @@ export default function VideoPlayer({
     if (hideControlsTimeout) {
       clearTimeout(hideControlsTimeout);
     }
-    setShowControls(false);
+    if (isPlaying) {
+      setShowControls(false);
+    }
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
@@ -131,7 +140,7 @@ export default function VideoPlayer({
         muted={muted}
         playsInline
         preload="auto"
-        className="w-full h-auto"
+        className="w-full h-auto rounded-lg"
         onClick={togglePlay}
         onKeyDown={(e) => {
           if (e.code === 'Space') {
@@ -143,9 +152,9 @@ export default function VideoPlayer({
         aria-label="Video player"
       />
 
-      {/* Controls Overlay */}
+      {/* Controls Overlay - Always visible but with opacity changes */}
       <div 
-        className={`absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 transition-opacity duration-300 rounded-lg ${
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -154,10 +163,10 @@ export default function VideoPlayer({
           <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={togglePlay}
-              className="bg-[#0087C8] hover:bg-[#006CA1] text-white rounded-full p-4 shadow-xl transition-all duration-200 transform hover:scale-110"
+              className="bg-[#0087C8] hover:bg-[#006CA1] text-white rounded-full p-6 shadow-2xl transition-all duration-200 transform hover:scale-110 backdrop-blur-sm"
               aria-label="Play video"
             >
-              <Play className="h-8 w-8 ml-1" fill="currentColor" />
+              <Play className="h-10 w-10 ml-1" fill="currentColor" />
             </button>
           </div>
         )}
@@ -167,36 +176,36 @@ export default function VideoPlayer({
           {/* Progress Bar */}
           <div 
             ref={progressRef}
-            className="w-full bg-white/20 rounded-full h-1 mb-3 cursor-pointer"
+            className="w-full bg-white/30 rounded-full h-2 mb-4 cursor-pointer group/progress"
             onClick={handleProgressClick}
           >
             <div 
               className="bg-[#0087C8] h-full rounded-full transition-all duration-150 relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-[#0087C8] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity duration-200 border-2 border-[#0087C8]" />
             </div>
           </div>
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={togglePlay}
-                className="text-white hover:text-[#0087C8] transition-colors duration-200"
+                className="text-white hover:text-[#0087C8] transition-colors duration-200 p-1"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
-                  <Pause className="h-5 w-5" fill="currentColor" />
+                  <Pause className="h-6 w-6" fill="currentColor" />
                 ) : (
-                  <Play className="h-5 w-5 ml-0.5" fill="currentColor" />
+                  <Play className="h-6 w-6 ml-0.5" fill="currentColor" />
                 )}
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={toggleMute}
-                  className="text-white hover:text-[#0087C8] transition-colors duration-200"
+                  className="text-white hover:text-[#0087C8] transition-colors duration-200 p-1"
                   aria-label={isMuted ? "Unmute" : "Mute"}
                 >
                   {isMuted || volume === 0 ? (
@@ -212,14 +221,14 @@ export default function VideoPlayer({
                   step="0.1"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#0087C8] [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#0087C8] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none"
+                  className="w-20 h-2 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:shadow-lg"
                 />
               </div>
             </div>
 
             <button
               onClick={toggleFullscreen}
-              className="text-white hover:text-[#0087C8] transition-colors duration-200"
+              className="text-white hover:text-[#0087C8] transition-colors duration-200 p-1"
               aria-label="Toggle fullscreen"
             >
               <Maximize className="h-5 w-5" />
