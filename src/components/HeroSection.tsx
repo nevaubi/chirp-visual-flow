@@ -145,7 +145,7 @@ export default function HeroSection() {
                 Professional Newsletters
               </span>
             </h1>
-            <p className="text-xl sm:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl sm:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 lg:mt-8 leading-relaxed max-w-3xl mx-auto">
               <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
               <span className="block mt-2 font-semibold text-[#0087C8]">
                 <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
