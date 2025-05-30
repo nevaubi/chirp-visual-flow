@@ -22,15 +22,6 @@ export default function ProductStepsSection() {
 
   return (
     <div className="relative z-20 mb-10">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
-          From Bookmarks to Newsletters in 3 Simple Steps
-        </h3>
-        <p className="text-gray-600 max-w-xl mx-auto text-sm">
-          See exactly how Letternest transforms your saved content into professional newsletters
-        </p>
-      </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
         {steps.map((step, index) => (
           <div 
