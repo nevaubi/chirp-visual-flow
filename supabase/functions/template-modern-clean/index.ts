@@ -106,99 +106,122 @@ serve(async (req) => {
 
     console.log(`Modern Clean Template: Updated remaining generations to ${newRemainingGenerations} for user ${user.id}`);
 
-    // Fetch bookmarks using Apify
-    const apifyApiKey = Deno.env.get('APIFY_API_KEY');
-    if (!apifyApiKey) {
-      throw new Error('APIFY_API_KEY not configured');
-    }
+    // 6) Fetch bookmarks directly from Twitter API first
+logStep("Fetching bookmarks", { count: selectedCount, userId: profile.numerical_id });
+const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${profile.numerical_id}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
+    "Content-Type": "application/json"
+  }
+});
 
-    console.log('Modern Clean Template: Fetching bookmarks from Twitter API...');
-    
-    const apifyInput = {
-      "startUrls": [
-        {
-          "url": `https://api.twitter.com/2/users/${profile.numerical_id}/bookmarks?max_results=${selectedCount}&tweet.fields=created_at,author_id,public_metrics,context_annotations,entities&expansions=author_id&user.fields=username,name,verified,profile_image_url,public_metrics`
-        }
-      ],
-      "maxRequestRetries": 3,
-      "requestTimeoutSecs": 30,
-      "headers": {
-        "Authorization": `Bearer ${profile.twitter_bookmark_access_token}`
-      }
-    };
+if (!bookmarksResp.ok) {
+  const text = await bookmarksResp.text();
+  console.error(`Twitter API error (${bookmarksResp.status}):`, text);
+  
+  if (bookmarksResp.status === 401) {
+    throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
+  }
+  
+  if (bookmarksResp.status === 429) {
+    throw new Error("Twitter API rate limit exceeded. Please try again later.");
+  }
+  
+  throw new Error(`Twitter API error: ${bookmarksResp.status}`);
+}
 
-    const apifyResponse = await fetch(`https://api.apify.com/v2/acts/apify~twitter-url-scraper/run-sync-get-dataset-items?token=${apifyApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(apifyInput),
-    });
+const bookmarksData = await bookmarksResp.json();
+if (!bookmarksData?.data) {
+  console.error("Invalid or empty bookmark data:", bookmarksData);
+  
+  if (bookmarksData.meta?.result_count === 0) {
+    throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
+  }
+  
+  throw new Error("Failed to retrieve bookmarks from Twitter");
+}
 
-    if (!apifyResponse.ok) {
-      const errorText = await apifyResponse.text();
-      console.error('Apify API error:', apifyResponse.status, errorText);
-      throw new Error(`Apify API error: ${apifyResponse.status}`);
-    }
+const tweetIds = bookmarksData.data.map((t) => t.id);
+console.log(`Modern Clean Template: Successfully fetched bookmarks - ${tweetIds.length} tweets`);
 
-    const apifyData = await apifyResponse.json();
-    console.log('Modern Clean Template: Apify response received, items count:', apifyData.length);
+// 7) Fetch detailed tweets via Apify using the tweet IDs
+console.log('Modern Clean Template: Fetching detailed tweet data via Apify');
+const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
+if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
 
-    if (!apifyData || apifyData.length === 0) {
-      throw new Error('No data received from Apify');
-    }
+const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    "filter:blue_verified": false,
+    "filter:consumer_video": false,
+    "filter:has_engagement": false,
+    "filter:hashtags": false,
+    "filter:images": false,
+    "filter:links": false,
+    "filter:media": false,
+    "filter:mentions": false,
+    "filter:native_video": false,
+    "filter:nativeretweets": false,
+    "filter:news": false,
+    "filter:pro_video": false,
+    "filter:quote": false,
+    "filter:replies": false,
+    "filter:safe": false,
+    "filter:spaces": false,
+    "filter:twimg": false,
+    "filter:videos": false,
+    "filter:vine": false,
+    lang: "en",
+    maxItems: selectedCount,
+    tweetIDs: tweetIds
+  })
+});
 
-    // Parse the response
-    let bookmarksData;
+if (!apifyResp.ok) {
+  const text = await apifyResp.text();
+  console.error(`Apify API error (${apifyResp.status}):`, text);
+  throw new Error(`Apify API error: ${apifyResp.status}`);
+}
+
+const apifyData = await apifyResp.json();
+console.log('Modern Clean Template: Successfully fetched detailed tweet data', { tweetCount: apifyData.length || 0 });
+
+// 8) Format tweets for OpenAI
+function parseToOpenAI(data) {
+  const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+  let out = "";
+  
+  arr.forEach((t, i) => {
+    const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+    let dateStr = "N/A";
     try {
-      const responseItem = apifyData[0];
-      if (responseItem && responseItem.response) {
-        bookmarksData = JSON.parse(responseItem.response);
-      } else {
-        throw new Error('Invalid response structure from Apify');
-      }
-    } catch (parseError) {
-      console.error('Error parsing Apify response:', parseError);
-      throw new Error('Failed to parse bookmark data');
-    }
-
-    if (!bookmarksData.data || bookmarksData.data.length === 0) {
-      throw new Error('No bookmarks found in the response');
-    }
-
-    console.log(`Modern Clean Template: Found ${bookmarksData.data.length} bookmarks`);
-
-    // Process tweets and users
-    const tweets = bookmarksData.data;
-    const users = bookmarksData.includes?.users || [];
+      dateStr = new Date(t.createdAt).toISOString().split("T")[0];
+    } catch {}
     
-    // Create a user lookup map
-    const userMap = new Map();
-    users.forEach(user => {
-      userMap.set(user.id, user);
-    });
+    const photo = t.extendedEntities?.media?.find((m) => m.type === "photo")?.media_url_https;
+    
+    out += `Tweet ${i + 1}\n`;
+    out += `Tweet ID: ${t.id}\n`;
+    out += `Tweet text: ${txt}\n`;
+    out += `ReplyAmount: ${t.replyCount || 0}\n`;
+    out += `LikesAmount: ${t.likeCount || 0}\n`;
+    out += `Impressions: ${t.viewCount || 0}\n`;
+    out += `Date: ${dateStr}\n`;
+    out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
+    out += `PhotoUrl: ${photo || "N/A"}\n`;
+    
+    if (i < arr.length - 1) out += "\n---\n\n";
+  });
+  
+  return out;
+}
 
-    // Enrich tweets with user data
-    const enrichedTweets = tweets.map(tweet => {
-      const author = userMap.get(tweet.author_id);
-      return {
-        ...tweet,
-        author: author || { username: 'unknown', name: 'Unknown User' }
-      };
-    });
-
-    console.log('Modern Clean Template: Enriched tweets with user data');
-
-    // Prepare tweets for AI analysis
-    const tweetsForAnalysis = enrichedTweets.map(tweet => ({
-      id: tweet.id,
-      text: tweet.text,
-      author: tweet.author.username,
-      authorName: tweet.author.name,
-      createdAt: tweet.created_at,
-      metrics: tweet.public_metrics,
-      entities: tweet.entities
-    }));
+const tweetsForAnalysis = parseToOpenAI(apifyData);
+console.log('Modern Clean Template: Formatted tweets for analysis');
 
     console.log('Modern Clean Template: Starting AI analysis...');
 
