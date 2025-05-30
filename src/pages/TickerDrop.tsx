@@ -39,7 +39,7 @@ export default function TickerDrop() {
       </section>
 
       {/* Newsletter Signup Section */}
-      <section id="newsletter-signup" className="py-4 px-4 sm:px-6 lg:px-8">
+      <section id="newsletter-signup" className="py-2 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <TickerDropSignup />
         </div>
