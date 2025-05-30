@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, ArrowRight, BookOpen, Zap, Users } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
 import ChirpmetricsDashboard from "@/components/ChirpmetricsDashboard";
 import ReviewsSection from "@/components/ReviewsSection";
 
@@ -34,7 +34,7 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      {/* Arrow graphic - repositioned for better balance */}
+      {/* Arrow graphic */}
       <div className="absolute top-32 right-80 z-10 hidden xl:block animate-bounce">
         <img 
           src="/arrow1.png" 
@@ -45,26 +45,14 @@ export default function HeroSection() {
         />
       </div>
 
-      {/* Reviews section - positioned strategically */}
-      <div className="absolute top-20 right-12 z-20 hidden lg:block transform scale-110 hover:scale-115 transition-transform duration-300">
-        <ReviewsSection />
-      </div>
-
       <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-32">
         <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center">
           
-          {/* Mobile reviews section */}
-          <div className="flex justify-center mb-8 lg:hidden">
-            <ReviewsSection />
-          </div>
-
-          {/* Main headline - simplified to 2 rows */}
+          {/* Main headline - 2 rows without gradient */}
           <div className="mb-8">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight">
-              <span className="block text-gray-900">Turn X Bookmarks into</span>
-              <span className="block bg-gradient-to-r from-[#0087C8] to-[#FF6B35] bg-clip-text text-transparent">
-                Professional Newsletters
-              </span>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+              <span className="block">Turn X Bookmarks into</span>
+              <span className="block">Professional Newsletters</span>
             </h1>
             
             <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
@@ -75,37 +63,9 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Key value propositions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 max-w-4xl">
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0087C8] to-[#0066CC] rounded-xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Automated</div>
-                <div className="text-sm text-gray-600">Zero writing needed</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8C42] rounded-xl flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Beautiful</div>
-                <div className="text-sm text-gray-600">Professional design</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Engaging</div>
-                <div className="text-sm text-gray-600">High open rates</div>
-              </div>
-            </div>
+          {/* Reviews section - centered under hero text */}
+          <div className="flex justify-center mb-10">
+            <ReviewsSection />
           </div>
           
           {/* CTA buttons */}
