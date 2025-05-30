@@ -235,46 +235,18 @@
     animation: glow-pulse 8s ease-in-out infinite;
   }
 
-  /* Vertical scrolling animations for newsletter background */
-  @keyframes scroll-up {
+  /* Unified very slow scrolling animation for all newsletter columns */
+  @keyframes scroll-slow {
     0% { transform: translateY(0); }
     100% { transform: translateY(-50%); }
   }
   
-  @keyframes scroll-down {
-    0% { transform: translateY(-50%); }
-    100% { transform: translateY(0); }
-  }
-  
-  @keyframes scroll-up-slow {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-50%); }
-  }
-  
-  @keyframes scroll-down-slow {
-    0% { transform: translateY(-50%); }
-    100% { transform: translateY(0); }
-  }
-  
-  .animate-scroll-up {
-    animation: scroll-up 30s linear infinite;
+  .animate-scroll-slow {
+    animation: scroll-slow 80s linear infinite;
     will-change: transform;
   }
-  
-  .animate-scroll-down {
-    animation: scroll-down 25s linear infinite;
-    will-change: transform;
-  }
-  
-  .animate-scroll-up-slow {
-    animation: scroll-up-slow 40s linear infinite;
-    will-change: transform;
-  }
-  
-  .animate-scroll-down-slow {
-    animation: scroll-down-slow 35s linear infinite;
-    will-change: transform;
-  }
+
+  /* Remove old faster animations - they are replaced by the slow one above */
 }
 
 .bg-pattern-dots {

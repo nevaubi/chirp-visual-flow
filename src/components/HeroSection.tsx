@@ -18,11 +18,11 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
-      {/* Vertically scrolling newsletter columns */}
+      {/* Vertically scrolling newsletter columns - all parallel and same speed */}
       <div className="absolute inset-0 z-0">
-        {/* Far left scrolling column - upward */}
-        <div className="absolute -left-20 top-0 w-48 h-[200vh] opacity-15">
-          <div className="animate-scroll-up flex flex-col gap-8">
+        {/* Left outer column - slow upward scroll */}
+        <div className="absolute left-32 top-0 w-48 h-[200vh] opacity-12">
+          <div className="animate-scroll-slow flex flex-col gap-12">
             {/* First set of newsletters */}
             <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -36,9 +36,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Far right scrolling column - downward with delay */}
-        <div className="absolute -right-20 top-0 w-48 h-[200vh] opacity-15">
-          <div className="animate-scroll-down flex flex-col gap-8">
+        {/* Left inner column - slow upward scroll with delay */}
+        <div className="absolute left-64 top-0 w-48 h-[200vh] opacity-10">
+          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '10s' }}>
             {/* First set of newsletters */}
             <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
             <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
@@ -52,43 +52,43 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Inner left column - slower upward */}
-        <div className="absolute left-4 top-0 w-40 h-[200vh] opacity-10">
-          <div className="animate-scroll-up-slow flex flex-col gap-12">
-            {/* First set */}
-            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            {/* Duplicate set */}
-            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real3.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real1.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+        {/* Right inner column - slow upward scroll with different delay */}
+        <div className="absolute right-64 top-0 w-48 h-[200vh] opacity-10">
+          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '20s' }}>
+            {/* First set of newsletters */}
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set for seamless loop */}
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real1.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real4.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
-        {/* Inner right column - slower downward */}
-        <div className="absolute right-4 top-0 w-40 h-[200vh] opacity-10">
-          <div className="animate-scroll-down-slow flex flex-col gap-12">
-            {/* First set */}
-            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            {/* Duplicate set */}
-            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real4.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
-            <img src="/real2.png" alt="Newsletter" className="w-40 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+        {/* Right outer column - slow upward scroll with different delay */}
+        <div className="absolute right-32 top-0 w-48 h-[200vh] opacity-12">
+          <div className="animate-scroll-slow flex flex-col gap-12" style={{ animationDelay: '30s' }}>
+            {/* First set of newsletters */}
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            {/* Duplicate set for seamless loop */}
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real2.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
+            <img src="/real3.png" alt="Newsletter" className="w-48 h-auto rounded-lg shadow-lg border border-gray-200/50" />
           </div>
         </div>
 
         {/* Gradient overlays to fade edges */}
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-blue-50/80 to-transparent z-10"></div>
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent z-10"></div>
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-blue-50/60 to-transparent z-10"></div>
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-blue-50/60 to-transparent z-10"></div>
+        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-blue-50/60 to-transparent z-10"></div>
+        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-blue-50/60 to-transparent z-10"></div>
 
         {/* Subtle floating bookmark icons */}
         <div className="absolute top-24 left-1/5 z-20">
