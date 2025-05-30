@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -245,64 +244,107 @@ const Library = () => {
     setDialogOpen(true);
   };
 
-  // === replace the whole downloadAsPDF function with this ===============
-const downloadAsPDF = async () => {
-  if (!selectedNewsletter) return;
+  // Simplified and improved PDF download function
+  const downloadAsPDF = async () => {
+    if (!selectedNewsletter) return;
 
-  setIsPdfGenerating(true);
+    setIsPdfGenerating(true);
 
-  try {
-    const element = document.getElementById("newsletter-content");
-    if (!element) throw new Error("Newsletter content not found");
+    try {
+      const element = document.getElementById("newsletter-content");
+      if (!element) throw new Error("Newsletter content not found");
 
-    /* ------------------------------------------------------------------
-       1.  Work out how tall the rendered element is *in millimetres*.
-           1 CSS pixel  ≈  0.264583 mm
-    ------------------------------------------------------------------ */
-    const rect       = element.getBoundingClientRect();
-    const widthPx    = rect.width;
-    const heightPx   = rect.height;
-    const pxToMm     = (px: number) => px * 0.264583;
-    const widthMm    = pxToMm(widthPx);
-    const heightMm   = pxToMm(heightPx);
+      // Add print-specific styles to the element
+      const printStyle = document.createElement('style');
+      printStyle.textContent = `
+        @media print {
+          .newsletter-print-content {
+            font-family: 'Georgia', serif !important;
+            font-size: 12pt !important;
+            line-height: 1.6 !important;
+            color: #333 !important;
+          }
+          .newsletter-print-content h1 { 
+            font-size: 24pt !important; 
+            margin-bottom: 16pt !important;
+            page-break-after: avoid !important;
+          }
+          .newsletter-print-content h2 { 
+            font-size: 18pt !important; 
+            margin-top: 20pt !important;
+            margin-bottom: 12pt !important;
+            page-break-after: avoid !important;
+          }
+          .newsletter-print-content h3 { 
+            font-size: 14pt !important; 
+            margin-top: 16pt !important;
+            margin-bottom: 8pt !important;
+            page-break-after: avoid !important;
+          }
+          .newsletter-print-content p {
+            margin-bottom: 12pt !important;
+            orphans: 3 !important;
+            widows: 3 !important;
+          }
+          .newsletter-print-content img {
+            max-width: 100% !important;
+            height: auto !important;
+            page-break-inside: avoid !important;
+            margin: 12pt 0 !important;
+          }
+          .newsletter-print-content div[style*="background-color"] {
+            border: 1px solid #ddd !important;
+            padding: 12pt !important;
+            margin: 8pt 0 !important;
+            page-break-inside: avoid !important;
+          }
+        }
+      `;
+      document.head.appendChild(printStyle);
+      
+      // Add print class to element
+      element.classList.add('newsletter-print-content');
 
-    /* Guard-rail: jsPDF (and some PDF readers) refuse pages > 14 400 pt
-       ≈  5080 mm.  If the page would be taller, fall back to multi-page. */
-    const jsPdfPageMaxMm = 5080;
-    const isTooTall      = heightMm > jsPdfPageMaxMm;
+      // Simplified PDF options for consistent A4 output
+      const opt: html2pdf.Options = {
+        margin: [20, 15, 20, 15], // top, left, bottom, right in mm
+        filename: `newsletter-${format(new Date(selectedNewsletter.created_at), 'yyyy-MM-dd')}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          allowTaint: true,
+          letterRendering: true,
+          logging: false
+        },
+        pagebreak: { 
+          mode: ['avoid-all', 'css', 'legacy'],
+          before: '.page-break-before',
+          after: '.page-break-after',
+          avoid: ['h1', 'h2', 'h3', 'img']
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+          compress: true
+        }
+      };
 
-    /* ------------------------------------------------------------------
-       2.  Build the pdf-options object.
-           - custom page size = [ widthMm , heightMm ]
-           - turn off html2pdf’s automatic page-breaking
-    ------------------------------------------------------------------ */
-    const opt: html2pdf.Options = {
-      margin:       10,                 // add a small white border
-      filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
-      image:        { type: "jpeg", quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
-      pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
-      jsPDF:        {
-        unit: "mm",
-        // use custom size unless the doc would blow past reader limits
-        format: isTooTall ? "a4" : [widthMm, heightMm],
-        orientation: widthMm >= heightMm ? "landscape" : "portrait"
-      }
-    };
-
-    /* ------------------------------------------------------------------
-       3.  Generate and save
-    ------------------------------------------------------------------ */
-    await html2pdf().set(opt).from(element).save();
-    toast.success("PDF downloaded successfully!");
-  } catch (err) {
-    console.error("Error generating PDF:", err);
-    toast.error("Failed to generate PDF. Please try again.");
-  } finally {
-    setIsPdfGenerating(false);
-  }
-};
-
+      await html2pdf().set(opt).from(element).save();
+      
+      // Cleanup
+      element.classList.remove('newsletter-print-content');
+      document.head.removeChild(printStyle);
+      
+      toast.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
