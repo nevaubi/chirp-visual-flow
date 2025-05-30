@@ -182,7 +182,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 8) Format tweets for OpenAI (remains useful for internal analysis)
+    // 8) Format tweets for OpenAI
     function parseToOpenAI(data) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -204,7 +204,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         out += `Impressions: ${t.viewCount || 0}\n`;
         out += `Date: ${dateStr}\n`;
         out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
-        out += `PhotoUrl: ${photo || "N/A"}\n`; // Still useful for AI to know if images exist
+        out += `PhotoUrl: ${photo || "N/A"}\n`;
         
         if (i < arr.length - 1) out += "\n---\n\n";
       });
@@ -215,12 +215,11 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis (MODIFIED PROMPTS)
+    // 9) Call OpenAI for main analysis
     logStep("Calling OpenAI for initial thematic analysis and hook generation");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
     
-    // MODIFIED SYSTEM PROMPT for Step 9
     const analysisSystemPrompt = `You are an expert content strategist and analyst. Your task is to analyze a collection of tweets and synthesize them into high-level themes and insights, suitable for a sophisticated newsletter. You must also craft an engaging introductory hook.
 
 CAPABILITIES:
@@ -257,7 +256,6 @@ CRITICAL INSTRUCTIONS:
 Tweet data to analyze:
 ${formattedTweets}`;
     
-    // MODIFIED USER PROMPT for Step 9
     const analysisUserPrompt = `Based on the provided tweet collection, please generate:
 1.  An engaging 1-2 sentence HOOK for a newsletter summarizing the key takeaways from these bookmarks.
 2.  An analysis identifying 3-4 MAIN THEMES. For each main theme:
@@ -282,7 +280,7 @@ ${formattedTweets}`;
         Authorization: `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o", // Using a more current model like gpt-4o
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
@@ -293,8 +291,8 @@ ${formattedTweets}`;
             content: analysisUserPrompt
           }
         ],
-        temperature: 0.5, // Slightly higher for more natural synthesis
-        max_tokens: 3500 // Adjusted based on new structure
+        temperature: 0.5,
+        max_tokens: 3500
       })
     });
     
@@ -308,7 +306,7 @@ ${formattedTweets}`;
     let analysisResult = openaiJson.choices[0].message.content.trim();
     logStep("Successfully generated initial thematic analysis and hook");
 
-    // 10) Topic Selection and Query Generation for Perplexity (Largely Unchanged)
+    // 10) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
     const queryGenerationPrompt = `You are an expert at identifying the most promising themes for web search enrichment from a content analysis. Given an analysis of Twitter bookmarks (summarized into themes), select up to 3 themes that would benefit most from additional web-based context and information.
 
@@ -341,7 +339,7 @@ ENRICHMENT GOAL: [What specific information or context we want to add]
 If fewer than 3 themes are suitable for enrichment, provide only those.
 
 THEMATIC ANALYSIS TO REVIEW:
-${analysisResult}`; // analysisResult now contains the hook and thematic summaries
+${analysisResult}`;
 
     const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -350,7 +348,7 @@ ${analysisResult}`; // analysisResult now contains the hook and thematic summari
         Authorization: `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o", 
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
@@ -366,7 +364,7 @@ ${analysisResult}`; // analysisResult now contains the hook and thematic summari
       })
     });
     
-    let webEnrichmentContent = null; // To store structured enrichment data
+    let webEnrichmentContent = null;
 
     if (!queryGenRes.ok) {
       const txt = await queryGenRes.text();
@@ -396,6 +394,7 @@ ${analysisResult}`; // analysisResult now contains the hook and thematic summari
         const enrichmentResults = [];
         for (const topic of topicsToEnrich) {
           try {
+            // FIXED: Use correct Perplexity model
             const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
                 method: "POST",
                 headers: {
@@ -403,20 +402,19 @@ ${analysisResult}`; // analysisResult now contains the hook and thematic summari
                   "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
                 },
                 body: JSON.stringify({
-                  model: "sonar-small-online", // Using a generally available Perplexity model
+                  model: "llama-3.1-sonar-small-128k-online", // Fixed model name
                   messages: [{ role: "user", content: topic.query }],
                   temperature: 0.2,
-                  max_tokens: 350,
-                  // search_recency_filter: "week" // This might not be available on all models, check Perplexity docs
+                  max_tokens: 350
                 })
               }
             );
             if (perplexityRes.ok) {
               const data = await perplexityRes.json();
               enrichmentResults.push({
-                themeName: topic.theme, // Link back to the original theme name
+                themeName: topic.theme,
                 webSummary: data.choices[0].message.content,
-                sources: data.choices[0].message.citations ?? [] // Adapt based on actual Perplexity response
+                sources: data.choices[0].message.citations ?? []
               });
               logStep(`Successfully enriched theme: ${topic.theme}`);
             } else {
@@ -435,13 +433,11 @@ ${analysisResult}`; // analysisResult now contains the hook and thematic summari
       }
     }
 
-    // 12) Integrate Web Content with Original Analysis (MODIFIED PROMPT)
-    // This step is now optional and conditional on webEnrichmentContent
-    let finalAnalysisForMarkdown = analysisResult; // Default to original analysis
+    // 12) Integrate Web Content with Original Analysis
+    let finalAnalysisForMarkdown = analysisResult;
 
     if (webEnrichmentContent && webEnrichmentContent.length > 0) {
         logStep("Integrating web content with original thematic analysis");
-        // MODIFIED INTEGRATION PROMPT
         const integrationPrompt = `You are an expert content editor. You have an initial thematic analysis of Twitter bookmarks and supplementary web-sourced information for some of these themes.
 Your task is to seamlessly integrate the web-sourced insights into the relevant themes within the original analysis.
 
@@ -484,16 +480,13 @@ Provide the complete, integrated analysis. If a theme in the original analysis d
             const txt = await integrationRes.text();
             console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
             logStep("Failed to integrate web content, continuing with original thematic analysis");
-            // finalAnalysisForMarkdown remains analysisResult
         }
     }
 
-
-    // 13) Generate Markdown formatted newsletter (MODIFIED PROMPTS)
+    // 13) Generate Markdown formatted newsletter
     let markdownNewsletter = "";
     try {
       logStep("Starting 'Chain of Thought' markdown newsletter formatting");
-      // MODIFIED MARKDOWN SYSTEM PROMPT
       const markdownSystemPrompt = `You are a professional newsletter editor specializing in creating the "Chain of Thought" newsletter for LetterNest. Your job is to take a pre-analyzed thematic content (which includes a hook, main themes, and noteworthy sidetracks) and format it into a beautiful, professional, visually appealing, and well-structured Markdown newsletter.
 
 NEWSLETTER STRUCTURE: "Chain of Thought"
@@ -537,7 +530,6 @@ FORMATTING GUIDELINES:
 OUTPUT:
 Provide ONLY the formatted Markdown content.`;
       
-      // MODIFIED MARKDOWN USER PROMPT
       const markdownUserPrompt = `I have the thematic analysis for our "Chain of Thought" newsletter. Please format this into a professional and visually appealing Markdown newsletter, following the structure and guidelines provided in the system prompt.
 
 The analysis includes a HOOK, MAIN THEMES (each with Title, Gist, Key Insights, Deeper Dive, and optional RepresentativeImageURL), and NOTEWORTHY SIDETRACKS (each with Title and Quick Take).
@@ -546,7 +538,7 @@ Format this into the "Chain of Thought" newsletter for LetterNest.
 Current Date for newsletter: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 
 THEMATIC ANALYSIS CONTENT:
-${finalAnalysisForMarkdown}`; // Use the potentially web-enriched analysis
+${finalAnalysisForMarkdown}`;
       
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -581,8 +573,8 @@ ${finalAnalysisForMarkdown}`; // Use the potentially web-enriched analysis
       markdownNewsletter = `Error: Failed to generate markdown. Original analysis:\n${finalAnalysisForMarkdown}`;
     }
 
-    // 14) Generate Enhanced Markdown with UI/UX improvements (Prompts can be largely the same, focusing on styling)
-    let enhancedMarkdownNewsletter = markdownNewsletter; // Default to previous step if this fails
+    // 14) Generate Enhanced Markdown with UI/UX improvements
+    let enhancedMarkdownNewsletter = markdownNewsletter;
     try {
       logStep("Generating enhanced UI/UX markdown for 'Chain of Thought'");
       const enhancedSystemPrompt = `
@@ -632,8 +624,8 @@ ${markdownNewsletter}
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt }
             ],
-            temperature: 0.3, // Low temp for precise styling application
-            max_tokens: 4090 // Maximize output for potentially longer styled markdown
+            temperature: 0.3,
+            max_tokens: 4090
           })
         });
         
@@ -644,34 +636,26 @@ ${markdownNewsletter}
         } else {
           const errorText = await enhancedOpenaiRes.text();
           console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
-          // Fallback to non-enhanced markdown
         }
       } catch (enhancedError) {
         console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
-        // Fallback to non-enhanced markdown
       }
     } catch (err) {
       console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-      // Fallback to non-enhanced markdown
     }
 
     // 15) Clean up stray text around enhanced Markdown
     function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1'); // More robust removal of fences
+      let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
       cleaned = cleaned.trim();
-      // Check if the content starts with a Markdown heading, if not, it might be preamble.
-      // This is a heuristic. A more robust way might be to ensure the first non-empty line is a heading.
       const lines = cleaned.split('\n');
       let firstContentLine = 0;
       for(let i=0; i < lines.length; i++) {
         if(lines[i].trim() !== "") {
           if (!lines[i].trim().startsWith("#")) {
-            // If the first real content line isn't a heading, and there's a heading later, try to slice
             const headingMatch = cleaned.match(/(^|\n)(#+\s.*)/);
             if (headingMatch && typeof headingMatch.index === 'number' && headingMatch.index > 0) {
-                // Only slice if there's content *before* the first detected heading
                 if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
-                    // console.log("Slicing preamble before first heading");
                     cleaned = cleaned.substring(headingMatch.index).trim();
                 }
             }
@@ -692,7 +676,7 @@ ${markdownNewsletter}
         <img src="${href}"
              alt="${alt || 'Newsletter image'}"
              style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:6px; display:inline-block; border: 1px solid #eee;">
-      </div>`; // Adjusted image styling slightly
+      </div>`;
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
@@ -708,7 +692,6 @@ ${markdownNewsletter}
           </td></tr>
           <tr><td align="center" style="padding:20px 0 30px 0; font-size:12px; color:#777777;">
             Powered by LetterNest<br>
-            <!-- You can add unsubscribe links here later -->
           </td></tr>
         </table>
       </body>
@@ -716,17 +699,17 @@ ${markdownNewsletter}
     
     logStep("Converted 'Chain of Thought' markdown to HTML with inline CSS");
 
-    // 17) Send email via Resend
+    // 17) Send email via Resend - FIXED email domain
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@yourdomain.letternest.com"; // UPDATED default
-      const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; // UPDATED subject
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@letternest.com"; // FIXED: Use proper domain
+      const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`;
 
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`, // Nicer "From" name
+        from: `LetterNest <${fromEmail}>`,
         to: profile.sending_email,
         subject: emailSubject,
         html: emailHtml,
-        text: finalMarkdown // Send the cleaned final markdown as text part
+        text: finalMarkdown
       });
       
       if (emailError) {
@@ -740,13 +723,11 @@ ${markdownNewsletter}
       // Continue with saving to database even if email fails
     }
 
-    // 18) Save the newsletter to newsletter_storage table
+    // 18) Save the newsletter to newsletter_storage table - FIXED column name
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
         user_id: userId,
-        markdown_text: finalMarkdown, // Save the final, enhanced markdown
-        // html_text: emailHtml, // Optionally save HTML too
-        newsletter_type: "Chain of Thought" // Add type if you have different newsletters
+        markdown_text: finalMarkdown // FIXED: Use existing column name
       });
       
       if (storageError) {
@@ -786,8 +767,8 @@ ${markdownNewsletter}
       message: "'Chain of Thought' newsletter generated and process initiated for email.",
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
       data: {
-        analysisResult: finalAnalysisForMarkdown, // The content that went into markdown
-        markdownNewsletter: finalMarkdown, // The final markdown sent
+        analysisResult: finalAnalysisForMarkdown,
+        markdownNewsletter: finalMarkdown,
         timestamp
       }
     };
@@ -845,7 +826,6 @@ serve(async (req) => {
       // @ts-ignore
       EdgeRuntime.waitUntil(backgroundTask);
     } else {
-      // For local development or environments without EdgeRuntime.waitUntil
       backgroundTask.then(result => {
         logStep("Background task completed (local/fallback)", result);
       }).catch(err => {
