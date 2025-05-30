@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight, Bookmark } from "lucide-react";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -115,7 +116,7 @@ export default function HeroSection() {
             </h1>
             
             <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Stop letting great content get lost in your bookmarks. 
+              Never waste a good bookmark again. 
               <span className="block mt-2 font-semibold text-[#0087C8]">
                 Automatically curate and send beautiful newsletters to your audience.
               </span>
