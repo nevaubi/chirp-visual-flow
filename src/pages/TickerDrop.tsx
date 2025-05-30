@@ -86,7 +86,7 @@ export default function TickerDrop() {
             <div className="group">
               <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 bg-white border border-gray-200">
                 <img
-                  src="/2.png"
+                  src="/pictwo.png"
                   alt="The Ticker Drop Newsletter Example 2"
                   className="w-full h-auto object-cover"
                   loading="lazy"
