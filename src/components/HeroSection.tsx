@@ -1,4 +1,5 @@
 
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -140,15 +141,15 @@ export default function HeroSection() {
           {/* Headline ------------------------------------------------------ */}
           <div className="mb-8 relative z-20 w-full">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-              <span className="block">Turn X Bookmarks into</span>
+              <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
               <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                 Professional Newsletters
               </span>
             </h1>
             <p className="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Never waste a good bookmark again.
+              <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
               <span className="block mt-2 font-semibold text-[#0087C8]">
-                Automatically curate and send beautiful newsletters to your
+                <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
                 audience.
               </span>
             </p>
@@ -194,3 +195,4 @@ export default function HeroSection() {
     </section>
   );
 }
+
