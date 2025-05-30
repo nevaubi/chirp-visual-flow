@@ -531,63 +531,91 @@ renderer.listitem = (text, task, checked) => {
   return `<li style="margin: 0 0 0.8em 0; font-size: 16px; line-height: 1.6;">${text}</li>\n`;
 };
 
-// Custom heading rendering — colour, size & spacing
+/// 1. Custom heading renderer with section break considerations
 renderer.heading = (text, level) => {
-  const color = level <= 2 ? '#0A417A' : '#40827D';          // deep blue for H1/H2, muted teal for H3+
-  const size  = level === 1 ? '28px'
-               : level === 2 ? '22px'
-               : level === 3 ? '18px' : '16px';
-  return `<h${level} style="color:${color};
+  const color = level <= 2 ? '#0A417A' : '#40827D';  // deep blue for H1/H2, muted teal for H3+
+  const size = level === 1 ? '28px'
+             : level === 2 ? '22px'
+             : level === 3 ? '18px' : '16px';
+  
+  // Add class to major section headings for print layout control
+  const sectionClass = level === 2 ? ' class="section-heading"' : '';
+  
+  return `<h${level}${sectionClass} style="color:${color};
                              font-size:${size};
                              margin:1.2em 0 0.6em;
                              font-weight:600;">${text}</h${level}>\n`;
 };
 
+// 2. Image renderer with container class for print layout control
 renderer.image = (href, _title, alt) => `
-  <div style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
+  <div class="image-container" style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
     <img src="${href}"
          alt="${alt || 'Newsletter image'}"
          style="max-width:100%; width:auto; max-height:480px; height:auto; border-radius:10px;
                 display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
   </div>`;
 
+// 3. Convert the final markdown to HTML using the configured renderer
+const htmlBody = marked(finalMarkdown, { renderer });
 
-    const htmlBody = marked(finalMarkdown, { renderer });
-
-    const emailHtml = juice(`
-      <body style="background-color:#E8EFF5; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: Arial, sans-serif;">
-
-        <!-- ✱✱ add this once ✱✱ -->
+// 4. Generate the final email HTML with proper CSS for both display and print
+const emailHtml = juice(`
+  <body style="background-color:#E8EFF5; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: Arial, sans-serif;">
+    <!-- Improved print CSS for PDF generation -->
     <style>
-      /* keep everything on one long sheet when “Save as PDF” is used */
       @media print {
-        body, html { width: 100%; height: auto; }
-        table, tr, td, div, p, img { page-break-inside: avoid !important; }
+        /* Basic settings for print layout */
+        body, html { 
+          width: 100%; 
+          height: auto; 
+          background-color: #ffffff !important; 
+        }
+        
+        /* Prevent orphaned headings */
+        h1, h2, h3 { 
+          page-break-after: avoid; 
+          margin-top: 1em;
+        }
+        
+        /* Keep images and their captions together */
+        .image-container { 
+          page-break-inside: avoid; 
+        }
+        
+        /* Allow content to flow naturally across pages */
+        p, ul, ol, dl, blockquote { 
+          page-break-inside: auto; 
+        }
+        
+        /* Ensure clean breaks after major sections */
+        .section-break {
+          page-break-after: always;
+        }
+        
+        /* Override any conflicting inline styles */
+        .content-container {
+          page-break-inside: auto !important;
+        }
       }
     </style>
-    <!-- ✱✱ end insertion ✱✱ -->
 
-        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#E8EFF5;">
-          <tr><td align="center" style="padding:25px 0;">
-            <table width="680" border="0" cellpadding="0" cellspacing="0" role="presentation"
-       style="max-width:680px; margin:0 auto; background-color:#ffffff; border-radius:12px;
-              box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-              page-break-inside: avoid; page-break-before: auto; page-break-after: auto;">
+    <!-- Simplified structure with div-based layout -->
+    <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #E8EFF5;">
+      <div class="content-container" style="display: inline-block; width: 100%; max-width: 680px; margin: 25px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1); text-align: left;">
+        <div class="content-body" style="padding: 40px 45px; line-height: 1.7; color: #333333; font-size: 16px;">
+          ${htmlBody}
+        </div>
+      </div>
+      
+      <div class="footer" style="text-align: center; padding: 30px 0 40px 0; font-size: 13px; color: #555555;">
+        Powered by LetterNest<br>
+      </div>
+    </div>
+  </body>
+`);
 
-              <tr><td style="padding:40px 45px; line-height:1.7; color:#333333; font-size:16px;">
-                ${htmlBody}
-              </td></tr>
-            </table>
-          </td></tr>
-          <tr><td align="center" style="padding:30px 0 40px 0; font-size:13px; color:#555555;">
-            Powered by LetterNest<br>
-            <!-- Unsubscribe links etc. -->
-          </td></tr>
-        </table>
-      </body>
-    `);
-    
-    logStep("Converted 'Chain of Thought' markdown to HTML with inline CSS (final aesthetic enhancements)");
+logStep("Converted 'Chain of Thought' markdown to HTML with inline CSS (final aesthetic enhancements)");
 
     // 17) Send email via Resend (No changes here)
     try {
