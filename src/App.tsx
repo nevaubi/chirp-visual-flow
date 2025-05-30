@@ -23,7 +23,6 @@ import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
 import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
-import GenerateTweets from "./pages/dashboard/GenerateTweets";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,7 +62,6 @@ const App = () => (
                 <Route path="checkout-success" element={<CheckoutSuccess />} />
                 <Route path="checkout-cancel" element={<CheckoutCancel />} />
                 <Route path="analytics" element={<Library />} />
-                <Route path="community" element={<GenerateTweets />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
             </Route>

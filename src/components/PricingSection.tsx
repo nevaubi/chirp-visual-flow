@@ -75,10 +75,7 @@ const PricingCard = ({
       <ul className="space-y-3 md:space-y-4">
         {features.map((feature, i) => (
           <li key={i} className="flex items-center gap-3 text-left">
-            <Check className={cn(
-              "h-4 w-4 md:h-5 md:w-5 shrink-0",
-              title === "Auto Newsletter Platform" ? "text-[#ff7720]" : "text-[#0ea5e9]"
-            )} />
+            <Check className="h-4 w-4 md:h-5 md:w-5 shrink-0 text-[#ff7720]" />
             <span className="text-[#4a5568] text-[14px] md:text-[15px]">{feature}</span>
           </li>
         ))}
@@ -137,20 +134,13 @@ const PricingSection = () => {
   const navigate = useNavigate();
   const { authState } = useAuth();
   const [isLoadingNewsletter, setIsLoadingNewsletter] = useState(false);
-  const [isLoadingCreator, setIsLoadingCreator] = useState(false);
   
-  // Check if user is subscribed to either plan
+  // Check if user is subscribed to newsletter plan
   const isSubscribedToNewsletter = authState.profile?.subscription_tier === "Newsletter";
-  const isSubscribedToCreator = authState.profile?.subscription_tier === "Creator";
   
   // Handle checkout process
-  const handleCheckout = async (priceId: string, platform: 'newsletter' | 'creator') => {
-    // Set the appropriate loading state
-    if (platform === 'newsletter') {
-      setIsLoadingNewsletter(true);
-    } else {
-      setIsLoadingCreator(true);
-    }
+  const handleCheckout = async (priceId: string) => {
+    setIsLoadingNewsletter(true);
     
     try {
       // Check if user is logged in
@@ -164,7 +154,7 @@ const PricingSection = () => {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { 
           priceId,
-          platform
+          platform: 'newsletter'
         }
       });
       
@@ -187,12 +177,7 @@ const PricingSection = () => {
       console.error("Error in checkout process:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
-      // Reset loading state
-      if (platform === 'newsletter') {
-        setIsLoadingNewsletter(false);
-      } else {
-        setIsLoadingCreator(false);
-      }
+      setIsLoadingNewsletter(false);
     }
   };
 
@@ -215,37 +200,10 @@ const PricingSection = () => {
       </div>
     ),
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
-    onPurchase: (priceId: string) => handleCheckout(priceId, 'newsletter'),
+    onPurchase: handleCheckout,
     isLoading: isLoadingNewsletter,
     isSubscribed: isSubscribedToNewsletter,
     borderColor: "border-2 border-orange-200"
-  };
-
-  const creatorCard = {
-    title: "X (Twitter) Creator Platform",
-    price: "$19",
-    description: "Smarter tweets → faster growth for creators",
-    features: [
-      <span><strong>450 tweet generations</strong></span>,
-      "Analytics dashboard",
-      "AI voice profile",
-      "Trending topics insights"
-    ],
-    ctaText: "Try It Free",
-    popular: false,
-    buttonClassName: "bg-[#0ea5e9] hover:bg-[#0284c7] text-white",
-    platformIcon: (
-      <div className="w-16 h-16 rounded-full bg-[#f2f2f2] flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
-          <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
-        </svg>
-      </div>
-    ),
-    priceId: "price_1RRXZ2DBIslKIY5s4gxpBlME",
-    onPurchase: (priceId: string) => handleCheckout(priceId, 'creator'),
-    isLoading: isLoadingCreator,
-    isSubscribed: isSubscribedToCreator,
-    borderColor: "border-2 border-blue-200"
   };
 
   return (
@@ -260,18 +218,15 @@ const PricingSection = () => {
 
         <div className="mx-auto flex max-w-5xl flex-col items-center space-y-8 text-center">
           <div className="space-y-3">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Choose Your Platform</h2>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Newsletter Platform</h2>
             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed">
-              Select the perfect solution for your needs.
+              Transform your bookmarks into professional newsletters.
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-4 lg:gap-4 w-full max-w-4xl justify-center items-center md:items-stretch px-2 md:px-0">
+          <div className="flex justify-center w-full max-w-md px-2 md:px-0">
             {/* Auto Newsletter Platform Card */}
             <PricingCard {...newsletterCard} />
-            
-            {/* X Creator Platform Card */}
-            <PricingCard {...creatorCard} />
           </div>
         </div>
       </div>
