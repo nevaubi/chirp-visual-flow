@@ -1,8 +1,9 @@
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
-import { Mail, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import ReviewsSection from "@/components/ReviewsSection";
+import VideoPlayer from "@/components/VideoPlayer";
 
 export default function HeroSection() {
   /* -------------------------------------------------- */
@@ -174,20 +175,16 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Right Column: Video */}
+            {/* Right Column: Custom Video Player */}
             <div className="mt-12 lg:mt-0 relative z-20">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
+                <VideoPlayer
+                  src="/final.mp4"
+                  autoPlay={true}
+                  loop={true}
+                  muted={true}
                   className="w-full h-auto"
-                >
-                  <source src="/final.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                />
               </div>
             </div>
           </div>
