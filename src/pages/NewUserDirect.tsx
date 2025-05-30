@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import WelcomePopup from "@/components/auth/WelcomePopup";
+import WelcomeAnimation from "@/components/auth/WelcomeAnimation";
 import { Profile } from "@/types/auth";
 
 const NewUserDirect = () => {
@@ -25,58 +25,52 @@ const NewUserDirect = () => {
         // Trigger animation after a short delay
         setTimeout(() => {
           setShowAnimation(true);
+          // Auto-select newsletter platform after animation starts
+          handleAutoSelectNewsletter();
         }, 300);
       }
     }
   }, [authState.loading, authState.user, authState.profile, navigate]);
 
-  // Handle welcome option selection
-  const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
+  // Automatically select newsletter platform
+  const handleAutoSelectNewsletter = async () => {
     try {
-      // Prepare updates based on selected option
+      console.log("Auto-selecting newsletter platform for new user");
+      
+      // Prepare updates to mark user as newsletter platform user
       const updates: Partial<Profile> = {
         is_new: false,
+        is_newsletter_platform: true,
+        is_creator_platform: false,
       };
-      
-      // Set the appropriate platform flag
-      if (option === "newsletters") {
-        updates.is_newsletter_platform = true;
-        updates.is_creator_platform = false;
-      } else {
-        updates.is_creator_platform = true;
-        updates.is_newsletter_platform = false;
-      }
       
       // Update the profile
       await updateProfile(updates);
       
-      // Wait for the animation and redirect
+      console.log("Successfully auto-selected newsletter platform");
+    } catch (error) {
+      console.error("Error in handleAutoSelectNewsletter:", error);
+      // Still redirect to dashboard even if there's an error
       setTimeout(() => {
         navigate('/dashboard/home', { replace: true });
-      }, 1500);
-    } catch (error) {
-      console.error("Error in handleWelcomeOptionSelect:", error);
-      // Redirect to dashboard even if there's an error
-      navigate('/dashboard/home', { replace: true });
+      }, 2000);
     }
+  };
+
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    navigate('/dashboard/home', { replace: true });
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50">
-      <div 
-        className={`transition-all duration-700 ease-in-out ${
-          showAnimation ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        }`}
-      >
-        <WelcomePopup 
-          open={true} 
-          onOptionSelect={handleWelcomeOptionSelect}
-          disableClose={true}
-          fullscreen={true}
+    <div className="min-h-screen">
+      {showAnimation && (
+        <WelcomeAnimation
           profilePicUrl={authState.profile?.twitter_profilepic_url}
           username={authState.profile?.twitter_username}
+          onComplete={handleAnimationComplete}
         />
-      </div>
+      )}
     </div>
   );
 };
