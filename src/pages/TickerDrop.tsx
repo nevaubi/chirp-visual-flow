@@ -1,6 +1,6 @@
 
 import React from "react";
-import { FileText, TrendingUp, Users, Clock } from "lucide-react";
+import { FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,33 +21,12 @@ export default function TickerDrop() {
           </div>
           
           <p className="text-xl lg:text-2xl text-gray-600 mb-4 italic">
-            Bi-weekly Stock Newsletter
+            Every Tues & Fri
           </p>
           
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Stay ahead of the market with curated stock insights, market analysis, and investment opportunities delivered straight to your inbox every two weeks.
+            Stay ahead of the market with curated stock insights, market analysis, and investment opportunities delivered straight to your inbox.
           </p>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
-            <div className="flex flex-col items-center p-6 bg-white/80 rounded-2xl shadow-lg border border-gray-100">
-              <TrendingUp className="h-8 w-8 text-[#0087C8] mb-3" />
-              <div className="text-3xl font-bold text-gray-900">98%</div>
-              <div className="text-gray-600">Accuracy Rate</div>
-            </div>
-            
-            <div className="flex flex-col items-center p-6 bg-white/80 rounded-2xl shadow-lg border border-gray-100">
-              <Users className="h-8 w-8 text-[#0087C8] mb-3" />
-              <div className="text-3xl font-bold text-gray-900">15K+</div>
-              <div className="text-gray-600">Subscribers</div>
-            </div>
-            
-            <div className="flex flex-col items-center p-6 bg-white/80 rounded-2xl shadow-lg border border-gray-100">
-              <Clock className="h-8 w-8 text-[#0087C8] mb-3" />
-              <div className="text-3xl font-bold text-gray-900">5 min</div>
-              <div className="text-gray-600">Read Time</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -59,7 +38,7 @@ export default function TickerDrop() {
               Newsletter Examples
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See what our subscribers receive bi-weekly. Professional market analysis made simple.
+              See what our subscribers receive. Professional market analysis made simple.
             </p>
           </div>
           
@@ -135,7 +114,7 @@ export default function TickerDrop() {
             Subscribe Now - Free
           </Button>
           <p className="text-blue-200 mt-4 text-sm">
-            Delivered bi-weekly • No spam • Unsubscribe anytime
+            Delivered twice weekly • No spam • Unsubscribe anytime
           </p>
         </div>
       </section>
