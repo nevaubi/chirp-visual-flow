@@ -19,18 +19,12 @@ export default function TickerDropSignup() {
     setStatus('idle');
 
     try {
-      // Generate verification token
-      const verificationToken = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour expiry
-
-      // Insert email into database
+      // Insert email into database with email already verified
       const { error: insertError } = await supabase
         .from('tickerdrop_emails')
         .insert({
           email: email.toLowerCase().trim(),
-          verification_token: verificationToken,
-          verification_token_expires_at: expiresAt.toISOString()
+          is_email_verified: true // Set as verified by default
         });
 
       if (insertError) {
@@ -43,20 +37,8 @@ export default function TickerDropSignup() {
         return;
       }
 
-      // Send verification email
-      const { error: emailError } = await supabase.functions.invoke('send-verification-email', {
-        body: { email: email.toLowerCase().trim(), verificationToken }
-      });
-
-      if (emailError) {
-        console.error('Email sending error:', emailError);
-        setStatus('error');
-        setMessage("Subscription successful, but verification email failed to send. Please contact support.");
-        return;
-      }
-
       setStatus('success');
-      setMessage("Success! Check your email to verify your subscription to The Ticker Drop.");
+      setMessage("Success! You're now subscribed to The Ticker Drop.");
       setEmail("");
     } catch (error) {
       console.error('Subscription error:', error);
