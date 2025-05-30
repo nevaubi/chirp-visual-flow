@@ -69,6 +69,14 @@ export default function Navbar() {
               <span>The Ticker Drop</span>
             </Link>
             
+            <Link 
+              to="/chain-of-thought" 
+              className="flex items-center gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50/50 px-4 py-2 font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
+            >
+              <FileText size={18} />
+              <span>Chain of Thought</span>
+            </Link>
+            
             {isAuthenticated ? (
               <>
                 <Button 
@@ -141,6 +149,15 @@ export default function Navbar() {
             >
               <FileText size={16} />
               <span>The Ticker Drop</span>
+            </Link>
+            
+            <Link 
+              to="/chain-of-thought" 
+              className="flex items-center gap-2 text-purple-600 hover:bg-purple-50/30 p-2 rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <FileText size={16} />
+              <span>Chain of Thought</span>
             </Link>
             
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">

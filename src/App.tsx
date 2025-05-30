@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +25,7 @@ import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
 import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
+import ChainOfThought from "./pages/ChainOfThought";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +51,7 @@ const App = () => (
             <Route path="/newuser-direct" element={<NewUserDirect />} />
             <Route path="/free-tools" element={<FreeTools />} />
             <Route path="/ticker-drop" element={<TickerDrop />} />
+            <Route path="/chain-of-thought" element={<ChainOfThought />} />
             <Route path="/ticker-drop/verify" element={<TickerDropVerify />} />
             <Route path="/ticker-drop/unsubscribe" element={<TickerDropUnsubscribe />} />
             <Route path="/terms" element={<Terms />} />

@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cot_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          is_email_verified: boolean
+          subscribed_at: string
+          unsubscribed_at: string | null
+          updated_at: string
+          verification_token: string | null
+          verification_token_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          is_email_verified?: boolean
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          verification_token?: string | null
+          verification_token_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          is_email_verified?: boolean
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          verification_token?: string | null
+          verification_token_expires_at?: string | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           created_at: string
