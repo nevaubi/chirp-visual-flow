@@ -147,7 +147,7 @@ export default function HeroSection() {
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
-      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-32">
+      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-20">
         <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-5xl mx-auto">
           {/* Headline ------------------------------------------------------ */}
           <div className="mb-8 relative z-20">
