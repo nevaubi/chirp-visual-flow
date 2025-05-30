@@ -68,25 +68,27 @@ export default function TickerDropSignup() {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200">
+    <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
       <div className="text-center mb-6">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Mail className="h-8 w-8 text-[#0087C8]" />
-          <h3 className="text-2xl font-bold text-gray-900">Subscribe to The Ticker Drop</h3>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="bg-[#0087C8]/10 p-2 rounded-xl">
+            <Mail className="h-6 w-6 text-[#0087C8]" />
+          </div>
+          <h3 className="text-2xl lg:text-3xl font-bold text-gray-900">Subscribe to The Ticker Drop</h3>
         </div>
-        <p className="text-gray-600">
-          Get market insights and stock analysis delivered to your inbox every Tuesday & Friday
+        <p className="text-gray-600 text-lg">
+          Tuesdays at 10am CT, Fridays at 4pm CT
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="relative">
           <Input
             type="email"
             placeholder="Enter your email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-12 text-base"
+            className="w-full h-14 text-base px-4 border-2 border-gray-200 rounded-xl focus:border-[#0087C8] focus:ring-4 focus:ring-[#0087C8]/10 transition-all duration-200 bg-white/80"
             required
             disabled={isLoading}
           />
@@ -94,29 +96,36 @@ export default function TickerDropSignup() {
         
         <Button 
           type="submit"
-          className="w-full h-12 bg-[#0087C8] hover:bg-[#0270A8] text-white font-semibold text-base"
+          className="w-full h-14 bg-[#0087C8] hover:bg-[#0270A8] text-white font-semibold text-lg rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
           disabled={isLoading || !email.trim()}
         >
-          {isLoading ? "Subscribing..." : "Subscribe for Free"}
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Subscribing...
+            </div>
+          ) : (
+            "Subscribe for Free"
+          )}
         </Button>
       </form>
 
       {status !== 'idle' && (
-        <div className={`mt-4 p-4 rounded-lg flex items-center gap-3 ${
+        <div className={`mt-5 p-4 rounded-xl flex items-center gap-3 transition-all duration-300 ${
           status === 'success' 
             ? 'bg-green-50 text-green-800 border border-green-200' 
             : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
           {status === 'success' ? (
-            <CheckCircle className="h-5 w-5 text-green-600" />
+            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
           ) : (
-            <AlertCircle className="h-5 w-5 text-red-600" />
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
           )}
           <p className="text-sm font-medium">{message}</p>
         </div>
       )}
 
-      <p className="text-xs text-gray-500 mt-4 text-center">
+      <p className="text-xs text-gray-500 mt-5 text-center leading-relaxed">
         No spam, unsubscribe at any time. By subscribing, you agree to receive marketing emails from The Ticker Drop.
       </p>
     </div>
