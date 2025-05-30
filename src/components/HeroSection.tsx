@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -178,7 +177,7 @@ export default function HeroSection() {
 
             {/* Right Column: Custom Video Player */}
             <div className="mt-10 sm:mt-12 lg:mt-0 relative z-20">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 w-[85%] sm:w-full mx-auto">
                 <VideoPlayer
                   src="/final.mp4"
                   autoPlay={true}
