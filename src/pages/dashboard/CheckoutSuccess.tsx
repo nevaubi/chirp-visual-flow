@@ -25,6 +25,7 @@ const CheckoutSuccess = () => {
   const sessionId = searchParams.get("session_id");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [subscriptionType, setSubscriptionType] = useState<'newsletter' | 'creator' | null>(null);
   const { authState, refreshProfile } = useAuth();
   
   // Use refs to prevent multiple executions
@@ -100,7 +101,23 @@ const CheckoutSuccess = () => {
           toast.error("Error checking subscription status");
           setIsLoading(false);
         } else if (isMounted) {
-          toast.success("Subscription activated successfully!");
+          // Determine subscription type based on the response
+          if (data?.subscription_tier === "Creator") {
+            setSubscriptionType('creator');
+            toast.success("Creator subscription activated successfully!");
+          } else if (data?.subscription_tier?.includes("Newsletter")) {
+            setSubscriptionType('newsletter');
+            toast.success("Newsletter subscription activated successfully!");
+          } else {
+            // Fallback - check profile to determine platform
+            if (authState.profile?.is_creator_platform) {
+              setSubscriptionType('creator');
+              toast.success("Creator subscription activated successfully!");
+            } else {
+              setSubscriptionType('newsletter');
+              toast.success("Newsletter subscription activated successfully!");
+            }
+          }
           
           // After successful subscription check, refresh the user's profile to get updated preferences
           await refreshProfile();
@@ -131,9 +148,9 @@ const CheckoutSuccess = () => {
     return () => {
       isMounted = false;
     };
-  }, [sessionId, authState.user, authState.loading, refreshProfile]);
+  }, [sessionId, authState.user, authState.loading, authState.profile, refreshProfile]);
 
-  // Handle form submission
+  // Handle form submission for newsletter platform
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!authState.user) {
       toast.error("You must be logged in to update your profile");
@@ -170,6 +187,11 @@ const CheckoutSuccess = () => {
     }
   };
 
+  // Handle Creator platform redirect
+  const handleCreatorRedirect = () => {
+    navigate("/dashboard/home");
+  };
+
   // Function to render newsletter generations info
   const renderNewsletterGenerations = () => {
     if (authState.profile?.remaining_newsletter_generations) {
@@ -178,6 +200,20 @@ const CheckoutSuccess = () => {
           <span className="font-semibold text-green-600">
             {authState.profile.remaining_newsletter_generations} Newsletter Generations
           </span> included with your subscription
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Function to render tweet generations info for Creator platform
+  const renderTweetGenerations = () => {
+    if (authState.profile?.remaining_tweet_generations) {
+      return (
+        <div className="mt-2">
+          <span className="font-semibold text-green-600">
+            {authState.profile.remaining_tweet_generations} Tweet Generations
+          </span> included with your subscription this month
         </div>
       );
     }
@@ -193,65 +229,101 @@ const CheckoutSuccess = () => {
         
         <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
         
-        <p className="text-muted-foreground mb-2">
-          Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
-        </p>
-        
-        {/* Display newsletter generations */}
-        {renderNewsletterGenerations()}
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email for Newsletter Delivery</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="your@email.com" 
-                      type="email"
-                      {...field} 
-                      disabled={isSubmitting}
-                      className="text-base"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button 
-              type="submit" 
-              className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save Email & Continue"}
-            </Button>
-          </form>
-        </Form>
-        
-        {authState.profile?.newsletter_day_preference && (
-          <div className="mt-6 p-4 bg-amber-50 rounded-lg">
-            <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
-            <p className="text-sm text-muted-foreground">
-              Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
+        {subscriptionType === 'creator' ? (
+          // Creator Platform Success
+          <>
+            <p className="text-muted-foreground mb-2">
+              Your Creator subscription is activated! You now have access to advanced tweet generation features.
             </p>
-            {authState.profile.newsletter_content_preferences && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Type: <span className="font-medium">
-                  {authState.profile.newsletter_content_preferences.audience === 'personal' 
-                    ? 'Personal Newsletter' 
-                    : 'Audience Newsletter'}
-                </span>
-              </p>
+            
+            {/* Display tweet generations */}
+            {renderTweetGenerations()}
+            
+            <Button 
+              onClick={handleCreatorRedirect}
+              className="w-full bg-green-500 hover:bg-green-600 text-lg py-6 mt-6"
+            >
+              Go to Dashboard
+            </Button>
+            
+            {authState.profile?.subscription_tier && (
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Your Creator Subscription</h3>
+                <p className="text-sm text-muted-foreground">
+                  Plan: <span className="font-medium">{authState.profile.subscription_tier}</span>
+                </p>
+                {authState.profile.remaining_tweet_generations > 0 && (
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    {authState.profile.remaining_tweet_generations} Tweet Generations Available This Month
+                  </p>
+                )}
+              </div>
             )}
-            {authState.profile.remaining_newsletter_generations > 0 && (
-              <p className="text-sm text-green-600 font-medium mt-1">
-                {authState.profile.remaining_newsletter_generations} Newsletter Generations Available
-              </p>
+          </>
+        ) : (
+          // Newsletter Platform Success (existing logic)
+          <>
+            <p className="text-muted-foreground mb-2">
+              Your newsletter subscription is activated! Please enter the email address where you'd like to receive your newsletters.
+            </p>
+            
+            {/* Display newsletter generations */}
+            {renderNewsletterGenerations()}
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email for Newsletter Delivery</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="your@email.com" 
+                          type="email"
+                          {...field} 
+                          disabled={isSubmitting}
+                          className="text-base"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Saving..." : "Save Email & Continue"}
+                </Button>
+              </form>
+            </Form>
+            
+            {authState.profile?.newsletter_day_preference && (
+              <div className="mt-6 p-4 bg-amber-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Your Newsletter Preferences</h3>
+                <p className="text-sm text-muted-foreground">
+                  Delivery: <span className="font-medium">{authState.profile.newsletter_day_preference}</span>
+                </p>
+                {authState.profile.newsletter_content_preferences && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Type: <span className="font-medium">
+                      {authState.profile.newsletter_content_preferences.audience === 'personal' 
+                        ? 'Personal Newsletter' 
+                        : 'Audience Newsletter'}
+                    </span>
+                  </p>
+                )}
+                {authState.profile.remaining_newsletter_generations > 0 && (
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    {authState.profile.remaining_newsletter_generations} Newsletter Generations Available
+                  </p>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

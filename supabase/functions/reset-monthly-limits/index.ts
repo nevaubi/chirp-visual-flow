@@ -19,7 +19,7 @@ serve(async (req) => {
     console.log('Starting monthly limits reset...');
 
     // Reset tweet generations for Creator platform users
-    const { data: updatedProfiles, error: updateError } = await supabaseAdmin
+    const { data: updatedCreatorProfiles, error: updateCreatorError } = await supabaseAdmin
       .from('profiles')
       .update({
         remaining_tweet_generations: supabaseAdmin.raw(`
@@ -33,18 +33,41 @@ serve(async (req) => {
       .eq('is_creator_platform', true)
       .select('id, twitter_username, subscribed, remaining_tweet_generations');
 
-    if (updateError) {
-      console.error('Error updating tweet generations:', updateError);
-      throw new Error(`Failed to reset tweet generations: ${updateError.message}`);
+    if (updateCreatorError) {
+      console.error('Error updating Creator tweet generations:', updateCreatorError);
+      throw new Error(`Failed to reset Creator tweet generations: ${updateCreatorError.message}`);
     }
 
-    console.log(`Successfully reset tweet generations for ${updatedProfiles?.length || 0} Creator platform users`);
+    console.log(`Successfully reset tweet generations for ${updatedCreatorProfiles?.length || 0} Creator platform users`);
+
+    // Reset newsletter generations for Newsletter platform users
+    const { data: updatedNewsletterProfiles, error: updateNewsletterError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        remaining_newsletter_generations: supabaseAdmin.raw(`
+          CASE 
+            WHEN is_newsletter_platform = true AND subscribed = true THEN 20
+            WHEN is_newsletter_platform = true AND subscribed = false THEN 0
+            ELSE remaining_newsletter_generations
+          END
+        `)
+      })
+      .eq('is_newsletter_platform', true)
+      .select('id, twitter_username, subscribed, remaining_newsletter_generations');
+
+    if (updateNewsletterError) {
+      console.error('Error updating Newsletter generations:', updateNewsletterError);
+      throw new Error(`Failed to reset Newsletter generations: ${updateNewsletterError.message}`);
+    }
+
+    console.log(`Successfully reset newsletter generations for ${updatedNewsletterProfiles?.length || 0} Newsletter platform users`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Reset tweet generations for ${updatedProfiles?.length || 0} Creator platform users`,
-        updatedUsers: updatedProfiles?.length || 0
+        message: `Reset complete: ${updatedCreatorProfiles?.length || 0} Creator users, ${updatedNewsletterProfiles?.length || 0} Newsletter users`,
+        creatorUsersUpdated: updatedCreatorProfiles?.length || 0,
+        newsletterUsersUpdated: updatedNewsletterProfiles?.length || 0
       }),
       {
         headers: { 

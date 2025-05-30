@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -25,6 +26,55 @@ const determineNewsletterGenerationCount = (preference: string | null | undefine
   }
   
   return 0;
+};
+
+// Helper function to determine tweet generation count for Creator platform
+const determineTweetGenerationCount = (priceId: string | null | undefined, subscribed: boolean): number => {
+  // If it's a Creator platform subscription
+  if (priceId === "price_1RRXZ2DBIslKIY5s4gxpBlME") {
+    return subscribed ? 150 : 5; // 150 for paid, 5 for free
+  }
+  
+  return 0; // Not a Creator platform subscription
+};
+
+// Helper function to determine subscription tier and platform type
+const determineSubscriptionDetails = (priceId: string | null | undefined) => {
+  let subscriptionTier = null;
+  let isCreatorPlatform = false;
+  let isNewsletterPlatform = false;
+  
+  // Map price IDs to subscription tiers and platforms
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+    subscriptionTier = "Newsletter Standard";
+    isNewsletterPlatform = true;
+  } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+    subscriptionTier = "Newsletter Premium";
+    isNewsletterPlatform = true;
+  } else if (priceId === "price_1RRXZ2DBIslKIY5s4gxpBlME") {
+    subscriptionTier = "Creator";
+    isCreatorPlatform = true;
+  }
+  
+  return { subscriptionTier, isCreatorPlatform, isNewsletterPlatform };
+};
+
+// Helper function to safely convert timestamp to ISO string
+const safeTimestampToISO = (timestamp: number): string | null => {
+  try {
+    if (!timestamp || timestamp <= 0) {
+      return null;
+    }
+    const date = new Date(timestamp * 1000);
+    if (isNaN(date.getTime())) {
+      logStep("Invalid timestamp", { timestamp });
+      return null;
+    }
+    return date.toISOString();
+  } catch (error) {
+    logStep("Error converting timestamp", { timestamp, error: error.message });
+    return null;
+  }
 };
 
 serve(async (req) => {
@@ -108,52 +158,60 @@ serve(async (req) => {
           }
         }
         
-        // Check if this is a newsletter subscription by examining the line items
-        let isNewsletterSubscription = false;
+        // Check if this is a newsletter or creator subscription by examining the line items
         let priceId = null;
         
         if (session.line_items?.data) {
           const lineItems = session.line_items.data;
           for (const item of lineItems) {
             priceId = item.price?.id;
-            // Check if it's a newsletter price ID
-            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-              isNewsletterSubscription = true;
-              break;
-            }
+            if (priceId) break;
           }
         }
         
-        // Set remaining newsletter generations based on subscription or preference
-        let remainingNewsletterGenerations = 20; // Default to 20 for newsletter subscriptions
+        // Determine subscription details
+        const { subscriptionTier, isCreatorPlatform, isNewsletterPlatform } = determineSubscriptionDetails(priceId);
         
-        // If not a newsletter subscription, determine from preference
-        if (!isNewsletterSubscription) {
-          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference, priceId);
+        // Set appropriate generation counts
+        let remainingNewsletterGenerations = 0;
+        let remainingTweetGenerations = null;
+        
+        if (isNewsletterPlatform) {
+          remainingNewsletterGenerations = 20; // Fixed value for newsletter subscriptions
+        } else if (isCreatorPlatform) {
+          remainingTweetGenerations = 150; // 150 for paid Creator subscription
         }
         
-        logStep("Newsletter generations determined", { 
-          isNewsletterSubscription, 
+        logStep("Platform and generations determined", { 
+          isNewsletterPlatform,
+          isCreatorPlatform,
           priceId,
-          remainingNewsletterGenerations
+          remainingNewsletterGenerations,
+          remainingTweetGenerations
         });
         
         if (customerId && userId) {
-          // Update the profile with the customer ID and newsletter preferences
+          // Update the profile with the customer ID and platform-specific preferences
           const profileUpdates: any = { 
             stripe_customer_id: customerId
           };
           
-          if (newsletterDayPreference) {
-            profileUpdates.newsletter_day_preference = newsletterDayPreference;
+          // Set platform flags
+          if (isCreatorPlatform) {
+            profileUpdates.is_creator_platform = true;
+            profileUpdates.remaining_tweet_generations = remainingTweetGenerations;
+          } else if (isNewsletterPlatform) {
+            profileUpdates.is_newsletter_platform = true;
+            profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
+            
+            if (newsletterDayPreference) {
+              profileUpdates.newsletter_day_preference = newsletterDayPreference;
+            }
+            
+            if (newsletterContentPreferences) {
+              profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
+            }
           }
-          
-          if (newsletterContentPreferences) {
-            profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
-          }
-          
-          // Set the remaining_newsletter_generations to 20 for newsletter subscriptions
-          profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
           
           const { error: updateError } = await supabaseAdmin
             .from('profiles')
@@ -163,7 +221,11 @@ serve(async (req) => {
           if (updateError) {
             logStep("Error updating profile", updateError);
           } else {
-            logStep("Profile updated with checkout session data", { remainingNewsletterGenerations });
+            logStep("Profile updated with checkout session data", { 
+              isCreatorPlatform,
+              remainingTweetGenerations,
+              remainingNewsletterGenerations 
+            });
           }
         }
         break;
@@ -182,16 +244,18 @@ serve(async (req) => {
         // Get price information
         const priceId = subscription.items.data[0].price.id;
         
-        // Determine subscription tier based on price ID
-        let subscriptionTier = null;
-        if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
-          subscriptionTier = "Newsletter Standard";
-        } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-          subscriptionTier = "Newsletter Premium";
-        }
+        // Determine subscription details
+        const { subscriptionTier, isCreatorPlatform, isNewsletterPlatform } = determineSubscriptionDetails(priceId);
         
-        // Calculate subscription period end
-        const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        // Calculate subscription period end safely
+        const subscriptionPeriodEnd = safeTimestampToISO(subscription.current_period_end);
+        
+        if (!subscriptionPeriodEnd) {
+          logStep("Invalid subscription period end timestamp", { 
+            current_period_end: subscription.current_period_end 
+          });
+          // Continue processing but with null end date
+        }
         
         // Find profiles with this customer ID
         const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -211,32 +275,45 @@ serve(async (req) => {
         
         // Update each profile
         for (const profile of profiles) {
-          // Determine the generation count based on price ID and preference
-          const isNewsletterSubscription = priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || 
-                                          priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr";
+          // Determine the generation counts based on platform
+          let remainingNewsletterGenerations = 0;
+          let remainingTweetGenerations = null;
           
-          // Set to 20 for newsletter subscriptions, otherwise use preference-based logic
-          const remainingNewsletterGenerations = isNewsletterSubscription 
-            ? 20 
-            : determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId);
+          if (isNewsletterPlatform) {
+            remainingNewsletterGenerations = 20;
+          } else if (isCreatorPlatform) {
+            remainingTweetGenerations = subscription.status === 'active' ? 150 : 5;
+          }
           
-          logStep("Setting newsletter generations", { 
+          logStep("Setting platform generations", { 
             profileId: profile.id, 
-            isNewsletterSubscription,
-            remainingNewsletterGenerations
+            isCreatorPlatform,
+            isNewsletterPlatform,
+            remainingNewsletterGenerations,
+            remainingTweetGenerations
           });
+          
+          const updateData: any = {
+            subscribed: subscription.status === 'active',
+            subscription_tier: subscriptionTier,
+            subscription_id: subscription.id,
+            subscription_period_end: subscriptionPeriodEnd,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            stripe_price_id: priceId
+          };
+          
+          // Set platform-specific fields
+          if (isCreatorPlatform) {
+            updateData.is_creator_platform = true;
+            updateData.remaining_tweet_generations = remainingTweetGenerations;
+          } else if (isNewsletterPlatform) {
+            updateData.is_newsletter_platform = true;
+            updateData.remaining_newsletter_generations = remainingNewsletterGenerations;
+          }
           
           const { error: updateError } = await supabaseAdmin
             .from('profiles')
-            .update({
-              subscribed: subscription.status === 'active',
-              subscription_tier: subscriptionTier,
-              subscription_id: subscription.id,
-              subscription_period_end: subscriptionPeriodEnd,
-              cancel_at_period_end: subscription.cancel_at_period_end,
-              stripe_price_id: priceId,
-              remaining_newsletter_generations: remainingNewsletterGenerations
-            })
+            .update(updateData)
             .eq('id', profile.id);
             
           if (updateError) {
@@ -244,6 +321,9 @@ serve(async (req) => {
           } else {
             logStep("Profile updated with subscription data", { 
               profileId: profile.id, 
+              subscriptionTier,
+              isCreatorPlatform,
+              remainingTweetGenerations,
               remainingNewsletterGenerations 
             });
           }
@@ -294,7 +374,8 @@ serve(async (req) => {
                 subscription_period_end: null,
                 cancel_at_period_end: false,
                 stripe_price_id: null,
-                remaining_newsletter_generations: 0
+                remaining_newsletter_generations: 0,
+                remaining_tweet_generations: 5 // Reset to free tier for Creator platform
               })
               .eq('id', profile.id);
               
@@ -316,7 +397,8 @@ serve(async (req) => {
                 subscription_period_end: null,
                 cancel_at_period_end: false,
                 stripe_price_id: null,
-                remaining_newsletter_generations: 0
+                remaining_newsletter_generations: 0,
+                remaining_tweet_generations: 5 // Reset to free tier for Creator platform
               })
               .eq('id', profile.id);
               
