@@ -107,7 +107,7 @@ serve(async (req) => {
     console.log(`Modern Clean Template: Updated remaining generations to ${newRemainingGenerations} for user ${user.id}`);
 
     // 6) Fetch bookmarks directly from Twitter API first
-logStep("Fetching bookmarks", { count: selectedCount, userId: profile.numerical_id });
+console.log('Modern Clean Template: Fetching bookmarks', { count: selectedCount, userId: profile.numerical_id });
 const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${profile.numerical_id}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
   method: "GET",
   headers: {
