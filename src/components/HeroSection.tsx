@@ -1,11 +1,18 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
 import ReviewsSection from "@/components/ReviewsSection";
 import ProductStepsSection from "@/components/ProductStepsSection";
 
 export default function HeroSection() {
+  /* -------------------------------------------------- */
+  /* helper: scroll to top on component mount           */
+  /* -------------------------------------------------- */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   /* -------------------------------------------------- */
   /* helper: smooth-scroll to pricing                    */
   /* -------------------------------------------------- */
@@ -24,7 +31,7 @@ export default function HeroSection() {
   /* -------------------------------------------------- */
   return (
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
-      {/* ----------------------- SCROLLING BACKGROUND ---------------------- */}
+      {/* -- SCROLLING BACKGROUND -- */}
       <div className="absolute inset-0 z-0">
         {/* -- LEFT OUTER (scroll ↑) --------------------------------------- */}
         <div className="absolute left-4 sm:left-16 top-0 w-32 sm:w-48 h-[150vh] sm:h-[200vh] opacity-10">
@@ -127,7 +134,7 @@ export default function HeroSection() {
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
-      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-20">
+      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-32">
         <div className="flex flex-col items-center text-center min-h-[calc(100vh-200px)] justify-center max-w-5xl mx-auto">
           {/* Headline ------------------------------------------------------ */}
           <div className="mb-8 relative z-20">
