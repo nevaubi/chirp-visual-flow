@@ -402,7 +402,7 @@ ${analysisResult}`;
                   "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
                 },
                 body: JSON.stringify({
-                  model: "llama-3.1-sonar-small-128k-online", // Fixed model name
+                  model: "sonar-pro", // Fixed model name
                   messages: [{ role: "user", content: topic.query }],
                   temperature: 0.2,
                   max_tokens: 350
