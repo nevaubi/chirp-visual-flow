@@ -38,7 +38,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Subscription & plan & tokens checks
+    // 4) Subscription & plan & tokens checks (No changes here)
     if (!profile.subscription_tier) {
       throw new Error("You must have an active subscription to generate newsletters");
     }
@@ -53,7 +53,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id
+    // 5) Ensure numerical_id (No changes here)
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
       try {
@@ -87,7 +87,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
-    // 6) Fetch bookmarks
+    // 6) Fetch bookmarks (No changes here)
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -99,26 +99,20 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     if (!bookmarksResp.ok) {
       const text = await bookmarksResp.text();
       console.error(`Twitter API error (${bookmarksResp.status}):`, text);
-      if (bookmarksResp.status === 401) {
-        throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
-      }
-      if (bookmarksResp.status === 429) {
-        throw new Error("Twitter API rate limit exceeded. Please try again later.");
-      }
+      if (bookmarksResp.status === 401) throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
+      if (bookmarksResp.status === 429) throw new Error("Twitter API rate limit exceeded. Please try again later.");
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
     }
     const bookmarksData = await bookmarksResp.json();
     if (!bookmarksData?.data) {
       console.error("Invalid or empty bookmark data:", bookmarksData);
-      if (bookmarksData.meta?.result_count === 0) {
-        throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
-      }
+      if (bookmarksData.meta?.result_count === 0) throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
       throw new Error("Failed to retrieve bookmarks from Twitter");
     }
-    const tweetIds = bookmarksData.data.map((t) => t.id);
+    const tweetIds = bookmarksData.data.map((t: any) => t.id);
     logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 7) Fetch detailed tweets via Apify
+    // 7) Fetch detailed tweets via Apify (No changes here)
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -142,7 +136,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 8) Format tweets for OpenAI
+    // 8) Format tweets for OpenAI (No changes here)
     function parseToOpenAI(data: any) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -159,65 +153,62 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis (MODIFIED FOR LENGTH & IMAGES)
+    // 9) Call OpenAI for main analysis (MODIFIED FOR VARIED STRUCTURE, MORE COLOR INFO)
     logStep("Calling OpenAI for initial thematic analysis and hook generation");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
     
-    const analysisSystemPrompt = `You are an expert content strategist and analyst. Your task is to analyze a collection of tweets and synthesize them into substantial, insightful themes for a sophisticated newsletter. You must also craft an engaging introductory hook and proactively identify relevant imagery.
+    const analysisSystemPrompt = `You are an expert content strategist and analyst for LetterNest. Your task is to analyze a collection of tweets and synthesize them into substantial, insightful, and structurally varied themes for the "Chain of Thought" newsletter. This includes crafting an engaging hook and proactively identifying relevant imagery.
 
 CAPABILITIES:
-- Identify 4-5 main thematic clusters from the provided tweet data.
-- For each theme, synthesize core ideas, discussions, and sentiments into detailed explanations.
-- Identify 3-4 secondary or emerging themes (sub-topics) with comprehensive summaries.
-- Generate a compelling 1-2 sentence "hook" or "teaser".
-- For EACH main theme and EACH noteworthy sidetrack, actively try to select a highly relevant PhotoUrl from the provided data that visually encapsulates the theme.
+- Identify 4-5 main thematic clusters.
+- For each theme, synthesize core ideas into detailed explanations, incorporating varied text structures.
+- Identify 3-4 secondary themes (sidetracks) with comprehensive summaries.
+- Generate a compelling 1-2 sentence "hook".
+- For EACH main theme and EACH noteworthy sidetrack, actively select a highly relevant PhotoUrl.
 
 OUTPUT STRUCTURE:
-Your output should be a structured text. Start with the hook, then detail the main themes and sub-themes.
-
-1.  **HOOK:**
-    *   A 1-2 sentence engaging teaser for the newsletter.
-
+1.  **HOOK:** A 1-2 sentence engaging teaser.
 2.  **MAIN THEMES (4-5 identified):**
-    *   **Theme Title:** A concise, engaging title.
-    *   **The Gist:** A 3-4 sentence summary of the core idea.
-    *   **Key Insights:** 4-5 bullet points synthesizing significant discussions, patterns, or sentiments. (Approx. 50-70 words per bullet).
-    *   **Deeper Dive:** A substantial paragraph (approx. 300-450 words) expanding on the theme, covering context, predominant sentiment, key perspectives, notable trends, and potential implications. This should be a rich synthesis.
-    *   **RepresentativeImageURL (Strive to include):** From the provided PhotoUrls, select the single most compelling and thematically relevant image for this theme. If no suitable image is found, state "N/A".
-
-3.  **NOTEWORTHY SIDETRACKS (3-4 identified sub-topics):**
-    *   **Sidetrack Title:** A brief, descriptive title.
-    *   **Quick Take:** A 2-3 sentence summary of this theme.
-    *   **RepresentativeImageURL (Strive to include):** From the PhotoUrls, select a relevant image for this sidetrack. If none, state "N/A".
+    *   **Theme Title:** Concise, engaging.
+    *   **The Gist:** 3-4 sentence summary.
+    *   **Key Insights:** 4-5 bullet points (50-70 words each).
+    *   **Deeper Dive (Varied Structure):** A substantial section (approx. 300-450 words). Within this, incorporate:
+        *   Standard paragraphs for explanation.
+        *   **Where appropriate for clarity or emphasis, use a numbered list for sequential points or a short series of related ideas.**
+        *   **Include one "Key Takeaway Box":** A distinct, brief (1-2 sentences) summary of the most crucial point from the Deeper Dive, labeled clearly (e.g., "KEY TAKEAWAY: ...").
+        *   **Optionally, a "Synthesized Quote":** If a powerful, synthesized statement (NOT a direct tweet quote) can encapsulate a core aspect of the theme, include it, labeled "THEME SNAPSHOT: '...'".
+    *   **RepresentativeImageURL (Strive to include):** The most compelling image. If none, state "N/A".
+3.  **NOTEWORTHY SIDETRACKS (3-4 identified):**
+    *   **Sidetrack Title:** Brief, descriptive.
+    *   **Quick Take:** 2-3 sentence summary.
+    *   **RepresentativeImageURL (Strive to include):** Relevant image. If none, "N/A".
 
 CRITICAL INSTRUCTIONS:
-- **DO NOT** include direct quotes from tweets.
-- **DO NOT** list individual tweet IDs or authors.
-- Focus on **comprehensive synthesis, abstraction, and thematic storytelling.**
-- The tone should be professional, insightful, and accessible.
-- Strive for substantial content in "Deeper Dive" sections.
-- Actively seek out and include relevant 'RepresentativeImageURL' for all themes and sidetracks where possible.
+- NO direct tweet quotes, IDs, or authors.
+- Focus on comprehensive synthesis, abstraction, and thematic storytelling with varied presentation.
+- Tone: Professional, insightful, accessible.
+- Actively seek and include 'RepresentativeImageURL' for all themes/sidetracks.
 
 Tweet data to analyze:
 ${formattedTweets}`;
     
-    const analysisUserPrompt = `Based on the provided tweet collection, please generate:
-1.  An engaging 1-2 sentence HOOK.
-2.  An analysis identifying 4-5 MAIN THEMES. For each:
-    *   Engaging Theme Title.
+    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Chain of Thought" newsletter:
+1.  HOOK (1-2 sentences).
+2.  4-5 MAIN THEMES, each with:
+    *   Theme Title.
     *   "The Gist" (3-4 sentences).
-    *   4-5 "Key Insights" as bullet points (synthesized, 50-70 words each).
-    *   A "Deeper Dive" paragraph (300-450 words, synthesized).
-    *   A 'RepresentativeImageURL' (or "N/A").
-3.  An analysis identifying 3-4 NOTEWORTHY SIDETRACKS. For each:
+    *   4-5 "Key Insights" (bullet points, 50-70 words each).
+    *   "Deeper Dive" (300-450 words) incorporating paragraphs, and where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
+    *   'RepresentativeImageURL' (or "N/A").
+3.  3-4 NOTEWORTHY SIDETRACKS, each with:
     *   Sidetrack Title.
     *   "Quick Take" (2-3 sentences).
-    *   A 'RepresentativeImageURL' (or "N/A").
+    *   'RepresentativeImageURL' (or "N/A").
 
-Ensure all textual content is substantial and insightful. Proactively include image URLs.
+Ensure substantial, insightful content with varied text structures and proactive image inclusion.
 
-Here is the tweet collection:
+Tweet collection:
 ${formattedTweets}`;
     
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -230,7 +221,7 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.5,
-        max_tokens: 4090 // Increased for longer content
+        max_tokens: 4090 
       })
     });
     if (!openaiRes.ok) {
@@ -240,19 +231,12 @@ ${formattedTweets}`;
     }
     const openaiJson = await openaiRes.json();
     let analysisResult = openaiJson.choices[0].message.content.trim();
-    logStep("Successfully generated initial thematic analysis and hook (longer, more images)");
+    logStep("Successfully generated initial thematic analysis (varied structure, image focus)");
 
-    // 10) Topic Selection and Query Generation for Perplexity (Largely Unchanged)
+    // 10) Topic Selection and Query Generation for Perplexity (No changes needed here)
     logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a thematic analysis of Twitter bookmarks, select up to 3 themes that would benefit most from additional web-based context.
-
-TASK:
-1. Review the provided thematic analysis.
-2. Select up to 3 themes based on relevance, complexity, and educational value.
-3. For each, create:
-   - A search query string (25-50 chars).
-   - An enrichment goal.
-
+    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a thematic analysis, select up to 3 themes that would benefit most from additional web-based context.
+TASK: Review analysis, select up to 3 themes (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
 FORMAT:
 ===
 THEME 1: [Theme Name]
@@ -275,9 +259,7 @@ ${analysisResult}`;
         temperature: 0.3, max_tokens: 800
       })
     });
-    
     let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
-
     if (!queryGenRes.ok) {
       const txt = await queryGenRes.text();
       console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
@@ -286,14 +268,12 @@ ${analysisResult}`;
       const queryGenJson = await queryGenRes.json();
       const searchQueriesText = queryGenJson.choices[0].message.content.trim();
       logStep("Successfully generated search queries", { searchQueriesText });
-
       const topicsToEnrich: { theme: string; query: string; goal: string }[] = [];
       const regex = /THEME \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*THEME \d+:|$)/gis;
       let match;
       while ((match = regex.exec(searchQueriesText)) !== null) {
         topicsToEnrich.push({ theme: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
       }
-      
       const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
       if (!PERPLEXITY_API_KEY || topicsToEnrich.length === 0) {
         logStep("Missing Perplexity API key or no topics to enrich, continuing without web enrichment");
@@ -305,20 +285,11 @@ ${analysisResult}`;
             const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
-                body: JSON.stringify({
-                  model: "sonar-pro", 
-                  messages: [{ role: "user", content: topic.query }],
-                  temperature: 0.2, max_tokens: 400 // Increased slightly for potentially richer summaries
-                })
-              }
-            );
+                body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: topic.query }], temperature: 0.2, max_tokens: 400 })
+            });
             if (perplexityRes.ok) {
               const data = await perplexityRes.json();
-              enrichmentResults.push({
-                themeName: topic.theme,
-                webSummary: data.choices[0].message.content,
-                sources: data.choices[0].message.citations ?? [] 
-              });
+              enrichmentResults.push({ themeName: topic.theme, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
               logStep(`Successfully enriched theme: ${topic.theme}`);
             } else {
               console.error(`Perplexity API error for "${topic.query}": ${perplexityRes.status}`, await perplexityRes.text());
@@ -329,36 +300,21 @@ ${analysisResult}`;
             enrichmentResults.push({ themeName: topic.theme, webSummary: "[Perplexity request failed]", sources: [] });
           }
         }
-        if (enrichmentResults.length > 0) {
-          webEnrichmentContent = enrichmentResults;
-          logStep("Web enrichment data collected");
-        }
+        if (enrichmentResults.length > 0) { webEnrichmentContent = enrichmentResults; logStep("Web enrichment data collected"); }
       }
     }
 
-    // 12) Integrate Web Content with Original Analysis (MODIFIED FOR LENGTH)
+    // 12) Integrate Web Content (No changes needed here other than accommodating potentially longer base analysis)
     let finalAnalysisForMarkdown = analysisResult; 
-
     if (webEnrichmentContent && webEnrichmentContent.length > 0) {
         logStep("Integrating web content with original thematic analysis");
-        const integrationPrompt = `You are an expert content editor. You have an initial thematic analysis and supplementary web-sourced information. Integrate the web insights into the relevant themes.
-
-INTEGRATION RULES:
-- Maintain the original analysis structure (Hook, Main Themes, Noteworthy Sidetracks).
-- For each theme with web enrichment:
-    - Weave 3-4 key points (or more, if 'webSummary' is rich) from 'webSummary' into the 'Deeper Dive' section.
-    - Add a subsection "Broader Context Online:" within 'Deeper Dive' for these web insights. Make this section substantial (e.g., 100-150 words from the web summary if available).
-    - Mention sources concisely if relevant.
-- Ensure smooth transitions and consistent tone. Enhance, don't replace.
-
-ORIGINAL THEMATIC ANALYSIS:
+        const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided thematic analysis.
+RULES: Maintain original structure. For themes with web enrichment, weave 3-4+ points from 'webSummary' into 'Deeper Dive', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
+ORIGINAL ANALYSIS:
 ${analysisResult}
-
-WEB-SOURCED INFORMATION:
+WEB-SOURCED INFO:
 ${JSON.stringify(webEnrichmentContent, null, 2)}
-
-Provide the complete, integrated analysis. Themes without web enrichment remain unchanged.`;
-
+Provide complete, integrated analysis.`;
         const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
@@ -368,15 +324,13 @@ Provide the complete, integrated analysis. Themes without web enrichment remain 
                     { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
                     { role: "user", content: integrationPrompt }
                 ],
-                temperature: 0.3,
-                max_tokens: 4090 // Ensure enough for combined length
+                temperature: 0.3, max_tokens: 4090 
             })
         });
-
         if (integrationRes.ok) {
             const integrationJson = await integrationRes.json();
             finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
-            logStep("Successfully integrated web content with thematic analysis (for length)");
+            logStep("Successfully integrated web content with thematic analysis");
         } else {
             const txt = await integrationRes.text();
             console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
@@ -384,39 +338,42 @@ Provide the complete, integrated analysis. Themes without web enrichment remain 
         }
     }
 
-    // 13) Generate Markdown formatted newsletter (MODIFIED FOR IMAGES)
+    // 13) Generate Markdown formatted newsletter (MODIFIED FOR VARIED STRUCTURE)
     let markdownNewsletter = "";
     try {
-      logStep("Starting 'Chain of Thought' markdown newsletter formatting");
-      const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes, sidetracks, with image URLs) into a beautiful, professional, visually appealing Markdown newsletter.
+      logStep("Starting 'Chain of Thought' markdown newsletter formatting (varied structure)");
+      const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes with varied structures like numbered lists/key takeaway boxes/synthesized quotes, sidetracks, image URLs) into a beautiful, professional Markdown newsletter.
 
-NEWSLETTER STRUCTURE: "Chain of Thought"
+NEWSLETTER STRUCTURE:
 1.  HEADER: Title (H1 "Chain of Thought"), Date (H3/Subtitle), Subtle horizontal rule.
-2.  INTRODUCTION: The "HOOK" as an engaging paragraph.
+2.  INTRODUCTION: The "HOOK".
 3.  MAIN THEMATIC SECTIONS: For each main theme:
     *   Section Title (H2).
     *   "The Gist" (Blockquoted/emphasized).
+    *   Image: If 'RepresentativeImageURL' is valid, include it after "The Gist".
     *   "Key Insights" (Bulleted list).
-    *   "Deeper Dive" (Regular text, including any integrated web content).
-    *   **Image Integration:** If 'RepresentativeImageURL' is provided (and not "N/A"), include the image after "The Gist" or at the start of "Deeper Dive".
+    *   "Deeper Dive": Present the detailed explanation.
+        *   If the analysis includes a numbered list, format it as such.
+        *   If it includes a "KEY TAKEAWAY BOX:", format this distinctly (e.g., using a blockquote or a styled div precursor that will be enhanced later). Example: "> **KEY TAKEAWAY:** [text]".
+        *   If it includes a "THEME SNAPSHOT:", format this distinctly. Example: "_THEME SNAPSHOT: \"[text]\"_".
     *   Subtle horizontal rule or extra spacing before next theme.
 4.  NOTEWORTHY SIDETRACKS: Section Title (H2). For each sidetrack:
     *   Sub-section Title (H3).
-    *   "Quick Take" (Regular text).
-    *   **Image Integration:** If 'RepresentativeImageURL' is provided (and not "N/A"), include it.
+    *   Image: If 'RepresentativeImageURL' is valid, include it.
+    *   "Quick Take".
 5.  FOOTER: Clear horizontal rule, "Generated by LetterNest."
 
 FORMATTING GUIDELINES:
 - Clean Markdown. Generous white space. Professional, insightful, engaging tone.
-- **Image Usage:** Include 'RepresentativeImageURL' where provided and valid (not "N/A"). Aim for 3-5 well-placed, thematically relevant images if available in the analysis. Ensure images are appropriately sized by the renderer.
-- Do not invent content. Only format the provided analysis.
+- Image Usage: Include 'RepresentativeImageURL' where valid. Aim for 3-5 well-placed images.
+- Varied Structures: Correctly format numbered lists, "KEY TAKEAWAY BOX", and "THEME SNAPSHOT" if present in the input analysis.
+- Do not invent content. Only format.
 
 OUTPUT: ONLY the formatted Markdown content.`;
       
-      const markdownUserPrompt = `Format this thematic analysis into the "Chain of Thought" Markdown newsletter for LetterNest, following the structure and guidelines. Prioritize including provided images.
-Current Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-
-THEMATIC ANALYSIS CONTENT (includes HOOK, MAIN THEMES with image URLs, SIDETRACKS with image URLs):
+      const markdownUserPrompt = `Format this thematic analysis (with varied structures) into the "Chain of Thought" Markdown newsletter. Prioritize including images and correctly formatting special text structures.
+Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+THEMATIC ANALYSIS CONTENT:
 ${finalAnalysisForMarkdown}`;
       
       try {
@@ -435,7 +392,7 @@ ${finalAnalysisForMarkdown}`;
         if (markdownOpenaiRes.ok) {
           const markdownJson = await markdownOpenaiRes.json();
           markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("'Chain of Thought' Markdown newsletter generated successfully (more images)");
+          logStep("'Chain of Thought' Markdown (varied structure) generated successfully");
         } else {
           const errorText = await markdownOpenaiRes.text();
           console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
@@ -450,44 +407,49 @@ ${finalAnalysisForMarkdown}`;
       markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
     }
 
-    // 14) Generate Enhanced Markdown with UI/UX improvements (MODIFIED FOR COLOR SCHEME & DIVIDERS)
+    // 14) Generate Enhanced Markdown with UI/UX (MODIFIED FOR MORE COLOR, SPACING, VARIED STRUCTURE STYLING)
     let enhancedMarkdownNewsletter = markdownNewsletter;
     try {
-      logStep("Generating enhanced UI/UX markdown for 'Chain of Thought' (color scheme, dividers)");
+      logStep("Generating enhanced UI/UX markdown (more color, spacing, varied structure)");
       const enhancedSystemPrompt = `
-You are a newsletter UI/UX specialist. Your goal is to take well-structured "Chain of Thought" markdown and output a **visually enhanced** markdown document using inline HTML/CSS, ready for email.
+You are a newsletter UI/UX specialist. Your goal is to take "Chain of Thought" markdown (which may include specific structures like "KEY TAKEAWAY BOX:" or "THEME SNAPSHOT:") and output a **visually enhanced** markdown document using inline HTML/CSS.
 
 COLOR PALETTE & STYLING:
-- **Primary Accent (Deep Blue):** #0A417A (Use for H1, H2 headings)
-- **Secondary Accent (Muted Blue/Grey):** #607D8B (Use for H3 headings, subtle text accents if needed)
-- **Callout Background (Very Light Grey):** #F4F6F8 (Use for \`<div ...>\` styling "The Gist" or blockquotes)
-- **Divider Color:** #D1D9E0 (A light grey for horizontal rule styled divs)
-- **Body Text:** #333333 (Standard dark grey for readability)
-- **Font:** Suggest "Arial, sans-serif" or a similar clean, widely available font family in the main body style.
+- **Primary Accent (Deep Blue):** #0A417A (Use for H1, H2, left border of key callouts)
+- **Secondary Accent (Muted Teal):** #40827D (Use for H3, bullet point color, link color if applicable)
+- **Tertiary Accent (Warm Gold/Ochre):** #B5842A (Use for "THEME SNAPSHOT" text color or a subtle underline/accent on it)
+- **Callout Background (Very Light Grey):** #F4F6F8 (For "The Gist" and "KEY TAKEAWAY BOX")
+- **Divider Color:** #D1D9E0 (Light grey for styled divs)
+- **Body Text:** #333333
+- **Font:** "Arial, sans-serif" (Apply to body)
 
 ENHANCEMENT RULES:
 1.  **Headings:**
-    *   H1 ("Chain of Thought"): \`<h1 style="color: ${"#0A417A"}; margin-bottom: 5px;">Chain of Thought</h1>\`
-    *   H2 (Main Theme Titles, "Noteworthy Sidetracks"): Wrap content in \`<span style="color: ${"#0A417A"};">\`.
-    *   H3 (Date, Sidetrack Titles): Wrap content in \`<span style="color: ${"#607D8B"};">\`.
+    *   H1: \`<h1 style="color: ${"#0A417A"}; margin-bottom: 5px; font-weight: 600;">Chain of Thought</h1>\`
+    *   H2: Wrap content in \`<span style="color: ${"#0A417A"}; font-weight: 500;">\`.
+    *   H3: Wrap content in \`<span style="color: ${"#40827D"}; font-weight: 500;">\`.
 2.  **Spacing & Layout:**
-    *   Ensure one blank line (double newline in Markdown) before/after headings, lists, styled divs, and images.
-    *   "The Gist" / Blockquotes: Wrap in \`<div style="background-color: ${"#F4F6F8"}; padding: 15px 20px; border-radius: 6px; margin: 15px 0; border-left: 4px solid ${"#0A417A"};">\`.
-3.  **Dividers:**
-    *   Replace Markdown '---' (if any are generated by previous step for structure) OR add new dividers between major sections (e.g., after intro, between main themes, before sidetracks, before footer) with:
-        \`<div style="height: 1px; background-color: ${"#D1D9E0"}; margin: 30px 0;"></div>\`
-4.  **General:**
-    *   The input markdown is already written. **Only apply visual styling.** Do not alter content or core structure.
-    *   Ensure all HTML/CSS is email-client friendly.
-    *   Prioritize a clean, professional, modern, and visually appealing aesthetic.
+    *   Paragraphs (\`<p>\` tags that will be generated by 'marked'): Add \`style="margin-bottom: 1.2em; line-height: 1.7;"\` for better readability of long text blocks.
+    *   "The Gist" / Blockquotes: Wrap in \`<div style="background-color: ${"#F4F6F8"}; padding: 18px 22px; border-radius: 6px; margin: 20px 0; border-left: 4px solid ${"#0A417A"}; font-style: italic;">\`.
+3.  **Specific Structures Styling:**
+    *   If text starts with "> **KEY TAKEAWAY:**", transform into:
+        \`<div style="background-color: ${"#F4F6F8"}; padding: 15px 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid ${"#B5842A"};"><strong>KEY TAKEAWAY:</strong> [rest of text]</div>\` (Using Tertiary for border)
+    *   If text matches "_THEME SNAPSHOT: \"[text]\"_", transform into:
+        \`<p style="text-align: center; margin: 25px 0; font-style: italic;"><span style="color: ${"#B5842A"}; border-bottom: 1px dotted ${"#B5842A"}; padding-bottom: 2px;">THEME SNAPSHOT: "[text]"</span></p>\`
+4.  **Lists:**
+    *   Bulleted lists (\`<ul>\`) items (\`<li>\`): Style with the secondary accent color: \`<li style="color: ${"#40827D"}; margin-bottom: 8px;"><span style="color: ${"#333333"};">[list item text]</span></li>\` (Color the bullet, text remains default).
+    *   Numbered lists (\`<ol>\`): Similar styling for list items if desired, or keep default.
+5.  **Dividers:** Replace Markdown '---' OR add new dividers between major sections with:
+    \`<div style="height: 1px; background-color: ${"#D1D9E0"}; margin: 35px 0;"></div>\`
+6.  **General:** Only apply visual styling. Ensure email-client friendly HTML/CSS.
 
-Produce valid markdown with these inline HTML/CSS enhancements.
+Produce valid markdown with these enhancements.
 `;
       
       const enhancedUserPrompt = `
-Transform the "Chain of Thought" markdown below into a **visually enhanced** version using the specified color palette and styling rules (headings, callouts, dividers) via inline HTML/CSS.
-
-**Do not change the content or the core markdown structure.** Only add styling.
+Transform the "Chain of Thought" markdown below into a **visually enhanced** version using the specified color palette and styling rules (headings, callouts, specific structures, lists, dividers) via inline HTML/CSS.
+Pay close attention to styling "KEY TAKEAWAY BOX:" and "THEME SNAPSHOT:" if they appear.
+Apply paragraph styling for better spacing.
 
 "Chain of Thought" Markdown Draft:
 <current newsletter>
@@ -505,14 +467,14 @@ ${markdownNewsletter}
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt }
             ],
-            temperature: 0.2, // Low temp for precise styling
+            temperature: 0.1, // Very low temp for precise styling application
             max_tokens: 4090 
           })
         });
         if (enhancedOpenaiRes.ok) {
           const enhancedJson = await enhancedOpenaiRes.json();
           enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced UI/UX markdown (color, dividers) generated successfully");
+          logStep("Enhanced UI/UX markdown (more color, spacing, varied structure) generated");
         } else {
           const errorText = await enhancedOpenaiRes.text();
           console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
@@ -524,15 +486,15 @@ ${markdownNewsletter}
       console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
     }
 
-    // 15) Clean up stray text around enhanced Markdown
+    // 15) Clean up stray text around enhanced Markdown (No changes needed here)
     function cleanMarkdown(md: string): string {
       let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
       cleaned = cleaned.trim();
       const lines = cleaned.split('\n');
       for(let i = 0; i < lines.length; i++){
         if (lines[i].trim() !== "") {
-          if (!lines[i].trim().startsWith("#") && !lines[i].trim().startsWith("<h1") && !lines[i].trim().startsWith("<div")) { // Check for HTML too
-            const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/); // Broader match
+          if (!lines[i].trim().startsWith("#") && !lines[i].trim().startsWith("<h1") && !lines[i].trim().startsWith("<div")) {
+            const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/);
             if (headingMatch && typeof headingMatch.index === 'number' && headingMatch.index > 0) {
               if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
                 cleaned = cleaned.substring(headingMatch.index).trim();
@@ -547,21 +509,40 @@ ${markdownNewsletter}
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
     logStep("Cleaned up final markdown for 'Chain of Thought'");
 
-    // 16) Convert final Markdown to HTML & inline CSS
+    // 16) Convert final Markdown to HTML & inline CSS (MODIFIED RENDERER FOR PARAGRAPH STYLING)
     const renderer = new marked.Renderer();
-    // Override paragraph rendering to avoid <p> tags around custom <div> dividers
+    // Override paragraph rendering to apply styles and avoid <p> around custom <div> dividers
     renderer.paragraph = (text) => {
-        if (text.trim().startsWith('<div style="height: 1px;')) {
-            return text.trim() + '\n'; // Return the div as is
+        if (text.trim().startsWith('<div style="height: 1px;')) { // Don't wrap our custom dividers
+            return text.trim() + '\n';
         }
-        return '<p>' + text + '</p>\n';
+        if (text.trim().startsWith('<div style="background-color:')) { // Don't wrap our custom callout divs
+            return text.trim() + '\n';
+        }
+         // Apply specific styling for paragraphs originating from the "Deeper Dive" or general text
+        return `<p style="margin-bottom: 1.2em; line-height: 1.7;">${text}</p>\n`;
+    };
+    // Custom list item rendering for styled bullets
+    renderer.listitem = (text, task, checked) => {
+        if (task) { // for task lists, not used here but good practice
+            return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
+        }
+        // Apply color to bullet via pseudo-element or a span if more complex styling is needed and can be handled by juice
+        // Simpler: style the <li> text color, bullet will inherit or use a default.
+        // For specific bullet color as requested in prompt:
+        // This is tricky with pure markdown-to-HTML for email. The prompt asked for <li style="color: #40827D..."><span style="color:#333">text</span></li>
+        // 'marked' doesn't easily allow injecting spans like that directly into listitem text.
+        // A more robust way for email would be to use HTML tables for lists or unicode bullets with color spans.
+        // For now, we'll style the <li> which will color both bullet and text, then the UI prompt can try to wrap text in a span.
+        // The UI prompt's instruction to wrap the list item text in a span with default color is better.
+        return `<li style="margin-bottom: 0.6em;">${text}</li>\n`; // The UI styling step (14) is prompted to handle the inner span for text color.
     };
     renderer.image = (href, _title, alt) => `
-      <div style="text-align:center; margin-top: 15px; margin-bottom: 25px;">
+      <div style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
         <img src="${href}"
              alt="${alt || 'Newsletter image'}"
-             style="max-width:100%; width:auto; max-height:450px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      </div>`; // Enhanced image style
+             style="max-width:100%; width:auto; max-height:480px; height:auto; border-radius:10px; display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+      </div>`; 
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
@@ -569,13 +550,13 @@ ${markdownNewsletter}
       <body style="background-color:#E8EFF5; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: Arial, sans-serif;">
         <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#E8EFF5;">
           <tr><td align="center" style="padding:25px 0;">
-            <table width="640" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:640px; margin:0 auto; background-color:#ffffff; border-radius:10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-              <tr><td style="padding:35px 40px; line-height:1.65; color:#333333; font-size:16px;">
+            <table width="680" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:680px; margin:0 auto; background-color:#ffffff; border-radius:12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1);">
+              <tr><td style="padding:40px 45px; line-height:1.7; color:#333333; font-size:16px;">
                 ${htmlBody}
               </td></tr>
             </table>
           </td></tr>
-          <tr><td align="center" style="padding:25px 0 35px 0; font-size:13px; color:#555555;">
+          <tr><td align="center" style="padding:30px 0 40px 0; font-size:13px; color:#555555;">
             Powered by LetterNest<br>
             <!-- Unsubscribe links etc. -->
           </td></tr>
@@ -583,73 +564,45 @@ ${markdownNewsletter}
       </body>
     `);
     
-    logStep("Converted 'Chain of Thought' markdown to HTML with inline CSS (enhanced style)");
+    logStep("Converted 'Chain of Thought' markdown to HTML with inline CSS (final aesthetic enhancements)");
 
-    // 17) Send email via Resend
+    // 17) Send email via Resend (No changes here)
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@letternest.com"; 
       const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; 
-
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`, 
-        to: profile.sending_email,
-        subject: emailSubject,
-        html: emailHtml,
-        text: finalMarkdown 
+        from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
       });
-      if (emailError) {
-        console.error("Error sending email with Resend:", emailError);
-        throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`);
-      }
+      if (emailError) { console.error("Error sending email with Resend:", emailError); throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`); }
       logStep("'Chain of Thought' Email sent successfully", { id: emailData?.id });
-    } catch (sendErr) {
-      console.error("Error sending email:", sendErr);
-    }
+    } catch (sendErr) { console.error("Error sending email:", sendErr); }
 
-    // 18) Save the newsletter to newsletter_storage table
+    // 18) Save the newsletter to newsletter_storage table (No changes here)
     try {
-      const { error: storageError } = await supabase.from('newsletter_storage').insert({
-        user_id: userId,
-        markdown_text: finalMarkdown,
-      });
-      if (storageError) {
-        console.error("Failed to save 'Chain of Thought' newsletter to storage:", storageError);
-      } else {
-        logStep("'Chain of Thought' Newsletter successfully saved to storage");
-      }
-    } catch (storageErr) {
-      console.error("Error saving 'Chain of Thought' newsletter to storage:", storageErr);
-    }
+      const { error: storageError } = await supabase.from('newsletter_storage').insert({ user_id: userId, markdown_text: finalMarkdown });
+      if (storageError) { console.error("Failed to save 'Chain of Thought' newsletter to storage:", storageError); } 
+      else { logStep("'Chain of Thought' Newsletter successfully saved to storage"); }
+    } catch (storageErr) { console.error("Error saving 'Chain of Thought' newsletter to storage:", storageErr); }
 
-    // 19) Update remaining generations count
+    // 19) Update remaining generations count (No changes here)
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({
-        remaining_newsletter_generations: newCount
-      }).eq("id", userId);
-      if (updateError) {
-        console.error("Failed to update remaining generations:", updateError);
-      } else {
-        logStep("Updated remaining generations count", { newCount });
-      }
+      const { error: updateError } = await supabase.from("profiles").update({ remaining_newsletter_generations: newCount }).eq("id", userId);
+      if (updateError) { console.error("Failed to update remaining generations:", updateError); } 
+      else { logStep("Updated remaining generations count", { newCount }); }
     }
 
-    // 20) Final log & response
+    // 20) Final log & response (No changes here)
     const timestamp = new Date().toISOString();
-    logStep("'Chain of Thought' newsletter generation successful (enhanced)", {
+    logStep("'Chain of Thought' newsletter generation successful (final aesthetic)", {
       userId, timestamp, tweetCount: selectedCount,
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
     });
-
     return {
       status: "success",
       message: "'Chain of Thought' newsletter generated and process initiated for email.",
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: {
-        analysisResult: finalAnalysisForMarkdown, 
-        markdownNewsletter: finalMarkdown, 
-        timestamp
-      }
+      data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
     };
   } catch (error) {
     console.error("Error in background 'Chain of Thought' newsletter generation process:", error);
@@ -660,57 +613,43 @@ ${markdownNewsletter}
   }
 }
 
-// Main serve function that handles the HTTP request
+// Main serve function (No changes here)
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") { return new Response(null, { headers: corsHeaders }); }
   try {
     logStep("Starting 'Chain of Thought' newsletter generation process (HTTP)");
-    
     const { selectedCount } = await req.json();
     if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
       return new Response(JSON.stringify({ error: "Invalid selection. Please choose 10, 20, or 30 tweets." }), 
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "No authorization header" }), 
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    
     if (userError || !user) {
       console.error("Authentication error:", userError);
       return new Response(JSON.stringify({ error: "Authentication failed" }), 
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
     const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-    
     // @ts-ignore 
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      // @ts-ignore
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) { // @ts-ignore
       EdgeRuntime.waitUntil(backgroundTask);
     } else {
-      backgroundTask.then(result => {
-        logStep("Background task completed (local/fallback)", result);
-      }).catch(err => {
-        console.error("Background task error (local/fallback):", err);
-      });
+      backgroundTask.then(result => { logStep("Background task completed (local/fallback)", result); })
+      .catch(err => { console.error("Background task error (local/fallback):", err); });
     }
-    
     return new Response(JSON.stringify({
       status: "processing",
       message: "Your 'Chain of Thought' newsletter generation has started. You will receive an email when it's ready.",
     }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
   } catch (error) {
     console.error("Error in manual-newsletter-generation function:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), 
