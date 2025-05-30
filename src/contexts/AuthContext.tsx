@@ -5,6 +5,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { AuthState, Profile } from '@/types/auth';
+import WelcomePopup from '@/components/auth/WelcomePopup';
 
 const initialState: AuthState = {
   user: null,
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(initialState);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const navigate = useNavigate();
 
   // Helper function to clear auth state
@@ -145,6 +147,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Handle welcome popup option selection
+  const handleWelcomeOptionSelect = async (option: "newsletters" | "creator") => {
+    try {
+      // Prepare updates based on selected option
+      const updates: Partial<Profile> = {
+        is_new: false,
+      };
+      
+      // Set the appropriate platform flag
+      if (option === "newsletters") {
+        updates.is_newsletter_platform = true;
+        updates.is_creator_platform = false;
+      } else {
+        updates.is_creator_platform = true;
+        updates.is_newsletter_platform = false;
+      }
+      
+      // Update the profile
+      await updateProfile(updates);
+      
+      // Close the welcome popup after a brief delay to allow the loading message to show
+      setTimeout(() => {
+        setShowWelcomePopup(false);
+      }, 1500);
+      
+      // Refresh the current page to reflect the new platform selection
+      setTimeout(() => {
+        if (window.location.pathname.includes('/dashboard')) {
+          // Force refresh the dashboard to load the right platform view
+          navigate(0);
+        }
+      }, 2000);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
   useEffect(() => {
     const fetchProfile = async (userId: string) => {
       try {
@@ -157,6 +196,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error) {
           return null;
         }
+        
+        // Don't automatically show welcome popup for new users
+        // They will be directed to the newuser-direct page instead
+        // if (data.is_new === null) {
+        //   setShowWelcomePopup(true);
+        // }
         
         return data as Profile;
       } catch (err) {
@@ -393,6 +438,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       refreshProfile // Add refreshProfile to the context value
     }}>
       {children}
+      
+      {/* Render welcome popup when needed (for in-app settings changes) */}
+      <WelcomePopup 
+        open={showWelcomePopup} 
+        onOptionSelect={handleWelcomeOptionSelect}
+        profilePicUrl={authState.profile?.twitter_profilepic_url}
+        username={authState.profile?.twitter_username}
+      />
     </AuthContext.Provider>
   );
 };
