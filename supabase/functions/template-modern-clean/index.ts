@@ -174,7 +174,7 @@ OUTPUT STRUCTURE:
     *   **The Gist:** 3-4 sentence summary.
     *   **Key Insights:** 4-5 bullet points (50-70 words each).
     *   **Deeper Dive (Varied Structure):** A substantial section (approx. 300-450 words). Within this, incorporate:
-        *   Standard paragraphs for explanation.
+        *   Standard paragraphs for explanation. And visually appealing text formatting and spacing so as to not jam too much text in one block at a time
         *   **Where appropriate for clarity or emphasis, use a numbered list for sequential points or a short series of related ideas.**
         *   **Include one "Key Takeaway Box":** A distinct, brief (1-2 sentences) summary of the most crucial point from the Deeper Dive, labeled clearly (e.g., "KEY TAKEAWAY: ...").
         *   **Optionally, a "Synthesized Quote":** If a powerful, synthesized statement (NOT a direct tweet quote) can encapsulate a core aspect of the theme, include it, labeled "THEME SNAPSHOT: '...'".
@@ -187,7 +187,8 @@ OUTPUT STRUCTURE:
 CRITICAL INSTRUCTIONS:
 - NO direct tweet quotes, IDs, or authors.
 - Focus on comprehensive synthesis, abstraction, and thematic storytelling with varied presentation.
-- Tone: Professional, insightful, accessible.
+- Tone: Human-like accessible natural dialogue and clear wording with naturally flowing sentences with no abrupt breaks or unnecessary punctuation like those commonly found in AI generated text
+- Write like the way people actually talk. Clear communication and at a 10th grade speaking level
 - Actively seek and include 'RepresentativeImageURL' for all themes/sidetracks.
 
 Tweet data to analyze:
@@ -199,7 +200,7 @@ ${formattedTweets}`;
     *   Theme Title.
     *   "The Gist" (3-4 sentences).
     *   4-5 "Key Insights" (bullet points, 50-70 words each).
-    *   "Deeper Dive" (300-450 words) incorporating paragraphs, and where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
+    *   "Deeper Dive" (300-450 words) incorporating paragraphs and ensure to break up the text as needed so it’s more readable—good spacing and layout, not everything jammed into one block.And where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
     *   'RepresentativeImageURL' (or "N/A").
 3.  3-4 NOTEWORTHY SIDETRACKS, each with:
     *   Sidetrack Title.
@@ -215,13 +216,13 @@ ${formattedTweets}`;
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4.1-2025-04-14",
         messages: [
           { role: "system", content: analysisSystemPrompt },
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.5,
-        max_tokens: 4090 
+        max_tokens: 2200 
       })
     });
     if (!openaiRes.ok) {
@@ -251,7 +252,7 @@ ${analysisResult}`;
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4o", 
+        model: "gpt-4.1-2025-04-14", 
         messages: [
           { role: "system", content: "You are a search query optimization specialist." },
           { role: "user", content: queryGenerationPrompt }
@@ -319,7 +320,7 @@ Provide complete, integrated analysis.`;
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
             body: JSON.stringify({
-                model: "gpt-4o",
+                model: "gpt-4.1-2025-04-14",
                 messages: [
                     { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
                     { role: "user", content: integrationPrompt }
@@ -342,7 +343,7 @@ Provide complete, integrated analysis.`;
     let markdownNewsletter = "";
     try {
       logStep("Starting 'Chain of Thought' markdown newsletter formatting (varied structure)");
-      const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes with varied structures like numbered lists/key takeaway boxes/synthesized quotes, sidetracks, image URLs) into a beautiful, professional Markdown newsletter.
+      const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes with varied structures like numbered lists/key takeaway boxes/synthesized quotes, sidetracks, image URLs) into clean, beautiful, visually appealing, well-structured Markdown.
 
 NEWSLETTER STRUCTURE:
 1.  HEADER: Title (H1 "Chain of Thought"), Date (H3/Subtitle), Subtle horizontal rule.
@@ -364,10 +365,11 @@ NEWSLETTER STRUCTURE:
 5.  FOOTER: Clear horizontal rule, "Generated by LetterNest."
 
 FORMATTING GUIDELINES:
-- Clean Markdown. Generous white space. Professional, insightful, engaging tone.
+- Clean Markdown. Generous white space. Professional, insightful, accessible, clear communication and engaging tone.
 - Image Usage: Include 'RepresentativeImageURL' where valid. Aim for 3-5 well-placed images.
 - Varied Structures: Correctly format numbered lists, "KEY TAKEAWAY BOX", and "THEME SNAPSHOT" if present in the input analysis.
 - Do not invent content. Only format.
+- Use bold and italic formatting where appropriate for emphasis
 
 OUTPUT: ONLY the formatted Markdown content.`;
       
@@ -381,7 +383,7 @@ ${finalAnalysisForMarkdown}`;
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4o",
+            model: "gpt-4.1-2025-04-14",
             messages: [
               { role: "system", content: markdownSystemPrompt },
               { role: "user", content: markdownUserPrompt }
@@ -418,9 +420,9 @@ PROFESSIONAL COLOR PALETTE & STYLING:
 - **Primary Navy (Main Headings & Key Text):** #142a4b (Use for H1, H2, primary text emphasis)
 - **Accent Blue (Secondary Headings):** #5774cd (Use for H3, link color, subtle accents)
 - **Success Green (Highlights & Actions):** #a1c181 (Use for "THEME SNAPSHOT" text color, key callout borders)
-- **Professional Background (Section Backgrounds):** #d2ddec (Use for "The Gist" backgrounds and major section separators)
-- **Clean White:** #ffffff (For content backgrounds and contrast)
-- **Subtle Border:** #D2DDEC (For dividers and light borders)
+- **Prioritize visually appealing structures and ease of cognitive ability for users when reading the newsletter
+- **Callout backgrounds in visually appealing color schemes
+- **Table headers shaded lightly for readability.  
 - **Body Text:** #333333 (Standard readable text)
 - **Font:** "Lato, Tahoma, Verdana, Segoe, sans-serif" (Professional, clean typeface)
 
@@ -443,15 +445,16 @@ ENHANCEMENT RULES:
 4.  **Professional List Styling:**
     *   Bulleted lists (\`<ul>\`) items: \`<li style="color: #5774cd; margin-bottom: 10px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">[list item text]</span></li>\` (Accent bullet color, readable content)
     *   Numbered lists: Similar professional styling with structured hierarchy.
+    *   Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
 
 5.  **Section Dividers & Spacing:**
     *   Replace markdown '---' or add strategic dividers with:
         \`<div style="height: 2px; background: linear-gradient(to right, #d2ddec, #5774cd, #d2ddec); margin: 40px 0; border-radius: 1px;"></div>\`
     *   Add breathing room between major sections.
 
-6.  **Email-Client Compatibility:** Ensure all styling uses inline CSS compatible with major email clients.
+6.  **Email-Client Compatibility:** Ensure all styling uses inline CSS compatible with major email clients. Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.
 
-Transform the markdown below into a visually enhanced, professionally styled newsletter.
+Transform the markdown below into a visually enhanced, appealing, and professionally styled newsletter.
 `;
       
       const enhancedUserPrompt = `
@@ -460,6 +463,7 @@ Transform the "Chain of Thought" markdown below into a **professionally enhanced
 - Enhanced styling for "KEY TAKEAWAY BOX:" and "THEME SNAPSHOT:" elements
 - Improved spacing and typography for excellent readability
 - Section dividers that create visual flow
+- User friendliness and and visuals
 
 "Chain of Thought" Markdown Draft:
 <current newsletter>
@@ -472,7 +476,7 @@ ${markdownNewsletter}
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4o", 
+            model: "gpt-4.1-2025-04-14", 
             messages: [
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt }
@@ -645,7 +649,7 @@ ${markdownNewsletter}
 
     // 17) Send email via Resend (No changes here)
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@letternest.com"; 
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com"; 
       const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; 
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
