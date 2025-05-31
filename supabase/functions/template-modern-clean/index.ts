@@ -222,7 +222,7 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.5,
-        max_tokens: 7000
+        max_tokens: 10000
       })
     });
     if (!openaiRes.ok) {
@@ -257,7 +257,7 @@ ${analysisResult}`;
           { role: "system", content: "You are a search query optimization specialist." },
           { role: "user", content: queryGenerationPrompt }
         ],
-        temperature: 0.3, max_tokens: 5000
+        temperature: 0.3, max_tokens: 10000
       })
     });
     let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
@@ -325,7 +325,7 @@ Provide complete, integrated analysis.`;
                     { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
                     { role: "user", content: integrationPrompt }
                 ],
-                temperature: 0.3, max_tokens: 7000
+                temperature: 0.3, max_tokens: 10000
             })
         });
         if (integrationRes.ok) {
@@ -388,7 +388,7 @@ ${finalAnalysisForMarkdown}`;
               { role: "system", content: markdownSystemPrompt },
               { role: "user", content: markdownUserPrompt }
             ],
-            temperature: 0.2, max_tokens: 7000
+            temperature: 0.2, max_tokens: 10000
           })
         });
         if (markdownOpenaiRes.ok) {
@@ -482,7 +482,7 @@ ${markdownNewsletter}
               { role: "user", content: enhancedUserPrompt }
             ],
             temperature: 0.1, // Very low temp for precise styling application
-            max_tokens: 7000 
+            max_tokens: 10000 
           })
         });
         if (enhancedOpenaiRes.ok) {
