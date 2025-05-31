@@ -222,7 +222,7 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.5,
-        max_tokens: 2200 
+        max_tokens: 4000 
       })
     });
     if (!openaiRes.ok) {
@@ -257,7 +257,7 @@ ${analysisResult}`;
           { role: "system", content: "You are a search query optimization specialist." },
           { role: "user", content: queryGenerationPrompt }
         ],
-        temperature: 0.3, max_tokens: 800
+        temperature: 0.3, max_tokens: 1400
       })
     });
     let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
