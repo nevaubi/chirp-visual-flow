@@ -708,7 +708,7 @@ ${markdownNewsletter}
             Authorization: `Bearer ${OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "chatgpt-4o-latest", // Updated from chatgpt-4o-latest
+            model: "gpt-4.1-2025-04-14", // Updated from chatgpt-4o-latest
             messages: [
               {
                 role: "system",
@@ -719,7 +719,7 @@ ${markdownNewsletter}
                 content: enhancedUserPrompt
               }
             ],
-            temperature: 0.4,
+            temperature: 0.3,
             max_tokens: 4000
           })
         });
