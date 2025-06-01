@@ -1,4 +1,5 @@
 
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -160,8 +161,8 @@ export default function HeroSection() {
             {/* Image Sequence */}
             <div className="mb-8 sm:mb-10 relative z-20">
               <div className="flex items-center justify-center gap-4 sm:gap-6">
-                {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[25%] sm:w-[30%]">
+                {/* First Image - increased by 15% for mobile */}
+                <div className="relative rounded-2xl overflow-hidden w-[29%] sm:w-[35%]">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -174,8 +175,8 @@ export default function HeroSection() {
                   <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#0087C8] animate-pulse" />
                 </div>
 
-                {/* Second Image - 40% larger */}
-                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[42%]">
+                {/* Second Image - increased by 15% for mobile */}
+                <div className="relative rounded-2xl overflow-hidden w-[40%] sm:w-[48%]">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -275,8 +276,8 @@ export default function HeroSection() {
             {/* Full-width Image Sequence */}
             <div className="relative z-20">
               <div className="flex items-center justify-center gap-8">
-                {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[35%] max-w-md">
+                {/* First Image - decreased by 10% for larger screens */}
+                <div className="relative rounded-2xl overflow-hidden w-[31.5%] max-w-md">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -289,8 +290,8 @@ export default function HeroSection() {
                   <ArrowRight className="w-12 h-12 text-[#0087C8] animate-pulse" />
                 </div>
 
-                {/* Second Image - 40% larger */}
-                <div className="relative rounded-2xl overflow-hidden w-[49%] max-w-lg">
+                {/* Second Image - increased by 10% for larger screens */}
+                <div className="relative rounded-2xl overflow-hidden w-[53.9%] max-w-lg">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -305,3 +306,4 @@ export default function HeroSection() {
     </section>
   );
 }
+
