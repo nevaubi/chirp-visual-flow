@@ -142,7 +142,16 @@ export default function HeroSection() {
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
               <h1 className="text-6xl sm:text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
+                <span className="flex items-center justify-center gap-2 mb-2">
+                  <span>Turn</span>
+                  <img 
+                    src="/homepic3.png" 
+                    alt="X" 
+                    className="inline-block h-12 sm:h-14 w-auto align-baseline"
+                  />
+                  <span className="text-[#FF6B35]">Bookmarks</span>
+                  <span>into</span>
+                </span>
                 <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                   Professional Newsletters
                 </span>
@@ -209,7 +218,16 @@ export default function HeroSection() {
               {/* Left Column: Hero Text (headline only) */}
               <div className="text-left">
                 <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                  <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
+                  <span className="flex items-center gap-3 mb-2">
+                    <span>Turn</span>
+                    <img 
+                      src="/homepic3.png" 
+                      alt="X" 
+                      className="inline-block h-16 w-auto align-baseline"
+                    />
+                    <span className="text-[#FF6B35]">Bookmarks</span>
+                  </span>
+                  <span className="block">into</span>
                   <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                     Professional Newsletters
                   </span>
