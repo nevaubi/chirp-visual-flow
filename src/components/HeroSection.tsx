@@ -1,6 +1,7 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { useEffect } from "react";
 import ReviewsSection from "@/components/ReviewsSection";
 
@@ -243,6 +244,24 @@ export default function HeroSection() {
                     Get Started Free
                     <ArrowRight className="ml-3 h-6 w-6" />
                   </Button>
+                </div>
+
+                {/* Bullet points list */}
+                <div className="relative z-20 w-full">
+                  <ul className="space-y-3 text-lg text-gray-700">
+                    <li className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                      <span>Auto enriched for context</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                      <span>Any niche/topic</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                      <span>Emailed in 2-3 minutes</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
