@@ -202,24 +202,21 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Large Screen Layout: Text left, Subtext + Social proof + CTA right, Images below */}
+          {/* Large Screen Layout: Text left, Social proof + CTA right, Images below */}
           <div className="hidden lg:block w-full">
             {/* Two-column layout for text and social proof + CTA */}
             <div className="grid grid-cols-2 gap-16 items-start mb-16">
-              {/* Left Column: Hero Text (headline only) */}
+              {/* Left Column: Hero Text (headline + subtext) */}
               <div className="text-left">
-                <h1 className="text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+                <h1 className="text-5xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
                   <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span></span>
                   <span className="block">into Professional</span>
                   <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                     Newsletters
                   </span>
                 </h1>
-              </div>
-
-              {/* Right Column: Subtext + Social proof + CTA */}
-              <div className="flex flex-col items-start space-y-8">
-                {/* Subtext */}
+                
+                {/* Subtext moved under headline */}
                 <p className="text-2xl text-gray-600 leading-relaxed text-left">
                   <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
                   <span className="block mt-2 font-semibold text-[#0087C8]">
@@ -227,13 +224,16 @@ export default function HeroSection() {
                     audience.
                   </span>
                 </p>
+              </div>
 
+              {/* Right Column: Social proof + CTA */}
+              <div className="flex flex-col items-start space-y-8">
                 {/* Social proof */}
                 <div className="relative z-20">
                   <ReviewsSection />
                 </div>
 
-                {/* CTA button */}
+                {/* CTA button - left aligned */}
                 <div className="relative z-20 w-full">
                   <Button
                     size="lg"
