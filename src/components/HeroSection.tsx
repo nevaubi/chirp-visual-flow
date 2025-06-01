@@ -146,7 +146,7 @@ export default function HeroSection() {
                   <img 
                     src="/homepic3.png" 
                     alt="X" 
-                    className="inline-block h-12 sm:h-14 w-auto align-baseline"
+                    className="inline-block h-10 sm:h-12 w-auto object-contain align-middle"
                   />
                   <span className="text-[#FF6B35]">Bookmarks</span>
                   <span>into</span>
@@ -222,7 +222,7 @@ export default function HeroSection() {
                     <img 
                       src="/homepic3.png" 
                       alt="X" 
-                      className="inline-block h-16 w-auto align-baseline"
+                      className="inline-block h-14 w-auto object-contain align-middle"
                     />
                     <span className="text-[#FF6B35]">Bookmarks</span>
                   </span>
