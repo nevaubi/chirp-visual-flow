@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -135,50 +136,31 @@ export default function HeroSection() {
       {/* ---------------------------- HERO CONTENT ------------------------- */}
       <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-24 sm:pt-32">
         <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
-          {/* Headline ------------------------------------------------------ */}
-          <div className="mb-6 sm:mb-8 relative z-20 w-full">
-            <h1 className="text-6xl sm:text-6xl lg:text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-              <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
-              <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
-                Professional Newsletters
-              </span>
-            </h1>
-            <p className="text-xl sm:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 lg:mt-8 leading-relaxed max-w-3xl mx-auto">
-              <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
-              <span className="block mt-2 font-semibold text-[#0087C8]">
-                <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
-                audience.
-              </span>
-            </p>
-          </div>
-
-          {/* Two-column layout for desktop ------------------------------- */}
-          <div className="w-full lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
-            {/* Left Column: Social proof + CTA button */}
-            <div className="flex flex-col items-center lg:items-start space-y-8 sm:space-y-10 lg:pl-12 xl:pl-20">
-              {/* Social proof -------------------------------------------------- */}
-              <div className="flex justify-center lg:justify-start relative z-20">
-                <ReviewsSection />
-              </div>
-
-              {/* CTA button --------------------------------------------------- */}
-              <div className="flex justify-center lg:justify-start relative z-20 w-full">
-                <Button
-                  size="lg"
-                  className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full sm:w-auto lg:w-full max-w-sm"
-                  onClick={scrollToPricing}
-                >
-                  Get Started Free
-                  <ArrowRight className="ml-3 h-6 w-6" />
-                </Button>
-              </div>
+          
+          {/* Mobile Layout: Text → Images → Social proof + CTA */}
+          <div className="lg:hidden w-full">
+            {/* Headline */}
+            <div className="mb-6 sm:mb-8 relative z-20 w-full">
+              <h1 className="text-6xl sm:text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+                <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
+                <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
+                  Professional Newsletters
+                </span>
+              </h1>
+              <p className="text-xl sm:text-xl leading-relaxed text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
+                <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
+                <span className="block mt-2 font-semibold text-[#0087C8]">
+                  <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
+                  audience.
+                </span>
+              </p>
             </div>
 
-            {/* Right Column: Image Sequence */}
-            <div className="mt-5 sm:mt-12 lg:mt-0 relative z-20">
+            {/* Image Sequence */}
+            <div className="mb-8 sm:mb-10 relative z-20">
               <div className="flex items-center justify-center gap-4 sm:gap-6">
                 {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[30%] sm:w-[35%] lg:w-[40%]">
+                <div className="relative rounded-2xl overflow-hidden w-[30%] sm:w-[35%]">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -192,7 +174,95 @@ export default function HeroSection() {
                 </div>
 
                 {/* Second Image - 40% larger */}
-                <div className="relative rounded-2xl overflow-hidden w-[50%] sm:w-[55%] lg:w-[60%]">
+                <div className="relative rounded-2xl overflow-hidden w-[50%] sm:w-[55%]">
+                  <img
+                    src="/homepic2.png"
+                    alt="Generated Newsletter"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Social proof */}
+            <div className="flex justify-center relative z-20 mb-8 sm:mb-10">
+              <ReviewsSection />
+            </div>
+
+            {/* CTA button */}
+            <div className="flex justify-center relative z-20 w-full">
+              <Button
+                size="lg"
+                className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full sm:w-auto max-w-sm"
+                onClick={scrollToPricing}
+              >
+                Get Started Free
+                <ArrowRight className="ml-3 h-6 w-6" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Large Screen Layout: Text left, Social proof + CTA right, Images below */}
+          <div className="hidden lg:block w-full">
+            {/* Two-column layout for text and social proof + CTA */}
+            <div className="grid grid-cols-2 gap-16 items-center mb-16">
+              {/* Left Column: Hero Text */}
+              <div className="text-left">
+                <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+                  <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
+                  <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
+                    Professional Newsletters
+                  </span>
+                </h1>
+                <p className="text-2xl text-gray-600 leading-relaxed">
+                  <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
+                  <span className="block mt-2 font-semibold text-[#0087C8]">
+                    <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
+                    audience.
+                  </span>
+                </p>
+              </div>
+
+              {/* Right Column: Social proof + CTA */}
+              <div className="flex flex-col items-start space-y-8">
+                {/* Social proof */}
+                <div className="relative z-20">
+                  <ReviewsSection />
+                </div>
+
+                {/* CTA button */}
+                <div className="relative z-20 w-full">
+                  <Button
+                    size="lg"
+                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
+                    onClick={scrollToPricing}
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-3 h-6 w-6" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Full-width Image Sequence */}
+            <div className="relative z-20">
+              <div className="flex items-center justify-center gap-8">
+                {/* First Image */}
+                <div className="relative rounded-2xl overflow-hidden w-[40%] max-w-md">
+                  <img
+                    src="/homepic1.png"
+                    alt="X Bookmarks Dashboard"
+                    className="w-full h-auto"
+                  />
+                </div>
+
+                {/* Arrow */}
+                <div className="flex-shrink-0">
+                  <ArrowRight className="w-12 h-12 text-[#0087C8] animate-pulse" />
+                </div>
+
+                {/* Second Image - 40% larger */}
+                <div className="relative rounded-2xl overflow-hidden w-[60%] max-w-lg">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
