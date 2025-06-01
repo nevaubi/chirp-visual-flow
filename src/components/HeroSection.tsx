@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -252,19 +253,19 @@ export default function HeroSection() {
                       <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
                         <Check className="h-4 w-4 text-green-600" />
                       </div>
-                      <span className="text-gray-700 font-medium">Auto enriched for context</span>
+                      <span className="text-gray-700 font-bold">Auto enriched for context</span>
                     </li>
                     <li className="flex items-center group">
                       <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
                         <Check className="h-4 w-4 text-green-600" />
                       </div>
-                      <span className="text-gray-700 font-medium">Any niche/topic</span>
+                      <span className="text-gray-700 font-bold">Any niche/topic</span>
                     </li>
                     <li className="flex items-center group">
                       <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
                         <Check className="h-4 w-4 text-green-600" />
                       </div>
-                      <span className="text-gray-700 font-medium">Emailed in 2-3 minutes</span>
+                      <span className="text-gray-700 font-bold">Emailed in 2-3 minutes</span>
                     </li>
                   </ul>
                 </div>
