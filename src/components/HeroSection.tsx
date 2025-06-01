@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -134,8 +133,8 @@ export default function HeroSection() {
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
-      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-24 sm:pt-32">
-        <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
+      <div className="container max-w-none xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 xl:px-20 relative z-30 pt-24 sm:pt-32">
+        <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center mx-auto">
           
           {/* Mobile Layout: Text → Images → Social proof + CTA */}
           <div className="lg:hidden w-full">
