@@ -175,14 +175,31 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Right Column: New Image */}
+            {/* Right Column: Image Sequence */}
             <div className="mt-5 sm:mt-12 lg:mt-0 relative z-20">
-              <div className="relative rounded-2xl overflow-hidden w-[40%] sm:w-[50%] lg:w-[60%] mx-auto">
-                <img
-                  src="/homepic1.png"
-                  alt="Newsletter Platform Dashboard"
-                  className="w-full h-auto"
-                />
+              <div className="flex items-center justify-center gap-4 sm:gap-6">
+                {/* First Image */}
+                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[40%] lg:w-[45%]">
+                  <img
+                    src="/homepic1.png"
+                    alt="X Bookmarks Dashboard"
+                    className="w-full h-auto"
+                  />
+                </div>
+
+                {/* Arrow */}
+                <div className="flex-shrink-0">
+                  <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#0087C8] animate-pulse" />
+                </div>
+
+                {/* Second Image */}
+                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[40%] lg:w-[45%]">
+                  <img
+                    src="/homepic2.png"
+                    alt="Generated Newsletter"
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
             </div>
           </div>
