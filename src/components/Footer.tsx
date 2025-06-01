@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -17,7 +16,7 @@ const Footer = () => {
             />
             <span className="font-semibold text-xl">
               <span className="text-black">letter</span>
-              <span className="text-[#0087C8]">nest</span>
+              <span className="text-[#FF6B35]">nest</span>
             </span>
           </Link>
 

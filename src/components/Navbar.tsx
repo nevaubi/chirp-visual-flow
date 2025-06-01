@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ export default function Navbar() {
             />
             <span className="font-black text-2xl lg:text-3xl tracking-tight">
               <span className="text-black">letter</span>
-              <span className="text-[#0087C8]">nest</span>
+              <span className="text-[#FF6B35]">nest</span>
             </span>
           </Link>
 

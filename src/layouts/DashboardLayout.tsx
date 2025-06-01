@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -281,7 +280,7 @@ const DashboardLayout = () => {
             />
             <span className="font-bold text-xl">
               <span className="text-black">letter</span>
-              <span className="text-[#0087C8]">nest</span>
+              <span className="text-[#FF6B35]">nest</span>
             </span>
           </Link>
         </div>
@@ -333,7 +332,7 @@ const DashboardLayout = () => {
               {shouldShowExpanded && (
                 <span className="font-bold text-xl whitespace-nowrap overflow-hidden">
                   <span className="text-white">letter</span>
-                  <span className="text-white">nest</span>
+                  <span className="text-[#FF6B35]">nest</span>
                 </span>
               )}
             </Link>
