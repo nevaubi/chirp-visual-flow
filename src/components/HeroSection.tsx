@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -246,20 +245,26 @@ export default function HeroSection() {
                   </Button>
                 </div>
 
-                {/* Bullet points list */}
+                {/* Bullet points list - Enhanced styling */}
                 <div className="relative z-20 w-full">
-                  <ul className="space-y-3 text-lg text-gray-700">
-                    <li className="flex items-center">
-                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Auto enriched for context</span>
+                  <ul className="space-y-4 text-lg">
+                    <li className="flex items-center group">
+                      <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
+                        <Check className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 font-medium">Auto enriched for context</span>
                     </li>
-                    <li className="flex items-center">
-                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Any niche/topic</span>
+                    <li className="flex items-center group">
+                      <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
+                        <Check className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 font-medium">Any niche/topic</span>
                     </li>
-                    <li className="flex items-center">
-                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Emailed in 2-3 minutes</span>
+                    <li className="flex items-center group">
+                      <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
+                        <Check className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 font-medium">Emailed in 2-3 minutes</span>
                     </li>
                   </ul>
                 </div>
