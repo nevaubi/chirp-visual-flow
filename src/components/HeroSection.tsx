@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import ReviewsSection from "@/components/ReviewsSection";
-import VideoPlayer from "@/components/VideoPlayer";
 
 export default function HeroSection() {
   /* -------------------------------------------------- */
@@ -176,14 +175,12 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Right Column: Custom Video Player */}
+            {/* Right Column: New Image */}
             <div className="mt-5 sm:mt-12 lg:mt-0 relative z-20">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 w-[85%] sm:w-full mx-auto">
-                <VideoPlayer
-                  src="/final.mp4"
-                  autoPlay={true}
-                  loop={true}
-                  muted={true}
+                <img
+                  src="/ChatGPT Image Jun 1, 2025, 04_07_45 PM.png"
+                  alt="Newsletter Platform Dashboard"
                   className="w-full h-auto"
                 />
               </div>
