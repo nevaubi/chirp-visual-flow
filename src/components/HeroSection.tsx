@@ -160,7 +160,7 @@ export default function HeroSection() {
             <div className="mb-8 sm:mb-10 relative z-20">
               <div className="flex items-center justify-center gap-4 sm:gap-6">
                 {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[30%] sm:w-[35%]">
+                <div className="relative rounded-2xl overflow-hidden w-[25%] sm:w-[30%]">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -174,7 +174,7 @@ export default function HeroSection() {
                 </div>
 
                 {/* Second Image - 40% larger */}
-                <div className="relative rounded-2xl overflow-hidden w-[50%] sm:w-[55%]">
+                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[42%]">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -202,11 +202,11 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Large Screen Layout: Text left, Social proof + CTA right, Images below */}
+          {/* Large Screen Layout: Text left, Subtext + Social proof + CTA right, Images below */}
           <div className="hidden lg:block w-full">
             {/* Two-column layout for text and social proof + CTA */}
-            <div className="grid grid-cols-2 gap-16 items-center mb-16">
-              {/* Left Column: Hero Text */}
+            <div className="grid grid-cols-2 gap-16 items-start mb-16">
+              {/* Left Column: Hero Text (headline only) */}
               <div className="text-left">
                 <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
                   <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
@@ -214,17 +214,19 @@ export default function HeroSection() {
                     Professional Newsletters
                   </span>
                 </h1>
-                <p className="text-2xl text-gray-600 leading-relaxed">
+              </div>
+
+              {/* Right Column: Subtext + Social proof + CTA */}
+              <div className="flex flex-col items-start space-y-8">
+                {/* Subtext */}
+                <p className="text-2xl text-gray-600 leading-relaxed text-left">
                   <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
                   <span className="block mt-2 font-semibold text-[#0087C8]">
                     <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
                     audience.
                   </span>
                 </p>
-              </div>
 
-              {/* Right Column: Social proof + CTA */}
-              <div className="flex flex-col items-start space-y-8">
                 {/* Social proof */}
                 <div className="relative z-20">
                   <ReviewsSection />
@@ -248,7 +250,7 @@ export default function HeroSection() {
             <div className="relative z-20">
               <div className="flex items-center justify-center gap-8">
                 {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[40%] max-w-md">
+                <div className="relative rounded-2xl overflow-hidden w-[35%] max-w-md">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -262,7 +264,7 @@ export default function HeroSection() {
                 </div>
 
                 {/* Second Image - 40% larger */}
-                <div className="relative rounded-2xl overflow-hidden w-[60%] max-w-lg">
+                <div className="relative rounded-2xl overflow-hidden w-[49%] max-w-lg">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
