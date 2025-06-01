@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -142,9 +141,9 @@ export default function HeroSection() {
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
               <h1 className="text-5xl sm:text-5xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                <span className="block">Turn <span className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2B] bg-clip-text text-transparent">X Bookmarks</span></span>
+                <span className="block">Turn <span className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">X Bookmarks</span></span>
                 <span className="block">into Professional</span>
-                <span className="block text-[#0087C8]">
+                <span className="block text-[#FF6B35]">
                   Newsletters
                 </span>
               </h1>
@@ -174,8 +173,8 @@ export default function HeroSection() {
                   <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#0087C8] animate-pulse" />
                 </div>
 
-                {/* Second Image - increased by 35% for mobile (was 15%, now 20% more) */}
-                <div className="relative rounded-2xl overflow-hidden w-[48%] sm:w-[48%]">
+                {/* Second Image - increased by 15% for mobile */}
+                <div className="relative rounded-2xl overflow-hidden w-[40%] sm:w-[48%]">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -210,9 +209,9 @@ export default function HeroSection() {
               {/* Left Column: Hero Text (headline + subtext) */}
               <div className="text-left">
                 <h1 className="text-5xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                  <span className="block">Turn <span className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2B] bg-clip-text text-transparent">X Bookmarks</span></span>
+                  <span className="block">Turn <span className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">X Bookmarks</span></span>
                   <span className="block">into Professional</span>
-                  <span className="block text-[#0087C8]">
+                  <span className="block text-[#FF6B35]">
                     Newsletters
                   </span>
                 </h1>
@@ -227,11 +226,23 @@ export default function HeroSection() {
                 </p>
               </div>
 
-              {/* Right Column: Social proof + Bullet points + CTA */}
+              {/* Right Column: Social proof + CTA */}
               <div className="flex flex-col items-start space-y-8">
                 {/* Social proof */}
                 <div className="relative z-20">
                   <ReviewsSection />
+                </div>
+
+                {/* CTA button - left aligned */}
+                <div className="relative z-20 w-full">
+                  <Button
+                    size="lg"
+                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
+                    onClick={scrollToPricing}
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-3 h-6 w-6" />
+                  </Button>
                 </div>
 
                 {/* Bullet points list - Enhanced styling */}
@@ -256,18 +267,6 @@ export default function HeroSection() {
                       <span className="text-gray-700 font-bold">Emailed in 2-3 minutes</span>
                     </li>
                   </ul>
-                </div>
-
-                {/* CTA button - left aligned, moved below bullet points */}
-                <div className="relative z-20 w-full">
-                  <Button
-                    size="lg"
-                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
-                    onClick={scrollToPricing}
-                  >
-                    Get Started Free
-                    <ArrowRight className="ml-3 h-6 w-6" />
-                  </Button>
                 </div>
               </div>
             </div>
