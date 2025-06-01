@@ -173,8 +173,8 @@ export default function HeroSection() {
                   <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#0087C8] animate-pulse" />
                 </div>
 
-                {/* Second Image - increased by 15% for mobile */}
-                <div className="relative rounded-2xl overflow-hidden w-[40%] sm:w-[48%]">
+                {/* Second Image - increased by 35% for mobile (was 15%, now 20% more) */}
+                <div className="relative rounded-2xl overflow-hidden w-[48%] sm:w-[48%]">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
