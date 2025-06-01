@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -226,23 +227,11 @@ export default function HeroSection() {
                 </p>
               </div>
 
-              {/* Right Column: Social proof + CTA */}
+              {/* Right Column: Social proof + Bullet points + CTA */}
               <div className="flex flex-col items-start space-y-8">
                 {/* Social proof */}
                 <div className="relative z-20">
                   <ReviewsSection />
-                </div>
-
-                {/* CTA button - left aligned */}
-                <div className="relative z-20 w-full">
-                  <Button
-                    size="lg"
-                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
-                    onClick={scrollToPricing}
-                  >
-                    Get Started Free
-                    <ArrowRight className="ml-3 h-6 w-6" />
-                  </Button>
                 </div>
 
                 {/* Bullet points list - Enhanced styling */}
@@ -267,6 +256,18 @@ export default function HeroSection() {
                       <span className="text-gray-700 font-bold">Emailed in 2-3 minutes</span>
                     </li>
                   </ul>
+                </div>
+
+                {/* CTA button - moved below bullet list */}
+                <div className="relative z-20 w-full">
+                  <Button
+                    size="lg"
+                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
+                    onClick={scrollToPricing}
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-3 h-6 w-6" />
+                  </Button>
                 </div>
               </div>
             </div>

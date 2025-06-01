@@ -53,8 +53,8 @@ export default function ReviewsSection({ profilePictures }: ReviewsSectionProps)
           ))}
         </div>
         
-        {/* Text Content */}
-        <p className="text-sm text-gray-600 font-medium text-center">
+        {/* Text Content - increased size by 10% and made bold */}
+        <p className="text-base text-gray-600 font-bold text-center">
           5-stars from 100+ creators during pre-launch testing
         </p>
       </div>
