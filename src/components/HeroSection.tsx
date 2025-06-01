@@ -1,4 +1,5 @@
 
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -176,21 +177,6 @@ export default function HeroSection() {
 
                 {/* Second Image - increased by 15% for mobile */}
                 <div className="relative rounded-2xl overflow-hidden w-[40%] sm:w-[48%]">
-                  {/* Tada lines - Mobile */}
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-full h-8 pointer-events-none">
-                    {/* Central burst lines */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-                      {/* Line 1 */}
-                      <div className="absolute w-6 h-0.5 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent transform -rotate-45 -translate-x-3 -translate-y-1 opacity-60 animate-fade-in"></div>
-                      {/* Line 2 */}
-                      <div className="absolute w-8 h-0.5 bg-gradient-to-r from-transparent via-[#0087C8] to-transparent transform rotate-45 translate-x-2 -translate-y-1 opacity-70 animate-fade-in animation-delay-100"></div>
-                      {/* Line 3 */}
-                      <div className="absolute w-5 h-0.5 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent transform -rotate-12 -translate-x-1 translate-y-1 opacity-50 animate-fade-in animation-delay-200"></div>
-                      {/* Line 4 */}
-                      <div className="absolute w-7 h-0.5 bg-gradient-to-r from-transparent via-[#0087C8] to-transparent transform rotate-12 translate-x-1 translate-y-1 opacity-60 animate-fade-in animation-delay-300"></div>
-                    </div>
-                  </div>
-                  
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -306,25 +292,6 @@ export default function HeroSection() {
 
                 {/* Second Image - increased by 10% for larger screens */}
                 <div className="relative rounded-2xl overflow-hidden w-[53.9%] max-w-lg">
-                  {/* Tada lines - Desktop */}
-                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-full h-12 pointer-events-none">
-                    {/* Central burst lines */}
-                    <div className="absolute top-6 left-1/2 transform -translate-x-1/2">
-                      {/* Line 1 */}
-                      <div className="absolute w-10 h-0.5 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent transform -rotate-45 -translate-x-5 -translate-y-2 opacity-60 animate-fade-in"></div>
-                      {/* Line 2 */}
-                      <div className="absolute w-12 h-0.5 bg-gradient-to-r from-transparent via-[#0087C8] to-transparent transform rotate-45 translate-x-3 -translate-y-2 opacity-70 animate-fade-in animation-delay-100"></div>
-                      {/* Line 3 */}
-                      <div className="absolute w-8 h-0.5 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent transform -rotate-12 -translate-x-2 translate-y-1 opacity-50 animate-fade-in animation-delay-200"></div>
-                      {/* Line 4 */}
-                      <div className="absolute w-10 h-0.5 bg-gradient-to-r from-transparent via-[#0087C8] to-transparent transform rotate-12 translate-x-2 translate-y-1 opacity-60 animate-fade-in animation-delay-300"></div>
-                      {/* Line 5 */}
-                      <div className="absolute w-6 h-0.5 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent transform -rotate-75 -translate-x-4 opacity-45 animate-fade-in animation-delay-400"></div>
-                      {/* Line 6 */}
-                      <div className="absolute w-9 h-0.5 bg-gradient-to-r from-transparent via-[#0087C8] to-transparent transform rotate-75 translate-x-4 opacity-55 animate-fade-in animation-delay-500"></div>
-                    </div>
-                  </div>
-                  
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
@@ -339,3 +306,4 @@ export default function HeroSection() {
     </section>
   );
 }
+
