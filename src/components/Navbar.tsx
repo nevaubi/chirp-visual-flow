@@ -45,7 +45,7 @@ export default function Navbar() {
         ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-100/50' 
         : 'bg-transparent'
     }`}>
-      <div className="max-w-none xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-16 xl:px-20 py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 lg:py-8">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img 
@@ -140,7 +140,7 @@ export default function Navbar() {
       {/* Mobile Navigation */}
       {isOpen && (
         <div className="bg-white shadow-lg p-4 md:hidden animate-fade-in border-t border-blue-100">
-          <nav className="max-w-none xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto flex flex-col gap-2">
+          <nav className="max-w-7xl mx-auto flex flex-col gap-2">
             <Link 
               to="/ticker-drop" 
               className="flex items-center gap-2 text-[#0087C8] hover:bg-blue-50/30 p-2 rounded-lg transition-colors"

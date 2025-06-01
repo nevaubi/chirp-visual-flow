@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -133,24 +134,15 @@ export default function HeroSection() {
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
-      <div className="container max-w-none xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 xl:px-20 relative z-30 pt-24 sm:pt-32">
-        <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center mx-auto">
+      <div className="container mx-auto px-4 sm:px-6 relative z-30 pt-24 sm:pt-32">
+        <div className="flex flex-col items-center text-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-200px)] justify-center max-w-6xl mx-auto">
           
           {/* Mobile Layout: Text → Images → Social proof + CTA */}
           <div className="lg:hidden w-full">
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
               <h1 className="text-6xl sm:text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                <span className="flex items-center justify-center gap-2 mb-2">
-                  <span>Turn</span>
-                  <img 
-                    src="/homepic3.png" 
-                    alt="X" 
-                    className="inline-block h-10 sm:h-12 w-auto object-contain align-middle"
-                  />
-                  <span className="text-[#FF6B35]">Bookmarks</span>
-                  <span>into</span>
-                </span>
+                <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
                 <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                   Professional Newsletters
                 </span>
@@ -217,16 +209,7 @@ export default function HeroSection() {
               {/* Left Column: Hero Text (headline only) */}
               <div className="text-left">
                 <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                  <span className="flex items-center gap-3 mb-2">
-                    <span>Turn</span>
-                    <img 
-                      src="/homepic3.png" 
-                      alt="X" 
-                      className="inline-block h-14 w-auto object-contain align-middle"
-                    />
-                    <span className="text-[#FF6B35]">Bookmarks</span>
-                  </span>
-                  <span className="block">into</span>
+                  <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
                   <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                     Professional Newsletters
                   </span>
