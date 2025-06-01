@@ -30,7 +30,7 @@ export default function HeroSection() {
   /* render                                             */
   /* -------------------------------------------------- */
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0087C8]/5 via-blue-50/40 to-white">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 to-white">
       {/* -- SCROLLING BACKGROUND -- */}
       <div className="absolute inset-0 z-0">
         {/* -- LEFT OUTER (scroll ↑) --------------------------------------- */}
@@ -127,10 +127,10 @@ export default function HeroSection() {
         </div>
 
         {/* -- GRADIENT FADES ---------------------------------------------- */}
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0087C8]/8 to-transparent z-10" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-blue-50/80 to-transparent z-10" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent z-10" />
-        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-[#0087C8]/6 to-transparent z-10" />
-        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-[#0087C8]/6 to-transparent z-10" />
+        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-blue-50/60 to-transparent z-10" />
+        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-blue-50/60 to-transparent z-10" />
       </div>
 
       {/* ---------------------------- HERO CONTENT ------------------------- */}
