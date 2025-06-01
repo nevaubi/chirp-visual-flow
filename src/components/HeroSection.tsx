@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -140,16 +141,8 @@ export default function HeroSection() {
           <div className="lg:hidden w-full">
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
-              <h1 className="text-6xl sm:text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900 font-recoleta">
-                <span className="block flex items-center justify-center gap-3 flex-wrap">
-                  Turn 
-                  <img 
-                    src="/homepic3.png" 
-                    alt="X (Twitter)" 
-                    className="h-16 sm:h-16 w-auto inline-block"
-                  /> 
-                  <span className="text-[#FF6B35]">Bookmarks</span> into
-                </span>
+              <h1 className="text-6xl sm:text-6xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+                <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
                 <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                   Professional Newsletters
                 </span>
@@ -215,16 +208,8 @@ export default function HeroSection() {
             <div className="grid grid-cols-2 gap-16 items-start mb-16">
               {/* Left Column: Hero Text (headline only) */}
               <div className="text-left">
-                <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900 font-recoleta">
-                  <span className="block flex items-center gap-4 flex-wrap">
-                    Turn 
-                    <img 
-                      src="/homepic3.png" 
-                      alt="X (Twitter)" 
-                      className="h-20 w-auto inline-block"
-                    /> 
-                    <span className="text-[#FF6B35]">Bookmarks</span> into
-                  </span>
+                <h1 className="text-7xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
+                  <span className="block">Turn <span className="text-[#FF6B35]">X Bookmarks</span> into</span>
                   <span className="block bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">
                     Professional Newsletters
                   </span>

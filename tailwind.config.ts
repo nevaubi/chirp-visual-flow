@@ -23,7 +23,6 @@ export default {
       fontFamily: {
         sans: ["Montserrat", "Poppins", "sans-serif"],
         heading: ["Montserrat", "sans-serif"],
-        recoleta: ["Recoleta", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
