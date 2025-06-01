@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -179,7 +178,7 @@ export default function HeroSection() {
             <div className="mt-5 sm:mt-12 lg:mt-0 relative z-20">
               <div className="flex items-center justify-center gap-4 sm:gap-6">
                 {/* First Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[40%] lg:w-[45%]">
+                <div className="relative rounded-2xl overflow-hidden w-[30%] sm:w-[35%] lg:w-[40%]">
                   <img
                     src="/homepic1.png"
                     alt="X Bookmarks Dashboard"
@@ -192,8 +191,8 @@ export default function HeroSection() {
                   <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#0087C8] animate-pulse" />
                 </div>
 
-                {/* Second Image */}
-                <div className="relative rounded-2xl overflow-hidden w-[35%] sm:w-[40%] lg:w-[45%]">
+                {/* Second Image - 40% larger */}
+                <div className="relative rounded-2xl overflow-hidden w-[50%] sm:w-[55%] lg:w-[60%]">
                   <img
                     src="/homepic2.png"
                     alt="Generated Newsletter"
