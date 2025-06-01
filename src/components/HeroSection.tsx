@@ -177,7 +177,7 @@ export default function HeroSection() {
 
             {/* Right Column: New Image */}
             <div className="mt-5 sm:mt-12 lg:mt-0 relative z-20">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 w-[85%] sm:w-full mx-auto">
+              <div className="relative rounded-2xl overflow-hidden w-[60%] sm:w-[70%] lg:w-[80%] mx-auto">
                 <img
                   src="/ChatGPT Image Jun 1, 2025, 04_07_45 PM.png"
                   alt="Newsletter Platform Dashboard"
