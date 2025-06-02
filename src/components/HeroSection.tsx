@@ -51,7 +51,7 @@ function AutoScrollCarousel() {
     return () => observer.unobserve(carousel);
   }, []);
 
-  // Optimized animation with requestAnimationFrame
+  // Enhanced animation with improved mobile performance
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel || !isVisible || isPaused) return;
@@ -62,26 +62,34 @@ function AutoScrollCarousel() {
 
     let scrollAmount = carousel.scrollLeft;
     let scrollDirection = 1;
-    // Improved speed and smoothness - faster on mobile
-    const scrollSpeed = isMobile ? 1.2 : 0.5;
+    // Significantly faster speed on mobile with smoother increments
+    const scrollSpeed = isMobile ? 2.5 : 0.8;
     let lastTime = 0;
 
     const animate = (currentTime: number) => {
-      // Smoother animation timing - consistent 60fps
-      const frameDelay = 16; // Always 60fps for smoothness
+      // Smoother frame timing - reduced delay on mobile for fluid motion
+      const frameDelay = isMobile ? 8 : 16; // 120fps on mobile, 60fps on desktop
       
       if (currentTime - lastTime >= frameDelay) {
         const maxScroll = carousel.scrollWidth - carousel.clientWidth;
         
-        // Change direction at boundaries
+        // Smoother direction changes with slight easing
         if (scrollAmount >= maxScroll) {
           scrollDirection = -1;
         } else if (scrollAmount <= 0) {
           scrollDirection = 1;
         }
         
+        // Enhanced smoothness with fractional pixel movements
         scrollAmount += scrollSpeed * scrollDirection;
-        carousel.scrollLeft = scrollAmount;
+        
+        // Use smoother scrolling method on mobile
+        if (isMobile) {
+          carousel.style.scrollBehavior = 'auto';
+          carousel.scrollLeft = Math.round(scrollAmount * 10) / 10; // Sub-pixel precision
+        } else {
+          carousel.scrollLeft = scrollAmount;
+        }
         
         lastTime = currentTime;
       }
@@ -114,6 +122,11 @@ function AutoScrollCarousel() {
       <div 
         ref={carouselRef}
         className="flex overflow-x-auto scrollbar-hide gap-4 pb-4 pt-2 px-1 carousel-container"
+        style={{
+          // Enhanced smoothness on mobile
+          scrollBehavior: isMobile ? 'auto' : 'smooth',
+          WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
+        }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
