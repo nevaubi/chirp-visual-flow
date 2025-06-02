@@ -50,7 +50,7 @@ export default function Navbar() {
           {/* Logo section */}
           <Link to="/" className="flex items-center gap-3 group">
             <img 
-              src="/newlogo.png" 
+              src="/logoo.png" 
               alt="Letternest Logo" 
               className="h-9 w-9 transition-transform duration-300 group-hover:scale-110"
             />

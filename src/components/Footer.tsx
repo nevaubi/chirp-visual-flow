@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -11,7 +10,7 @@ const Footer = () => {
           {/* Logo and Name (side by side) */}
           <Link to="/" className="mb-6 flex items-center gap-2">
             <img 
-              src="/newlogo.png" 
+              src="/logoo.png" 
               alt="Letternest Logo" 
               className="h-8 w-8" 
             />
