@@ -1,7 +1,7 @@
 import React from "react";
 import TwitterMockup from "./TwitterMockup";
 import BookmarkComponent from "./BookmarkComponent";
-import Step3Image from "./Step3Image";
+import Step3Image from "./Step3image";
 
 const HowItWorksSection = () => {
   return (
