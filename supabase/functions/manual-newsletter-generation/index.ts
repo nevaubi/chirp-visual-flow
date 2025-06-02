@@ -778,9 +778,40 @@ renderer.image = (href, _title, alt) => `
     const htmlBody = marked(finalMarkdown, { renderer });
 
     const emailHtml = juice(`
-      <body style="background:#f5f7fa;margin:0;padding:20px;">
-        <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-          <div style="padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+  <body style="background:#f5f7fa;margin:0;padding:20px;">
+
+    <!-- ✨ added style block begins -->
+    <style>
+      /* Desktop restore – only wide screens get larger side-padding */
+      @media screen and (min-width:640px){
+        .content-body{padding:24px 24px !important;}
+      }
+
+      /* Print / “Save as PDF” tidy-up so spacing matches desktop view */
+      @media print{
+        body,html{
+          width:100%;
+          margin:0;
+          background:#ffffff !important;
+        }
+        .wrapper{
+          max-width:none !important;
+          width:100% !important;
+          margin:0 !important;
+        }
+        .content-body{
+          padding:32px !important;
+          font-size:14px !important;
+          line-height:1.4 !important;
+        }
+        img{max-width:100% !important;height:auto !important;}
+      }
+    </style>
+    <!-- ✨ added style block ends -->
+
+    <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;">
+      <div class="content-body" style="padding:24px 16px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+
             ${htmlBody}
           </div>
         </div>
