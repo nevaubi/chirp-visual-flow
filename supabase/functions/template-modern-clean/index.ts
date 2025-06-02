@@ -428,31 +428,33 @@ PROFESSIONAL COLOR PALETTE & STYLING:
 
 ENHANCEMENT RULES:
 1.  **Headings with Professional Hierarchy:**
-    *   H1: Leave as is - the renderer will style it
-    *   H2: Leave as is - the renderer will style it
-    *   H3: Leave as is - the renderer will style it
+    *   H1: \`<h1 style="color: #142a4b; margin-bottom: 8px; font-weight: 700; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">Chain of Thought</h1>\`
+    *   H2: Wrap content in \`<span style="color: #142a4b; font-weight: 600; font-size: 24px;">\`.
+    *   H3: Wrap content in \`<span style="color: #5774cd; font-weight: 500; font-size: 20px;">\`.
 
 2.  **Professional Layout & Spacing:**
-    *   Paragraphs: Leave as standard markdown paragraphs
-    *   "The Gist" / Major Blockquotes: Wrap in \`<blockquote class="gist-block" style="background-color: #d2ddec; padding: 12px 10px; border-radius: 4px; margin: 16px 0; border-left: 4px solid #142a4b; font-style: italic; color: #142a4b;">\`.
+    *   Paragraphs: Add \`style="margin-bottom: 1.3em; line-height: 1.8; color: #333333; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"\` for optimal readability.
+    *   "The Gist" / Major Blockquotes: Wrap in \`<div style="background-color: #d2ddec; padding: 20px 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #142a4b; font-style: italic; color: #142a4b;">\`.
 
-3.  **Enhanced Special Structures (Mobile-Friendly):**
+3.  **Enhanced Special Structures:**
     *   **KEY TAKEAWAY BOX**: Transform "> **KEY TAKEAWAY:**" into:
-        \`<div class="takeaway-box" style="background-color: #ffffff; padding: 10px 10px; border-radius: 4px; margin: 14px 0; border: 2px solid #a1c181; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"><strong style="color: #142a4b;">KEY TAKEAWAY:</strong> <span style="color: #333333;">[rest of text]</span></div>\`
+        \`<div style="background-color: #ffffff; padding: 18px 22px; border-radius: 8px; margin: 25px 0; border: 2px solid #a1c181; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"><strong style="color: #142a4b;">KEY TAKEAWAY:</strong> <span style="color: #333333;">[rest of text]</span></div>\`
     *   **THEME SNAPSHOT**: Transform "_THEME SNAPSHOT: \"[text]\"_" into:
-        \`<div class="snapshot-box" style="text-align: center; margin: 16px 0; padding: 12px 10px; background-color: #f8f9fa; border-radius: 4px;"><span style="color: #a1c181; font-weight: 500; font-size: 16px;">THEME SNAPSHOT</span><p style="margin: 10px 0 0 0; font-style: italic; color: #142a4b; font-size: 15px;">"[text]"</p></div>\`
+        \`<div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;"><span style="color: #a1c181; font-weight: 500; font-size: 18px; border-bottom: 2px dotted #a1c181; padding-bottom: 3px;">THEME SNAPSHOT</span><p style="margin: 15px 0 0 0; font-style: italic; color: #142a4b; font-size: 16px;">"[text]"</p></div>\`
 
 4.  **Professional List Styling:**
-    *   Leave lists as standard markdown lists - the renderer will style them
+    *   Bulleted lists (\`<ul>\`) items: \`<li style="color: #5774cd; margin-bottom: 10px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">[list item text]</span></li>\` (Accent bullet color, readable content)
+    *   Numbered lists: Similar professional styling with structured hierarchy.
+    *   Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
 
 5.  **Section Dividers & Spacing:**
-    *   Replace markdown '---' with:
-        \`<hr style="height: 2px; background: linear-gradient(to right, #d2ddec, #5774cd, #d2ddec); margin: 20px 0; border: none; border-radius: 1px;">\`
+    *   Replace markdown '---' or add strategic dividers with:
+        \`<div style="height: 2px; background: linear-gradient(to right, #d2ddec, #5774cd, #d2ddec); margin: 40px 0; border-radius: 1px;"></div>\`
     *   Add breathing room between major sections.
 
-6.  **Email-Client Compatibility:** Keep styling minimal and mobile-friendly. Avoid excessive padding/margins in inline styles.
+6.  **Email-Client Compatibility:** Ensure all styling uses inline CSS compatible with major email clients. Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.
 
-Transform the markdown below into a visually enhanced, appealing, and professionally styled newsletter with mobile-first considerations.
+Transform the markdown below into a visually enhanced, appealing, and professionally styled newsletter.
 `;
       
       const enhancedUserPrompt = `
@@ -585,250 +587,172 @@ ${markdownNewsletter}
 
     // Generate the final email HTML with professional design system
     const emailHtml = juice(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chain of Thought Newsletter</title>
-      </head>
-      <body style="margin:0; padding:0; background-color:#f5f7fa; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+      <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+        <!-- Professional print CSS for PDF generation -->
         <style>
-          /* Base styles */
-          body { margin: 0 !important; padding: 0 !important; }
-          table { border-spacing: 0; }
-          td { padding: 0; }
-          img { border: 0; }
-          
-          /* Desktop styles */
-          @media screen and (min-width: 601px) {
-            .content-wrapper { 
-              padding: 20px 0 !important; 
-              background-color: #f5f7fa !important;
-            }
-            .content-container { 
-              width: 700px !important; 
-              margin: 0 auto !important;
-              border-radius: 16px !important;
-              box-shadow: 0 8px 32px rgba(20,42,75,0.12) !important;
-              border: 1px solid #d2ddec !important;
-            }
-            .content-body { 
-              padding: 45px 50px !important; 
-            }
-          }
-          
-          /* Mobile styles - default */
-          .content-wrapper {
-            width: 100%;
-            padding: 0;
-            background-color: #ffffff;
-          }
-          
-          .content-container {
-            width: 100%;
-            background-color: #ffffff;
-            border-radius: 0;
-            box-shadow: none;
-            border: none;
-          }
-          
-          .content-body {
-            padding: 16px 10px;
-            line-height: 1.6;
-            color: #333333;
-            font-size: 16px;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          /* Typography responsive */
-          h1 { 
-            color: #142a4b;
-            font-size: 28px;
-            margin: 0 0 16px 0;
-            font-weight: 700;
-            line-height: 1.3;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          h2 {
-            color: #142a4b;
-            font-size: 22px;
-            margin: 24px 0 12px 0;
-            font-weight: 600;
-            line-height: 1.4;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          h3 {
-            color: #5774cd;
-            font-size: 18px;
-            margin: 20px 0 10px 0;
-            font-weight: 500;
-            line-height: 1.4;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          p {
-            margin: 0 0 16px 0;
-            line-height: 1.6;
-            font-size: 16px;
-            color: #333333;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          li {
-            margin: 0 0 12px 0;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #333333;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          .image-container {
-            text-align: center;
-            margin: 16px 0 20px 0;
-            padding: 0;
-          }
-          
-          .image-container img {
-            max-width: 100%;
-            width: auto;
-            max-height: 500px;
-            height: auto;
-            border-radius: 6px;
-            display: inline-block;
-            box-shadow: 0 2px 8px rgba(20,42,75,0.08);
-          }
-          
-          /* Desktop typography overrides */
-          @media screen and (min-width: 601px) {
-            h1 { font-size: 32px !important; margin: 0 0 24px 0 !important; }
-            h2 { font-size: 26px !important; margin: 32px 0 16px 0 !important; }
-            h3 { font-size: 22px !important; margin: 24px 0 12px 0 !important; }
-            p { margin: 0 0 20px 0 !important; line-height: 1.8 !important; }
-            li { line-height: 1.7 !important; }
-            .image-container { margin: 25px 0 35px 0 !important; }
-            .image-container img { 
-              border-radius: 12px !important; 
-              box-shadow: 0 6px 20px rgba(20,42,75,0.15) !important;
-              border: 1px solid #d2ddec !important;
-            }
-          }
-          
-          /* Print styles */
           @media print {
             body, html { 
               width: 100%; 
               height: auto; 
               background-color: #ffffff !important; 
             }
+            
             h1, h2, h3 { 
               page-break-after: avoid; 
               margin-top: 1.2em;
             }
+            
             .image-container { 
               page-break-inside: avoid; 
             }
+            
             p, ul, ol, dl, blockquote { 
               page-break-inside: auto; 
             }
+            
             .section-break {
               page-break-after: always;
             }
+            
             .content-container {
               page-break-inside: auto !important;
             }
           }
           
-          /* Special content blocks - mobile first */
-          .gist-block, blockquote {
-            background-color: #d2ddec;
-            padding: 12px 10px;
-            border-radius: 4px;
-            margin: 16px 0;
-            border-left: 4px solid #142a4b;
-            font-style: italic;
-            color: #142a4b;
-          }
-          
-          .takeaway-box {
-            background-color: #ffffff;
-            padding: 10px 10px;
-            border-radius: 4px;
-            margin: 14px 0;
-            border: 2px solid #a1c181;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          }
-          
-          .snapshot-box {
-            text-align: center;
-            margin: 16px 0;
-            padding: 12px 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-          }
-          
-          /* Desktop overrides for special content blocks */
-          @media screen and (min-width: 601px) {
-            .gist-block, blockquote {
-              padding: 20px 25px !important;
-              border-radius: 8px !important;
-              margin: 25px 0 !important;
+          /* Mobile-first responsive design for full-width mobile experience */
+          @media screen and (max-width: 600px) {
+            body {
+              background-color: #ffffff !important;
             }
             
-            .takeaway-box {
-              padding: 18px 22px !important;
-              border-radius: 8px !important;
-              margin: 25px 0 !important;
+            .content-wrapper {
+              padding: 0 !important;
+              background-color: #ffffff !important;
             }
             
-            .snapshot-box {
-              margin: 30px 0 !important;
-              padding: 20px !important;
-              border-radius: 8px !important;
+            .content-container {
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
             }
             
-            .snapshot-box span {
-              font-size: 18px !important;
-              border-bottom: 2px dotted #a1c181;
-              padding-bottom: 3px;
-            }
-            
-            .snapshot-box p {
+            .content-body {
+              padding: 16px 10px !important;
               font-size: 16px !important;
-              margin: 15px 0 0 0 !important;
+              line-height: 1.6 !important;
+            }
+            
+            /* Mobile-optimized headings */
+            h1 {
+              font-size: 28px !important;
+              margin: 0 0 16px 0 !important;
+              line-height: 1.3 !important;
+            }
+            
+            h2 {
+              font-size: 22px !important;
+              margin: 24px 0 12px 0 !important;
+              line-height: 1.4 !important;
+            }
+            
+            h3 {
+              font-size: 18px !important;
+              margin: 20px 0 10px 0 !important;
+              line-height: 1.4 !important;
+            }
+            
+            /* Mobile-optimized paragraphs and text */
+            p {
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+              margin: 0 0 16px 0 !important;
+            }
+            
+            /* Mobile-optimized lists */
+            li {
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+              margin-bottom: 12px !important;
+            }
+            
+            /* Mobile-optimized special content blocks */
+            .image-container {
+              margin: 16px 0 20px 0 !important;
+              padding: 0 !important;
+            }
+            
+            .image-container img {
+              border-radius: 6px !important;
+              box-shadow: 0 2px 8px rgba(20,42,75,0.08) !important;
+              max-width: 100% !important;
+            }
+            
+            /* Mobile-optimized callout boxes with reduced padding */
+            div[style*="background-color: #d2ddec"] {
+              padding: 12px 10px !important;
+              margin: 16px 0 !important;
+              border-radius: 4px !important;
+            }
+            
+            div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
+              padding: 10px 10px !important;
+              margin: 14px 0 !important;
+              border-radius: 4px !important;
+            }
+            
+            div[style*="background-color: #f8f9fa"] {
+              padding: 12px 10px !important;
+              margin: 16px 0 !important;
+              border-radius: 4px !important;
+            }
+            
+            /* Mobile footer optimization */
+            .footer {
+              padding: 20px 10px 24px 10px !important;
+              font-size: 14px !important;
+              background-color: #ffffff !important;
+            }
+          }
+          
+          /* Enhanced typography and spacing for all devices */
+          .content-body h1, .content-body h2, .content-body h3 {
+            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
+          }
+          
+          .content-body p, .content-body li {
+            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
+          }
+          
+          /* Tablet optimization (601px to 900px) */
+          @media screen and (min-width: 601px) and (max-width: 900px) {
+            .content-container {
+              max-width: 95% !important;
+              margin: 0 auto !important;
+            }
+            
+            .content-body {
+              padding: 35px 30px !important;
             }
           }
         </style>
 
-        <!-- Main table wrapper for email compatibility -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="content-wrapper">
-          <tr>
-            <td align="center" valign="top">
-              <!-- Content container table -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="content-container">
-                <tr>
-                  <td class="content-body">
-                    ${htmlBody}
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Footer -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                <tr>
-                  <td align="center" style="padding: 20px 10px 24px 10px; font-size: 14px; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-                    Powered by <strong>LetterNest</strong><br>
-                    <span style="color: #888; font-size: 12px;">Professional Newsletter Generation</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+        <!-- Professional newsletter container -->
+        <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f5f7fa; padding: 20px 0;">
+          <div class="content-container" style="display: inline-block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
+            <div class="content-body" style="padding: 45px 50px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+              ${htmlBody}
+            </div>
+          </div>
+          
+          <div class="footer" style="text-align: center; padding: 35px 0 45px 0; font-size: 14px; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+            Powered by <strong>LetterNest</strong><br>
+            <span style="color: #888; font-size: 12px;">Professional Newsletter Generation</span>
+          </div>
+        </div>
       </body>
-      </html>
     `);
 
     logStep("Converted 'Chain of Thought' markdown to HTML with professional design system");
