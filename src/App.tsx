@@ -28,6 +28,7 @@ import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
 import ProFeatures from "./pages/dashboard/ProFeatures";
 import ChainOfThought from "./pages/ChainOfThought";
+import SatoshiSummary from "./pages/SatoshiSummary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,7 @@ const App = () => {
               <Route path="/free-tools" element={<FreeTools />} />
               <Route path="/ticker-drop" element={<TickerDrop />} />
               <Route path="/chain-of-thought" element={<ChainOfThought />} />
+              <Route path="/satoshi-summary" element={<SatoshiSummary />} />
               <Route path="/ticker-drop/verify" element={<TickerDropVerify />} />
               <Route path="/ticker-drop/unsubscribe" element={<TickerDropUnsubscribe />} />
               <Route path="/terms" element={<Terms />} />
