@@ -1,7 +1,7 @@
 import React from "react";
 import TwitterMockup from "./TwitterMockup";
 import BookmarkComponent from "./BookmarkComponent";
-import Step3Image from "./Step3image";
+import Step3Image from "./Step3Image";
 
 const HowItWorksSection = () => {
   return (
@@ -32,8 +32,8 @@ const HowItWorksSection = () => {
               1
             </div>
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col">
-              <div className="bg-gradient-to-br from-[#0087C8] to-[#006CA1] flex items-center justify-center p-4 pt-6">
-                <div className="bg-white rounded-lg w-full shadow-lg overflow-hidden">
+              <div className="h-64 bg-gradient-to-br from-[#0087C8] to-[#006CA1] flex items-center justify-center p-4 pt-6">
+                <div className="bg-white rounded-lg w-full shadow-lg overflow-hidden max-h-full">
                   <div className="h-6 bg-gray-50 border-b border-gray-200 flex items-center px-2 gap-1">
                     <div className="flex gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#ff5f57]"></div>
@@ -45,7 +45,7 @@ const HowItWorksSection = () => {
                       twitter.com
                     </div>
                   </div>
-                  <div className="w-full h-[200px] overflow-hidden bg-white">
+                  <div className="w-full h-[180px] overflow-hidden bg-white">
                     <div 
                       className="w-full h-full flex items-start justify-center"
                       style={{ 
@@ -112,4 +112,4 @@ const HowItWorksSection = () => {
   );
 };
 
-export default HowItWorksSection;
+export default HowItWorksSection; 
