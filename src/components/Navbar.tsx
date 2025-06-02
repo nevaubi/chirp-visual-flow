@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,34 +62,34 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-8">
             {/* Newsletter Links Group */}
-            <div className="relative ml-4">
-              <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-gray-700 tracking-wide whitespace-nowrap">Newsletters</span>
-              <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
+            <div className="relative ml-4 flex flex-col items-center">
+              <span className="text-xs font-semibold text-gray-700 tracking-wide mb-2">Newsletters</span>
+              <div className="flex items-center gap-2">
                 <Link 
                   to="/ticker-drop" 
-                  className="flex items-center gap-2 text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <FileText size={16} />
+                  <FileText size={14} />
                   <span>The Ticker Drop</span>
                 </Link>
                 
-                <div className="w-px h-5 bg-gray-300"></div>
+                <div className="w-px h-5 bg-black"></div>
                 
                 <Link 
                   to="/chain-of-thought" 
-                  className="flex items-center gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <FileText size={16} />
+                  <FileText size={14} />
                   <span>Chain of Thought</span>
                 </Link>
                 
-                <div className="w-px h-5 bg-gray-300"></div>
+                <div className="w-px h-5 bg-black"></div>
                 
                 <Link 
                   to="/satoshi-summary" 
-                  className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <FileText size={16} />
+                  <FileText size={14} />
                   <span>Satoshi Summary</span>
                 </Link>
               </div>
