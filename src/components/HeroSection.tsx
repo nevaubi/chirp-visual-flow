@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -63,11 +62,15 @@ function AutoScrollCarousel() {
 
     let scrollAmount = carousel.scrollLeft;
     let scrollDirection = 1;
-    const scrollSpeed = isMobile ? 0.3 : 0.5; // Slower on mobile for better performance
+    // Faster and smoother on mobile with optimized speed
+    const scrollSpeed = isMobile ? 0.8 : 0.5;
     let lastTime = 0;
 
     const animate = (currentTime: number) => {
-      if (currentTime - lastTime >= 16) { // ~60fps throttling
+      // Smoother frame rate for mobile (reduce to ~30fps for better performance)
+      const frameDelay = isMobile ? 33 : 16;
+      
+      if (currentTime - lastTime >= frameDelay) {
         const maxScroll = carousel.scrollWidth - carousel.clientWidth;
         
         // Change direction at boundaries
@@ -119,19 +122,19 @@ function AutoScrollCarousel() {
         {cards.map((card) => (
           <div 
             key={card.id}
-            className={`flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${card.color} p-4 flex flex-col justify-between w-32 h-48 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized`}
+            className={`flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${card.color} p-4 flex flex-col justify-between w-28 h-40 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized`}
           >
             <div>
-              <div className="w-full h-8 sm:h-10 lg:h-12 bg-white/60 rounded-lg mb-3 flex items-center justify-center">
-                <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gray-300 rounded"></div>
+              <div className="w-full h-6 sm:h-10 lg:h-12 bg-white/60 rounded-lg mb-3 flex items-center justify-center">
+                <div className="w-3 h-3 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gray-300 rounded"></div>
               </div>
               <h3 className={`font-bold text-xs sm:text-sm lg:text-base ${card.textColor}`}>{card.title}</h3>
               <p className={`text-xs sm:text-xs lg:text-sm ${card.textColor} opacity-80`}>{card.subtitle}</p>
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <div className="w-full h-1.5 sm:h-2 bg-white/60 rounded"></div>
-              <div className="w-3/4 h-1.5 sm:h-2 bg-white/60 rounded"></div>
-              <div className="w-1/2 h-1.5 sm:h-2 bg-white/60 rounded"></div>
+            <div className="space-y-1 sm:space-y-2">
+              <div className="w-full h-1 sm:h-2 bg-white/60 rounded"></div>
+              <div className="w-3/4 h-1 sm:h-2 bg-white/60 rounded"></div>
+              <div className="w-1/2 h-1 sm:h-2 bg-white/60 rounded"></div>
             </div>
           </div>
         ))}
