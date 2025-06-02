@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -14,14 +13,14 @@ function AutoScrollCarousel() {
   
   // Newsletter card data with images
   const cards = [
-    { id: 1, title: "AI Newsletter", subtitle: "Weekly AI insights", image: "/one.png" },
-    { id: 2, title: "Crypto Weekly", subtitle: "Market updates", image: "/two.png" },
-    { id: 3, title: "Tech Trends", subtitle: "Latest in tech", image: "/three.png" },
-    { id: 4, title: "Finance Focus", subtitle: "Money matters", image: "/four.png" },
-    { id: 5, title: "Design Daily", subtitle: "Creative insights", image: "/five.png" },
-    { id: 6, title: "Startup Stories", subtitle: "Entrepreneurship", image: "/six.png" },
-    { id: 7, title: "Health Hub", subtitle: "Wellness tips", image: "/seven.png" },
-    { id: 8, title: "Travel Tales", subtitle: "Adventure stories", image: "/eight.png" },
+    { id: 1, image: "/one.png" },
+    { id: 2, image: "/two.png" },
+    { id: 3, image: "/three.png" },
+    { id: 4, image: "/four.png" },
+    { id: 5, image: "/five.png" },
+    { id: 6, image: "/six.png" },
+    { id: 7, image: "/seven.png" },
+    { id: 8, image: "/eight.png" },
   ];
 
   // Check for mobile device and reduced motion preference
@@ -128,19 +127,10 @@ function AutoScrollCarousel() {
             {/* Image background */}
             <img 
               src={card.image}
-              alt={card.title}
+              alt={`Newsletter card ${card.id}`}
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
             />
-            
-            {/* Overlay gradient for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            
-            {/* Text content */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-              <h3 className="font-bold text-xs sm:text-sm lg:text-base text-white drop-shadow-md">{card.title}</h3>
-              <p className="text-xs sm:text-xs lg:text-sm text-white/90 opacity-90 drop-shadow-sm">{card.subtitle}</p>
-            </div>
           </div>
         ))}
       </div>
