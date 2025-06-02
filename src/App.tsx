@@ -1,9 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -38,50 +38,61 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/bookmarks/callback" element={<BookmarksCallback />} />
-            <Route path="/newuser-direct" element={<NewUserDirect />} />
-            <Route path="/free-tools" element={<FreeTools />} />
-            <Route path="/ticker-drop" element={<TickerDrop />} />
-            <Route path="/chain-of-thought" element={<ChainOfThought />} />
-            <Route path="/ticker-drop/verify" element={<TickerDropVerify />} />
-            <Route path="/ticker-drop/unsubscribe" element={<TickerDropUnsubscribe />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            
-            {/* New routes for individual tools */}
-            <Route path="/tools/tweet-id-converter" element={<TweetIdConverter />} />
-            <Route path="/tools/tweet-screenshot" element={<TweetScreenshot />} />
-            
-            {/* Protected Routes */}
-            <Route path="/dashboard" element={<ProtectedRoute />}>
-              <Route element={<DashboardLayout />}>
-                <Route index element={<Navigate to="/dashboard/home" replace />} />
-                <Route path="home" element={<DashboardHome />} />
-                <Route path="pro-features" element={<ProFeatures />} />
-                <Route path="checkout-success" element={<CheckoutSuccess />} />
-                <Route path="checkout-cancel" element={<CheckoutCancel />} />
-                <Route path="analytics" element={<Library />} />
-                <Route path="settings" element={<Settings />} />
+const App = () => {
+  // Fix scroll restoration issue
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    // Always start at the top of the page
+    window.scrollTo(0, 0);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/bookmarks/callback" element={<BookmarksCallback />} />
+              <Route path="/newuser-direct" element={<NewUserDirect />} />
+              <Route path="/free-tools" element={<FreeTools />} />
+              <Route path="/ticker-drop" element={<TickerDrop />} />
+              <Route path="/chain-of-thought" element={<ChainOfThought />} />
+              <Route path="/ticker-drop/verify" element={<TickerDropVerify />} />
+              <Route path="/ticker-drop/unsubscribe" element={<TickerDropUnsubscribe />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              
+              {/* New routes for individual tools */}
+              <Route path="/tools/tweet-id-converter" element={<TweetIdConverter />} />
+              <Route path="/tools/tweet-screenshot" element={<TweetScreenshot />} />
+              
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute />}>
+                <Route element={<DashboardLayout />}>
+                  <Route index element={<Navigate to="/dashboard/home" replace />} />
+                  <Route path="home" element={<DashboardHome />} />
+                  <Route path="pro-features" element={<ProFeatures />} />
+                  <Route path="checkout-success" element={<CheckoutSuccess />} />
+                  <Route path="checkout-cancel" element={<CheckoutCancel />} />
+                  <Route path="analytics" element={<Library />} />
+                  <Route path="settings" element={<Settings />} />
+                </Route>
               </Route>
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
