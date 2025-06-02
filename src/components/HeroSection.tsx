@@ -140,7 +140,14 @@ export default function HeroSection() {
           <div className="lg:hidden w-full">
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
-              <h1 className="sm:text-5xl font-black leading-tight mb-6 tracking-tight text-gray-900" style={{ fontSize: '40px' }}>
+              <h1 
+                className="sm:text-5xl leading-tight mb-6 tracking-tight text-gray-900" 
+                style={{ 
+                  fontSize: '40px',
+                  fontFamily: 'Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  fontWeight: '900'
+                }}
+              >
                 Turn <span className="text-[#0087C8]">X Bookmarks</span> into Professional <span className="text-[#FF6B35]">Newsletters</span>
               </h1>
               <p className="text-xl sm:text-xl leading-relaxed text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
