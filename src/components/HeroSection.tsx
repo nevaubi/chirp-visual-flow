@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -209,7 +208,7 @@ export default function HeroSection() {
           {/* Large Screen Layout: Text left, Social proof + CTA right, Images below */}
           <div className="hidden lg:block w-full">
             {/* Two-column layout for text and social proof + CTA */}
-            <div className="grid grid-cols-2 gap-16 items-start mb-16">
+            <div className="grid grid-cols-2 gap-16 items-start mb-8">
               {/* Left Column: Hero Text (headline + subtext) */}
               <div className="text-left">
                 <h1 className="text-5xl font-black leading-[0.95] mb-8 tracking-tight text-gray-900">
