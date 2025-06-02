@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -11,16 +12,16 @@ function AutoScrollCarousel() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Newsletter card data
+  // Newsletter card data - simplified without colors
   const cards = [
-    { id: 1, title: "AI Newsletter", subtitle: "Weekly AI insights", color: "bg-blue-100", textColor: "text-blue-800" },
-    { id: 2, title: "Crypto Weekly", subtitle: "Market updates", color: "bg-emerald-100", textColor: "text-emerald-800" },
-    { id: 3, title: "Tech Trends", subtitle: "Latest in tech", color: "bg-purple-100", textColor: "text-purple-800" },
-    { id: 4, title: "Finance Focus", subtitle: "Money matters", color: "bg-orange-100", textColor: "text-orange-800" },
-    { id: 5, title: "Design Daily", subtitle: "Creative insights", color: "bg-pink-100", textColor: "text-pink-800" },
-    { id: 6, title: "Startup Stories", subtitle: "Entrepreneurship", color: "bg-indigo-100", textColor: "text-indigo-800" },
-    { id: 7, title: "Health Hub", subtitle: "Wellness tips", color: "bg-green-100", textColor: "text-green-800" },
-    { id: 8, title: "Travel Tales", subtitle: "Adventure stories", color: "bg-cyan-100", textColor: "text-cyan-800" },
+    { id: 1, title: "AI Newsletter", subtitle: "Weekly AI insights" },
+    { id: 2, title: "Crypto Weekly", subtitle: "Market updates" },
+    { id: 3, title: "Tech Trends", subtitle: "Latest in tech" },
+    { id: 4, title: "Finance Focus", subtitle: "Money matters" },
+    { id: 5, title: "Design Daily", subtitle: "Creative insights" },
+    { id: 6, title: "Startup Stories", subtitle: "Entrepreneurship" },
+    { id: 7, title: "Health Hub", subtitle: "Wellness tips" },
+    { id: 8, title: "Travel Tales", subtitle: "Adventure stories" },
   ];
 
   // Check for mobile device and reduced motion preference
@@ -62,13 +63,13 @@ function AutoScrollCarousel() {
 
     let scrollAmount = carousel.scrollLeft;
     let scrollDirection = 1;
-    // Faster and smoother on mobile with optimized speed
-    const scrollSpeed = isMobile ? 0.8 : 0.5;
+    // Improved speed and smoothness - faster on mobile
+    const scrollSpeed = isMobile ? 1.2 : 0.5;
     let lastTime = 0;
 
     const animate = (currentTime: number) => {
-      // Smoother frame rate for mobile (reduce to ~30fps for better performance)
-      const frameDelay = isMobile ? 33 : 16;
+      // Smoother animation timing - consistent 60fps
+      const frameDelay = 16; // Always 60fps for smoothness
       
       if (currentTime - lastTime >= frameDelay) {
         const maxScroll = carousel.scrollWidth - carousel.clientWidth;
@@ -122,19 +123,11 @@ function AutoScrollCarousel() {
         {cards.map((card) => (
           <div 
             key={card.id}
-            className={`flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${card.color} p-4 flex flex-col justify-between w-28 h-40 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized`}
+            className="flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-gray-100 p-4 flex flex-col justify-between w-28 h-40 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized"
           >
             <div>
-              <div className="w-full h-6 sm:h-10 lg:h-12 bg-white/60 rounded-lg mb-3 flex items-center justify-center">
-                <div className="w-3 h-3 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gray-300 rounded"></div>
-              </div>
-              <h3 className={`font-bold text-xs sm:text-sm lg:text-base ${card.textColor}`}>{card.title}</h3>
-              <p className={`text-xs sm:text-xs lg:text-sm ${card.textColor} opacity-80`}>{card.subtitle}</p>
-            </div>
-            <div className="space-y-1 sm:space-y-2">
-              <div className="w-full h-1 sm:h-2 bg-white/60 rounded"></div>
-              <div className="w-3/4 h-1 sm:h-2 bg-white/60 rounded"></div>
-              <div className="w-1/2 h-1 sm:h-2 bg-white/60 rounded"></div>
+              <h3 className="font-bold text-xs sm:text-sm lg:text-base text-gray-700">{card.title}</h3>
+              <p className="text-xs sm:text-xs lg:text-sm text-gray-600 opacity-80">{card.subtitle}</p>
             </div>
           </div>
         ))}
@@ -187,7 +180,7 @@ export default function HeroSection() {
               >
                 Turn <span className="text-[#0087C8]">X Bookmarks</span> into Professional <span className="text-[#FF6B35]">Newsletters</span>
               </h1>
-              <p className="text-xl sm:text-xl leading-relaxed text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
+              <p className="text-lg sm:text-xl leading-relaxed text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
                 <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
                 <span className="block mt-2 font-semibold text-[#0087C8]">
                   <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
