@@ -48,7 +48,7 @@ const WhoLetternestIsForSection = () => {
             Who Uses <span className="text-black">letter</span><span className="text-[#FF6B35]">nest</span>?
           </h2>
           <p className="text-xl text-gray-700 font-medium max-w-4xl mx-auto">
-            For anyone who wants beautiful newsletters, instantly.
+            Anyone who wants beautiful newsletters, instantly.
           </p>
         </div>
 
