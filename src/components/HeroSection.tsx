@@ -1,4 +1,5 @@
 
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -231,7 +232,7 @@ export default function HeroSection() {
               </div>
 
               {/* Right Column: Social proof + Bullet points + CTA */}
-              <div className="flex flex-col items-start space-y-8">
+              <div className="flex flex-col items-center space-y-8">
                 {/* Social proof */}
                 <div className="relative z-20">
                   <ReviewsSection />
@@ -261,8 +262,8 @@ export default function HeroSection() {
                   </ul>
                 </div>
 
-                {/* CTA button + credit card text - left aligned */}
-                <div className="relative z-20 w-full flex flex-col items-start">
+                {/* CTA button + credit card text - center aligned */}
+                <div className="relative z-20 w-full flex flex-col items-center">
                   <Button
                     size="lg"
                     className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 max-w-sm"
@@ -309,3 +310,4 @@ export default function HeroSection() {
     </section>
   );
 }
+
