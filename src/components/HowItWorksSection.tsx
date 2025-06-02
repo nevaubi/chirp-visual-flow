@@ -1,3 +1,4 @@
+
 import React from "react";
 import TwitterMockup from "./TwitterMockup";
 import BookmarkComponent from "./BookmarkComponent";
@@ -12,20 +13,12 @@ const HowItWorksSection = () => {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-100/20 rounded-full blur-3xl"></div>
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-6">
-          <p className="text-base font-bold">Here's how letternest works</p>
-        </div>
-        
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-16">
           Generate a <span className="text-[#FF6B35]">beautiful newsletter</span> in <br className="hidden sm:block" />
           3 simple steps
         </h2>
         
-        <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
-          Bookmark tweets, select how many to include, and hit <strong className="text-gray-800">'Create Newsletter'</strong>. Letternest adds context and formatting - <strong className="text-gray-800">turning your bookmarks into a polished newsletter in under 3 minutes</strong>.
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Step 1 - Updated with TwitterMockup */}
           <div className="relative">
             <div className="absolute -top-3 -left-3 w-12 h-12 bg-[#FF6B35] text-white rounded-full flex items-center justify-center font-bold z-20 shadow-lg border-2 border-white">
@@ -107,6 +100,10 @@ const HowItWorksSection = () => {
             </div>
           </div>
         </div>
+
+        <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto">
+          Bookmark tweets, select how many to include, and hit <strong className="text-gray-800">'Create Newsletter'</strong>. Letternest adds context and formatting - <strong className="text-gray-800">turning your bookmarks into a polished newsletter in under 3 minutes</strong>.
+        </p>
       </div>
     </section>
   );
