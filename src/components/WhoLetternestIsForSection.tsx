@@ -45,10 +45,10 @@ const WhoLetternestIsForSection = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-black mb-4">
-            Who Uses <span className="text-[#0087C8]">letter</span><span className="text-[#FF6B35]">nest</span>?
+            Who Uses <span className="text-black">letter</span><span className="text-[#FF6B35]">nest</span>?
           </h2>
           <p className="text-xl text-gray-700 font-medium max-w-4xl mx-auto">
-            For <span className="underline decoration-[#FF6B35] decoration-2">anyone</span> who wants beautiful newsletters, instantly.
+            For anyone who wants beautiful newsletters, instantly.
           </p>
         </div>
 
