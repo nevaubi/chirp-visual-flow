@@ -12,16 +12,16 @@ function AutoScrollCarousel() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Newsletter card data - simplified without colors
+  // Newsletter card data with images
   const cards = [
-    { id: 1, title: "AI Newsletter", subtitle: "Weekly AI insights" },
-    { id: 2, title: "Crypto Weekly", subtitle: "Market updates" },
-    { id: 3, title: "Tech Trends", subtitle: "Latest in tech" },
-    { id: 4, title: "Finance Focus", subtitle: "Money matters" },
-    { id: 5, title: "Design Daily", subtitle: "Creative insights" },
-    { id: 6, title: "Startup Stories", subtitle: "Entrepreneurship" },
-    { id: 7, title: "Health Hub", subtitle: "Wellness tips" },
-    { id: 8, title: "Travel Tales", subtitle: "Adventure stories" },
+    { id: 1, title: "AI Newsletter", subtitle: "Weekly AI insights", image: "/one.png" },
+    { id: 2, title: "Crypto Weekly", subtitle: "Market updates", image: "/two.png" },
+    { id: 3, title: "Tech Trends", subtitle: "Latest in tech", image: "/three.png" },
+    { id: 4, title: "Finance Focus", subtitle: "Money matters", image: "/four.png" },
+    { id: 5, title: "Design Daily", subtitle: "Creative insights", image: "/five.png" },
+    { id: 6, title: "Startup Stories", subtitle: "Entrepreneurship", image: "/six.png" },
+    { id: 7, title: "Health Hub", subtitle: "Wellness tips", image: "/seven.png" },
+    { id: 8, title: "Travel Tales", subtitle: "Adventure stories", image: "/eight.png" },
   ];
 
   // Check for mobile device and reduced motion preference
@@ -123,11 +123,23 @@ function AutoScrollCarousel() {
         {cards.map((card) => (
           <div 
             key={card.id}
-            className="flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-gray-100 p-4 flex flex-col justify-between w-28 h-40 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized"
+            className="flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-28 h-40 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized relative"
           >
-            <div>
-              <h3 className="font-bold text-xs sm:text-sm lg:text-base text-gray-700">{card.title}</h3>
-              <p className="text-xs sm:text-xs lg:text-sm text-gray-600 opacity-80">{card.subtitle}</p>
+            {/* Image background */}
+            <img 
+              src={card.image}
+              alt={card.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+            />
+            
+            {/* Overlay gradient for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            
+            {/* Text content */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+              <h3 className="font-bold text-xs sm:text-sm lg:text-base text-white drop-shadow-md">{card.title}</h3>
+              <p className="text-xs sm:text-xs lg:text-sm text-white/90 opacity-90 drop-shadow-sm">{card.subtitle}</p>
             </div>
           </div>
         ))}
