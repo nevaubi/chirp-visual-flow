@@ -112,4 +112,4 @@ const HowItWorksSection = () => {
   );
 };
 
-export default HowItWorksSection; 
+export default HowItWorksSection;
