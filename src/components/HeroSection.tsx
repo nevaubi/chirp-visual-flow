@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -62,8 +63,8 @@ function AutoScrollCarousel() {
 
     let scrollAmount = carousel.scrollLeft;
     let scrollDirection = 1;
-    // Significantly faster speed on mobile with smoother increments
-    const scrollSpeed = isMobile ? 2.5 : 0.8;
+    // Slightly reduced speed on mobile for better user experience
+    const scrollSpeed = isMobile ? 2.0 : 0.8;
     let lastTime = 0;
 
     const animate = (currentTime: number) => {
