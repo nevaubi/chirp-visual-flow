@@ -741,8 +741,10 @@ ${markdownNewsletter}
 
         <!-- Professional newsletter container -->
         <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f5f7fa; padding: 20px 0;">
-          <div class="content-container" style="display: inline-block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
-            <div class="content-body" style="padding: 45px 50px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+         <div class="content-container" style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
+
+            <div class="content-body" style="padding: 24px 16px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+
               ${htmlBody}
             </div>
           </div>
