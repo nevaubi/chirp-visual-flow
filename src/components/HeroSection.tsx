@@ -1,11 +1,16 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReviewsSection from "@/components/ReviewsSection";
 
 function AutoScrollCarousel() {
-  const carouselRef = useRef(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Newsletter card data
   const cards = [
@@ -18,19 +23,55 @@ function AutoScrollCarousel() {
     { id: 7, title: "Health Hub", subtitle: "Wellness tips", color: "bg-green-100", textColor: "text-green-800" },
     { id: 8, title: "Travel Tales", subtitle: "Adventure stories", color: "bg-cyan-100", textColor: "text-cyan-800" },
   ];
-  
+
+  // Check for mobile device and reduced motion preference
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Intersection Observer to only animate when visible
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
-    
-    let scrollAmount = 0;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(carousel);
+    return () => observer.unobserve(carousel);
+  }, []);
+
+  // Optimized animation with requestAnimationFrame
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel || !isVisible || isPaused) return;
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let scrollAmount = carousel.scrollLeft;
     let scrollDirection = 1;
-    const scrollSpeed = 1; // Adjust for faster/slower scrolling
-    
-    const scroll = () => {
-      if (carousel) {
-        // Check if we've reached the end or beginning to change direction
-        if (scrollAmount >= carousel.scrollWidth - carousel.clientWidth) {
+    const scrollSpeed = isMobile ? 0.3 : 0.5; // Slower on mobile for better performance
+    let lastTime = 0;
+
+    const animate = (currentTime: number) => {
+      if (currentTime - lastTime >= 16) { // ~60fps throttling
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        
+        // Change direction at boundaries
+        if (scrollAmount >= maxScroll) {
           scrollDirection = -1;
         } else if (scrollAmount <= 0) {
           scrollDirection = 1;
@@ -38,39 +79,47 @@ function AutoScrollCarousel() {
         
         scrollAmount += scrollSpeed * scrollDirection;
         carousel.scrollLeft = scrollAmount;
+        
+        lastTime = currentTime;
       }
+      
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
-    
-    const interval = setInterval(scroll, 20); // Adjust timing for smoother or faster scrolling
-    
-    // Sync scrollAmount with the actual scrollLeft when user manually scrolls
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    // Sync scrollAmount with manual scroll
     const handleScroll = () => {
       scrollAmount = carousel.scrollLeft;
     };
-    
-    carousel.addEventListener('scroll', handleScroll);
-    
+
+    carousel.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => {
-      clearInterval(interval);
-      carousel?.removeEventListener('scroll', handleScroll);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      carousel.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isVisible, isPaused, isMobile]);
   
   return (
     <div className="w-full relative">
-      {/* Left fade */}
-      <div className="absolute left-0 top-0 h-full w-16 z-10 pointer-events-none" 
-           style={{ background: 'linear-gradient(to right, rgb(249, 250, 251), transparent)' }}></div>
+      {/* Optimized fade gradients */}
+      <div className="absolute left-0 top-0 h-full w-16 z-10 pointer-events-none bg-gradient-to-r from-gray-50 to-transparent"></div>
       
       <div 
         ref={carouselRef}
-        className="flex overflow-x-auto scrollbar-hide gap-4 pb-4 pt-2 px-1"
-        style={{ scrollBehavior: 'smooth' }}
+        className="flex overflow-x-auto scrollbar-hide gap-4 pb-4 pt-2 px-1 carousel-container"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
       >
         {cards.map((card) => (
           <div 
             key={card.id}
-            className={`flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${card.color} p-4 flex flex-col justify-between w-32 h-48 sm:w-40 sm:h-56 lg:w-48 lg:h-72`}
+            className={`flex-shrink-0 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${card.color} p-4 flex flex-col justify-between w-32 h-48 sm:w-40 sm:h-56 lg:w-48 lg:h-72 card-optimized`}
           >
             <div>
               <div className="w-full h-8 sm:h-10 lg:h-12 bg-white/60 rounded-lg mb-3 flex items-center justify-center">
@@ -89,8 +138,7 @@ function AutoScrollCarousel() {
       </div>
       
       {/* Right fade */}
-      <div className="absolute right-0 top-0 h-full w-16 z-10 pointer-events-none" 
-           style={{ background: 'linear-gradient(to left, rgb(249, 250, 251), transparent)' }}></div>
+      <div className="absolute right-0 top-0 h-full w-16 z-10 pointer-events-none bg-gradient-to-l from-gray-50 to-transparent"></div>
     </div>
   );
 }
@@ -103,14 +151,11 @@ export default function HeroSection() {
     window.scrollTo(0, 0);
   }, []);
 
-  /* -------------------------------------------------- */
-  /* helper: smooth-scroll to pricing                    */
-  /* -------------------------------------------------- */
   const scrollToPricing = () => {
     const pricingSection = document.getElementById("pricing-section");
     if (!pricingSection) return;
 
-    const navbarHeight = 80; // px – adjust if your nav height changes
+    const navbarHeight = 80;
     const offset = pricingSection.offsetTop - navbarHeight;
 
     window.scrollTo({ top: offset, behavior: "smooth" });
