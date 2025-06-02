@@ -1,5 +1,3 @@
-
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -213,22 +211,21 @@ export default function HeroSection() {
             <div className="grid grid-cols-2 gap-16 items-start mb-16">
               {/* Left Column: Hero Text (headline + subtext) */}
               <div className="text-left">
-                <h1 className="text-5xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                  <span className="block">Turn <span className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">X Bookmarks</span></span>
-                  <span className="block">into Professional</span>
-                  <span className="block text-[#FF6B35]">
+                <h1 className="text-5xl font-black leading-[0.95] mb-8 tracking-tight text-gray-900">
+                  <span className="block mb-1">Turn <span className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">X Bookmarks</span></span>
+                  <span className="block mb-1">into Professional</span>
+                  <span className="block text-[#FF6B35] mb-2">
                     Newsletters
                   </span>
                 </h1>
                 
-                {/* Subtext moved under headline */}
-                <p className="text-2xl text-gray-600 leading-relaxed text-left">
-                  <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
-                  <span className="block mt-2 font-semibold text-[#0087C8]">
-                    <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your
-                    audience.
-                  </span>
-                </p>
+                {/* Subtext moved under headline with improved spacing */}
+                <div className="text-xl text-gray-600 leading-relaxed text-left space-y-3">
+                  <p className="text-[#FF6B35] font-medium">Never waste a good bookmark again.</p>
+                  <p className="font-semibold text-[#0087C8]">
+                    <span className="text-[#FF6B35]">Automatically</span> curate and send beautiful newsletters to your audience.
+                  </p>
+                </div>
               </div>
 
               {/* Right Column: Social proof + Bullet points + CTA */}
@@ -310,4 +307,3 @@ export default function HeroSection() {
     </section>
   );
 }
-
