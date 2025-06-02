@@ -65,10 +65,11 @@ export default function SatoshiSummary() {
                 <img
                   src="/crypto1.png"
                   alt="Satoshi Summary Newsletter Example 1"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover select-none pointer-events-none"
                   loading="lazy"
+                  draggable="false"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </div>
 
@@ -78,10 +79,11 @@ export default function SatoshiSummary() {
                 <img
                   src="/crypto2.png"
                   alt="Satoshi Summary Newsletter Example 2"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover select-none pointer-events-none"
                   loading="lazy"
+                  draggable="false"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </div>
 
@@ -91,10 +93,11 @@ export default function SatoshiSummary() {
                 <img
                   src="/crypto3.png"
                   alt="Satoshi Summary Newsletter Example 3"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover select-none pointer-events-none"
                   loading="lazy"
+                  draggable="false"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </div>
           </div>
