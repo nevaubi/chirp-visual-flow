@@ -4,7 +4,7 @@ import { Bitcoin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ChainOfThoughtSignup from "@/components/newsletter/ChainOfThoughtSignup";
+import SatoshiSummarySignup from "@/components/newsletter/SatoshiSummarySignup";
 
 export default function SatoshiSummary() {
   const scrollToNewsletter = () => {
@@ -39,9 +39,9 @@ export default function SatoshiSummary() {
       </section>
 
       {/* Newsletter Signup Section */}
-      <section id="newsletter-signup" className="py-2 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <ChainOfThoughtSignup />
+      <section id="newsletter-signup" className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-lg mx-auto">
+          <SatoshiSummarySignup />
         </div>
       </section>
 

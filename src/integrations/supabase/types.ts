@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      cot_emails: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          is_active: boolean
-          is_email_verified: boolean
-          subscribed_at: string
-          unsubscribed_at: string | null
-          updated_at: string
-          verification_token: string | null
-          verification_token_expires_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          is_active?: boolean
-          is_email_verified?: boolean
-          subscribed_at?: string
-          unsubscribed_at?: string | null
-          updated_at?: string
-          verification_token?: string | null
-          verification_token_expires_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          is_active?: boolean
-          is_email_verified?: boolean
-          subscribed_at?: string
-          unsubscribed_at?: string | null
-          updated_at?: string
-          verification_token?: string | null
-          verification_token_expires_at?: string | null
-        }
-        Relationships: []
-      }
       feedback: {
         Row: {
           created_at: string
@@ -71,47 +32,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      newsletter_queue: {
-        Row: {
-          attempt_count: number
-          created_at: string
-          error_message: string | null
-          id: string
-          is_newsletter_sent: Database["public"]["Enums"]["newsletter_status"]
-          scheduled_date: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          attempt_count?: number
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          is_newsletter_sent?: Database["public"]["Enums"]["newsletter_status"]
-          scheduled_date: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          attempt_count?: number
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          is_newsletter_sent?: Database["public"]["Enums"]["newsletter_status"]
-          scheduled_date?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "newsletter_queue_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       newsletter_storage: {
         Row: {
@@ -242,45 +162,6 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string | null
           voice_profile_analysis?: string | null
-        }
-        Relationships: []
-      }
-      tickerdrop_emails: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          is_active: boolean
-          is_email_verified: boolean
-          subscribed_at: string
-          unsubscribed_at: string | null
-          updated_at: string
-          verification_token: string | null
-          verification_token_expires_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          is_active?: boolean
-          is_email_verified?: boolean
-          subscribed_at?: string
-          unsubscribed_at?: string | null
-          updated_at?: string
-          verification_token?: string | null
-          verification_token_expires_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          is_active?: boolean
-          is_email_verified?: boolean
-          subscribed_at?: string
-          unsubscribed_at?: string | null
-          updated_at?: string
-          verification_token?: string | null
-          verification_token_expires_at?: string | null
         }
         Relationships: []
       }

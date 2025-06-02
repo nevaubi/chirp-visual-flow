@@ -39,8 +39,8 @@ export default function ChainOfThought() {
       </section>
 
       {/* Newsletter Signup Section */}
-      <section id="newsletter-signup" className="py-2 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
+      <section id="newsletter-signup" className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-lg mx-auto">
           <ChainOfThoughtSignup />
         </div>
       </section>

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle, AlertCircle } from "lucide-react";
 
-export default function TickerDropSignup() {
+export default function SatoshiSummarySignup() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -26,14 +26,14 @@ export default function TickerDropSignup() {
         email: email.toLowerCase().trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        newsletter: 'ticker-drop'
+        newsletter: 'satoshi-summary'
       });
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       setStatus('success');
-      setMessage("Success! You're now subscribed to The Ticker Drop.");
+      setMessage("Success! You're now subscribed to Satoshi Summary.");
       setEmail("");
       setFirstName("");
       setLastName("");
@@ -50,13 +50,13 @@ export default function TickerDropSignup() {
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 max-w-md mx-auto">
       <div className="text-center mb-5">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="bg-[#0087C8]/10 p-2 rounded-lg">
-            <Mail className="h-5 w-5 text-[#0087C8]" />
+          <div className="bg-orange-500/10 p-2 rounded-lg">
+            <Mail className="h-5 w-5 text-orange-500" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">Subscribe to The Ticker Drop</h3>
+          <h3 className="text-xl font-bold text-gray-900">Subscribe to Satoshi Summary</h3>
         </div>
         <p className="text-gray-600 text-sm">
-          Tuesdays at 10am CT, Fridays at 4pm CT
+          Every Tuesday & Friday
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function TickerDropSignup() {
             placeholder="Enter your email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-10 border-gray-200 focus:border-[#0087C8] focus:ring-[#0087C8]/20"
+            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
             required
             disabled={isLoading}
           />
@@ -88,7 +88,7 @@ export default function TickerDropSignup() {
               placeholder="First name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="h-10 border-gray-200 focus:border-[#0087C8] focus:ring-[#0087C8]/20"
+              className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
               disabled={isLoading}
             />
           </div>
@@ -102,7 +102,7 @@ export default function TickerDropSignup() {
               placeholder="Last name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="h-10 border-gray-200 focus:border-[#0087C8] focus:ring-[#0087C8]/20"
+              className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
               disabled={isLoading}
             />
           </div>
@@ -114,7 +114,7 @@ export default function TickerDropSignup() {
         
         <Button 
           type="submit"
-          className="w-full h-10 bg-[#0087C8] hover:bg-[#0270A8] text-white font-medium rounded-lg transition-all duration-200"
+          className="w-full h-10 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-all duration-200"
           disabled={isLoading || !email.trim()}
         >
           {isLoading ? (
@@ -144,7 +144,7 @@ export default function TickerDropSignup() {
       )}
 
       <p className="text-xs text-gray-500 mt-4 text-center leading-relaxed">
-        No spam, unsubscribe at any time. By subscribing, you agree to receive marketing emails from The Ticker Drop.
+        No spam, unsubscribe at any time. By subscribing, you agree to receive marketing emails from Satoshi Summary.
       </p>
     </div>
   );
