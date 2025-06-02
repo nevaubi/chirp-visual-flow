@@ -67,7 +67,7 @@ export default function Navbar() {
               <div className="flex items-center gap-2 transform -translate-y-2">
                 <Link 
                   to="/ticker-drop" 
-                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-[17px] rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
                   <FileText size={14} />
                   <span>The Ticker Drop</span>
@@ -77,7 +77,7 @@ export default function Navbar() {
                 
                 <Link 
                   to="/chain-of-thought" 
-                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-[17px] rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
                   <FileText size={14} />
                   <span>Chain of Thought</span>
@@ -87,7 +87,7 @@ export default function Navbar() {
                 
                 <Link 
                   to="/satoshi-summary" 
-                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
+                  className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-[17px] rounded-lg transition-all duration-300 hover:scale-[1.02]"
                 >
                   <FileText size={14} />
                   <span>Satoshi Summary</span>
