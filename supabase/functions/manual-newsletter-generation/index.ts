@@ -268,7 +268,7 @@ ${formattedTweets}`;
 
 For each MAIN TOPIC (5):
 1. Create a concise header (20-30 words) that captures the essence of the topic
-2. Provide 4 bullet points highlighting the most significant data points or aspects (60 words max each)
+2. Provide 4 bullet points highlighting the most significant data points or aspects (100 words max each)
 3. Using an accessible and naturally communicating casual tone of voice, write a detailed explanation of approximately 500-700 words that thoroughly describes the topic, including:
    - Overall context and background
    - Predominant sentiment (positive, negative, mixed, neutral)
@@ -279,7 +279,7 @@ For each MAIN TOPIC (5):
 
 For each SUB-TOPIC (4):
 1. Create a concise header (10-20 words)
-2. Provide 3 bullet points highlighting the most significant aspects (50 words max each)
+2. Provide 3 bullet points highlighting the most significant aspects (80 words max each)
 3. Write a comprehensive explanation of approximately 300-400 words that thoroughly describes the sub-topic using accessible naturally human sounding casual language
 4. Extract or reference a notable quote or statement related to this sub-topic
 5. Include the best photo url that best represents this topic (if available)
@@ -312,7 +312,7 @@ ${formattedTweets}`;
           }
         ],
         temperature: 0.4,
-        max_tokens: 3000
+        max_tokens: 6000
       })
     });
     
@@ -380,7 +380,7 @@ ${analysisResult}`;
           }
         ],
         temperature: 0.3,
-        max_tokens: 800
+        max_tokens: 1000
       })
     });
     
@@ -434,7 +434,7 @@ ${analysisResult}`;
                     { role: "user", content: topic.query }
                   ],
                   temperature: 0.2,
-                  max_tokens: 350,
+                  max_tokens: 500,
 
                   // recency: only results from the last 7 days
                   search_recency_filter: "week"
@@ -493,7 +493,7 @@ Your task is to integrate the web-sourced information into the original analysis
 INTEGRATION RULES:
 - Preserve the original structure of 5 main topics and 4 sub-topics
 - For the 3 topics that have additional web information, weave this information naturally into the existing content
-- Add a "Web Insights" section to each enriched topic with 2-3 key points from the web search
+- Add a "Web Insights" section to each enriched topic with 3-5 key points from the web search
 - Include 1-2 sources as references where appropriate
 - Ensure the transitions between original and new content are smooth
 - Maintain a consistent tone and style throughout
@@ -525,7 +525,7 @@ Provide the complete integrated analysis with all main topics and sub-topics, in
               }
             ],
             temperature: 0.3,
-            max_tokens: 4000
+            max_tokens: 8000
           })
         });
         
@@ -631,7 +631,7 @@ Create a newsletter that is visually appealing when rendered as Markdown, with c
               }
             ],
             temperature: 0.2,
-            max_tokens: 4000
+            max_tokens: 7000
           })
         });
         
@@ -720,7 +720,7 @@ ${markdownNewsletter}
               }
             ],
             temperature: 0.3,
-            max_tokens: 4000
+            max_tokens: 8000
           })
         });
         
