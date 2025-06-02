@@ -1007,7 +1007,7 @@ ${markdownNewsletter}
 
     // 17) Send email via Resend
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@admin.chirpmetrics.com";
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: fromEmail,
         to: profile.sending_email,
