@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             {/* Newsletter Links Group */}
             <div className="relative ml-4 flex flex-col items-center">
-              <span className="text-xs font-semibold text-gray-700 tracking-wide transform -translate-y-2">Newsletters</span>
+              <span className="text-xs font-semibold text-gray-700 tracking-wide transform -translate-y-2 underline">Newsletters</span>
               <div className="flex items-center gap-2 transform -translate-y-2">
                 <Link 
                   to="/ticker-drop" 
