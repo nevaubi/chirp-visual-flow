@@ -108,7 +108,7 @@ export default function BookmarkComponent() {
         }
       `}</style>
       
-      <div className="flex items-center space-x-8 scale-75 -ml-8">
+      <div className="flex items-center space-x-8 scale-75 -ml-0 sm:-ml-8">
         {/* Left side - Bookmark options */}
         <div className="flex flex-col space-y-4">
           {/* First button - slightly rotated */}
