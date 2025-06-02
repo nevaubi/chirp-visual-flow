@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img 
-              src="/thisone.png" 
+              src="/newlogo.png" 
               alt="Letternest Logo" 
               className="h-9 w-9 transition-transform duration-300 group-hover:scale-110"
             />

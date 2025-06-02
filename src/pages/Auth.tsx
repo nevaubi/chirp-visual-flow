@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,7 +39,7 @@ const Auth = () => {
           <div className="p-8">
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/thisone.png" 
+                src="/newlogo.png" 
                 alt="Letternest Logo" 
                 className="h-10 w-10 mr-2"
               />
