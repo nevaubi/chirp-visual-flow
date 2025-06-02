@@ -63,7 +63,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             {/* Newsletter Links Group */}
             <div className="relative ml-4 flex flex-col items-center">
-              <span className="text-xs font-semibold text-gray-700 tracking-wide mb-1">Newsletters</span>
+              <span className="text-xs font-semibold text-gray-700 tracking-wide mb-0.5">Newsletters</span>
               <div className="flex items-center gap-2">
                 <Link 
                   to="/ticker-drop" 
