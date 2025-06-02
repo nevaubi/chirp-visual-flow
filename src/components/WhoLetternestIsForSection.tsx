@@ -1,5 +1,7 @@
+
 import React from "react";
 import { CheckCircle, Zap, Clock, Lightbulb, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const WhoLetternestIsForSection = () => {
   const personas = [
@@ -112,14 +114,17 @@ const WhoLetternestIsForSection = () => {
 
         {/* Bottom CTA */}
         <div className="text-center mt-16">
-          <div className="inline-flex items-center bg-gradient-to-r from-[#0087C8] to-[#006CA1] text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 group">
+          <Link 
+            to="/auth"
+            className="inline-flex items-center bg-gradient-to-r from-[#0087C8] to-[#006CA1] text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+          >
             <span>Ready to get started?</span>
             <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
-          </div>
+          </Link>
         </div>
       </div>
     </section>
   );
 };
 
-export default WhoLetternestIsForSection; 
+export default WhoLetternestIsForSection;
