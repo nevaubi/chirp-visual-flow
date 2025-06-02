@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@4.3.0";
@@ -756,62 +755,213 @@ ${markdownNewsletter}
     const finalMarkdown = cleanMarkdown( cleanMarkdown(enhancedMarkdownNewsletter) );
     logStep("Cleaned up final markdown");
 
-    // 16) Convert final Markdown to HTML & inline CSS
+    // 16) Convert final Markdown to HTML & inline CSS with enhanced renderers
     const renderer = new marked.Renderer();
 
-    // ──────────────────────────────────────────────────────────────
-// CENTRED, SIZE-CAPPED IMAGES FOR E-MAIL CLIENTS
-// ──────────────────────────────────────────────────────────────
-renderer.image = (href, _title, alt) => `
-  <div style="text-align:center;">
-    <img src="${href}"
-         alt="${alt}"
-         style="
-           max-width:400px;   /* adjust if you want */
-           width:100%;
-           height:auto;
-           border-radius:4px;
-           display:inline-block;">
-  </div>`;
+    // Enhanced paragraph rendering with better typography
+    renderer.paragraph = (text) => {
+      // Skip special divs and maintain their structure
+      if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
+        return text.trim() + '\n';
+      }
+      return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
+    };
 
+    // Enhanced list item rendering
+    renderer.listitem = (text, task, checked) => {
+      if (task) {
+        return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
+      }
+      return `<li style="margin: 0 0 0.9em 0; font-size: 16px; line-height: 1.7; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
+    };
+
+    // Enhanced heading renderer
+    renderer.heading = (text, level) => {
+      const sizes = {
+        1: '32px',
+        2: '26px',
+        3: '22px',
+        4: '18px',
+        5: '16px',
+        6: '14px'
+      };
+      
+      const margins = {
+        1: '0 0 24px 0',
+        2: '32px 0 16px 0',
+        3: '24px 0 12px 0',
+        4: '20px 0 10px 0',
+        5: '16px 0 8px 0',
+        6: '14px 0 8px 0'
+      };
+      
+      const size = sizes[level as keyof typeof sizes] || '16px';
+      const margin = margins[level as keyof typeof margins] || '16px 0 8px 0';
+      
+      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
+    };
+
+    // Enhanced image renderer with centered, size-capped images
+    renderer.image = (href, _title, alt) => `
+      <div class="image-container" style="text-align:center; margin: 20px 0;">
+        <img src="${href}"
+             alt="${alt || 'Newsletter image'}"
+             style="
+               max-width:500px;
+               width:100%;
+               height:auto;
+               border-radius:8px;
+               display:inline-block;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      </div>`;
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
     const emailHtml = juice(`
-  <body style="background:#f5f7fa;margin:0;padding:20px;">
+      <body style="background:#f5f7fa;margin:0;padding:0;font-family:Arial,sans-serif;">
 
-    <!-- ✨ added style block begins -->
-    <style>
-      /* Desktop restore – only wide screens get larger side-padding */
-      @media screen and (min-width:640px){
-        .content-body{padding:24px 24px !important;}
-      }
+        <style>
+          /* Professional print CSS for PDF generation */
+          @media print {
+            body, html {
+              width: 100%;
+              margin: 0;
+              background: #ffffff !important;
+            }
+            
+            .wrapper {
+              max-width: none !important;
+              width: 100% !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+            }
+            
+            .content-body {
+              padding: 40px 60px !important;
+              font-size: 14px !important;
+              line-height: 1.6 !important;
+            }
+            
+            /* Prevent page breaks in the middle of elements */
+            h1, h2, h3, h4, h5, h6 {
+              page-break-after: avoid;
+              page-break-inside: avoid;
+            }
+            
+            p, li {
+              page-break-inside: avoid;
+            }
+            
+            .image-container {
+              page-break-inside: avoid;
+              page-break-before: auto;
+              page-break-after: auto;
+            }
+            
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* Ensure callout boxes stay together */
+            div[style*="background"], blockquote {
+              page-break-inside: avoid;
+            }
+            
+            /* Add spacing for better PDF readability */
+            h2 {
+              margin-top: 40px !important;
+            }
+            
+            h3 {
+              margin-top: 30px !important;
+            }
+          }
+          
+          /* Mobile-first responsive design for full-width mobile experience */
+          @media screen and (max-width: 600px) {
+            body {
+              background: #ffffff !important;
+              padding: 0 !important;
+            }
+            
+            .wrapper {
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+            }
+            
+            .content-body {
+              padding: 16px 12px !important;
+            }
+            
+            /* Mobile typography */
+            h1 {
+              font-size: 28px !important;
+              margin: 0 0 16px 0 !important;
+            }
+            
+            h2 {
+              font-size: 22px !important;
+              margin: 24px 0 12px 0 !important;
+            }
+            
+            h3 {
+              font-size: 18px !important;
+              margin: 20px 0 10px 0 !important;
+            }
+            
+            p, li {
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+            }
+            
+            /* Mobile image handling */
+            .image-container {
+              margin: 16px 0 !important;
+            }
+            
+            .image-container img {
+              max-width: 100% !important;
+              border-radius: 4px !important;
+            }
+            
+            /* Mobile callout boxes */
+            div[style*="background"] {
+              padding: 12px !important;
+              margin: 16px 0 !important;
+              border-radius: 4px !important;
+            }
+          }
+          
+          /* Tablet optimization */
+          @media screen and (min-width: 601px) and (max-width: 900px) {
+            .wrapper {
+              max-width: 95% !important;
+              margin: 20px auto !important;
+            }
+            
+            .content-body {
+              padding: 30px 25px !important;
+            }
+          }
+          
+          /* Desktop enhancements */
+          @media screen and (min-width: 901px) {
+            .wrapper {
+              max-width: 700px !important;
+            }
+            
+            .content-body {
+              padding: 40px 50px !important;
+            }
+          }
+        </style>
 
-      /* Print / “Save as PDF” tidy-up so spacing matches desktop view */
-      @media print{
-        body,html{
-          width:100%;
-          margin:0;
-          background:#ffffff !important;
-        }
-        .wrapper{
-          max-width:none !important;
-          width:100% !important;
-          margin:0 !important;
-        }
-        .content-body{
-          padding:32px !important;
-          font-size:14px !important;
-          line-height:1.4 !important;
-        }
-        img{max-width:100% !important;height:auto !important;}
-      }
-    </style>
-    <!-- ✨ added style block ends -->
-
-    <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;">
-      <div class="content-body" style="padding:24px 16px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-
+        <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+          <div class="content-body" style="padding:24px 16px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
             ${htmlBody}
           </div>
         </div>
@@ -964,7 +1114,17 @@ serve(async (req) => {
     
     // Use EdgeRuntime.waitUntil to continue processing after sending response
     // @ts-ignore - EdgeRuntime exists in Deno Deploy but might not be in type definitions
-    EdgeRuntime.waitUntil(backgroundTask);
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(backgroundTask);
+    } else {
+      // Fallback for local development
+      backgroundTask.then(result => {
+        logStep("Background task completed (local/fallback)", result);
+      }).catch(err => {
+        console.error("Background task error (local/fallback):", err);
+      });
+    }
     
     // 4) Send immediate response to client
     return new Response(JSON.stringify({
