@@ -621,20 +621,26 @@ ${markdownNewsletter}
           
           /* Mobile-first responsive design for full-width mobile experience */
           @media screen and (max-width: 600px) {
+            body {
+              background-color: #ffffff !important;
+            }
+            
             .content-wrapper {
-              padding: 8px 0 !important;
+              padding: 0 !important;
+              background-color: #ffffff !important;
             }
             
             .content-container {
               max-width: 100% !important;
               width: 100% !important;
-              margin: 0 8px !important;
-              border-radius: 8px !important;
-              box-shadow: 0 4px 16px rgba(20,42,75,0.08) !important;
+              margin: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
             }
             
             .content-body {
-              padding: 20px 16px !important;
+              padding: 16px 10px !important;
               font-size: 16px !important;
               line-height: 1.6 !important;
             }
@@ -675,36 +681,39 @@ ${markdownNewsletter}
             /* Mobile-optimized special content blocks */
             .image-container {
               margin: 16px 0 20px 0 !important;
+              padding: 0 !important;
             }
             
             .image-container img {
-              border-radius: 8px !important;
-              box-shadow: 0 3px 12px rgba(20,42,75,0.1) !important;
+              border-radius: 6px !important;
+              box-shadow: 0 2px 8px rgba(20,42,75,0.08) !important;
+              max-width: 100% !important;
             }
             
-            /* Mobile-optimized callout boxes */
+            /* Mobile-optimized callout boxes with reduced padding */
             div[style*="background-color: #d2ddec"] {
-              padding: 16px 18px !important;
-              margin: 20px 0 !important;
-              border-radius: 6px !important;
+              padding: 12px 10px !important;
+              margin: 16px 0 !important;
+              border-radius: 4px !important;
             }
             
             div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
-              padding: 14px 16px !important;
-              margin: 18px 0 !important;
-              border-radius: 6px !important;
+              padding: 10px 10px !important;
+              margin: 14px 0 !important;
+              border-radius: 4px !important;
             }
             
             div[style*="background-color: #f8f9fa"] {
-              padding: 16px !important;
-              margin: 20px 0 !important;
-              border-radius: 6px !important;
+              padding: 12px 10px !important;
+              margin: 16px 0 !important;
+              border-radius: 4px !important;
             }
             
             /* Mobile footer optimization */
             .footer {
-              padding: 24px 16px 32px 16px !important;
+              padding: 20px 10px 24px 10px !important;
               font-size: 14px !important;
+              background-color: #ffffff !important;
             }
           }
           
