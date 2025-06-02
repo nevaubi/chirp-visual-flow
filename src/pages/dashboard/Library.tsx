@@ -388,14 +388,14 @@ const downloadAsPDF = async () => {
       
       {isLoading ? (
         // Loading state with skeleton cards
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
           {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
               <AspectRatio ratio={4/3}>
-                <div className="flex flex-col h-full p-3">
-                  <Skeleton className="h-4 w-16 mb-2" />
-                  <Skeleton className="h-16 w-full mb-2" />
-                  <Skeleton className="h-3 w-full mb-1" />
+                <div className="flex flex-col h-full p-4">
+                  <Skeleton className="h-4 w-16 mb-3" />
+                  <Skeleton className="h-16 w-full mb-3" />
+                  <Skeleton className="h-3 w-full mb-2" />
                   <Skeleton className="h-3 w-3/4" />
                 </div>
               </AspectRatio>
@@ -423,10 +423,11 @@ const downloadAsPDF = async () => {
         <div className="space-y-8">
           {sortedDates.map((date) => (
             <div key={date}>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              <h2 className="text-lg font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                <div className="w-1 h-6 bg-primary rounded-full"></div>
                 {formatGroupDate(date)}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                 {groupedNewsletters[date].map((newsletter) => {
                   const title = extractTitle(newsletter.markdown_text);
                   const firstImage = extractFirstImage(newsletter.markdown_text);
@@ -434,25 +435,25 @@ const downloadAsPDF = async () => {
                   return (
                     <Card 
                       key={newsletter.id} 
-                      className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer border-2 hover:border-primary/20 group"
+                      className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border border-gray-200/60 hover:border-primary/30 group bg-white/80 backdrop-blur-sm hover:bg-white"
                       onClick={() => viewNewsletter(newsletter)}
                     >
                       <AspectRatio ratio={4/3}>
-                        <div className="flex flex-col h-full">
-                          {/* Date Badge */}
-                          <div className="absolute top-2 right-2 z-10">
-                            <span className="text-xs font-medium bg-primary/90 text-primary-foreground px-2 py-1 rounded-md shadow-sm">
+                        <div className="flex flex-col h-full relative">
+                          {/* Enhanced Date Badge */}
+                          <div className="absolute top-3 right-3 z-20">
+                            <span className="text-xs font-semibold bg-white/95 backdrop-blur-sm text-gray-700 px-3 py-1.5 rounded-full shadow-lg border border-gray-200/50 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                               {formatShortDate(newsletter.created_at)}
                             </span>
                           </div>
                           
-                          {/* Image/Icon Section */}
-                          <div className="flex-none h-16 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
+                          {/* Enhanced Image/Icon Section */}
+                          <div className="flex-none h-20 bg-gradient-to-br from-primary/8 via-primary/5 to-primary/12 flex items-center justify-center relative overflow-hidden rounded-t-lg">
                             {firstImage ? (
                               <img 
                                 src={firstImage} 
                                 alt="Newsletter preview" 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 onError={(e) => {
                                   const img = e.currentTarget as HTMLImageElement;
                                   const fallback = img.nextElementSibling as HTMLElement;
@@ -464,29 +465,35 @@ const downloadAsPDF = async () => {
                               />
                             ) : null}
                             <div className={`${firstImage ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
-                              <FileText className="h-8 w-8 text-primary/60" />
+                              <FileText className="h-10 w-10 text-primary/60 group-hover:text-primary/80 transition-colors duration-300" />
                             </div>
+                            {/* Subtle overlay for better text contrast */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent"></div>
                           </div>
                           
-                          {/* Content Section */}
-                          <div className="flex-1 p-3 flex flex-col justify-between">
-                            <div>
-                              <h3 className="text-sm font-semibold text-gray-900 leading-tight mb-1 line-clamp-2">
+                          {/* Enhanced Content Section */}
+                          <div className="flex-1 p-4 flex flex-col justify-between bg-gradient-to-b from-white to-gray-50/50 group-hover:from-white group-hover:to-white transition-all duration-300">
+                            <div className="space-y-2">
+                              <h3 className="text-sm font-bold text-gray-900 leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-300">
                                 {title}
                               </h3>
-                              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 hidden sm:block">
+                              <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 hidden sm:block group-hover:text-gray-700 transition-colors duration-300">
                                 Newsletter content from {format(new Date(newsletter.created_at), 'MMM d')}
                               </p>
                             </div>
                             
-                            {/* Bottom indicator */}
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                              <div className="flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                                <span className="text-xs text-gray-400 font-medium">Newsletter</span>
+                            {/* Enhanced Bottom Section */}
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 group-hover:border-primary/20 transition-colors duration-300">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-primary rounded-full group-hover:bg-primary/80 transition-colors duration-300"></div>
+                                <span className="text-xs text-gray-500 font-semibold group-hover:text-primary transition-colors duration-300">Newsletter</span>
                               </div>
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="w-1 h-1 bg-primary rounded-full"></div>
+                              <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-1 h-1 bg-primary rounded-full"></div>
+                                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                  <div className="w-1 h-1 bg-primary rounded-full"></div>
+                                </div>
                               </div>
                             </div>
                           </div>
