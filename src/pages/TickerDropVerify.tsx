@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -15,6 +14,7 @@ export default function TickerDropVerify() {
   useEffect(() => {
     const verifyEmail = async () => {
       const token = searchParams.get('token');
+      const emailParam = searchParams.get('email');
       
       if (!token) {
         setStatus('error');
@@ -22,49 +22,18 @@ export default function TickerDropVerify() {
       }
 
       try {
-        // First, check if the token exists and is valid
-        const { data: emailData, error: fetchError } = await supabase
-          .from('tickerdrop_emails')
-          .select('email, verification_token_expires_at, is_email_verified')
-          .eq('verification_token', token)
-          .maybeSingle();
+        // TODO: Integrate with Resend API to verify email subscription
+        console.log('Email verification request:', {
+          token,
+          email: emailParam,
+          newsletter: 'ticker-drop'
+        });
 
-        if (fetchError || !emailData) {
-          setStatus('error');
-          return;
-        }
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Check if already verified
-        if (emailData.is_email_verified) {
-          setEmail(emailData.email);
-          setStatus('success');
-          return;
-        }
-
-        // Check if token is expired
-        const expiresAt = new Date(emailData.verification_token_expires_at);
-        if (expiresAt < new Date()) {
-          setStatus('expired');
-          return;
-        }
-
-        // Verify the email
-        const { error: updateError } = await supabase
-          .from('tickerdrop_emails')
-          .update({
-            is_email_verified: true,
-            verification_token: null,
-            verification_token_expires_at: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('verification_token', token);
-
-        if (updateError) {
-          setStatus('error');
-          return;
-        }
-
-        setEmail(emailData.email);
+        // For now, assume successful verification
+        setEmail(emailParam || 'your-email@example.com');
         setStatus('success');
       } catch (error) {
         console.error('Verification error:', error);

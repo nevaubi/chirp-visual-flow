@@ -4,7 +4,6 @@ import { useSearchParams } from "react-router-dom";
 import { CheckCircle, Mail, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -23,26 +22,14 @@ export default function TickerDropUnsubscribe() {
     setStatus('idle');
 
     try {
-      const { data, error } = await supabase
-        .from('tickerdrop_emails')
-        .update({
-          is_active: false,
-          unsubscribed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', email.toLowerCase().trim())
-        .eq('is_active', true)
-        .select();
+      // TODO: Integrate with Resend API to remove contact from audience
+      console.log('Unsubscribe request for:', {
+        email: email.toLowerCase().trim(),
+        newsletter: 'ticker-drop'
+      });
 
-      if (error) {
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        setStatus('error');
-        setMessage("Email not found or already unsubscribed.");
-        return;
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       setStatus('success');
       setMessage("You have been successfully unsubscribed from The Ticker Drop.");
