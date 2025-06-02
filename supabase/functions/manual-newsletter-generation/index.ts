@@ -758,52 +758,62 @@ ${markdownNewsletter}
     // 16) Convert final Markdown to HTML & inline CSS with enhanced renderers
     const renderer = new marked.Renderer();
 
-    // Enhanced paragraph rendering with better typography
+    // Enhanced paragraph rendering with tighter spacing
     renderer.paragraph = (text) => {
       // Skip special divs and maintain their structure
       if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
         return text.trim() + '\n';
       }
-      return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
+      return `<p style="margin: 0 0 0.8em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
     };
 
-    // Enhanced list item rendering
+    // Enhanced list item rendering with reduced spacing
     renderer.listitem = (text, task, checked) => {
       if (task) {
         return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 0.9em 0; font-size: 16px; line-height: 1.7; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
+      return `<li style="margin: 0 0 0.5em 0; font-size: 16px; line-height: 1.6; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
     };
 
-    // Enhanced heading renderer
+    // Enhanced heading renderer with optimized spacing and typography
     renderer.heading = (text, level) => {
       const sizes = {
-        1: '32px',
-        2: '26px',
-        3: '22px',
-        4: '18px',
-        5: '16px',
+        1: '26px',  // Reduced from 32px
+        2: '22px',  // Reduced from 26px
+        3: '19px',  // Reduced from 22px
+        4: '17px',  // Reduced from 18px
+        5: '15px',  // Reduced from 16px
         6: '14px'
       };
       
       const margins = {
-        1: '0 0 24px 0',
-        2: '32px 0 16px 0',
-        3: '24px 0 12px 0',
-        4: '20px 0 10px 0',
-        5: '16px 0 8px 0',
-        6: '14px 0 8px 0'
+        1: '0 0 12px 0',    // Reduced from 24px
+        2: '20px 0 10px 0', // Reduced from 32px/16px
+        3: '16px 0 8px 0',  // Reduced from 24px/12px
+        4: '14px 0 6px 0',  // Reduced from 20px/10px
+        5: '12px 0 6px 0',  // Reduced from 16px/8px
+        6: '10px 0 6px 0'   // Reduced from 14px/8px
+      };
+      
+      const lineHeights = {
+        1: '1.2',  // Tight line height for main header
+        2: '1.3',
+        3: '1.4',
+        4: '1.4',
+        5: '1.4',
+        6: '1.4'
       };
       
       const size = sizes[level as keyof typeof sizes] || '16px';
-      const margin = margins[level as keyof typeof margins] || '16px 0 8px 0';
+      const margin = margins[level as keyof typeof margins] || '12px 0 6px 0';
+      const lineHeight = lineHeights[level as keyof typeof lineHeights] || '1.4';
       
-      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
+      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; line-height:${lineHeight}; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
     };
 
-    // Enhanced image renderer with centered, size-capped images
+    // Enhanced image renderer with reduced margins
     renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 20px 0;">
+      <div class="image-container" style="text-align:center; margin: 12px 0;">
         <img src="${href}"
              alt="${alt || 'Newsletter image'}"
              style="
@@ -821,7 +831,7 @@ ${markdownNewsletter}
       <body style="background:#f5f7fa;margin:0;padding:0;font-family:Arial,sans-serif;">
 
         <style>
-          /* Professional print CSS for PDF generation */
+          /* Professional print CSS for PDF generation with tighter spacing */
           @media print {
             body, html {
               width: 100%;
@@ -837,9 +847,9 @@ ${markdownNewsletter}
             }
             
             .content-body {
-              padding: 40px 60px !important;
+              padding: 24px 40px !important;
               font-size: 14px !important;
-              line-height: 1.6 !important;
+              line-height: 1.5 !important;
             }
             
             /* Prevent page breaks in the middle of elements */
@@ -868,17 +878,29 @@ ${markdownNewsletter}
               page-break-inside: avoid;
             }
             
-            /* Add spacing for better PDF readability */
+            /* Tighter spacing for PDF */
+            h1 {
+              margin: 0 0 10px 0 !important;
+              font-size: 24px !important;
+              line-height: 1.2 !important;
+            }
+            
             h2 {
-              margin-top: 40px !important;
+              margin-top: 20px !important;
+              margin-bottom: 8px !important;
             }
             
             h3 {
-              margin-top: 30px !important;
+              margin-top: 16px !important;
+              margin-bottom: 6px !important;
+            }
+            
+            p {
+              margin-bottom: 0.7em !important;
             }
           }
           
-          /* Mobile-first responsive design for full-width mobile experience */
+          /* Mobile-first responsive design with optimized spacing */
           @media screen and (max-width: 600px) {
             body {
               background: #ffffff !important;
@@ -894,33 +916,37 @@ ${markdownNewsletter}
             }
             
             .content-body {
-              padding: 16px 12px !important;
+              padding: 12px 10px !important;
             }
             
-            /* Mobile typography */
+            /* Mobile typography with tighter spacing */
             h1 {
-              font-size: 28px !important;
-              margin: 0 0 16px 0 !important;
+              font-size: 22px !important;
+              margin: 0 0 10px 0 !important;
+              line-height: 1.2 !important;
             }
             
             h2 {
-              font-size: 22px !important;
-              margin: 24px 0 12px 0 !important;
+              font-size: 19px !important;
+              margin: 16px 0 8px 0 !important;
+              line-height: 1.3 !important;
             }
             
             h3 {
-              font-size: 18px !important;
-              margin: 20px 0 10px 0 !important;
+              font-size: 17px !important;
+              margin: 14px 0 6px 0 !important;
+              line-height: 1.3 !important;
             }
             
             p, li {
-              font-size: 16px !important;
+              font-size: 15px !important;
               line-height: 1.6 !important;
+              margin-bottom: 0.7em !important;
             }
             
             /* Mobile image handling */
             .image-container {
-              margin: 16px 0 !important;
+              margin: 10px 0 !important;
             }
             
             .image-container img {
@@ -928,40 +954,49 @@ ${markdownNewsletter}
               border-radius: 4px !important;
             }
             
-            /* Mobile callout boxes */
+            /* Mobile callout boxes with reduced padding */
             div[style*="background"] {
-              padding: 12px !important;
-              margin: 16px 0 !important;
+              padding: 8px !important;
+              margin: 10px 0 !important;
               border-radius: 4px !important;
             }
           }
           
-          /* Tablet optimization */
+          /* Tablet optimization with tighter spacing */
           @media screen and (min-width: 601px) and (max-width: 900px) {
             .wrapper {
               max-width: 95% !important;
-              margin: 20px auto !important;
+              margin: 15px auto !important;
             }
             
             .content-body {
-              padding: 30px 25px !important;
+              padding: 20px 18px !important;
+            }
+            
+            h1 {
+              font-size: 24px !important;
+              line-height: 1.2 !important;
             }
           }
           
-          /* Desktop enhancements */
+          /* Desktop enhancements with optimized spacing */
           @media screen and (min-width: 901px) {
             .wrapper {
               max-width: 700px !important;
             }
             
             .content-body {
-              padding: 40px 50px !important;
+              padding: 24px 32px !important;
+            }
+            
+            h1 {
+              line-height: 1.2 !important;
             }
           }
         </style>
 
         <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-          <div class="content-body" style="padding:24px 16px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+          <div class="content-body" style="padding:16px 14px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
             ${htmlBody}
           </div>
         </div>
