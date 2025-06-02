@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -235,8 +236,8 @@ export default function HeroSection() {
                   <ReviewsSection />
                 </div>
 
-                {/* Bullet points list - Enhanced styling */}
-                <div className="relative z-20 w-full">
+                {/* Bullet points list - Enhanced styling with center alignment */}
+                <div className="relative z-20 w-full flex justify-center">
                   <ul className="space-y-4 text-lg">
                     <li className="flex items-center group">
                       <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-green-200 transition-colors">
