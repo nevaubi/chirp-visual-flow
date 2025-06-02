@@ -64,7 +64,7 @@ export default function Navbar() {
             {/* Newsletter Links Group */}
             <div className="relative ml-4 flex flex-col items-center">
               <span className="text-xs font-semibold text-gray-700 tracking-wide">Newsletters</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 -mt-1">
                 <Link 
                   to="/ticker-drop" 
                   className="flex items-center gap-2 text-black hover:text-gray-600 px-3 py-1.5 font-medium text-sm rounded-lg transition-all duration-300 hover:scale-[1.02]"
