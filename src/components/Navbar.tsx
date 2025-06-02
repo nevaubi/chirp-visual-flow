@@ -59,25 +59,43 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link 
-              to="/ticker-drop" 
-              className="flex items-center gap-2 text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-4 py-2 font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
-            >
-              <FileText size={18} />
-              <span>The Ticker Drop</span>
-            </Link>
-            
-            <Link 
-              to="/chain-of-thought" 
-              className="flex items-center gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50/50 px-4 py-2 font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
-            >
-              <FileText size={18} />
-              <span>Chain of Thought</span>
-            </Link>
+          <div className="hidden md:flex items-center gap-8">
+            {/* Newsletter Links Group */}
+            <div className="relative ml-4">
+              <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-gray-700 tracking-wide whitespace-nowrap">Newsletters</span>
+              <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
+                <Link 
+                  to="/ticker-drop" 
+                  className="flex items-center gap-2 text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                >
+                  <FileText size={16} />
+                  <span>The Ticker Drop</span>
+                </Link>
+                
+                <div className="w-px h-5 bg-gray-300"></div>
+                
+                <Link 
+                  to="/chain-of-thought" 
+                  className="flex items-center gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                >
+                  <FileText size={16} />
+                  <span>Chain of Thought</span>
+                </Link>
+                
+                <div className="w-px h-5 bg-gray-300"></div>
+                
+                <Link 
+                  to="/the-crypto-coin" 
+                  className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                >
+                  <FileText size={16} />
+                  <span>The Crypto Coin</span>
+                </Link>
+              </div>
+            </div>
             
             {isAuthenticated ? (
-              <>
+              <div className="flex items-center gap-3">
                 <Button 
                   variant="ghost" 
                   className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-8 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
@@ -93,9 +111,9 @@ export default function Navbar() {
                   <LogOut size={18} />
                   <span>Sign out</span>
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-3">
                 <Button 
                   variant="ghost" 
                   className="text-[#0087C8] hover:text-[#0270A8] hover:bg-blue-50/50 px-8 py-3 font-semibold flex items-center gap-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md backdrop-blur-sm"
@@ -110,7 +128,7 @@ export default function Navbar() {
                 >
                   Signup for Free
                 </Button>
-              </>
+              </div>
             )}
           </div>
 
@@ -157,6 +175,15 @@ export default function Navbar() {
             >
               <FileText size={16} />
               <span>Chain of Thought</span>
+            </Link>
+            
+            <Link 
+              to="/the-crypto-coin" 
+              className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50/30 p-2 rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <FileText size={16} />
+              <span>The Crypto Coin</span>
             </Link>
             
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
