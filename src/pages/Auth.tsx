@@ -39,7 +39,7 @@ const Auth = () => {
           <div className="p-8">
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/newlogo.png" 
+                src="/logoo.png" 
                 alt="Letternest Logo" 
                 className="h-10 w-10 mr-2"
               />

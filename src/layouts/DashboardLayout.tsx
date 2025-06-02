@@ -274,7 +274,7 @@ const DashboardLayout = () => {
           </Button>
           <Link to="/" className="flex items-center gap-1.5">
             <img 
-              src="/newlogo.png" 
+              src="/logoo.png" 
               alt="Letternest Logo" 
               className="h-8 w-8"
             />
@@ -325,7 +325,7 @@ const DashboardLayout = () => {
               !shouldShowExpanded && !isMobile && "justify-center"
             )}>
               <img 
-                src="/newlogo.png" 
+                src="/logoo.png" 
                 alt="Letternest Logo" 
                 className="h-8 w-8 shrink-0"
               />
