@@ -63,7 +63,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             {/* Newsletter Links Group */}
             <div className="relative ml-4 flex flex-col items-center">
-              <span className="text-xs font-semibold text-gray-700 tracking-wide">Newsletters</span>
+              <span className="text-xs font-semibold text-gray-700 tracking-wide transform -translate-y-1">Newsletters</span>
               <div className="flex items-center gap-2 transform -translate-y-2">
                 <Link 
                   to="/ticker-drop" 
@@ -162,7 +162,7 @@ export default function Navbar() {
           <nav className="max-w-7xl mx-auto flex flex-col gap-2">
             <Link 
               to="/ticker-drop" 
-              className="flex items-center gap-2 text-[#0087C8] hover:bg-blue-50/30 p-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-black hover:text-gray-600 p-2 rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <FileText size={16} />
@@ -171,7 +171,7 @@ export default function Navbar() {
             
             <Link 
               to="/chain-of-thought" 
-              className="flex items-center gap-2 text-purple-600 hover:bg-purple-50/30 p-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-black hover:text-gray-600 p-2 rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <FileText size={16} />
@@ -180,7 +180,7 @@ export default function Navbar() {
             
             <Link 
               to="/satoshi-summary" 
-              className="flex items-center gap-2 text-orange-600 hover:bg-orange-50/30 p-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-black hover:text-gray-600 p-2 rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <FileText size={16} />
