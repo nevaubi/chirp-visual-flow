@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,11 +85,11 @@ export default function Navbar() {
                 <div className="w-px h-5 bg-gray-300"></div>
                 
                 <Link 
-                  to="/the-crypto-coin" 
-                  className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                  to="/satoshi-summary" 
+                  className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50/70 px-3 py-1.5 font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
                 >
                   <FileText size={16} />
-                  <span>The Crypto Coin</span>
+                  <span>Satoshi Summary</span>
                 </Link>
               </div>
             </div>
@@ -179,12 +178,12 @@ export default function Navbar() {
             </Link>
             
             <Link 
-              to="/the-crypto-coin" 
-              className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50/30 p-2 rounded-lg transition-colors"
+              to="/satoshi-summary" 
+              className="flex items-center gap-2 text-orange-600 hover:bg-orange-50/30 p-2 rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <FileText size={16} />
-              <span>The Crypto Coin</span>
+              <span>Satoshi Summary</span>
             </Link>
             
             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
