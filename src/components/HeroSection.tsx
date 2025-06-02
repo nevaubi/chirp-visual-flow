@@ -1,3 +1,4 @@
+
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -260,16 +261,17 @@ export default function HeroSection() {
                   </ul>
                 </div>
 
-                {/* CTA button - moved below bullet list */}
-                <div className="relative z-20 w-full">
+                {/* CTA button + credit card text - left aligned */}
+                <div className="relative z-20 w-full flex flex-col items-start">
                   <Button
                     size="lg"
-                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 w-full max-w-sm"
+                    className="bg-[#0087C8] hover:bg-[#006CA1] text-white px-10 py-5 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 max-w-sm"
                     onClick={scrollToPricing}
                   >
                     Get Started Free
                     <ArrowRight className="ml-3 h-6 w-6" />
                   </Button>
+                  <p className="text-sm text-gray-500 mt-2 italic">No credit card required</p>
                 </div>
               </div>
             </div>
