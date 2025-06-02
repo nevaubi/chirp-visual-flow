@@ -1,4 +1,3 @@
-
 // components/HeroSection.tsx
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
@@ -141,12 +140,8 @@ export default function HeroSection() {
           <div className="lg:hidden w-full">
             {/* Headline */}
             <div className="mb-6 sm:mb-8 relative z-20 w-full">
-              <h1 className="text-5xl sm:text-5xl font-black leading-[0.9] mb-6 tracking-tight text-gray-900">
-                <span className="block">Turn <span className="bg-gradient-to-r from-[#0087C8] to-[#006CA1] bg-clip-text text-transparent">X Bookmarks</span></span>
-                <span className="block">into Professional</span>
-                <span className="block text-[#FF6B35]">
-                  Newsletters
-                </span>
+              <h1 className="sm:text-5xl font-black leading-tight mb-6 tracking-tight text-gray-900" style={{ fontSize: '40px' }}>
+                Turn <span className="text-[#0087C8]">X Bookmarks</span> into Professional <span className="text-[#FF6B35]">Newsletters</span>
               </h1>
               <p className="text-xl sm:text-xl leading-relaxed text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
                 <span className="text-[#FF6B35]">Never</span> waste a good bookmark again.
