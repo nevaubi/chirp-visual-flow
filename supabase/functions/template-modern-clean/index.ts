@@ -200,7 +200,7 @@ ${formattedTweets}`;
     *   Theme Title.
     *   "The Gist" (3-4 sentences).
     *   4-5 "Key Insights" (bullet points, 50-70 words each).
-    *   "Deeper Dive" (300-450 words) incorporating paragraphs and ensure to break up the text as needed so it’s more readable—good spacing and layout, not everything jammed into one block.And where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
+    *   "Deeper Dive" (300-450 words) incorporating paragraphs and ensure to break up the text as needed so it's more readable—good spacing and layout, not everything jammed into one block.And where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
     *   'RepresentativeImageURL' (or "N/A").
 3.  3-4 NOTEWORTHY SIDETRACKS, each with:
     *   Sidetrack Title.
@@ -619,13 +619,114 @@ ${markdownNewsletter}
             }
           }
           
-          /* Enhanced typography and spacing */
+          /* Mobile-first responsive design for full-width mobile experience */
+          @media screen and (max-width: 600px) {
+            .content-wrapper {
+              padding: 8px 0 !important;
+            }
+            
+            .content-container {
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 0 8px !important;
+              border-radius: 8px !important;
+              box-shadow: 0 4px 16px rgba(20,42,75,0.08) !important;
+            }
+            
+            .content-body {
+              padding: 20px 16px !important;
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+            }
+            
+            /* Mobile-optimized headings */
+            h1 {
+              font-size: 28px !important;
+              margin: 0 0 16px 0 !important;
+              line-height: 1.3 !important;
+            }
+            
+            h2 {
+              font-size: 22px !important;
+              margin: 24px 0 12px 0 !important;
+              line-height: 1.4 !important;
+            }
+            
+            h3 {
+              font-size: 18px !important;
+              margin: 20px 0 10px 0 !important;
+              line-height: 1.4 !important;
+            }
+            
+            /* Mobile-optimized paragraphs and text */
+            p {
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+              margin: 0 0 16px 0 !important;
+            }
+            
+            /* Mobile-optimized lists */
+            li {
+              font-size: 16px !important;
+              line-height: 1.6 !important;
+              margin-bottom: 12px !important;
+            }
+            
+            /* Mobile-optimized special content blocks */
+            .image-container {
+              margin: 16px 0 20px 0 !important;
+            }
+            
+            .image-container img {
+              border-radius: 8px !important;
+              box-shadow: 0 3px 12px rgba(20,42,75,0.1) !important;
+            }
+            
+            /* Mobile-optimized callout boxes */
+            div[style*="background-color: #d2ddec"] {
+              padding: 16px 18px !important;
+              margin: 20px 0 !important;
+              border-radius: 6px !important;
+            }
+            
+            div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
+              padding: 14px 16px !important;
+              margin: 18px 0 !important;
+              border-radius: 6px !important;
+            }
+            
+            div[style*="background-color: #f8f9fa"] {
+              padding: 16px !important;
+              margin: 20px 0 !important;
+              border-radius: 6px !important;
+            }
+            
+            /* Mobile footer optimization */
+            .footer {
+              padding: 24px 16px 32px 16px !important;
+              font-size: 14px !important;
+            }
+          }
+          
+          /* Enhanced typography and spacing for all devices */
           .content-body h1, .content-body h2, .content-body h3 {
             font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
           }
           
           .content-body p, .content-body li {
             font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
+          }
+          
+          /* Tablet optimization (601px to 900px) */
+          @media screen and (min-width: 601px) and (max-width: 900px) {
+            .content-container {
+              max-width: 95% !important;
+              margin: 0 auto !important;
+            }
+            
+            .content-body {
+              padding: 35px 30px !important;
+            }
           }
         </style>
 
