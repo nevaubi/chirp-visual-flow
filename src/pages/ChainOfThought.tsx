@@ -19,7 +19,7 @@ export default function ChainOfThought() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
             <FileText className="h-12 w-12 text-purple-600" />
@@ -32,14 +32,14 @@ export default function ChainOfThought() {
             Every Tues & Fri
           </p>
           
-          <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-8 leading-relaxed">
             Twice a week, get the AI insights and developments that actually matter. Cutting-edge research, expert analysis, breakthrough innovations - every Tuesday & Friday.
           </p>
         </div>
       </section>
 
       {/* Newsletter Signup Section */}
-      <section id="newsletter-signup" className="py-8 px-4 sm:px-6 lg:px-8">
+      <section id="newsletter-signup" className="py-4 px-4 sm:px-6 lg:px-8">
         <div className="max-w-lg mx-auto">
           <ChainOfThoughtSignup />
         </div>
