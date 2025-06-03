@@ -13,8 +13,8 @@ const corsHeaders = {
 const COLORS = {
   primaryNavy: "#142a4b",
   accentBlue: "#5774cd",
-  lightBg: "#f7f9fc",
-  white: "#ffffff",
+  lightBg: "#f7f9fc", // Used for the email body background
+  white: "#ffffff", // Used for the content card background
   darkText: "#293041",
 };
 
@@ -718,18 +718,18 @@ ${finalAnalysisForMarkdown};`;
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <style>
-      html, body { background:${COLORS.white} !important; }
+      html, body { background:${COLORS.lightBg} !important; margin:0; padding:0; } /* MODIFIED: Use lightBg for overall email background */
       @media print {
-        body, html { width:100%; margin:0; background:${COLORS.white} !important; }
+        body, html { width:100%; margin:0; background:${COLORS.white} !important; } /* Print background remains white for content */
         .wrapper { width:100% !important; max-width:none !important; }
         table { width:100% !important; border-collapse:collapse; }
         table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
         h1, h2, h3 { page-break-after:avoid; }
       }
-      @media screen and (min-width:640px){
+      @media screen and (min-width:640px){ /* Desktop styles */
         .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
       }
-      @media screen and (max-width:600px){
+      @media screen and (max-width:600px){ /* Mobile styles */
         .wrapper{ max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
         .content-body{ padding:20px 16px !important; background:${COLORS.white} !important; }
         h1{ font-size:32px !important; color:${COLORS.primaryNavy} !important; }
@@ -739,13 +739,13 @@ ${finalAnalysisForMarkdown};`;
       }
     </style>
   </head>
-  <body bgcolor="${COLORS.white}" style="background-color:${COLORS.white}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.white}" style="background:${COLORS.white};">
+  <body bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;"> {/* MODIFIED: Use lightBg */}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg};"> {/* MODIFIED: Use lightBg */}
       <tr>
-        <td align="center">
+        <td align="center" style="padding: 20px 0;"> {/* MODIFIED: Added padding to this cell */}
 
-          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
-            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
+          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;"> {/* Wrapper remains white */}
+            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};"> {/* Content body remains white */}
               ${htmlBody}
             </div>
           </div>
