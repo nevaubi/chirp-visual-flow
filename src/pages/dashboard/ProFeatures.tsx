@@ -107,7 +107,7 @@ const ProFeatures = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-lg">
@@ -117,11 +117,7 @@ const ProFeatures = () => {
           <h1 className="text-2xl font-bold text-gray-900">Pro Features</h1>
           <p className="text-gray-600">Professional newsletter templates and advanced features</p>
         </div>
-      </div>
-
-      {/* Pro Badge */}
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200 ml-auto">
           <Crown className="w-3 h-3 mr-1" />
           Premium Templates
         </Badge>
@@ -178,30 +174,6 @@ const ProFeatures = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Coming Soon Section */}
-      <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">More Pro Features Coming Soon</h2>
-        <p className="text-gray-600 mb-4">We're working on additional premium features to enhance your newsletter experience:</p>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            Advanced analytics and insights
-          </li>
-          <li className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            Custom branding options
-          </li>
-          <li className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            A/B testing for newsletters
-          </li>
-          <li className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            Priority customer support
-          </li>
-        </ul>
       </div>
     </div>
   );
