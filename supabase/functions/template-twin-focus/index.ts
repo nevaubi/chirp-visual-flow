@@ -15,18 +15,62 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
-// Helper function to convert text to proper HTML formatting
+// Helper function to convert text to proper HTML formatting with visual breaks
 const formatTextForHTML = (text: string): string => {
   if (!text) return '';
   
-  return text
+  // Split long text into paragraphs for better readability
+  const sentences = text.split(/[.!?]+/);
+  let formattedText = '';
+  let currentParagraph = '';
+  
+  sentences.forEach((sentence, index) => {
+    sentence = sentence.trim();
+    if (sentence.length === 0) return;
+    
+    currentParagraph += sentence + '. ';
+    
+    // Create paragraph breaks every 2-3 sentences or at natural breaks
+    if ((index + 1) % 3 === 0 || sentence.includes('**') || currentParagraph.length > 300) {
+      formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
+      currentParagraph = '';
+    }
+  });
+  
+  // Add any remaining text
+  if (currentParagraph.trim()) {
+    formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
+  }
+  
+  return formattedText
     // Convert markdown bold to HTML
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Convert line breaks to proper HTML
-    .replace(/\n\n/g, '</p><p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: \'Inter\', sans-serif;">')
-    .replace(/\n/g, '<br>')
-    // Ensure proper paragraph structure
-    .trim();
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #01caa6;">$1</strong>')
+    // Fix any double periods
+    .replace(/\.\./g, '.');
+};
+
+// Helper function to split long synthesis text into visual sections
+const createVisualSections = (synthesis: string): string => {
+  const sections = synthesis.split(/\*\*(.*?)\*\*/);
+  let result = '';
+  
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i].trim();
+    if (!section) continue;
+    
+    if (i % 2 === 1) {
+      // This is a header (was between **)
+      result += `
+        <div style="background-color: #f8fbf7; padding: 16px; margin: 16px 0; border-left: 4px solid #01caa6; border-radius: 4px;">
+          <h4 style="margin: 0 0 12px 0; color: #01caa6; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;">${section}</h4>
+        </div>`;
+    } else {
+      // Regular text content
+      result += formatTextForHTML(section);
+    }
+  }
+  
+  return result || formatTextForHTML(synthesis);
 };
 
 // Clean HTML template with placeholders for dynamic content
@@ -166,24 +210,24 @@ const getNewsletterHTML = (data: any) => {
 													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
 														<tr>
 															<td class="pad">
-																<table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px;">
+																<table width="100%" border="1" cellpadding="12" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px; margin: 16px 0;">
 																	<tr style="background-color: #f8fbf7;">
-																		<th style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
 																			${section.dualPerspective.columnA.header}
 																		</th>
-																		<th style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
 																			${section.dualPerspective.columnB.header}
 																		</th>
 																	</tr>
 																	<tr>
-																		<td style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 14px; color: #201f42; vertical-align: top;">
-																			<ul style="margin: 0; padding-left: 15px;">
-																				${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 8px;">${point}</li>`).join('')}
+																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
+																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+																				${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
 																			</ul>
 																		</td>
-																		<td style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 14px; color: #201f42; vertical-align: top;">
-																			<ul style="margin: 0; padding-left: 15px;">
-																				${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 8px;">${point}</li>`).join('')}
+																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
+																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+																				${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
 																			</ul>
 																		</td>
 																	</tr>
@@ -193,12 +237,21 @@ const getNewsletterHTML = (data: any) => {
 													</table>
 													` : ''}
 													
-													<table class="paragraph_block block-4" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+													<table class="paragraph_block block-4" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
 														<tr>
-															<td class="pad">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
-																	<p style="margin: 0;">${section.synthesis}</p>
+															<td class="pad" style="padding: 20px 10px;">
+																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
+																	${createVisualSections(section.synthesis)}
 																</div>
+															</td>
+														</tr>
+													</table>
+													
+													<!-- Section Divider -->
+													<table class="divider_block" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad" style="padding: 10px;">
+																<div style="background-color: #e8f5f3; height: 2px; width: 100%; margin: 20px 0;"></div>
 															</td>
 														</tr>
 													</table>
@@ -269,9 +322,9 @@ const getNewsletterHTML = (data: any) => {
 													</table>
 													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
 														<tr>
-															<td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
-																	<p style="margin: 0;">${insight.summary}</p>
+															<td class="pad" style="padding-bottom:15px;padding-left:10px;padding-right:10px;">
+																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
+																	${formatTextForHTML(insight.summary)}
 																</div>
 															</td>
 														</tr>
