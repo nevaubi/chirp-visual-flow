@@ -107,7 +107,7 @@ const ProFeatures = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-lg">
@@ -124,9 +124,9 @@ const ProFeatures = () => {
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
         {templates.map((template) => (
-          <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200">
+          <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200 flex flex-col">
             <CardHeader>
               <div className={`w-full h-32 rounded-lg ${template.preview} border border-gray-200 mb-4 flex items-center justify-center`}>
                 <div className="text-center text-gray-500">
@@ -138,7 +138,7 @@ const ProFeatures = () => {
               <CardTitle className="text-lg">{template.name}</CardTitle>
               <CardDescription>{template.description}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-end">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-900">Features:</h4>
