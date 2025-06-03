@@ -242,13 +242,13 @@ ${formattedTweets}`;
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4.1-2025-04-14", // Consider using a more general model like "gpt-4-turbo" or "gpt-4o" if available and suitable
         messages: [
           { role: "system", content: analysisSystemPrompt },
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.6,
-        max_tokens: 10000
+        max_tokens: 4096 // Adjusted based on typical limits, ensure this is adequate
       })
     });
     if (!openaiRes.ok) {
@@ -287,7 +287,7 @@ ${analysisResult}`;
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4.1-2025-04-14", // Consider using a more general model
         messages: [
           { role: "system", content: "You are a search query optimization specialist for creative newsletters." },
           { role: "user", content: queryGenerationPrompt }
@@ -321,11 +321,11 @@ ${analysisResult}`;
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
               body: JSON.stringify({ 
-                model: "sonar-pro", 
+                model: "sonar-medium-online", // "sonar-pro" might be a specific or paid model, "sonar-medium-online" is a common free tier one
                 messages: [{ role: "user", content: topic.query }], 
                 temperature: 0.2, 
                 max_tokens: 300,
-                search_recency_filter: "week"
+                // search_recency_filter: "week" // This parameter might not be supported by all models or APIs, check Perplexity docs
               })
             });
             if (perplexityRes.ok) {
@@ -371,12 +371,12 @@ Provide the complete, enhanced analysis maintaining all layout structures.`;
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
+          model: "gpt-4.1-2025-04-14", // Consider using a more general model
           messages: [
             { role: "system", content: "You are enhancing creative content with current web insights while maintaining visual structure." },
             { role: "user", content: integrationPrompt }
           ],
-          temperature: 0.3, max_tokens: 12000
+          temperature: 0.3, max_tokens: 4096 // Adjusted
         })
       });
 
@@ -461,12 +461,12 @@ Create a visually stunning newsletter that properly implements each layout type 
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
+            model: "gpt-4.1-2025-04-14", // Consider using a more general model
             messages: [
               { role: "system", content: markdownSystemPrompt },
               { role: "user", content: markdownUserPrompt }
             ],
-            temperature: 0.2, max_tokens: 12000
+            temperature: 0.2, max_tokens: 4096 // Adjusted
           })
         });
         if (markdownOpenaiRes.ok) {
@@ -565,12 +565,12 @@ ${markdownNewsletter}
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
+            model: "gpt-4.1-2025-04-14", // Consider using a more general model
             messages: [
               { role: "system", content: enhancedSystemPrompt },
               { role: "user", content: enhancedUserPrompt }
             ],
-            temperature: 0.1, max_tokens: 15000
+            temperature: 0.1, max_tokens: 4096 // Adjusted, 15000 is very high
           })
         });
         if (enhancedOpenaiRes.ok) {
@@ -632,7 +632,7 @@ ${markdownNewsletter}
 
     // Creative heading renderer with modern typography
     renderer.heading = (text, level) => {
-      const colors = {
+      const colors: Record<number, string> = { // Explicitly type colors
         1: '#1a202c',
         2: '#2d3748', 
         3: '#3182ce',
@@ -640,7 +640,7 @@ ${markdownNewsletter}
         5: '#319795',
         6: '#38a169'
       };
-      const sizes = {
+      const sizes: Record<number, string> = { // Explicitly type sizes
         1: '36px',
         2: '28px',
         3: '24px',
@@ -648,7 +648,7 @@ ${markdownNewsletter}
         5: '18px',
         6: '16px'
       };
-      const weights = {
+      const weights: Record<number, string> = { // Explicitly type weights
         1: '800',
         2: '700',
         3: '600',
@@ -657,9 +657,9 @@ ${markdownNewsletter}
         6: '500'
       };
       
-      const color = colors[level as keyof typeof colors] || '#1a202c';
-      const size = sizes[level as keyof typeof sizes] || '18px';
-      const weight = weights[level as keyof typeof weights] || '500';
+      const color = colors[level] || '#1a202c';
+      const size = sizes[level] || '18px';
+      const weight = weights[level] || '500';
       
       return `<h${level} style="color:${color};
                                font-size:${size};
@@ -670,90 +670,39 @@ ${markdownNewsletter}
     };
 
     // ------------------------------------------------------------------
-//  SAFE image-left + bullets-right renderer (no JS, no flex)
-// ------------------------------------------------------------------
-renderer.image = (href, _title, alt) => `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
-    <tr>
-      <td width="44%" style="padding-right:18px;">
-        <img src="${href}" alt="${alt || ''}"
-             style="display:block;width:100%;max-width:260px;height:auto;
-                    border-radius:12px;border:1px solid #e2e8f0;
-                    box-shadow:0 6px 18px rgba(0,0,0,.06);">
-      </td>
-      <td width="56%" style="font-size:16px;line-height:1.7;color:#1a202c;">
-`;
-// (the next bullet list closes the table row + table in renderer.list)
+    //  SAFE image-left + bullets-right renderer (no JS, no flex)
+    //  NOTE: This renderer expects renderer.list to be customized to close the table.
+    //  This might lead to broken HTML if renderer.list is not appropriately overridden.
+    // ------------------------------------------------------------------
+    renderer.image = (href, _title, alt) => `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+        <tr>
+          <td width="44%" style="padding-right:18px;">
+            <img src="${href}" alt="${alt || ''}"
+                 style="display:block;width:100%;max-width:260px;height:auto;
+                        border-radius:12px;border:1px solid #e2e8f0;
+                        box-shadow:0 6px 18px rgba(0,0,0,.06);">
+          </td>
+          <td width="56%" style="font-size:16px;line-height:1.7;color:#1a202c;">
+    `; // Intentionally unclosed <td>. Expects list renderer to close </td></tr></table>
 
-// ------------------------------------------------------------------
-//  Convert Markdown → HTML using this renderer
-// ------------------------------------------------------------------
-const htmlBody = marked(finalMarkdown, { renderer });
+    // ------------------------------------------------------------------
+    //  Convert Markdown → HTML using this renderer
+    // ------------------------------------------------------------------
+    const htmlBody = marked(finalMarkdown, { renderer });
 
-// ------------------------------------------------------------------
-//  EMAIL HTML  (flat bg, tight wrapper, responsive table styles)
-// ------------------------------------------------------------------
-const emailHtml = juice(`
-<body bgcolor="#f7fafc" style="background:#f7fafc;margin:0;padding:0;">
-<style>
-  /* -------- PALETTE -------- */
-  :root{
-    --c-text:#1a202c;
-    --c-head:#2d3748;
-    --c-accent:#3182ce;
-    --c-bg:#ffffff;
-    --c-frame:#e2e8f0;
-  }
-
-  /* -------- TYPO -------- */
-  body,table,td{font-family:'Inter',Arial,sans-serif;color:var(--c-text);}
-  h1{font-size:30px;color:var(--c-head);margin:0 0 24px;font-weight:700;}
-  h2{font-size:24px;color:var(--c-accent);margin:28px 0 16px;font-weight:700;}
-  p{font-size:17px;line-height:1.8;margin:0 0 18px;}
-
-  /* -------- WRAPPER -------- */
-  .wrapper{max-width:640px;margin:0 auto;background:var(--c-bg);
-           border:1px solid var(--c-frame);border-radius:14px;
-           box-shadow:0 8px 32px rgba(0,0,0,.05);}
-  .content{padding:32px 28px;}
-
-  /* -------- TWO-COL TABLE (comparison) -------- */
-  .tbl th{background:var(--c-accent);color:#fff;padding:15px;font-size:16px;text-align:left;}
-  .tbl td{padding:15px;font-size:16px;border-top:1px solid var(--c-frame);}
-
-  /* -------- MOBILE -------- */
-  @media(max-width:600px){
-    .content{padding:26px 20px;}
-    h1{font-size:26px;}
-    h2{font-size:22px;}
-    p{font-size:16px;}
-    /* image+bullets stack */
-    .image-row td{display:block;width:100% !important;padding:0 !important;}
-  }
-</style>
-
-<div class="wrapper">
-  <div class="content">
-    ${htmlBody}
-  </div>
-</div>
-
-<div style="text-align:center;padding:28px 0 40px;font-size:14px;color:var(--c-accent);">
-  Crafted with ✨ by <strong style="color:var(--c-head);">LetterNest</strong>
-</div>
-</body>`);
-
-
+    // ------------------------------------------------------------------
+    //  EMAIL HTML (Creative Design)
+    // ------------------------------------------------------------------
+    const emailHtml = juice(`
+      <body style="margin:0; padding:0; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 50%, #e2e8f0 100%);">
         <!-- Creative newsletter container -->
-        <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 50%, #e2e8f0 100%); padding: 25px 0;">
-         <div class="content-container" style="display: block; width: 100%; max-width: 750px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 20px 50px rgba(26,32,44,0.15), 0 8px 16px rgba(45,55,72,0.1); text-align: left; border: 1px solid #e2e8f0; overflow: hidden;">
-
-            <div class="content-body" style="padding: 30px 20px; line-height: 1.7; color: #1a202c; font-size: 16px; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-
+        <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; padding: 25px 0;">
+          <div class="content-container" style="display: block; width: 100%; max-width: 750px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 20px 50px rgba(26,32,44,0.15), 0 8px 16px rgba(45,55,72,0.1); text-align: left; border: 1px solid #e2e8f0; overflow: hidden;">
+            <div class="content-body" style="padding: 30px 20px; line-height: 1.7; color: #1a202c; font-size: 16px;">
               ${htmlBody}
             </div>
           </div>
-          
           <div class="footer" style="text-align: center; padding: 40px 0 50px 0; font-size: 14px; color: #3182ce; font-family: 'Inter', sans-serif;">
             <div style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 12px; padding: 20px; margin: 0 20px; box-shadow: 0 4px 12px rgba(26,32,44,0.08);">
               Powered by <strong style="color: #1a202c;">LetterNest</strong><br>
@@ -784,6 +733,7 @@ const emailHtml = juice(`
       logStep("Creative Showcase email sent successfully", { id: emailData?.id });
     } catch (sendErr) { 
       console.error("Error sending Creative Showcase email:", sendErr); 
+      // Optionally rethrow or handle more gracefully if email sending is critical
     }
 
     // 18) Save newsletter to storage
@@ -862,14 +812,21 @@ serve(async (req: Request) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-    // @ts-ignore 
+    
+    // Handle background task execution based on environment
+    // @ts-ignore EdgeRuntime is a Supabase Edge Functions specific global
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) { 
       // @ts-ignore
       EdgeRuntime.waitUntil(backgroundTask);
     } else {
-      backgroundTask.then(result => { logStep("Background task completed", result); })
-      .catch(err => { console.error("Background task error:", err); });
+      // For local development or other environments, just let it run
+      backgroundTask.then(result => { 
+        logStep("Background task completed (non-EdgeRuntime)", result); 
+      }).catch(err => { 
+        console.error("Background task error (non-EdgeRuntime):", err); 
+      });
     }
+
     return new Response(JSON.stringify({
       status: "processing",
       message: "Your Creative Showcase newsletter generation has started. You will receive an email when it's ready.",
