@@ -475,59 +475,50 @@ ${finalAnalysisForMarkdown}`;
     // List item renderer
     renderer.listitem = (text, task, checked) => {
       if (task) {
-        return `<li class="task-list-item" style="color:#0c4160; list-style-type: none;"><input type="checkbox" ${checked ? "checked" : ""} disabled style="margin-right: 8px;">${text}</li>\n`;
+        return `<li class="task-list-item" style="color:#0c4160;"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #0c4160; font-family: 'Lato',sans-serif; list-style-type: disc; margin-left: 20px;">${text}</li>\n`;
+      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #0c4160; font-family: 'Lato',sans-serif;">${text}</li>\n`;
     };
 
     // Blockquote renderer
     renderer.blockquote = (quote) => {
-      return `<blockquote style="background-color: #cfdce4; border-left: 6px solid #293041; margin: 16px 0; padding: 12px 16px; color: #293041; font-family: 'Lato',sans-serif; font-size:16px; line-height:1.6;">${quote}</blockquote>\n`;
+      return `<blockquote style="background-color: #cfdce4; border-left: 5px solid #c7d7c0; margin: 16px 0; padding: 10px 16px; color: #293041; font-family: 'Lato',sans-serif; font-size:16px; line-height:1.6;">${quote}</blockquote>\n`;
     };
 
     // Heading renderer
     renderer.heading = (text, level) => {
-      const sizes: Record<number, string> = { 1: "42px", 2: "34px", 3: "30px", 4: "26px", 5: "22px", 6: "18px" };
-      const margins: Record<number, string> = { 1: "0 0 22px 0", 2: "26px 0 18px 0", 3: "22px 0 14px 0", 4: "18px 0 12px 0", 5: "16px 0 10px 0", 6: "12px 0 8px 0" };
-      const borderStyles: Record<number, string> = { 1: "6px", 2: "6px", 3: "4px", 4: "4px", 5: "3px", 6: "3px" };
+      const sizes: Record<number, string> = { 1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px" };
+      const margins: Record<number, string> = { 1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0" };
       let color = "#0c4160";
-      let bgColor = "transparent";
-      let textColor = "#ffffff";
-      if (level === 1 || level === 2) {
-        bgColor = "#0c4160";
-        textColor = "#ffffff";
-      } else {
-        bgColor = "#cfdce4";
-        textColor = "#0c4160";
-      }
+      if (level >= 3) color = "#293041";
+
       const size = sizes[level] || "18px";
       const margin = margins[level] || "12px 0 8px 0";
-      const border = borderStyles[level] || "3px";
 
-      return `<h${level} style="background-color:${bgColor}; color:${textColor}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: ${border} solid #0c4160; padding: 8px 12px; border-radius:4px;">${text}</h${level}>\n`;
+      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid #0c4160; padding-left: 8px;">${text}</h${level}>\n`;
     };
 
     // Image renderer
     renderer.image = (href, _title, alt) => `
-      <div style="text-align:center; margin: 28px 0; background-color: #c7d7c0; padding: 12px; border: 2px solid #293041; border-radius:8px;">
+      <div style="text-align:center; margin: 24px 0;">
         <img src="${href}"
              alt="${alt || "Newsletter image"}"
-             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:4px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
+             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid #293041;">
       </div>`;
 
     // Table renderer – 2-column responsive
     renderer.table = (header, body) => `
-      <table style="width:100%;border-collapse:collapse;margin:28px 0; border-radius:6px; overflow:hidden; border: 2px solid #0c4160;">
+      <table style="width:100%;border-collapse:collapse;margin:24px 0; border-radius:6px; overflow:hidden;">
         <thead>
           ${header.replace(
       /<th>/g,
-      '<th style="background:#cfdce4;color:#0c4160;padding:12px;font-size:16px;text-align:left;border-bottom:3px solid #293041;">',
+      '<th style="background:#cfdce4;color:#0c4160;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #293041;">',
     )}
         </thead>
         <tbody>
           ${body.replace(
       /<td>/g,
-      '<td style="padding:12px 14px;font-size:16px;vertical-align:top;border-bottom:2px solid #0c4160;color:#293041;background: #ffffff; border-right:2px solid #c7d7c0;">',
+      '<td style="padding:10px 12px;font-size:15px;vertical-align:top;border-bottom:1px solid #293041;color:#293041;background: rgba(207,220,228,0.05); border-right:2px solid #c7d7c0;">',
     )}
         </tbody>
       </table>`;
@@ -543,31 +534,30 @@ ${finalAnalysisForMarkdown}`;
             body,html{width:100%;margin:0;background:#ffffff !important;}
             .wrapper{width:100% !important;max-width:none !important;}
             table{width:100% !important;border-collapse:collapse;}
-            table td{padding:12px !important;font-size:15px !important;line-height:1.5 !important;}
+            table td{padding:10px !important;font-size:14px !important;line-height:1.4 !important;}
             h1,h2,h3{page-break-after:avoid;}
           }
           @media screen and (min-width:640px){
-            .content-body{padding:32px 40px !important;background:#ffffff !important;border-radius:8px !important;}
+            .content-body{padding:28px 32px !important;background:#ffffff !important;border-radius:8px !important;}
           }
           @media screen and (max-width:600px){
             body{background-color:#ffffff !important;}
             .wrapper{max-width:100% !important;margin:0 !important;border-radius:0 !important;background-color:#ffffff !important;}
-            .content-body{padding:24px 16px !important;background:#ffffff !important;}
-            h1{font-size:30px !important;color:#ffffff !important;background-color:#0c4160 !important;padding:10px !important;border-left:6px solid #0c4160 !important;border-radius:4px !important;}
-            h2{font-size:28px !important;color:#ffffff !important;background-color:#0c4160 !important;padding:8px !important;border-left:6px solid #0c4160 !important;border-radius:4px !important;}
-            h3{font-size:24px !important;color:#0c4160 !important;background-color:#cfdce4 !important;padding:6px !important;border-left:4px solid #0c4160 !important;border-radius:4px !important;}
-            blockquote{background-color:#cfdce4 !important;border-left:6px solid #293041 !important;color:#293041 !important;margin:16px 0 !important;padding:12px 14px !important;}
-            table, th, td{font-size:15px !important;}
+            .content-body{padding:20px 16px !important;background:#ffffff !important;}
+            h1{font-size:32px !important;color:#0c4160 !important;}
+            h2{font-size:28px !important;color:#0c4160 !important;}
+            h3{font-size:24px !important;color:#293041 !important;}
+            blockquote{background-color:#ffffff !important;border-left:5px solid #c7d7c0 !important;color:#293041 !important;}
           }
         </style>
 
-        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.12);text-align:left;">
-          <div class="content-body" style="padding:24px 16px;line-height:1.7;color:#293041;font-size:16px;font-family:'Lato',sans-serif;background:#ffffff;">
+        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
+          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#293041;font-size:16px;font-family:'Lato',sans-serif;background:#ffffff;">
             ${htmlBody}
           </div>
         </div>
 
-        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#293041;font-family:'Lato',sans-serif;background:#cfdce4;">
+        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#293041;font-family:'Lato',sans-serif;">
           Powered by <strong style="color:#0c4160;">LetterNest</strong><br>
           <span style="color:#293041;font-size:12px;">Professional Newsletter Generation</span>
         </div>
