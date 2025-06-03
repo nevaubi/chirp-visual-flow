@@ -62,25 +62,21 @@ const handler = async (req: Request): Promise<Response> => {
     // Your Ticker Drop audience ID - make sure this is correct in your Resend dashboard
     const audienceId = "cb993060-68d6-40d9-a746-ddfde69bc003";
     
-    // Prepare contact data with all required fields
-    const contactData = {
-      email: email.toLowerCase().trim(),
-      audienceId: audienceId,
-      unsubscribed: false,
-      ...(firstName?.trim() && { firstName: firstName.trim() }),
-      ...(lastName?.trim() && { lastName: lastName.trim() }),
-    };
+    console.log("Making request to Resend API for audience:", audienceId);
 
-    console.log("Contact data being sent to Resend:", contactData);
-
-    // Use fetch directly instead of Resend SDK to avoid dependency issues
-    const resendResponse = await fetch("https://api.resend.com/contacts", {
+    // Use the correct Resend API endpoint with audience ID in the URL
+    const resendResponse = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(contactData),
+      body: JSON.stringify({
+        email: email.toLowerCase().trim(),
+        unsubscribed: false,
+        ...(firstName?.trim() && { firstName: firstName.trim() }),
+        ...(lastName?.trim() && { lastName: lastName.trim() }),
+      }),
     });
 
     console.log("Resend API response status:", resendResponse.status);
