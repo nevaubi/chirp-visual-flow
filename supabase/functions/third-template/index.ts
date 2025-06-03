@@ -669,149 +669,80 @@ ${markdownNewsletter}
                                letter-spacing: -0.025em;">${text}</h${level}>\n`;
     };
 
-    // Enhanced image renderer with creative styling
-    renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 30px 0 40px; padding: 0;">
-        <img src="${href}"
-             alt="${alt || 'Newsletter image'}"
-             style="max-width:100%; width:auto; max-height:600px; height:auto; border-radius:16px;
-                    display:inline-block; box-shadow: 0 10px 30px rgba(26,32,44,0.1), 0 4px 8px rgba(45,55,72,0.05); 
-                    border: 1px solid #e2e8f0; transition: transform 0.3s ease;"
-             onmouseover="this.style.transform='scale(1.02)'"
-             onmouseout="this.style.transform='scale(1)'">
-      </div>`;
+    // ------------------------------------------------------------------
+//  SAFE image-left + bullets-right renderer (no JS, no flex)
+// ------------------------------------------------------------------
+renderer.image = (href, _title, alt) => `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+    <tr>
+      <td width="44%" style="padding-right:18px;">
+        <img src="${href}" alt="${alt || ''}"
+             style="display:block;width:100%;max-width:260px;height:auto;
+                    border-radius:12px;border:1px solid #e2e8f0;
+                    box-shadow:0 6px 18px rgba(0,0,0,.06);">
+      </td>
+      <td width="56%" style="font-size:16px;line-height:1.7;color:#1a202c;">
+`;
+// (the next bullet list closes the table row + table in renderer.list)
 
-    const htmlBody = marked(finalMarkdown, { renderer });
+// ------------------------------------------------------------------
+//  Convert Markdown → HTML using this renderer
+// ------------------------------------------------------------------
+const htmlBody = marked(finalMarkdown, { renderer });
 
-    // Generate the final email HTML with creative design system
-    const emailHtml = juice(`
-      <body style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 50%, #e2e8f0 100%); margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-        <!-- Creative design CSS -->
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
-          
-          @media print {
-            body, html { 
-              width: 100%; 
-              height: auto; 
-              background: #ffffff !important; 
-            }
-            
-            h1, h2, h3 { 
-              page-break-after: avoid; 
-              margin-top: 1.5em;
-            }
-            
-            .image-container { 
-              page-break-inside: avoid; 
-            }
-            
-            p, ul, ol, dl, blockquote { 
-              page-break-inside: auto; 
-            }
-          }
-          
-          /* Mobile-first responsive design */
-          @media screen and (max-width: 600px) {
-            body {
-              background: #ffffff !important;
-            }
-            
-            .content-wrapper {
-              padding: 0 !important;
-              background: #ffffff !important;
-            }
-            
-            .content-container {
-              max-width: 100% !important;
-              width: 100% !important;
-              margin: 0 !important;
-              border-radius: 0 !important;
-              box-shadow: none !important;
-              border: none !important;
-            }
-            
-            .content-body {
-              padding: 20px 15px !important;
-            }
-            
-            /* Mobile-optimized headings */
-            h1 {
-              font-size: 30px !important;
-              margin: 0 0 20px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            h2 {
-              font-size: 24px !important;
-              margin: 30px 0 15px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            h3 {
-              font-size: 20px !important;
-              margin: 25px 0 12px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            /* Mobile layout adjustments */
-            div[style*="display: flex"] {
-              flex-direction: column !important;
-            }
-            
-            div[style*="display: grid"] {
-              grid-template-columns: 1fr !important;
-              gap: 15px !important;
-            }
-            
-            div[style*="flex: 0 0 40%"] {
-              flex: none !important;
-              max-width: 100% !important;
-              margin-bottom: 20px !important;
-            }
-            
-            /* Mobile image optimization */
-            .image-container {
-              margin: 20px 0 25px 0 !important;
-            }
-            
-            .image-container img {
-              border-radius: 8px !important;
-              max-height: 300px !important;
-            }
-          }
-          
-          /* Tablet optimization */
-          @media screen and (min-width: 601px) and (max-width: 900px) {
-            .content-container {
-              max-width: 95% !important;
-              margin: 10px auto !important;
-            }
-            
-            .content-body {
-              padding: 40px 35px !important;
-            }
-          }
-          
-          /* Enhanced typography and spacing */
-          .content-body h1, .content-body h2, .content-body h3 {
-            font-family: 'Poppins', 'Inter', sans-serif;
-          }
-          
-          .content-body p, .content-body li {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          }
-          
-          /* Custom hover effects for interactive elements */
-          .hover-card {
-            transition: all 0.3s ease;
-          }
-          
-          .hover-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(26,32,44,0.15) !important;
-          }
-        </style>
+// ------------------------------------------------------------------
+//  EMAIL HTML  (flat bg, tight wrapper, responsive table styles)
+// ------------------------------------------------------------------
+const emailHtml = juice(`
+<body bgcolor="#f7fafc" style="background:#f7fafc;margin:0;padding:0;">
+<style>
+  /* -------- PALETTE -------- */
+  :root{
+    --c-text:#1a202c;
+    --c-head:#2d3748;
+    --c-accent:#3182ce;
+    --c-bg:#ffffff;
+    --c-frame:#e2e8f0;
+  }
+
+  /* -------- TYPO -------- */
+  body,table,td{font-family:'Inter',Arial,sans-serif;color:var(--c-text);}
+  h1{font-size:30px;color:var(--c-head);margin:0 0 24px;font-weight:700;}
+  h2{font-size:24px;color:var(--c-accent);margin:28px 0 16px;font-weight:700;}
+  p{font-size:17px;line-height:1.8;margin:0 0 18px;}
+
+  /* -------- WRAPPER -------- */
+  .wrapper{max-width:640px;margin:0 auto;background:var(--c-bg);
+           border:1px solid var(--c-frame);border-radius:14px;
+           box-shadow:0 8px 32px rgba(0,0,0,.05);}
+  .content{padding:32px 28px;}
+
+  /* -------- TWO-COL TABLE (comparison) -------- */
+  .tbl th{background:var(--c-accent);color:#fff;padding:15px;font-size:16px;text-align:left;}
+  .tbl td{padding:15px;font-size:16px;border-top:1px solid var(--c-frame);}
+
+  /* -------- MOBILE -------- */
+  @media(max-width:600px){
+    .content{padding:26px 20px;}
+    h1{font-size:26px;}
+    h2{font-size:22px;}
+    p{font-size:16px;}
+    /* image+bullets stack */
+    .image-row td{display:block;width:100% !important;padding:0 !important;}
+  }
+</style>
+
+<div class="wrapper">
+  <div class="content">
+    ${htmlBody}
+  </div>
+</div>
+
+<div style="text-align:center;padding:28px 0 40px;font-size:14px;color:var(--c-accent);">
+  Crafted with ✨ by <strong style="color:var(--c-head);">LetterNest</strong>
+</div>
+</body>`);
+
 
         <!-- Creative newsletter container -->
         <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 50%, #e2e8f0 100%); padding: 25px 0;">
