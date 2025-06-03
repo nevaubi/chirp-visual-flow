@@ -531,36 +531,75 @@ ${finalAnalysisForMarkdown}`;
 
 
         <style>
-  /* ---------- GLOBAL ---------- */
-  body        { background:#f2f6fa; margin:0; padding:0; }
-  p, li       { line-height:1.8; margin:0 0 1em 0; }
-  .wrapper    { max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; }
-  .content-body{ padding:24px 20px; }
+  /* ---------------  BRAND PALETTE  --------------- */
+  :root{
+    --brand-teal:  #01caa6;
+    --brand-navy:  #1f254a;
+    --brand-light: #ffffff;
+    --page-bg:     #f2f6fa;      /* outer frame */
+    --grad-soft:   linear-gradient(135deg,#e8fff8 0%,#ffffff 100%);
+  }
 
-  /* ---------- PRINT ---------- */
+  /* ---------------  LAYOUT  --------------- */
+  body         { background:var(--page-bg); margin:0; padding:0;
+                 font-family:'Inter', Arial, sans-serif; color:#34495e; }
+  .wrapper     { max-width:620px; margin:0 auto; background:var(--brand-light);
+                 border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.08); }
+  .content-body{ padding:32px 26px; }
+
+  /* ---------------  TYPOGRAPHY  --------------- */
+  h1{ font-size:30px; color:var(--brand-navy); margin:0 0 20px;
+      font-weight:800; letter-spacing:-0.5px; }
+  h2{ font-size:24px; color:var(--brand-navy); margin:32px 0 14px;
+      font-weight:700; }
+  h3{ font-size:20px; color:var(--brand-teal); margin:26px 0 12px;
+      font-weight:700; }
+  p, li{ font-size:17px; line-height:1.85; margin:0 0 1.2em; }
+
+  /* ---------------  SEPARATORS & BOXES  --------------- */
+  .section-divider{ height:2px;
+                    background:linear-gradient(90deg,transparent,
+                                var(--brand-teal) 50%,transparent);
+                    margin:40px 0; }
+
+  .table-wrapper{ background:var(--grad-soft); border-radius:10px;
+                  overflow:hidden; border:1px solid #d7f5ee; margin:24px 0; }
+
+  /* ---------------  TABLES  --------------- */
+  table{ width:100%; border-collapse:collapse; }
+  table th{ background:var(--brand-teal); color:#ffffff; padding:14px;
+            font-size:16px; text-align:left; }
+  table td{ padding:14px; font-size:16px; border-top:1px solid #eaf4f2; }
+
+  /* ---------------  IMAGES  --------------- */
+  img.responsive{ max-width:100%; height:auto; border-radius:10px;
+                  box-shadow:0 4px 18px rgba(0,0,0,.05); margin:24px 0; }
+
+  /* ---------------  BLOCKQUOTES  --------------- */
+  blockquote{ border-left:4px solid var(--brand-teal); padding-left:14px;
+              margin:0 0 1.2em; font-style:italic; color:#5d6d7e; }
+
+  /* ---------------  RESPONSIVE  --------------- */
+  @media(max-width:600px){
+    .content-body{ padding:26px 18px; }
+    h1{ font-size:26px; }
+    h2{ font-size:22px; }
+    h3{ font-size:20px; }
+    p, li{ font-size:16px; }
+  }
+
+  /* ---------------  PRINT (unchanged)  --------------- */
   @media print{
-    body,html   { width:100%; margin:0; background:#ffffff !important; }
-    .wrapper    { width:100% !important; max-width:none !important; border-radius:0 !important; }
-    table       { width:100% !important; border-collapse:collapse; }
-    table td    { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
-    h1,h2,h3    { page-break-after:avoid; }
-  }
-
-  /* ---------- DESKTOP (≥640 px) ---------- */
-  @media screen and (min-width:640px){
-    .content-body{ padding:32px 36px; background:#fcfcfc; border-radius:8px; }
-  }
-
-  /* ---------- MOBILE (≤600 px) ---------- */
-  @media screen and (max-width:600px){
-    .wrapper       { max-width:100% !important; margin:0 !important; border-radius:0 !important; }
-    .content-body  { padding:28px 18px !important; }
-    p, li          { font-size:17px !important; }
-    h1             { font-size:26px !important; }
-    h2             { font-size:22px !important; }
-    h3             { font-size:20px !important; }
+    body,html{ width:100%; margin:0; background:#ffffff !important; }
+    .wrapper{ width:100% !important; max-width:none !important;
+              border-radius:0 !important; }
+    table{ width:100% !important; border-collapse:collapse; }
+    table td{ padding:10px !important; font-size:14px !important;
+              line-height:1.4 !important; }
+    h1,h2,h3{ page-break-after:avoid; }
   }
 </style>
+
 
 
         <div class="wrapper" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
