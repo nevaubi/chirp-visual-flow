@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,9 +96,14 @@ const ProFeatures = () => {
     },
     {
       id: 2,
-      name: "Professional Business",
-      description: "Corporate-style layout ideal for business and finance content",
-      features: ["Professional styling", "Data-friendly", "Chart integration"],
+      name: "Twin Focus",
+      description: "A more structured perspective for visually appealing layouts",
+      features: ["Dual-column structure", "Visual content blocks", "Clean separation"],
+      layoutFeatures: [
+        "Balanced side-by-side sections",
+        "Alternating content blocks",
+        "Organized information flow"
+      ],
       preview: "bg-gradient-to-br from-gray-50 to-blue-50"
     },
     {
@@ -193,6 +197,109 @@ const ProFeatures = () => {
     </div>
   );
 
+  // Enhanced Twin Focus Card Component
+  const TwinFocusCard = ({ template }: { template: typeof templates[0] }) => (
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full max-w-[600px] mx-auto">
+      {/* Decorative Header */}
+      <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
+        <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[25%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[35%] h-1.5 bg-gray-300 rounded-full"></div>
+      </div>
+
+      {/* Title and Description */}
+      <div className="px-5">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-1">{template.name}</h2>
+        <p className="text-gray-500 text-base mb-7">{template.description}</p>
+      </div>
+
+      {/* Enhanced Preview with Twin Focus Layout */}
+      <div className="mx-5 mb-10 p-4 bg-gray-50 rounded-[10px] flex flex-col">
+        {/* Two-column layout at top */}
+        <div className="flex gap-5 mb-5 md:flex-row flex-col">
+          {/* Left column with image and bullets */}
+          <div className="flex-1 bg-gray-200 rounded-lg p-3 shadow-sm">
+            {/* Grey image placeholder */}
+            <div className="bg-gray-300 h-20 rounded-md mb-3"></div>
+            {/* Three bullet points */}
+            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4 mb-2.5"></div>
+            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4 mb-2.5"></div>
+            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4"></div>
+          </div>
+          
+          {/* Right column with text mockup */}
+          <div className="flex-1 bg-gray-200 rounded-lg p-3 shadow-sm">
+            <div className="h-2 bg-gray-350 rounded w-[80%] mb-2.5"></div>
+            <div className="h-2 bg-gray-350 rounded w-full mb-2.5"></div>
+            <div className="h-2 bg-gray-350 rounded w-[60%] mb-2.5"></div>
+            <div className="h-2 bg-gray-350 rounded w-[80%] mb-2.5"></div>
+            <div className="h-2 bg-gray-350 rounded w-[60%]"></div>
+          </div>
+        </div>
+        
+        {/* First horizontal section */}
+        <div className="bg-gray-100 p-2.5 rounded-md mb-3">
+          <div className="h-2 bg-gray-300 rounded w-[80%] mb-2.5"></div>
+          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
+        </div>
+        
+        {/* Second horizontal section */}
+        <div className="p-2.5">
+          <div className="h-2 bg-gray-300 rounded w-[80%] mb-2.5"></div>
+          <div className="h-2 bg-gray-300 rounded w-full mb-2.5"></div>
+          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
+        </div>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="flex flex-col md:flex-row mx-5 mb-7">
+        <div className="flex-1">
+          <h3 className="text-base font-medium text-gray-800 mb-2.5">Features:</h3>
+          <ul className="list-none p-0 m-0">
+            {template.features.map((feature, index) => (
+              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
+                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex-1 md:pl-5 md:border-l border-gray-200 mt-4 md:mt-0 md:pt-0 pt-4 border-t md:border-t-0">
+          <h3 className="text-base font-medium text-gray-800 mb-2.5">Layout Description:</h3>
+          <ul className="list-none p-0 m-0">
+            {template.layoutFeatures?.map((feature, index) => (
+              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
+                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Button and Text */}
+      <div className="mt-auto">
+        <Button 
+          className="w-[calc(100%-40px)] mx-5 mb-2.5 h-[50px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-base font-medium"
+          onClick={() => handleUseTemplate(template.id, template.name)}
+          disabled={loadingTemplate === template.name}
+        >
+          {loadingTemplate === template.name ? (
+            <>
+              <span className="mr-2">Generating...</span>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </>
+          ) : (
+            'Generate Pro Newsletter'
+          )}
+        </Button>
+        <p className="text-center text-gray-400 text-sm italic mx-5 mb-5">
+          (Defaults to 20 Bookmarks w/enriched context)
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full space-y-4">
       {/* Header */}
@@ -215,6 +322,8 @@ const ProFeatures = () => {
         {templates.map((template) => (
           template.id === 1 ? (
             <ModernCleanCard key={template.id} template={template} />
+          ) : template.id === 2 ? (
+            <TwinFocusCard key={template.id} template={template} />
           ) : (
             <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200 flex flex-col">
               <CardHeader>
