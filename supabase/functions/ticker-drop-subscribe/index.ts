@@ -74,8 +74,8 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         email: email.toLowerCase().trim(),
         unsubscribed: false,
-        ...(firstName?.trim() && { firstName: firstName.trim() }),
-        ...(lastName?.trim() && { lastName: lastName.trim() }),
+        ...(firstName?.trim() && { first_name: firstName.trim() }),
+        ...(lastName?.trim() && { last_name: lastName.trim() }),
       }),
     });
 
