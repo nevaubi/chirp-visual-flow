@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -245,8 +244,8 @@ const Library = () => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      // First parse with marked
-      const html = marked.parse(markdown);
+      // Use the synchronous version of marked.parse
+      const html = marked.parse(markdown, { async: false }) as string;
       
       // Then sanitize with DOMPurify to prevent XSS
       const sanitizedHtml = DOMPurify.sanitize(html, {
