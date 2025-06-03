@@ -15,6 +15,20 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
+// Helper function to convert text to proper HTML formatting
+const formatTextForHTML = (text: string): string => {
+  if (!text) return '';
+  
+  return text
+    // Convert markdown bold to HTML
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Convert line breaks to proper HTML
+    .replace(/\n\n/g, '</p><p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: \'Inter\', sans-serif;">')
+    .replace(/\n/g, '<br>')
+    // Ensure proper paragraph structure
+    .trim();
+};
+
 // Clean HTML template with placeholders for dynamic content
 const getNewsletterHTML = (data: any) => {
   const { hook, mainSections, quickInsights, date } = data;
