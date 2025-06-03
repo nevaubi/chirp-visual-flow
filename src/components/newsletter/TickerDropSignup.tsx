@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle, TrendingUp, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function TickerDropSignup() {
@@ -64,6 +63,68 @@ export default function TickerDropSignup() {
     }
   };
 
+  const resetForm = () => {
+    setStatus('idle');
+    setMessage("");
+  };
+
+  if (status === 'success') {
+    return (
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 max-w-md mx-auto">
+        {/* Success Celebration State */}
+        <div className="text-center animate-fade-in">
+          {/* Animated Success Icon with Glow */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-[#0087C8]/20 rounded-full animate-ping"></div>
+            <div className="relative bg-gradient-to-r from-[#0087C8] to-[#0270A8] p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center animate-bounce shadow-lg">
+              <CheckCircle className="h-10 w-10 text-white" />
+            </div>
+            {/* Sparkle Effects */}
+            <div className="absolute top-2 left-12 w-2 h-2 bg-[#0087C8] rounded-full animate-pulse"></div>
+            <div className="absolute top-8 right-8 w-1 h-1 bg-[#0270A8] rounded-full animate-pulse delay-300"></div>
+            <div className="absolute bottom-4 left-8 w-1.5 h-1.5 bg-[#0087C8] rounded-full animate-pulse delay-500"></div>
+          </div>
+
+          {/* Success Message */}
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+              <TrendingUp className="h-6 w-6 text-[#0087C8]" />
+              Welcome Aboard!
+            </h3>
+            <p className="text-[#0087C8] font-semibold text-lg mb-2">
+              You're now subscribed to The Ticker Drop
+            </p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Get ready for premium market insights delivered to your inbox every Tuesday & Friday!
+            </p>
+          </div>
+
+          {/* What's Next Section */}
+          <div className="bg-gradient-to-r from-[#0087C8]/5 to-[#0270A8]/5 rounded-xl p-4 mb-6 border border-[#0087C8]/10">
+            <h4 className="font-semibold text-gray-800 mb-2">What's Next?</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Check your email for a welcome message</li>
+              <li>• Your first newsletter arrives Tuesday at 10am CT</li>
+              <li>• Add us to your contacts to never miss an update</li>
+            </ul>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <Button 
+              onClick={resetForm}
+              variant="outline"
+              className="w-full border-[#0087C8] text-[#0087C8] hover:bg-[#0087C8] hover:text-white transition-all duration-200"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Subscribe Another Email
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 max-w-md mx-auto">
       <div className="text-center mb-5">
@@ -79,6 +140,7 @@ export default function TickerDropSignup() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium text-gray-700">
             Email Address <span className="text-red-500">*</span>
@@ -146,17 +208,9 @@ export default function TickerDropSignup() {
         </Button>
       </form>
 
-      {status !== 'idle' && (
-        <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 transition-all duration-300 ${
-          status === 'success' 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {status === 'success' ? (
-            <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
-          )}
+      {status === 'error' && (
+        <div className="mt-4 p-3 rounded-lg flex items-center gap-2 transition-all duration-300 bg-red-50 text-red-800 border border-red-200">
+          <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
           <p className="text-sm font-medium">{message}</p>
         </div>
       )}
