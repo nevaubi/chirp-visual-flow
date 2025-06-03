@@ -527,30 +527,43 @@ ${finalAnalysisForMarkdown}`;
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
   </head>
-  <body bgcolor="#ffffff" style="background-color:#ffffff; ...
+  <body bgcolor="#f2f6fa" style="background:#f2f6fa;margin:0;padding:0;">
+
 
         <style>
-          @media print{
-            body,html{width:100%;margin:0;background:#ffffff !important;}
-            .wrapper{width:100% !important;max-width:none !important;}
-            table{width:100% !important;border-collapse:collapse;}
-            table td{padding:10px !important;font-size:14px !important;line-height:1.4 !important;}
-            h1,h2,h3{page-break-after:avoid;}
-          }
-          @media screen and (min-width:640px){
-            .content-body{padding:28px 32px !important;background:#fcfcfc !important;border-radius:8px !important;}
-          }
-          @media screen and (max-width:600px){
-            body{background-color:#ffffff !important;}
-            .wrapper{max-width:100% !important;margin:0 !important;border-radius:0 !important;}
-            .content-body{padding:20px 16px !important;}
-            h1{font-size:26px !important;}
-            h2{font-size:22px !important;}
-            h3{font-size:20px !important;}
-          }
-        </style>
+  /* ---------- GLOBAL ---------- */
+  body        { background:#f2f6fa; margin:0; padding:0; }
+  p, li       { line-height:1.8; margin:0 0 1em 0; }
+  .wrapper    { max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; }
+  .content-body{ padding:24px 20px; }
 
-        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
+  /* ---------- PRINT ---------- */
+  @media print{
+    body,html   { width:100%; margin:0; background:#ffffff !important; }
+    .wrapper    { width:100% !important; max-width:none !important; border-radius:0 !important; }
+    table       { width:100% !important; border-collapse:collapse; }
+    table td    { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
+    h1,h2,h3    { page-break-after:avoid; }
+  }
+
+  /* ---------- DESKTOP (≥640 px) ---------- */
+  @media screen and (min-width:640px){
+    .content-body{ padding:32px 36px; background:#fcfcfc; border-radius:8px; }
+  }
+
+  /* ---------- MOBILE (≤600 px) ---------- */
+  @media screen and (max-width:600px){
+    .wrapper       { max-width:100% !important; margin:0 !important; border-radius:0 !important; }
+    .content-body  { padding:28px 18px !important; }
+    p, li          { font-size:17px !important; }
+    h1             { font-size:26px !important; }
+    h2             { font-size:22px !important; }
+    h3             { font-size:20px !important; }
+  }
+</style>
+
+
+        <div class="wrapper" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
           <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#2c3e50;font-size:16px;font-family:'Helvetica Neue',Arial,sans-serif;background:#ffffff;">
             ${htmlBody}
           </div>
