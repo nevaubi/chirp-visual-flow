@@ -1,21 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { marked } from "https://esm.sh/marked@4.3.0";
-import juice from "https://esm.sh/juice@11.0.0";
 import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
-};
-
-const COLORS = {
-  primaryNavy: "#142a4b",
-  accentBlue: "#5774cd",
-  lightBg: "#f7f9fc", // Used for the email body background on desktop
-  white: "#ffffff", // Used for the content card background and mobile body
-  darkText: "#293041",
 };
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
@@ -25,14 +15,347 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
+// Clean HTML template with placeholders for dynamic content
+const getNewsletterHTML = (data: any) => {
+  const { hook, mainSections, quickInsights, date } = data;
+  
+  return `<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
+<head>
+	<title>Newsletter from LetterNest</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!--[if mso]>
+	<xml><w:WordDocument xmlns:w="urn:schemas-microsoft-com:office:word"><w:DontUseAdvancedTypographyReadingMail/></w:WordDocument>
+	<o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml>
+	<![endif]-->
+	<!--[if !mso]><!-->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@700&display=swap" rel="stylesheet" type="text/css">
+	<!--<![endif]-->
+	<style>
+		* { box-sizing: border-box; }
+		body { margin: 0; padding: 0; }
+		a[x-apple-data-detectors] { color: inherit !important; text-decoration: inherit !important; }
+		#MessageViewBody a { color: inherit; text-decoration: none; }
+		p { line-height: inherit }
+		.desktop_hide, .desktop_hide table { mso-hide: all; display: none; max-height: 0px; overflow: hidden; }
+		.image_block img+div { display: none; }
+		sup, sub { font-size: 75%; line-height: 0; }
+		
+		@media (max-width:620px) {
+			.desktop_hide table.icons-inner { display: inline-block !important; }
+			.icons-inner { text-align: center; }
+			.icons-inner td { margin: 0 auto; }
+			.mobile_hide { display: none; }
+			.row-content { width: 100% !important; }
+			.stack .column { width: 100%; display: block; }
+			.mobile_hide { min-height: 0; max-height: 0; max-width: 0; overflow: hidden; font-size: 0px; }
+			.desktop_hide, .desktop_hide table { display: table !important; max-height: none !important; }
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color: #f6f6f6; margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
+	<table class="nl-container" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #f6f6f6;">
+		<tbody>
+			<tr>
+				<td>
+					<!-- Header Spacer -->
+					<table class="row row-1" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #201f42; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;">
+													<div class="spacer_block block-1" style="height:6px;line-height:6px;font-size:1px;">&#8202;</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<!-- Main Hook Section -->
+					<table class="row row-3" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #f8fbf7; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 24px; padding-left: 24px; padding-right: 24px; padding-top: 24px; vertical-align: top;">
+													<table class="heading_block block-1" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad">
+																<h1 style="margin: 0; color: #01caa6; direction: ltr; font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 34px;">
+																	<span style="word-break: break-word;">Newsletter Update</span>
+																	<br><span style="word-break: break-word; color: #515151; font-size: 16px;">${date}</span>
+																</h1>
+															</td>
+														</tr>
+													</table>
+													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad" style="padding-bottom:15px;padding-left:10px;padding-right:10px;padding-top:10px;">
+																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
+																	<p style="margin: 0;">${hook}</p>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					${mainSections.map((section: any, index: number) => `
+					<!-- Main Section ${index + 1} -->
+					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 24px; padding-right: 24px; padding-top: 32px; vertical-align: top;">
+													${section.image ? `
+													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad" style="width:100%;">
+																<div class="alignment" align="center">
+																	<div style="max-width: 552px;"><img src="${section.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 300px; object-fit: cover;" width="552" alt="${section.title}" height="auto"></div>
+																</div>
+															</td>
+														</tr>
+													</table>
+													` : ''}
+													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad">
+																<h2 style="margin: 0; color: #201f42; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28px;">
+																	<span style="word-break: break-word;">${section.title}</span>
+																</h2>
+															</td>
+														</tr>
+													</table>
+													
+													<!-- Dual Perspective Table -->
+													${section.dualPerspective ? `
+													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad">
+																<table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px;">
+																	<tr style="background-color: #f8fbf7;">
+																		<th style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+																			${section.dualPerspective.columnA.header}
+																		</th>
+																		<th style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+																			${section.dualPerspective.columnB.header}
+																		</th>
+																	</tr>
+																	<tr>
+																		<td style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 14px; color: #201f42; vertical-align: top;">
+																			<ul style="margin: 0; padding-left: 15px;">
+																				${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 8px;">${point}</li>`).join('')}
+																			</ul>
+																		</td>
+																		<td style="border: 1px solid #01caa6; padding: 12px; font-family: 'Inter', sans-serif; font-size: 14px; color: #201f42; vertical-align: top;">
+																			<ul style="margin: 0; padding-left: 15px;">
+																				${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 8px;">${point}</li>`).join('')}
+																			</ul>
+																		</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</table>
+													` : ''}
+													
+													<table class="paragraph_block block-4" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad">
+																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
+																	<p style="margin: 0;">${section.synthesis}</p>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					`).join('')}
+
+					<!-- Quick Insights Section -->
+					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 20px; padding-right: 20px; padding-top: 32px; vertical-align: top;">
+													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad" style="padding-left:10px;padding-right:10px;padding-top:10px;text-align:center;width:100%;">
+																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 400; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 26px;">
+																	<span style="word-break: break-word;">QUICK INSIGHTS</span>
+																</h3>
+															</td>
+														</tr>
+													</table>
+													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad">
+																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 35px;">
+																	<span style="word-break: break-word;">Key Takeaways & Additional Context</span>
+																</h3>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					${quickInsights.map((insight: any, index: number) => `
+					<!-- Quick Insight ${index + 1} -->
+					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 16px; padding-left: 20px; padding-right: 20px; padding-top: 16px; vertical-align: top;">
+													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad" style="padding-left:10px;padding-right:10px;text-align:left;width:100%;">
+																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 22px;">
+																	<span style="word-break: break-word;">${insight.title}</span>
+																</h3>
+															</td>
+														</tr>
+													</table>
+													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
+																	<p style="margin: 0;">${insight.summary}</p>
+																</div>
+															</td>
+														</tr>
+													</table>
+													${insight.quote ? `
+													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+																<div style="color:#ffffff;direction:ltr;font-family:'Inter', sans-serif;font-size:14px;font-weight:400;letter-spacing:0px;line-height:1.6;text-align:left;mso-line-height-alt:22px; font-style: italic; border-left: 3px solid #ffffff; padding-left: 15px;">
+																	<p style="margin: 0;">"${insight.quote}"</p>
+																</div>
+															</td>
+														</tr>
+													</table>
+													` : ''}
+												</td>
+												<td class="column column-2" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;">
+													${insight.image ? `
+													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+														<tr>
+															<td class="pad" style="padding-bottom:20px;padding-top:15px;width:100%;">
+																<div class="alignment" align="center">
+																	<div style="max-width: 280px;"><img src="${insight.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" width="280" alt="${insight.title}" height="auto"></div>
+																</div>
+															</td>
+														</tr>
+													</table>
+													` : ''}
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					`).join('')}
+
+					<!-- Spacer -->
+					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-left: 20px; padding-right: 20px; vertical-align: top;">
+													<div class="spacer_block block-1" style="height:32px;line-height:32px;font-size:1px;">&#8202;</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<!-- Footer -->
+					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+						<tbody>
+							<tr>
+								<td>
+									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
+										<tbody>
+											<tr>
+												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 20px; padding-top: 15px; vertical-align: top;">
+													<table class="paragraph_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+														<tr>
+															<td class="pad" style="padding-bottom:10px;padding-left:20px;padding-right:20px;padding-top:10px;">
+																<div style="color:#666666;direction:ltr;font-family:'Inter', sans-serif;font-size:12px;font-weight:400;letter-spacing:0px;line-height:1.5;text-align:center;mso-line-height-alt:18px;">
+																	<p style="margin: 0;">Powered by <strong style="color: #01caa6;">LetterNest</strong><br>
+																	Professional Newsletter Generation</p>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>`;
+};
+
 async function generateNewsletter(
   userId: string,
   selectedCount: number,
   jwt: string,
 ) {
   try {
-    // ... (Steps 1-14 remain unchanged from your provided code) ...
-
     // 1) Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -253,59 +576,51 @@ async function generateNewsletter(
     }
 
     const analysisSystemPrompt =
-      `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
+      `You are an expert content strategist for newsletter creation. Your task is to analyze a collection of tweets and organize them into a structured format for a professional newsletter layout.
 
-CAPABILITIES:
-- Identify 3-4 main themes with dual perspectives or contrasting viewpoints
-- Create balanced side-by-side comparisons
-- Synthesize comprehensive insights with clear structure
-- Generate engaging content with varied formatting
+RESPONSE FORMAT (JSON):
+{
+  "hook": "A compelling 1-2 sentence opener",
+  "mainSections": [
+    {
+      "title": "Main section title",
+      "image": "image_url_or_null",
+      "dualPerspective": {
+        "columnA": {
+          "header": "Dynamic column header",
+          "points": ["point 1", "point 2", "point 3"]
+        },
+        "columnB": {
+          "header": "Dynamic column header", 
+          "points": ["point 1", "point 2", "point 3"]
+        }
+      },
+      "synthesis": "150-250 word synthesis connecting both perspectives"
+    }
+  ],
+  "quickInsights": [
+    {
+      "title": "Insight title",
+      "summary": "2-3 sentence summary",
+      "quote": "notable quote or null",
+      "image": "image_url_or_null"
+    }
+  ]
+}
 
-OUTPUT STRUCTURE:
-1. **HOOK:** A compelling 1-2 sentence opener
-2. **MAIN FOCUS AREAS (3-4 identified):**
-   * **Focus Title:** Clear, engaging headline
-   * **Dual Perspective:** Two contrasting viewpoints or complementary angles
-     - **[Column Header A]:** One angle with 2-3 key points (dynamically generate a unique column header based on content)
-     - **[Column Header B]:** Contrasting/complementary angle with 2-3 key points (dynamically generate a unique column header based on content)
-   * **Synthesis:** How these perspectives connect (150-250 words)
-   * **RepresentativeImageURL:** Most relevant image or "N/A"
-3. **QUICK INSIGHTS (2-3 brief items):**
-   * **Insight Title:** Brief, descriptive
-   * **Summary:** 2-3 sentence overview
-   * **RepresentativeImageURL:** Relevant image or "N/A"
-
-CRITICAL INSTRUCTIONS:
-- NO direct tweet quotes, IDs, or authors
-- Focus on balanced, comparative analysis
-- Tone: Conversational, accessible, 10th grade reading level
-- Structure content for side-by-side presentation
-- Dynamically generate unique column headers rather than using "Perspective A" and "Perspective B"
+REQUIREMENTS:
+- 3-4 main sections with dual perspectives
+- 2-3 quick insights
 - Include image URLs where available
-
-Tweet data to analyze:
-${formattedTweets};`;
+- NO direct tweet quotes, IDs, or authors
+- Conversational, accessible tone (10th grade reading level)
+- Focus on balanced, comparative analysis
+- Generate meaningful column headers based on content`;
 
     const analysisUserPrompt =
-      `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
+      `Analyze the following tweet collection and generate a structured JSON response for the newsletter:
 
-1. HOOK (1-2 sentences)
-2. 3-4 MAIN FOCUS AREAS, each with:
-   * Focus Title
-   * Dual Perspective with:
-     - [Generate a unique subheader for Column A based on the content] (2-3 key points)
-     - [Generate a unique subheader for Column B based on the content] (2-3 key points)
-   * Synthesis (150-250 words connecting both perspectives)
-   * RepresentativeImageURL (or "N/A")
-3. 2-3 QUICK INSIGHTS, each with:
-   * Insight Title
-   * Summary (2-3 sentences)
-   * RepresentativeImageURL (or "N/A")
-
-Ensure balanced, comparative content that works well in a side-by-side layout. Dynamically name each column header meaningfully based on content.
-
-Tweet collection:
-${formattedTweets};`;
+${formattedTweets}`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -330,412 +645,83 @@ ${formattedTweets};`;
     }
     const openaiJson = await openaiRes.json();
     let analysisResult = openaiJson.choices[0].message.content.trim();
+    
+    // Parse JSON from OpenAI response
+    let parsedAnalysis;
+    try {
+      // Extract JSON from potential markdown code blocks
+      const jsonMatch = analysisResult.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        analysisResult = jsonMatch[1];
+      }
+      parsedAnalysis = JSON.parse(analysisResult);
+    } catch (e) {
+      console.error("Failed to parse OpenAI JSON response:", e);
+      throw new Error("Failed to parse analysis results");
+    }
+    
     logStep("Successfully generated Twin Focus analysis");
 
     // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt =
-      `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
-TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
-FORMAT:
-===
-FOCUS 1: [Focus Name]
-QUERY: [Search Query]
-ENRICHMENT GOAL: [Goal]
-... (up to 3)
-===
-TWIN FOCUS ANALYSIS:
-${analysisResult};`;
-
-    const queryGenRes = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are a search query optimization specialist." },
-            { role: "user", content: queryGenerationPrompt },
-          ],
-          temperature: 0.3,
-          max_tokens: 1000,
-        }),
-      },
-    );
-
-    let webEnrichmentContent:
-      | { focusName: string; webSummary: string; sources: any[] }[]
-      | null = null;
-    if (!queryGenRes.ok) {
-      const txt = await queryGenRes.text();
-      console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
-      logStep(
-        "Failed to generate search queries, continuing without Perplexity enrichment",
-      );
-    } else {
-      const queryGenJson = await queryGenRes.json();
-      const searchQueriesText = queryGenJson.choices[0].message.content.trim();
-      logStep("Successfully generated search queries", { searchQueriesText });
-      const focusesToEnrich: { focus: string; query: string; goal: string }[] = [];
-      const regex =
-        /FOCUS \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*FOCUS \d+:|$)/gis;
-      let match;
-      while ((match = regex.exec(searchQueriesText)) !== null) {
-        focusesToEnrich.push({
-          focus: match[1].trim(),
-          query: match[2].trim(),
-          goal: match[3].trim(),
-        });
-      }
-      const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-      if (!PERPLEXITY_API_KEY || focusesToEnrich.length === 0) {
-        logStep(
-          "Missing Perplexity API key or no focus areas to enrich, continuing without web enrichment",
-        );
-      } else {
-        logStep("Making Perplexity API calls for web enrichment", {
-          focusCount: focusesToEnrich.length,
-        });
-        const enrichmentResults: {
-          focusName: string;
-          webSummary: string;
-          sources: any[];
-        }[] = [];
-        for (const focus of focusesToEnrich) {
-          try {
-            const perplexityRes = await fetch(
-              "https://api.perplexity.ai/chat/completions",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
-                },
-                body: JSON.stringify({
-                  model: "sonar-pro",
-                  messages: [{ role: "user", content: focus.query }],
-                  temperature: 0.2,
-                  max_tokens: 400,
-                }),
+    const focusesToEnrich = parsedAnalysis.mainSections.slice(0, 3); // Take first 3 main sections
+    
+    const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+    if (PERPLEXITY_API_KEY && focusesToEnrich.length > 0) {
+      logStep("Making Perplexity API calls for web enrichment", {
+        focusCount: focusesToEnrich.length,
+      });
+      
+      for (const focus of focusesToEnrich) {
+        try {
+          const searchQuery = `${focus.title} latest news trends analysis`;
+          const perplexityRes = await fetch(
+            "https://api.perplexity.ai/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
               },
-            );
-            if (perplexityRes.ok) {
-              const data = await perplexityRes.json();
-              enrichmentResults.push({
-                focusName: focus.focus,
-                webSummary: data.choices[0].message.content,
-                sources: data.choices[0].message.citations ?? [],
-              });
-              logStep(`Successfully enriched focus: ${focus.focus}`);
-            } else {
-              console.error(
-                `Perplexity API error for "${focus.query}": ${perplexityRes.status}`,
-                await perplexityRes.text(),
-              );
-              enrichmentResults.push({
-                focusName: focus.focus,
-                webSummary: `[Perplexity error ${perplexityRes.status}]`,
-                sources: [],
-              });
-            }
-          } catch (err) {
-            console.error(
-              `Perplexity fetch failed for "${focus.query}":`,
-              err,
-            );
-            enrichmentResults.push({
-              focusName: focus.focus,
-              webSummary: "[Perplexity request failed]",
-              sources: [],
-            });
-          }
-        }
-        if (enrichmentResults.length > 0) {
-          webEnrichmentContent = enrichmentResults;
-          logStep("Web enrichment data collected");
-        }
-      }
-    }
-
-    // 12) Integrate Web Content
-    let finalAnalysisForMarkdown = analysisResult;
-    if (webEnrichmentContent && webEnrichmentContent.length > 0) {
-      logStep("Integrating web content with original Twin Focus analysis");
-      const integrationPrompt =
-        `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
-RULES: Maintain original structure. For focus areas with web enrichment, weave 3-4+ points from 'webSummary' into 'Synthesis', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
-ORIGINAL ANALYSIS:
-${analysisResult}
-WEB-SOURCED INFO:
-${JSON.stringify(webEnrichmentContent, null, 2)}
-Provide complete, integrated analysis.;`;
-
-      const integrationRes = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are an expert content editor, skilled at seamlessly integrating supplementary information.",
-              },
-              { role: "user", content: integrationPrompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 8000,
-          }),
-        },
-      );
-      if (integrationRes.ok) {
-        const integrationJson = await integrationRes.json();
-        finalAnalysisForMarkdown = integrationJson.choices[0].message.content
-          .trim();
-        logStep("Successfully integrated web content with Twin Focus analysis");
-      } else {
-        const txt = await integrationRes.text();
-        console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-        logStep("Failed to integrate web content, continuing with original analysis");
-      }
-    }
-
-    // 13) Generate Markdown formatted newsletter for Twin Focus
-    let markdownNewsletter = "";
-    try {
-      logStep("Starting Twin Focus markdown newsletter formatting");
-      const markdownSystemPrompt =
-        `You are a professional newsletter editor for the "Twin Focus" template. Format pre-analyzed content (hook, main focus areas with dual perspectives, quick insights, image URLs) into clean, beautiful, well-structured Markdown optimized for side-by-side layouts.
-
-NEWSLETTER STRUCTURE:
-1. HEADER: Title (H1 "Twin Focus"), Date (H3/Subtitle), Horizontal rule
-2. INTRODUCTION: The "HOOK"
-3. MAIN FOCUS SECTIONS: For each focus area:
-   * Section Title (H2)
-   * Image: If 'RepresentativeImageURL' is valid, include it
-   * Dual Perspective layout: output a two-column Markdown table
-     | **[Column A Header]** | **[Column B Header]** |
-     | --- | --- |
-     | (2-3 bullet points) | (2-3 bullet points) |
-   * Synthesis (detailed explanation connecting both perspectives)
-   * Horizontal rule for separation
-4. QUICK INSIGHTS: Section Title (H2). For each insight:
-   * Sub-section Title (H3)
-   * Image: If 'RepresentativeImageURL' is valid, include it
-   * Summary content
-5. FOOTER: Horizontal rule, "Generated by LetterNest."
-
-FORMATTING GUIDELINES:
-- Clean Markdown with generous white space
-- Professional, balanced, accessible tone
-- Image Usage: Include 'RepresentativeImageURL' where valid
-- Dual-column friendly structure
-- Bold and italic formatting for emphasis
-- Do not invent content - only format
-
-OUTPUT: ONLY the formatted Markdown content.;`;
-
-      const markdownUserPrompt =
-        `Format this Twin Focus analysis into the "Twin Focus" Markdown newsletter. Prioritize balanced layouts and include images.
-Date: ${
-          new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        }
-TWIN FOCUS ANALYSIS CONTENT:
-${finalAnalysisForMarkdown};`;
-
-      try {
-        const markdownOpenaiRes = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              body: JSON.stringify({
+                model: "sonar-pro",
+                messages: [{ role: "user", content: searchQuery }],
+                temperature: 0.2,
+                max_tokens: 400,
+              }),
             },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                { role: "system", content: markdownSystemPrompt },
-                { role: "user", content: markdownUserPrompt },
-              ],
-              temperature: 0.2,
-              max_tokens: 8000,
-            }),
-          },
-        );
-        if (markdownOpenaiRes.ok) {
-          const markdownJson = await markdownOpenaiRes.json();
-          markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("Twin Focus Markdown generated successfully");
-        } else {
-          const errorText = await markdownOpenaiRes.text();
-          console.error(
-            `Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`,
-            errorText,
           );
-          markdownNewsletter =
-            `Error: Unable to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
-        }
-      } catch (markdownError) {
-        console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter =
-          `Error: API error in markdown. Analysis:\n${finalAnalysisForMarkdown}`;
-      }
-    } catch (err) {
-      console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter =
-        `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
-    }
-
-    // 14) Clean up markdown
-    function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(
-        /^```(?:markdown)?\s*([\s\S]*?)\s*```$/i,
-        "$1",
-      );
-      cleaned = cleaned.trim();
-      const lines = cleaned.split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim() !== "") {
-          if (
-            !lines[i].trim().startsWith("#") &&
-            !lines[i].trim().startsWith("<h1") &&
-            !lines[i].trim().startsWith("<div")
-          ) {
-            const headingMatch = cleaned.match(
-              /(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/,
-            );
-            if (
-              headingMatch &&
-              typeof headingMatch.index === "number" &&
-              headingMatch.index > 0
-            ) {
-              if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
-                cleaned = cleaned.substring(headingMatch.index).trim();
-              }
-            }
+          if (perplexityRes.ok) {
+            const data = await perplexityRes.json();
+            const webContent = data.choices[0].message.content;
+            
+            // Enhance synthesis with web content
+            focus.synthesis += `\n\n**Broader Context Online:** ${webContent.substring(0, 500)}...`;
+            logStep(`Successfully enriched focus: ${focus.title}`);
           }
-          break;
+        } catch (err) {
+          console.error(`Perplexity fetch failed for "${focus.title}":`, err);
         }
       }
-      return cleaned;
     }
-    const finalMarkdown = cleanMarkdown(markdownNewsletter);
-    logStep("Cleaned up final markdown for Twin Focus");
 
+    // 10) Generate HTML email
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    
+    const emailHtml = getNewsletterHTML({
+      hook: parsedAnalysis.hook,
+      mainSections: parsedAnalysis.mainSections,
+      quickInsights: parsedAnalysis.quickInsights,
+      date: currentDate
+    });
 
-    // 15) Convert final Markdown to HTML with styling improvements
-    const renderer = new marked.Renderer();
+    logStep("Generated HTML newsletter with new template");
 
-    renderer.paragraph = (text) => {
-      if (
-        text.trim().startsWith("<div") || text.trim().startsWith("<span")
-      ) {
-        return text.trim() + "\n";
-      }
-      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif;">${text}</p>\n`;
-    };
-    renderer.listitem = (text, task, checked) => {
-      if (task) {
-        return `<li class="task-list-item" style="color:${COLORS.primaryNavy};"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
-      }
-      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: ${COLORS.primaryNavy}; font-family: 'Lato',sans-serif;">${text}</li>\n`;
-    };
-    renderer.blockquote = (quote) => {
-      return `<blockquote style="background-color: ${COLORS.lightBg}; border-left: 5px solid ${COLORS.accentBlue}; margin: 16px 0; padding: 10px 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif; font-size: 16px; line-height: 1.6;">${quote}</blockquote>\n`;
-    };
-    renderer.heading = (text, level) => {
-      const sizes: Record<number, string> = {1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px"};
-      const margins: Record<number, string> = {1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0"};
-      let color = COLORS.primaryNavy;
-      if (level >= 3) color = COLORS.darkText;
-      const size = sizes[level] || "18px";
-      const margin = margins[level] || "12px 0 8px 0";
-      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid ${COLORS.primaryNavy}; padding-left: 8px;">${text}</h${level}>\n`;
-    };
-    renderer.image = (href, _title, alt) =>
-      `<div style="text-align:center; margin: 24px 0;">
-        <img src="${href}" alt="${alt || "Newsletter image"}" style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid ${COLORS.darkText};">
-      </div>`;
-    renderer.table = (header, body) =>
-      `<table style="width:100%; border-collapse:collapse; margin:24px 0; border-radius:6px; overflow:hidden;">
-        <thead>${header.replace(/<th>/g, `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`)}</thead>
-        <tbody>${body.replace(/<td>/g, `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`)}</tbody>
-      </table>`;
-
-    const htmlBody = marked(finalMarkdown, { renderer });
-
-    // 16) Generate email HTML with updated color scheme and reliable white background
-    const emailHtml = juice(`
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <style>
-      /* Default styles: Desktop uses lightBg for body */
-      html, body { background:${COLORS.lightBg} !important; margin:0; padding:0; }
-      .email-body-container-td { padding: 20px 0; background-color: ${COLORS.lightBg}; } /* Default padding and bg for desktop */
-
-      @media print {
-        body, html { width:100%; margin:0; background:${COLORS.white} !important; }
-        .wrapper { width:100% !important; max-width:none !important; }
-        table { width:100% !important; border-collapse:collapse; }
-        table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
-        h1, h2, h3 { page-break-after:avoid; }
-      }
-      @media screen and (min-width:640px){ /* Desktop specific overrides for content body (if any beyond .wrapper) */
-        .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
-      }
-      @media screen and (max-width:600px){ /* Mobile styles */
-        html, body { background:${COLORS.white} !important; } /* Force entire page white on mobile */
-        .email-body-container-td { padding: 0 !important; background-color: ${COLORS.white} !important; } /* Remove padding and make td white on mobile */
-        .wrapper{ width:100% !important; max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
-        .content-body{ padding:20px 16px !important; background:${COLORS.white} !important; }
-        h1{ font-size:32px !important; color:${COLORS.primaryNavy} !important; }
-        h2{ font-size:28px !important; color:${COLORS.primaryNavy} !important; }
-        h3{ font-size:24px !important; color:${COLORS.darkText} !important; }
-        blockquote{ background:${COLORS.white} !important; border-left:5px solid ${COLORS.lightBg} !important; color:${COLORS.darkText} !important; }
-      }
-    </style>
-  </head>
-  <body bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg};">
-      <tr>
-        <td align="center" class="email-body-container-td"> 
-          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
-            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
-              ${htmlBody}
-            </div>
-          </div>
-
-          <div style="text-align:center; padding:30px 0 40px 0; font-size:14px; color:${COLORS.darkText}; font-family:'Lato',sans-serif;">
-            Powered by <strong style="color:${COLORS.primaryNavy};">LetterNest</strong><br/>
-            <span style="color:${COLORS.darkText}; font-size:12px;">Professional Newsletter Generation</span>
-          </div>
-
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-`);
-
-    logStep("Converted Twin Focus markdown to HTML with updated color scheme");
-
-    // ... (Steps 17-19 and the serve function remain unchanged from your provided code) ...
-    // 17) Send email via Resend
+    // 11) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") ||
         "newsletter@newsletters.letternest.ai";
@@ -745,7 +731,7 @@ ${finalAnalysisForMarkdown};`;
         to: profile.sending_email,
         subject: emailSubject,
         html: emailHtml,
-        text: finalMarkdown,
+        text: `${parsedAnalysis.hook}\n\n${parsedAnalysis.mainSections.map((s: any) => `${s.title}\n${s.synthesis}`).join('\n\n')}`,
       });
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
@@ -756,12 +742,14 @@ ${finalAnalysisForMarkdown};`;
       console.error("Error sending email:", sendErr);
     }
 
-    // 18) Save the newsletter to newsletter_storage table
+    // 12) Save the newsletter to newsletter_storage table
     try {
+      const markdownContent = `# Newsletter Update - ${currentDate}\n\n${parsedAnalysis.hook}\n\n${parsedAnalysis.mainSections.map((s: any) => `## ${s.title}\n\n${s.synthesis}`).join('\n\n')}`;
+      
       const { error: storageError } = await supabase.from("newsletter_storage")
         .insert({
           user_id: userId,
-          markdown_text: finalMarkdown,
+          markdown_text: markdownContent,
         });
       if (storageError) {
         console.error(
@@ -775,7 +763,7 @@ ${finalAnalysisForMarkdown};`;
       console.error("Error saving Twin Focus newsletter to storage:", storageErr);
     }
 
-    // 19) Update remaining generations count
+    // 13) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({
@@ -802,14 +790,13 @@ ${finalAnalysisForMarkdown};`;
     return {
       status: "success",
       message:
-        "Twin Focus newsletter generated and process initiated for email.",
+        "Twin Focus newsletter generated and sent successfully.",
       remainingGenerations:
         profile.remaining_newsletter_generations > 0
           ? profile.remaining_newsletter_generations - 1
           : 0,
       data: {
-        analysisResult: finalAnalysisForMarkdown,
-        markdownNewsletter: finalMarkdown,
+        analysisResult: parsedAnalysis,
         timestamp,
       },
     };
