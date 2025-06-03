@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle, Brain, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function ChainOfThoughtSignup() {
@@ -64,14 +64,55 @@ export default function ChainOfThoughtSignup() {
     }
   };
 
+  const resetForm = () => {
+    setStatus('idle');
+    setMessage("");
+  };
+
   if (status === 'success') {
     return (
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 max-w-md mx-auto">
-        <div className="text-center">
-          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <p className="text-green-500 font-semibold text-lg">
-            Subscribed successfully!
-          </p>
+        <div className="text-center animate-fade-in">
+          {/* Simple Success Icon */}
+          <div className="mb-6">
+            <div className="bg-purple-600 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+          </div>
+
+          {/* Success Message */}
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              Mind Expanded!
+            </h3>
+            <p className="text-purple-600 font-semibold text-lg mb-2">
+              You're now subscribed to Chain of Thought
+            </p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Get ready for cutting-edge AI insights delivered to your inbox every Tuesday & Friday!
+            </p>
+          </div>
+
+          {/* What's Next Section */}
+          <div className="bg-purple-600/5 rounded-xl p-4 mb-6 border border-purple-600/10">
+            <h4 className="font-semibold text-gray-800 mb-2">What's Next?</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Check your email for a welcome message</li>
+              <li>• Your first newsletter arrives Tuesday at 10am CT</li>
+              <li>• Stay ahead of the AI revolution</li>
+            </ul>
+          </div>
+
+          {/* Action Button */}
+          <Button 
+            onClick={resetForm}
+            variant="outline"
+            className="w-full border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-200"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Subscribe Another Email
+          </Button>
         </div>
       </div>
     );
