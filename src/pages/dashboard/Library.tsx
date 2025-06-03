@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, isWithinInterval, subDays, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import html2pdf from "html2pdf.js";
+import DOMPurify from "dompurify";
 
 // Define the newsletter structure
 interface Newsletter {
@@ -62,15 +63,21 @@ const stripHtmlTags = (text: string): string => {
 const extractTitle = (markdown: string | null): string => {
   if (!markdown) return "Newsletter";
   
+  // Sanitize the markdown first
+  const sanitizedMarkdown = DOMPurify.sanitize(markdown, { 
+    ALLOWED_TAGS: [], 
+    ALLOWED_ATTR: [] 
+  });
+  
   // Look for first heading (# Title) and clean it
-  const headingMatch = markdown.match(/^#+\s*(.+)$/m);
+  const headingMatch = sanitizedMarkdown.match(/^#+\s*(.+)$/m);
   if (headingMatch) {
     const cleanTitle = stripHtmlTags(headingMatch[1].trim());
     return cleanTitle || "Newsletter";
   }
   
   // Fallback to first line of substantial text, but be smarter about it
-  const lines = markdown.split('\n').filter(line => line.trim().length > 0);
+  const lines = sanitizedMarkdown.split('\n').filter(line => line.trim().length > 0);
   
   for (const line of lines) {
     // Skip lines that are mostly HTML or markdown syntax
@@ -97,14 +104,20 @@ const extractTitle = (markdown: string | null): string => {
 const extractFirstImage = (markdown: string | null): string | null => {
   if (!markdown) return null;
   
+  // Sanitize markdown first
+  const sanitizedMarkdown = DOMPurify.sanitize(markdown, {
+    ALLOWED_TAGS: ['img'],
+    ALLOWED_ATTR: ['src', 'alt']
+  });
+  
   // Look for markdown image syntax ![alt](url)
-  const imageMatch = markdown.match(/!\[.*?\]\((.*?)\)/);
+  const imageMatch = sanitizedMarkdown.match(/!\[.*?\]\((.*?)\)/);
   if (imageMatch) {
     return imageMatch[1];
   }
   
   // Look for direct image URLs
-  const urlMatch = markdown.match(/(https?:\/\/.*?\.(jpg|jpeg|png|gif|webp))/i);
+  const urlMatch = sanitizedMarkdown.match(/(https?:\/\/.*?\.(jpg|jpeg|png|gif|webp))/i);
   if (urlMatch) {
     return urlMatch[1];
   }
@@ -227,12 +240,32 @@ const Library = () => {
     });
   };
 
-  // Render markdown to HTML
+  // Secure markdown to HTML renderer with sanitization
   const renderMarkdown = (markdown: string | null) => {
     if (!markdown) return "<p>No content available</p>";
     
     try {
-      return marked.parse(markdown);
+      // First parse with marked
+      const html = marked.parse(markdown);
+      
+      // Then sanitize with DOMPurify to prevent XSS
+      const sanitizedHtml = DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'p', 'br', 'strong', 'em', 'u', 'strike',
+          'ul', 'ol', 'li', 'blockquote',
+          'a', 'img', 'code', 'pre',
+          'table', 'thead', 'tbody', 'tr', 'th', 'td'
+        ],
+        ALLOWED_ATTR: {
+          'a': ['href', 'title'],
+          'img': ['src', 'alt', 'title', 'width', 'height'],
+          '*': ['class']
+        },
+        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+      });
+      
+      return sanitizedHtml;
     } catch (err) {
       console.error("Error rendering markdown:", err);
       return "<p>Error rendering content</p>";
@@ -245,64 +278,47 @@ const Library = () => {
     setDialogOpen(true);
   };
 
-  // === replace the whole downloadAsPDF function with this ===============
-const downloadAsPDF = async () => {
-  if (!selectedNewsletter) return;
+  const downloadAsPDF = async () => {
+    if (!selectedNewsletter) return;
 
-  setIsPdfGenerating(true);
+    setIsPdfGenerating(true);
 
-  try {
-    const element = document.getElementById("newsletter-content");
-    if (!element) throw new Error("Newsletter content not found");
+    try {
+      const element = document.getElementById("newsletter-content");
+      if (!element) throw new Error("Newsletter content not found");
 
-    /* ------------------------------------------------------------------
-       1.  Work out how tall the rendered element is *in millimetres*.
-           1 CSS pixel  ≈  0.264583 mm
-    ------------------------------------------------------------------ */
-    const rect       = element.getBoundingClientRect();
-    const widthPx    = rect.width;
-    const heightPx   = rect.height;
-    const pxToMm     = (px: number) => px * 0.264583;
-    const widthMm    = pxToMm(widthPx);
-    const heightMm   = pxToMm(heightPx);
+      const rect       = element.getBoundingClientRect();
+      const widthPx    = rect.width;
+      const heightPx   = rect.height;
+      const pxToMm     = (px: number) => px * 0.264583;
+      const widthMm    = pxToMm(widthPx);
+      const heightMm   = pxToMm(heightPx);
 
-    /* Guard-rail: jsPDF (and some PDF readers) refuse pages > 14 400 pt
-       ≈  5080 mm.  If the page would be taller, fall back to multi-page. */
-    const jsPdfPageMaxMm = 5080;
-    const isTooTall      = heightMm > jsPdfPageMaxMm;
+      const jsPdfPageMaxMm = 5080;
+      const isTooTall      = heightMm > jsPdfPageMaxMm;
 
-    /* ------------------------------------------------------------------
-       2.  Build the pdf-options object.
-           - custom page size = [ widthMm , heightMm ]
-           - turn off html2pdf’s automatic page-breaking
-    ------------------------------------------------------------------ */
-    const opt: html2pdf.Options = {
-      margin:       10,                 // add a small white border
-      filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
-      image:        { type: "jpeg", quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
-      pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
-      jsPDF:        {
-        unit: "mm",
-        // use custom size unless the doc would blow past reader limits
-        format: isTooTall ? "a4" : [widthMm, heightMm],
-        orientation: widthMm >= heightMm ? "landscape" : "portrait"
-      }
-    };
+      const opt: html2pdf.Options = {
+        margin:       10,
+        filename:     `newsletter-${format(new Date(selectedNewsletter.created_at),'yyyy-MM-dd')}.pdf`,
+        image:        { type: "jpeg", quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
+        pagebreak:    { mode: isTooTall ? ["css","legacy"] : ["avoid-all"] },
+        jsPDF:        {
+          unit: "mm",
+          format: isTooTall ? "a4" : [widthMm, heightMm],
+          orientation: widthMm >= heightMm ? "landscape" : "portrait"
+        }
+      };
 
-    /* ------------------------------------------------------------------
-       3.  Generate and save
-    ------------------------------------------------------------------ */
-    await html2pdf().set(opt).from(element).save();
-    toast.success("PDF downloaded successfully!");
-  } catch (err) {
-    console.error("Error generating PDF:", err);
-    toast.error("Failed to generate PDF. Please try again.");
-  } finally {
-    setIsPdfGenerating(false);
-  }
-};
-
+      await html2pdf().set(opt).from(element).save();
+      toast.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -508,7 +524,7 @@ const downloadAsPDF = async () => {
         </div>
       )}
 
-      {/* Newsletter Dialog */}
+      {/* Newsletter Dialog with Secure Rendering */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           {selectedNewsletter && (
@@ -531,7 +547,13 @@ const downloadAsPDF = async () => {
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(selectedNewsletter.markdown_text || "")
+                    // Sanitize content before copying to clipboard
+                    const sanitizedContent = DOMPurify.sanitize(selectedNewsletter.markdown_text || "", {
+                      ALLOWED_TAGS: [],
+                      ALLOWED_ATTR: []
+                    });
+                    
+                    navigator.clipboard.writeText(sanitizedContent)
                       .then(() => toast.success("Newsletter content copied to clipboard"))
                       .catch(() => toast.error("Failed to copy to clipboard"));
                   }}
