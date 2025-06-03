@@ -461,7 +461,7 @@ ${finalAnalysisForMarkdown}`;
     const finalMarkdown = cleanMarkdown(markdownNewsletter);
     logStep("Cleaned up final markdown for Twin Focus");
 
-    // 15) Convert final Markdown to HTML with styling
+    // 15) Convert final Markdown to HTML with styling improvements
     const renderer = new marked.Renderer();
 
     // Paragraph renderer
@@ -469,7 +469,7 @@ ${finalAnalysisForMarkdown}`;
       if (text.trim().startsWith("<div") || text.trim().startsWith("<span")) {
         return text.trim() + "\n";
       }
-      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #2c3e50; font-family: 'Helvetica Neue', Arial, sans-serif;">${text}</p>\n`;
+      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #18171c; font-family: 'IBM Plex Mono','Georgia',sans-serif;">${text}</p>\n`;
     };
 
     // List item renderer
@@ -477,20 +477,20 @@ ${finalAnalysisForMarkdown}`;
       if (task) {
         return `<li class="task-list-item"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #2c3e50; font-family: 'Helvetica Neue', Arial, sans-serif;">${text}</li>\n`;
+      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #18171c; font-family: 'IBM Plex Mono','Georgia',sans-serif;">${text}</li>\n`;
     };
 
     // Heading renderer
     renderer.heading = (text, level) => {
       const sizes: Record<number, string> = { 1: "32px", 2: "28px", 3: "24px", 4: "20px", 5: "18px", 6: "16px" };
       const margins: Record<number, string> = { 1: "0 0 20px 0", 2: "28px 0 16px 0", 3: "24px 0 14px 0", 4: "20px 0 12px 0", 5: "18px 0 10px 0", 6: "16px 0 8px 0" };
-      const colors: Record<number, string> = { 1: "#2c3e50", 2: "#34495e", 3: "#3d566e", 4: "#4a6a8e", 5: "#5b7da2", 6: "#6a8fb6" };
+      const colors: Record<number, string> = { 1: "#18171c", 2: "#191f33", 3: "#34495e", 4: "#3d566e", 5: "#4a6a8e", 6: "#5b7da2" };
 
       const size = sizes[level] || "16px";
       const margin = margins[level] || "12px 0 8px 0";
-      const color = colors[level] || "#2c3e50";
+      const color = colors[level] || "#18171c";
 
-      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Helvetica Neue', Arial, sans-serif;">${text}</h${level}>\n`;
+      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Space Grotesk','Georgia',sans-serif;">${text}</h${level}>\n`;
     };
 
     // Image renderer
@@ -507,7 +507,7 @@ ${finalAnalysisForMarkdown}`;
         <thead>
           ${header.replace(
       /<th>/g,
-      '<th style="background:#eaf2f8;color:#2c3e50;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #bdc3c7;">',
+      '<th style="background:#e9e7e4;color:#18171c;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #dfe6e9;">',
     )}
         </thead>
         <tbody>
@@ -521,9 +521,9 @@ ${finalAnalysisForMarkdown}`;
     // Convert markdown to HTML
     const htmlBody = marked(finalMarkdown, { renderer });
 
-    // Generate email HTML
+    // Generate email HTML with updated color scheme
     const emailHtml = juice(`
-      <body style="background-color:#ffffff;margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;">
+      <body style="background-color:#dfdad7;margin:0;padding:0;font-family:'IBM Plex Mono','Georgia',sans-serif;-webkit-text-size-adjust:100%; text-size-adjust:100%;">
         <style>
           @media print{
             body,html{width:100%;margin:0;background:#ffffff !important;}
@@ -533,10 +533,10 @@ ${finalAnalysisForMarkdown}`;
             h1,h2,h3{page-break-after:avoid;}
           }
           @media screen and (min-width:640px){
-            .content-body{padding:28px 32px !important;background:#fcfcfc !important;border-radius:8px !important;}
+            .content-body{padding:28px 32px !important;background:#ffffff !important;border-radius:8px !important;}
           }
           @media screen and (max-width:600px){
-            body{background-color:#ffffff !important;}
+            body{background-color:#dfdad7 !important;}
             .wrapper{max-width:100% !important;margin:0 !important;border-radius:0 !important;}
             .content-body{padding:20px 16px !important;}
             h1{font-size:26px !important;}
@@ -546,18 +546,18 @@ ${finalAnalysisForMarkdown}`;
         </style>
 
         <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
-          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#2c3e50;font-size:16px;font-family:'Helvetica Neue',Arial,sans-serif;background:#ffffff;">
+          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#18171c;font-size:16px;font-family:'IBM Plex Mono','Georgia',sans-serif;background:#ffffff;">
             ${htmlBody}
           </div>
         </div>
 
-        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#95a5a6;font-family:'Helvetica Neue',Arial,sans-serif;">
-          Powered by <strong style="color:#2c3e50;">LetterNest</strong><br>
-          <span style="color:#bdc3c7;font-size:12px;">Professional Newsletter Generation</span>
+        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#191f33;font-family:'IBM Plex Mono','Georgia',sans-serif;">
+          Powered by <strong style="color:#18171c;">LetterNest</strong><br>
+          <span style="color:#34495e;font-size:12px;">Professional Newsletter Generation</span>
         </div>
       </body>`);
 
-    logStep("Converted Twin Focus markdown to HTML with styling improvements");
+    logStep("Converted Twin Focus markdown to HTML with updated color scheme");
 
     // 16) Send email via Resend
     try {
