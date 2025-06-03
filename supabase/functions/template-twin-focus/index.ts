@@ -469,28 +469,33 @@ ${finalAnalysisForMarkdown}`;
       if (text.trim().startsWith("<div") || text.trim().startsWith("<span")) {
         return text.trim() + "\n";
       }
-      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #142a4b; font-family: 'Lato',sans-serif;">${text}</p>\n`;
+      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #293041; font-family: 'Lato',sans-serif;">${text}</p>\n`;
     };
 
     // List item renderer
     renderer.listitem = (text, task, checked) => {
       if (task) {
-        return `<li class="task-list-item"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
+        return `<li class="task-list-item" style="color:#0c4160;"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #142a4b; font-family: 'Lato',sans-serif;">${text}</li>\n`;
+      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #0c4160; font-family: 'Lato',sans-serif;">${text}</li>\n`;
+    };
+
+    // Blockquote renderer
+    renderer.blockquote = (quote) => {
+      return `<blockquote style="background-color: #cfdce4; border-left: 5px solid #c7d7c0; margin: 16px 0; padding: 10px 16px; color: #293041; font-family: 'Lato',sans-serif; font-size:16px; line-height:1.6;">${quote}</blockquote>\n`;
     };
 
     // Heading renderer
     renderer.heading = (text, level) => {
       const sizes: Record<number, string> = { 1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px" };
       const margins: Record<number, string> = { 1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0" };
-      const colors: Record<number, string> = { 1: "#5774cd", 2: "#142a4b", 3: "#a1c181", 4: "#142a4b", 5: "#142a4b", 6: "#142a4b" };
+      let color = "#0c4160";
+      if (level >= 3) color = "#293041";
 
       const size = sizes[level] || "18px";
       const margin = margins[level] || "12px 0 8px 0";
-      const color = colors[level] || "#142a4b";
 
-      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif;">${text}</h${level}>\n`;
+      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid #0c4160; padding-left: 8px;">${text}</h${level}>\n`;
     };
 
     // Image renderer
@@ -498,7 +503,7 @@ ${finalAnalysisForMarkdown}`;
       <div style="text-align:center; margin: 24px 0;">
         <img src="${href}"
              alt="${alt || "Newsletter image"}"
-             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:1px solid #d2ddec;">
+             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid #293041;">
       </div>`;
 
     // Table renderer – 2-column responsive
@@ -507,13 +512,13 @@ ${finalAnalysisForMarkdown}`;
         <thead>
           ${header.replace(
       /<th>/g,
-      '<th style="background:#a1c181;color:#ffffff;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #d2ddec;">',
+      '<th style="background:#cfdce4;color:#0c4160;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #293041;">',
     )}
         </thead>
         <tbody>
           ${body.replace(
       /<td>/g,
-      '<td style="padding:10px 12px;font-size:15px;vertical-align:top;border-bottom:1px solid #d2ddec;color:#142a4b;">',
+      '<td style="padding:10px 12px;font-size:15px;vertical-align:top;border-bottom:1px solid #293041;color:#293041;background: rgba(207,220,228,0.05); border-right:2px solid #c7d7c0;">',
     )}
         </tbody>
       </table>`;
@@ -538,22 +543,23 @@ ${finalAnalysisForMarkdown}`;
           @media screen and (max-width:600px){
             body{background-color:#ffffff !important;}
             .wrapper{max-width:100% !important;margin:0 !important;border-radius:0 !important;background-color:#ffffff !important;}
-            .content-body{padding:20px 16px !important;}
-            h1{font-size:32px !important;color:#5774cd !important;}
-            h2{font-size:28px !important;color:#142a4b !important;}
-            h3{font-size:24px !important;color:#a1c181 !important;}
+            .content-body{padding:20px 16px !important;background:#ffffff !important;}
+            h1{font-size:32px !important;color:#0c4160 !important;}
+            h2{font-size:28px !important;color:#0c4160 !important;}
+            h3{font-size:24px !important;color:#293041 !important;}
+            blockquote{background-color:#ffffff !important;border-left:5px solid #c7d7c0 !important;color:#293041 !important;}
           }
         </style>
 
-        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#d2ddec;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
-          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#142a4b;font-size:16px;font-family:'Lato',sans-serif;background:#ffffff;">
+        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
+          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#293041;font-size:16px;font-family:'Lato',sans-serif;background:#ffffff;">
             ${htmlBody}
           </div>
         </div>
 
-        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#142a4b;font-family:'Lato',sans-serif;">
-          Powered by <strong style="color:#5774cd;">LetterNest</strong><br>
-          <span style="color:#142a4b;font-size:12px;">Professional Newsletter Generation</span>
+        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#293041;font-family:'Lato',sans-serif;">
+          Powered by <strong style="color:#0c4160;">LetterNest</strong><br>
+          <span style="color:#293041;font-size:12px;">Professional Newsletter Generation</span>
         </div>
       </body>`);
 
