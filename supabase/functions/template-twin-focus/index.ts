@@ -115,23 +115,27 @@ const extractAndParseJSON = (content: string): any => {
 
 // Helper function to convert text to proper HTML formatting with visual breaks
 const formatTextForHTML = (text: string): string => {
-  if (!text) return '';
+  if (!text) return "";
 
   // Split long text into paragraphs for better readability
   const sentences = text.split(/[.!?]+/);
-  let formattedText = '';
-  let currentParagraph = '';
+  let formattedText = "";
+  let currentParagraph = "";
 
   sentences.forEach((sentence, index) => {
     sentence = sentence.trim();
     if (sentence.length === 0) return;
 
-    currentParagraph += sentence + '. ';
+    currentParagraph += sentence + ". ";
 
     // Create paragraph breaks every 2-3 sentences or at natural breaks
-    if ((index + 1) % 3 === 0 || sentence.includes('**') || currentParagraph.length > 300) {
+    if (
+      (index + 1) % 3 === 0 ||
+      sentence.includes("**") ||
+      currentParagraph.length > 300
+    ) {
       formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
-      currentParagraph = '';
+      currentParagraph = "";
     }
   });
 
@@ -144,13 +148,13 @@ const formatTextForHTML = (text: string): string => {
     // Convert markdown bold to HTML
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #01caa6;">$1</strong>')
     // Fix any double periods
-    .replace(/\.\./g, '.');
+    .replace(/\.\./g, ".");
 };
 
 // Helper function to split long synthesis text into visual sections
 const createVisualSections = (synthesis: string): string => {
   const sections = synthesis.split(/\*\*(.*?)\*\*/);
-  let result = '';
+  let result = "";
 
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i].trim();
@@ -295,40 +299,63 @@ const getNewsletterHTML = (data: any) => {
           </tr>
 
           <!-- 4) MAIN SECTIONS (Color-coded Backgrounds, Images in Upper/Mid) -->
-          ${mainSections.map((section: any, index: number) => {
-            const bgColor = index % 2 === 0 ? '#ffffff' : '#f0f8fa';
-            return `
+          ${mainSections
+            .map((section: any, index: number) => {
+              const bgColor = index % 2 === 0 ? "#ffffff" : "#f0f8fa";
+              return `
             <tr>
               <td style="background-color: ${bgColor}; padding: 24px;">
                 <!-- Title + Optional Image (if provided) -->
                 <h2 style="color: #1f254a; margin-bottom: 12px;">${section.title}</h2>
-                ${section.image ? `
+                ${
+                  section.image
+                    ? `
                   <div style="text-align: center; margin: 16px 0;">
                     <img src="${section.image}" alt="${section.title}" width="552" style="width: 100%; max-width: 552px; height: auto; border-radius: 4px; object-fit: cover;">
                   </div>
-                ` : ''}
+                `
+                    : ""
+                }
                 
                 <!-- Dual-Perspective Table (two columns) -->
-                ${section.dualPerspective ? `
+                ${
+                  section.dualPerspective
+                    ? `
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 4px; overflow: hidden;">
                     <tr style="background-color: #f8fbf7;">
-                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a; border-right: 1px solid #01caa6;">${section.dualPerspective.columnA.header}</th>
-                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a;">${section.dualPerspective.columnB.header}</th>
+                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a; border-right: 1px solid #01caa6;">${
+                        section.dualPerspective.columnA.header
+                      }</th>
+                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a;">${
+                        section.dualPerspective.columnB.header
+                      }</th>
                     </tr>
                     <tr>
                       <td style="padding: 12px; font-family: 'Inter', sans-serif; font-size: 15px; color: #333333; vertical-align: top; border-right: 1px solid #01caa6;">
                         <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-                          ${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`).join('')}
+                          ${section.dualPerspective.columnA.points
+                            .map(
+                              (point: string) =>
+                                `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`
+                            )
+                            .join("")}
                         </ul>
                       </td>
                       <td style="padding: 12px; font-family: 'Inter', sans-serif; font-size: 15px; color: #333333; vertical-align: top;">
                         <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-                          ${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`).join('')}
+                          ${section.dualPerspective.columnB.points
+                            .map(
+                              (point: string) =>
+                                `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`
+                            )
+                            .join("")}
                         </ul>
                       </td>
                     </tr>
                   </table>
-                ` : ''}
+                `
+                    : ""
+                }
 
                 <!-- Synthesis (broken into sub-sections if “**Header**” markers exist) -->
                 <div style="margin-top: 16px; font-family: 'Inter', sans-serif; color: #333333; font-size: 16px; line-height: 1.7;">
@@ -342,36 +369,51 @@ const getNewsletterHTML = (data: any) => {
               </td>
             </tr>
             `;
-          }).join('')}
+            })
+            .join("")}
 
           <!-- 5) QUICK INSIGHTS SECTION (Solid Teal Background & Cards) -->
           <tr>
             <td style="background-color: #01caa6; padding: 24px;">
               <h3 style="color: #ffffff; text-align: center; margin-bottom: 16px;">QUICK INSIGHTS</h3>
-              ${quickInsights.map((insight: any) => `
+              ${quickInsights
+                .map((insight: any) => `
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
                   <tr>
                     <td style="padding: 16px;">
-                      <h3 style="color: #1f254a; margin-bottom: 8px;">${insight.title}</h3>
+                      <h3 style="color: #1f254a; margin-bottom: 8px;">${
+                        insight.title
+                      }</h3>
                       <!-- Summary -->
                       <div style="font-family: 'Inter', sans-serif; color: #333333; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
                         ${formatTextForHTML(insight.summary)}
                       </div>
                       <!-- Optional Quote -->
-                      ${insight.quote ? `
-                        <blockquote style="margin: 0; padding-left: 12px; border-left: 3px solid #01caa6; font-style: italic; color: #555555; font-size: 14px;">"${insight.quote}"</blockquote>
-                      ` : ''}
+                      ${
+                        insight.quote
+                          ? `
+                        <blockquote style="margin: 0; padding-left: 12px; border-left: 3px solid #01caa6; font-style: italic; color: #555555; font-size: 14px;">"${
+                          insight.quote
+                        }"</blockquote>
+                      `
+                          : ""
+                      }
                     </td>
-                    ${insight.image ? `
+                    ${
+                      insight.image
+                        ? `
                     <td style="width: 50%; text-align: center; padding: 16px;">
                       <img src="${insight.image}" alt="${insight.title}" width="200" style="width: 100%; max-width: 200px; height: auto; border-radius: 4px; object-fit: cover;">
                     </td>
-                    ` : `
+                    `
+                        : `
                     <td style="width: 50%;"></td>
-                    `}
+                    `
+                    }
                   </tr>
                 </table>
-              `).join('')}
+              `)
+                .join("")}
             </td>
           </tr>
 
@@ -404,7 +446,7 @@ const getNewsletterHTML = (data: any) => {
 async function generateNewsletter(
   userId: string,
   selectedCount: number,
-  jwt: string,
+  jwt: string
 ) {
   try {
     // 1) Initialize Supabase client
@@ -416,7 +458,7 @@ async function generateNewsletter(
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select(
-        "subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle",
+        "subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle"
       )
       .eq("id", userId)
       .single();
@@ -429,7 +471,7 @@ async function generateNewsletter(
     // 3) Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
       throw new Error(
-        "You must have an active subscription to generate newsletters",
+        "You must have an active subscription to generate newsletters"
       );
     }
     if (
@@ -440,7 +482,7 @@ async function generateNewsletter(
     }
     if (!profile.twitter_bookmark_access_token) {
       throw new Error(
-        "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings.",
+        "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings."
       );
     }
     const now = Math.floor(Date.now() / 1000);
@@ -449,7 +491,7 @@ async function generateNewsletter(
       profile.twitter_bookmark_token_expires_at < now
     ) {
       throw new Error(
-        "Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.",
+        "Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks."
       );
     }
 
@@ -458,11 +500,12 @@ async function generateNewsletter(
     if (!numericalId && profile.twitter_handle) {
       try {
         const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-        if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
+        if (!RAPIDAPI_KEY)
+          throw new Error("Missing RAPIDAPI_KEY in environment");
         const cleanHandle = profile.twitter_handle.trim().replace("@", "");
         const resp = await fetch(
           `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(
-            cleanHandle,
+            cleanHandle
           )}`,
           {
             method: "GET",
@@ -470,37 +513,43 @@ async function generateNewsletter(
               "x-rapidapi-key": RAPIDAPI_KEY,
               "x-rapidapi-host": "twitter293.p.rapidapi.com",
             },
-          },
+          }
         );
         if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
         const j = await resp.json();
         if (j?.user?.result?.rest_id) {
           numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase.from("profiles")
+          const { error: updateError } = await supabase
+            .from("profiles")
             .update({
               numerical_id: numericalId,
-            }).eq("id", userId);
-          if (updateError) console.error("Error updating numerical_id:", updateError);
+            })
+            .eq("id", userId);
+          if (updateError)
+            console.error("Error updating numerical_id:", updateError);
         } else {
           throw new Error(
-            "Could not retrieve your Twitter ID. Please try again later.",
+            "Could not retrieve your Twitter ID. Please try again later."
           );
         }
       } catch (err) {
         console.error("Error fetching numerical_id:", err);
         throw new Error(
-          "Could not retrieve your Twitter ID. Please try again later.",
+          "Could not retrieve your Twitter ID. Please try again later."
         );
       }
     }
     if (!numericalId) {
       throw new Error(
-        "Could not determine your Twitter ID. Please update your Twitter handle in settings.",
+        "Could not determine your Twitter ID. Please update your Twitter handle in settings."
       );
     }
 
     // 5) Fetch bookmarks
-    logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
+    logStep("Fetching bookmarks", {
+      count: selectedCount,
+      userId: numericalId,
+    });
     const bookmarksResp = await fetch(
       `https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`,
       {
@@ -509,19 +558,19 @@ async function generateNewsletter(
           Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
           "Content-Type": "application/json",
         },
-      },
+      }
     );
     if (!bookmarksResp.ok) {
       const text = await bookmarksResp.text();
       console.error(`Twitter API error (${bookmarksResp.status}):`, text);
       if (bookmarksResp.status === 401) {
         throw new Error(
-          "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.",
+          "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks."
         );
       }
       if (bookmarksResp.status === 429) {
         throw new Error(
-          "Twitter API rate limit exceeded. Please try again later.",
+          "Twitter API rate limit exceeded. Please try again later."
         );
       }
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
@@ -531,7 +580,7 @@ async function generateNewsletter(
       console.error("Invalid or empty bookmark data:", bookmarksData);
       if (bookmarksData.meta?.result_count === 0) {
         throw new Error(
-          "You don't have any bookmarks. Please save some tweets before generating a newsletter.",
+          "You don't have any bookmarks. Please save some tweets before generating a newsletter."
         );
       }
       throw new Error("Failed to retrieve bookmarks from Twitter");
@@ -574,7 +623,7 @@ async function generateNewsletter(
           maxItems: selectedCount,
           tweetIDs: tweetIds,
         }),
-      },
+      }
     );
     if (!apifyResp.ok) {
       const text = await apifyResp.text();
@@ -595,24 +644,24 @@ async function generateNewsletter(
         : [];
       let out = "";
       arr.forEach((t, i) => {
-        const txt = (t.text || "").replace(/https?:\\/\\/\\S+/g, "").trim();
+        // <<< FIXED: use a valid regex literal here >>>
+        const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
         let dateStr = "N/A";
         try {
           dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-        } catch {
-        }
+        } catch {}
         const photo = t.extendedEntities?.media?.find(
-          (m: any) => m.type === "photo",
+          (m: any) => m.type === "photo"
         )?.media_url_https;
         out +=
-          `Tweet ${i + 1}\\nID: ${t.id}\\nText: ${txt}\\nReplies: ${
+          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
             t.replyCount || 0
-          }\\nLikes: ${t.likeCount || 0}\\nImpressions: ${
+          }\nLikes: ${t.likeCount || 0}\nImpressions: ${
             t.viewCount || 0
-          }\\nDate: ${dateStr}\\nAuthor: ${
+          }\nDate: ${dateStr}\nAuthor: ${
             t.author?.name || "Unknown"
-          }\\nPhotoUrl: ${photo || "N/A"}\\n`;
-        if (i < arr.length - 1) out += "\\n---\\n\\n";
+          }\nPhotoUrl: ${photo || "N/A"}\n`;
+        if (i < arr.length - 1) out += "\n---\n\n";
       });
       return out;
     }
@@ -687,22 +736,25 @@ ${formattedTweets}`;
       try {
         logStep(`OpenAI API call attempt ${retryCount + 1}`);
 
-        const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: analysisSystemPrompt },
-              { role: "user", content: analysisUserPrompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 12000,
-          }),
-        });
+        const openaiRes = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                { role: "system", content: analysisSystemPrompt },
+                { role: "user", content: analysisUserPrompt },
+              ],
+              temperature: 0.3,
+              max_tokens: 12000,
+            }),
+          }
+        );
 
         if (!openaiRes.ok) {
           const txt = await openaiRes.text();
@@ -722,10 +774,12 @@ ${formattedTweets}`;
         analysisResult = extractAndParseJSON(rawContent);
         logStep("Successfully parsed OpenAI JSON response");
         break;
-
       } catch (parseError) {
         retryCount++;
-        console.error(`JSON parsing attempt ${retryCount} failed:`, parseError);
+        console.error(
+          `JSON parsing attempt ${retryCount} failed:`,
+          parseError
+        );
 
         if (retryCount >= maxRetries) {
           logStep("All JSON parsing attempts failed, using fallback structure");
@@ -739,11 +793,19 @@ ${formattedTweets}`;
                 dualPerspective: {
                   columnA: {
                     header: "Main Points",
-                    points: ["Important trends identified", "Key developments noted", "Emerging patterns observed"],
+                    points: [
+                      "Important trends identified",
+                      "Key developments noted",
+                      "Emerging patterns observed",
+                    ],
                   },
                   columnB: {
                     header: "Context",
-                    points: ["Market implications", "Industry impact", "Future considerations"],
+                    points: [
+                      "Market implications",
+                      "Industry impact",
+                      "Future considerations",
+                    ],
                   },
                 },
                 synthesis:
@@ -797,7 +859,7 @@ ${formattedTweets}`;
                 temperature: 0.2,
                 max_tokens: 1000,
               }),
-            },
+            }
           );
           if (perplexityRes.ok) {
             const data = await perplexityRes.json();
@@ -808,7 +870,10 @@ ${formattedTweets}`;
             logStep(`Successfully enriched focus: ${focus.title}`);
           }
         } catch (err) {
-          console.error(`Perplexity fetch failed for "${focus.title}":`, err);
+          console.error(
+            `Perplexity fetch failed for "${focus.title}":`,
+            err
+          );
         }
       }
     }
@@ -832,20 +897,29 @@ ${formattedTweets}`;
     // 11) Send email via Resend
     try {
       const fromEmail =
-        Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
+        Deno.env.get("FROM_EMAIL") ||
+        "newsletter@newsletters.letternest.ai";
       const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`,
-        to: profile.sending_email,
-        subject: emailSubject,
-        html: emailHtml,
-        text: `${analysisResult.hook}\n\n${analysisResult.mainSections
-          .map((s: any) => `${s.title}\n${s.synthesis}`)
-          .join("\n\n")}`,
-      });
+      const { data: emailData, error: emailError } =
+        await resend.emails.send({
+          from: `LetterNest <${fromEmail}>`,
+          to: profile.sending_email,
+          subject: emailSubject,
+          html: emailHtml,
+          text: `${
+            analysisResult.hook
+          }\n\n${analysisResult.mainSections
+            .map((s: any) => `${s.title}\n${s.synthesis}`)
+            .join("\n\n")}`,
+        });
       if (emailError) {
-        console.error("Error sending email with Resend:", emailError);
-        throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`);
+        console.error(
+          "Error sending email with Resend:",
+          emailError
+        );
+        throw new Error(
+          `Failed to send email: ${JSON.stringify(emailError)}`
+        );
       }
       logStep("Twin Focus Email sent successfully", { id: emailData?.id });
     } catch (sendErr) {
@@ -854,9 +928,13 @@ ${formattedTweets}`;
 
     // 12) Save the newsletter to newsletter_storage table
     try {
-      const markdownContent = `# Newsletter Update - ${currentDate}\n\n${analysisResult.hook}\n\n${analysisResult.mainSections
-        .map((s: any) => `## ${s.title}\n\n${s.synthesis}`)
-        .join("\n\n")}`;
+      const markdownContent = `# Newsletter Update - ${currentDate}\n\n${
+        analysisResult.hook
+      }\n\n${
+        analysisResult.mainSections
+          .map((s: any) => `## ${s.title}\n\n${s.synthesis}`)
+          .join("\n\n")
+      }`;
 
       const { error: storageError } = await supabase
         .from("newsletter_storage")
@@ -867,13 +945,16 @@ ${formattedTweets}`;
       if (storageError) {
         console.error(
           "Failed to save Twin Focus newsletter to storage:",
-          storageError,
+          storageError
         );
       } else {
         logStep("Twin Focus Newsletter successfully saved to storage");
       }
     } catch (storageErr) {
-      console.error("Error saving Twin Focus newsletter to storage:", storageErr);
+      console.error(
+        "Error saving Twin Focus newsletter to storage:",
+        storageErr
+      );
     }
 
     // 13) Update remaining generations count
@@ -918,7 +999,7 @@ ${formattedTweets}`;
   } catch (error) {
     console.error(
       "Error in background Twin Focus newsletter generation process:",
-      error,
+      error
     );
     return {
       status: "error",
@@ -944,7 +1025,7 @@ serve(async (req: Request) => {
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
     const authHeader = req.headers.get("Authorization");
@@ -954,7 +1035,7 @@ serve(async (req: Request) => {
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -973,7 +1054,7 @@ serve(async (req: Request) => {
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
     const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
@@ -999,7 +1080,7 @@ serve(async (req: Request) => {
       {
         status: 202,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   } catch (error) {
     console.error("Error in Twin Focus newsletter generation function:", error);
@@ -1008,7 +1089,7 @@ serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 });
