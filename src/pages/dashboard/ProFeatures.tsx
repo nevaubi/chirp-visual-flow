@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -156,20 +155,25 @@ const ProFeatures = () => {
                     ))}
                   </ul>
                 </div>
-                <Button 
-                  className="w-full bg-[#0087C8] hover:bg-[#006CA1]"
-                  onClick={() => handleUseTemplate(template.id, template.name)}
-                  disabled={loadingTemplate === template.name}
-                >
-                  {loadingTemplate === template.name ? (
-                    <>
-                      <span className="mr-2">Generating...</span>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </>
-                  ) : (
-                    'Use Template'
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    className="w-full bg-[#0087C8] hover:bg-[#006CA1]"
+                    onClick={() => handleUseTemplate(template.id, template.name)}
+                    disabled={loadingTemplate === template.name}
+                  >
+                    {loadingTemplate === template.name ? (
+                      <>
+                        <span className="mr-2">Generating...</span>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </>
+                    ) : (
+                      'Generate Pro Newsletter'
+                    )}
+                  </Button>
+                  <p className="text-xs text-gray-500 italic text-center">
+                    (Defaults to 20 Bookmarks w/enriched context)
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
