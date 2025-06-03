@@ -13,8 +13,8 @@ const corsHeaders = {
 const COLORS = {
   primaryNavy: "#142a4b",
   accentBlue: "#5774cd",
-  lightBg: "#f7f9fc", // Used for the email body background
-  white: "#ffffff", // Used for the content card background
+  lightBg: "#f7f9fc", // Used for the email body background on desktop
+  white: "#ffffff", // Used for the content card background and mobile body
   darkText: "#293041",
 };
 
@@ -31,6 +31,8 @@ async function generateNewsletter(
   jwt: string,
 ) {
   try {
+    // ... (Steps 1-14 remain unchanged from your provided code) ...
+
     // 1) Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -634,10 +636,10 @@ ${finalAnalysisForMarkdown};`;
     const finalMarkdown = cleanMarkdown(markdownNewsletter);
     logStep("Cleaned up final markdown for Twin Focus");
 
+
     // 15) Convert final Markdown to HTML with styling improvements
     const renderer = new marked.Renderer();
 
-    // Paragraph renderer
     renderer.paragraph = (text) => {
       if (
         text.trim().startsWith("<div") || text.trim().startsWith("<span")
@@ -646,68 +648,32 @@ ${finalAnalysisForMarkdown};`;
       }
       return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif;">${text}</p>\n`;
     };
-
-    // List item renderer
     renderer.listitem = (text, task, checked) => {
       if (task) {
         return `<li class="task-list-item" style="color:${COLORS.primaryNavy};"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
       }
       return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: ${COLORS.primaryNavy}; font-family: 'Lato',sans-serif;">${text}</li>\n`;
     };
-
-    // Blockquote renderer
     renderer.blockquote = (quote) => {
       return `<blockquote style="background-color: ${COLORS.lightBg}; border-left: 5px solid ${COLORS.accentBlue}; margin: 16px 0; padding: 10px 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif; font-size: 16px; line-height: 1.6;">${quote}</blockquote>\n`;
     };
-
-    // Heading renderer
     renderer.heading = (text, level) => {
-      const sizes: Record<number, string> = {
-        1: "40px",
-        2: "32px",
-        3: "28px",
-        4: "24px",
-        5: "20px",
-        6: "18px",
-      };
-      const margins: Record<number, string> = {
-        1: "0 0 20px 0",
-        2: "24px 0 16px 0",
-        3: "20px 0 14px 0",
-        4: "16px 0 12px 0",
-        5: "14px 0 10px 0",
-        6: "12px 0 8px 0",
-      };
+      const sizes: Record<number, string> = {1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px"};
+      const margins: Record<number, string> = {1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0"};
       let color = COLORS.primaryNavy;
       if (level >= 3) color = COLORS.darkText;
       const size = sizes[level] || "18px";
       const margin = margins[level] || "12px 0 8px 0";
       return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid ${COLORS.primaryNavy}; padding-left: 8px;">${text}</h${level}>\n`;
     };
-
-    // Image renderer
     renderer.image = (href, _title, alt) =>
       `<div style="text-align:center; margin: 24px 0;">
-        <img src="${href}"
-             alt="${alt || "Newsletter image"}"
-             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid ${COLORS.darkText};">
+        <img src="${href}" alt="${alt || "Newsletter image"}" style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid ${COLORS.darkText};">
       </div>`;
-
-    // Table renderer – 2-column responsive
     renderer.table = (header, body) =>
       `<table style="width:100%; border-collapse:collapse; margin:24px 0; border-radius:6px; overflow:hidden;">
-        <thead>
-          ${header.replace(
-        /<th>/g,
-        `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`,
-      )}
-        </thead>
-        <tbody>
-          ${body.replace(
-        /<td>/g,
-        `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`,
-      )}
-        </tbody>
+        <thead>${header.replace(/<th>/g, `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`)}</thead>
+        <tbody>${body.replace(/<td>/g, `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`)}</tbody>
       </table>`;
 
     const htmlBody = marked(finalMarkdown, { renderer });
@@ -718,19 +684,24 @@ ${finalAnalysisForMarkdown};`;
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <style>
-      html, body { background:${COLORS.lightBg} !important; margin:0; padding:0; } /* MODIFIED: Use lightBg for overall email background */
+      /* Default styles: Desktop uses lightBg for body */
+      html, body { background:${COLORS.lightBg} !important; margin:0; padding:0; }
+      .email-body-container-td { padding: 20px 0; background-color: ${COLORS.lightBg}; } /* Default padding and bg for desktop */
+
       @media print {
-        body, html { width:100%; margin:0; background:${COLORS.white} !important; } /* Print background remains white for content */
+        body, html { width:100%; margin:0; background:${COLORS.white} !important; }
         .wrapper { width:100% !important; max-width:none !important; }
         table { width:100% !important; border-collapse:collapse; }
         table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
         h1, h2, h3 { page-break-after:avoid; }
       }
-      @media screen and (min-width:640px){ /* Desktop styles */
+      @media screen and (min-width:640px){ /* Desktop specific overrides for content body (if any beyond .wrapper) */
         .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
       }
       @media screen and (max-width:600px){ /* Mobile styles */
-        .wrapper{ max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
+        html, body { background:${COLORS.white} !important; } /* Force entire page white on mobile */
+        .email-body-container-td { padding: 0 !important; background-color: ${COLORS.white} !important; } /* Remove padding and make td white on mobile */
+        .wrapper{ width:100% !important; max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
         .content-body{ padding:20px 16px !important; background:${COLORS.white} !important; }
         h1{ font-size:32px !important; color:${COLORS.primaryNavy} !important; }
         h2{ font-size:28px !important; color:${COLORS.primaryNavy} !important; }
@@ -739,13 +710,12 @@ ${finalAnalysisForMarkdown};`;
       }
     </style>
   </head>
-  <body bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;"> {/* MODIFIED: Use lightBg */}
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg};"> {/* MODIFIED: Use lightBg */}
+  <body bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg};">
       <tr>
-        <td align="center" style="padding: 20px 0;"> {/* MODIFIED: Added padding to this cell */}
-
-          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;"> {/* Wrapper remains white */}
-            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};"> {/* Content body remains white */}
+        <td align="center" class="email-body-container-td"> 
+          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
+            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
               ${htmlBody}
             </div>
           </div>
@@ -764,6 +734,7 @@ ${finalAnalysisForMarkdown};`;
 
     logStep("Converted Twin Focus markdown to HTML with updated color scheme");
 
+    // ... (Steps 17-19 and the serve function remain unchanged from your provided code) ...
     // 17) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") ||
