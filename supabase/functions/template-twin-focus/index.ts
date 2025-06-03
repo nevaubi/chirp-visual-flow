@@ -373,7 +373,7 @@ Your job: take pre-analysed thematic content and output clean, beautiful Markdow
       </tr>
     </table>
 
-    • `{{HERO_IMAGE_URL}}` → use *the first valid* \`RepresentativeImageURL\` from Main Theme 1.  
+    • \`{{HERO_IMAGE_URL}}\` → use *the first valid* \`RepresentativeImageURL\` from Main Theme 1.  
     • Bullets → derive from Main Theme 1 “Key Insights”.  
     • Paragraphs → 2-3 sentence plain-language summary of Main Theme 1’s “The Gist”.
 
@@ -391,6 +391,7 @@ Your job: take pre-analysed thematic content and output clean, beautiful Markdow
 
 OUTPUT **only** the fully-formatted Markdown.
 `;
+
 
       
       const markdownUserPrompt = `Format this thematic analysis (with varied structures) into the "Chain of Thought" Markdown newsletter. Prioritize including images and correctly formatting special text structures.
