@@ -11,7 +11,7 @@ const corsHeaders = {
 
 const COLORS = {
   primaryNavy: "#142a4b",
-  accentBlue: "#5774cd", 
+  accentBlue: "#5774cd",
   lightBg: "#f7f9fc",
   white: "#ffffff",
   darkText: "#293041",
@@ -27,29 +27,42 @@ const logStep = (step: string, details?: any) => {
   console.log(`[TWIN-FOCUS-GEN] ${step}${detailsStr}`);
 };
 
+// Remove hashtags (#Word) and lone asterisks (*word*)
+const sanitizePlain = (txt: string) =>
+  txt
+    .replace(/(^|\s)#(\w+)/g, "$1$2")      // drops the # symbol
+    .replace(/\*{1}(.*?)\*{1}/g, "$1");    // converts *bold?* -> bold?
+
 // Enhanced text cleaning function
 function cleanTextForDisplay(text: string): string {
-  return text
-    // Remove markdown formatting
-    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markers
-    .replace(/\*(.*?)\*/g, '$1') // Remove italic markers
-    .replace(/#{1,6}\s*/g, '') // Remove hashtags
-    .replace(/^\s*[-*+]\s*/gm, '') // Remove list markers
-    .replace(/^\s*\d+\.\s*/gm, '') // Remove numbered list markers
-    .replace(/`(.*?)`/g, '$1') // Remove code markers
-    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove link formatting, keep text
+  const sanitized = sanitizePlain(text);
+  return sanitized
+    // Remove markdown bold markers
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    // Remove markdown italic markers
+    .replace(/\*(.*?)\*/g, "$1")
+    // Remove hashtags (already removed above, but keep for safety)
+    .replace(/#{1,6}\s*/g, "")
+    // Remove list markers like "- " or "* "
+    .replace(/^\s*[-*+]\s*/gm, "")
+    // Remove numbered list markers like "1. "
+    .replace(/^\s*\d+\.\s*/gm, "")
+    // Remove inline code markers `code`
+    .replace(/`(.*?)`/g, "$1")
+    // Remove markdown link syntax but keep link text
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
     // Clean up extra spaces and line breaks
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 // Enhanced content parser for better image distribution
 interface ParsedSection {
-  type: 'header' | 'focus' | 'insight' | 'content';
+  type: "header" | "focus" | "insight" | "content";
   title: string;
   content: string;
   imageUrl?: string;
-  subsections?: { 
+  subsections?: {
     columnA?: { header: string; points: string[] };
     columnB?: { header: string; points: string[] };
     synthesis?: string;
@@ -61,115 +74,142 @@ function parseNewsletterContent(analysisText: string): {
   sections: ParsedSection[];
   images: string[];
 } {
-  const lines = analysisText.split('\n');
+  const lines = analysisText.split("\n");
   const sections: ParsedSection[] = [];
   const images: string[] = [];
-  let hook = '';
+  let hook = "";
   let currentSection: ParsedSection | null = null;
-  
+
   // Extract images first
   const imageRegex = /(?:RepresentativeImageURL|PhotoUrl|Image):\s*(https?:\/\/[^\s,]+)/gi;
   let imageMatch;
   while ((imageMatch = imageRegex.exec(analysisText)) !== null) {
-    if (imageMatch[1] && imageMatch[1] !== 'N/A' && !imageMatch[1].includes('N/A')) {
+    if (imageMatch[1] && imageMatch[1] !== "N/A" && !imageMatch[1].includes("N/A")) {
       images.push(imageMatch[1]);
     }
   }
-  
+
   // Also look for markdown image syntax
   const markdownImageRegex = /!\[.*?\]\((https?:\/\/[^)]+)\)/g;
   while ((imageMatch = markdownImageRegex.exec(analysisText)) !== null) {
-    if (imageMatch[1] && imageMatch[1] !== 'N/A') {
+    if (imageMatch[1] && imageMatch[1] !== "N/A") {
       images.push(imageMatch[1]);
     }
   }
-  
+
   let isInMainFocus = false;
   let isInQuickInsights = false;
-  let currentContent = '';
-  
+  let currentContent = "";
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Skip empty lines and markdown artifacts
-    if (!line || line.startsWith('```') || line.startsWith('---')) continue;
-    
+    if (!line || line.startsWith("```") || line.startsWith("---")) continue;
+
     // Detect hook (usually early in content)
-    if ((line.toLowerCase().includes('hook') || 
-         (i < 10 && !line.startsWith('#') && !line.includes(':') && line.length > 30)) && !hook) {
-      hook = cleanTextForDisplay(line.replace(/^.*?hook:?\s*/i, ''));
+    if (
+      ((line.toLowerCase().includes("hook")) ||
+        (i < 10 && !line.startsWith("#") && !line.includes(":") && line.length > 30)) &&
+      !hook
+    ) {
+      hook = cleanTextForDisplay(line.replace(/^.*?hook:?\s*/i, ""));
       continue;
     }
-    
+
     // Detect main sections
-    if (line.toLowerCase().includes('main focus') || line.toLowerCase().includes('focus area')) {
+    if (
+      line.toLowerCase().includes("main focus") ||
+      line.toLowerCase().includes("focus area")
+    ) {
       isInMainFocus = true;
       isInQuickInsights = false;
       continue;
     }
-    
-    if (line.toLowerCase().includes('quick insight') || line.toLowerCase().includes('additional') || 
-        line.toLowerCase().includes('brief') || line.toLowerCase().includes('rapid')) {
+
+    // Detect quick insights section
+    if (
+      line.toLowerCase().includes("quick insight") ||
+      line.toLowerCase().includes("additional") ||
+      line.toLowerCase().includes("brief") ||
+      line.toLowerCase().includes("rapid")
+    ) {
       isInMainFocus = false;
       isInQuickInsights = true;
       continue;
     }
-    
+
     // Detect focus titles within main focus section
-    if (isInMainFocus && (line.includes('Focus') || line.includes('FOCUS') || 
-                          (line.length > 20 && line.length < 100 && !line.includes(':')))) {
+    if (
+      isInMainFocus &&
+      (line.includes("Focus") ||
+        line.includes("FOCUS") ||
+        (line.length > 20 && line.length < 100 && !line.includes(":")))
+    ) {
       if (currentSection) {
         sections.push(currentSection);
       }
-      
+
       const title = cleanTextForDisplay(line);
-      currentSection = { type: 'focus', title, content: '' };
-      currentContent = '';
+      currentSection = { type: "focus", title, content: "" };
+      currentContent = "";
       continue;
     }
-    
+
     // Detect insight titles within quick insights section
-    if (isInQuickInsights && (line.includes('Insight') || line.includes('INSIGHT') || 
-                              (line.length > 15 && line.length < 80 && !line.includes(':')))) {
+    if (
+      isInQuickInsights &&
+      (line.includes("Insight") ||
+        line.includes("INSIGHT") ||
+        (line.length > 15 && line.length < 80 && !line.includes(":")))
+    ) {
       if (currentSection) {
         sections.push(currentSection);
       }
-      
+
       const title = cleanTextForDisplay(line);
-      currentSection = { type: 'insight', title, content: '' };
-      currentContent = '';
+      currentSection = { type: "insight", title, content: "" };
+      currentContent = "";
       continue;
     }
-    
+
     // Add content to current section
-    if (currentSection && line.length > 0 && !line.toLowerCase().includes('representativeimageurl')) {
+    if (
+      currentSection &&
+      line.length > 0 &&
+      !line.toLowerCase().includes("representativeimageurl")
+    ) {
       const cleanLine = cleanTextForDisplay(line);
       if (cleanLine && cleanLine.length > 3) {
-        currentContent += (currentContent ? ' ' : '') + cleanLine;
+        currentContent += (currentContent ? " " : "") + cleanLine;
       }
     }
-    
+
     // Update current section content
     if (currentSection && currentContent) {
       currentSection.content = currentContent;
     }
   }
-  
+
   if (currentSection) {
     sections.push(currentSection);
   }
-  
+
   // Remove duplicates from images
   const uniqueImages = [...new Set(images)];
-  
+
   return { hook, sections, images: uniqueImages };
 }
 
 // Enhanced HTML generation with distributed images
-function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSection[]; images: string[] }): string {
+function generateEnhancedHTML(parsedContent: {
+  hook: string;
+  sections: ParsedSection[];
+  images: string[];
+}): string {
   const { hook, sections, images } = parsedContent;
   let imageIndex = 0;
-  
+
   // Helper function to get next image
   const getNextImage = (): string | null => {
     if (imageIndex < images.length) {
@@ -177,15 +217,18 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
     }
     return null;
   };
-  
+
   // Header section
   let html = `
     <div style="text-align: center; padding: 32px 0 24px 0; border-bottom: 3px solid ${COLORS.accentBlue}; margin-bottom: 32px;">
       <h1 style="font-size: 42px; font-weight: 800; color: ${COLORS.primaryNavy}; margin: 0 0 8px 0; font-family: 'Lato', sans-serif; letter-spacing: -0.02em;">Twin Focus</h1>
-      <p style="font-size: 18px; color: ${COLORS.subtleGray}; margin: 0; font-family: 'Lato', sans-serif; font-weight: 500;">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <p style="font-size: 18px; color: ${COLORS.subtleGray}; margin: 0; font-family: 'Lato', sans-serif; font-weight: 500;">${new Date().toLocaleDateString(
+    "en-US",
+    { year: "numeric", month: "long", day: "numeric" }
+  )}</p>
     </div>
   `;
-  
+
   // Hook section
   if (hook) {
     html += `
@@ -194,26 +237,28 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
       </div>
     `;
   }
-  
+
   // Process focus sections first
-  const focusSections = sections.filter(s => s.type === 'focus');
-  const insightSections = sections.filter(s => s.type === 'insight');
-  
+  const focusSections = sections.filter((s) => s.type === "focus");
+  const insightSections = sections.filter((s) => s.type === "insight");
+
   // Main focus sections with distributed images
   focusSections.forEach((section, index) => {
     const image = getNextImage();
-    
+
     html += `
       <div style="margin-bottom: 40px; border: 1px solid ${COLORS.borderColor}; border-radius: 16px; overflow: hidden; background: ${COLORS.white}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <div style="background: ${COLORS.primaryNavy}; padding: 20px; text-align: center;">
-          <h2 style="color: ${COLORS.white}; font-size: 28px; margin: 0; font-family: 'Lato', sans-serif; font-weight: 700;">${section.title}</h2>
+          <h2 style="color: ${COLORS.white}; font-size: 28px; margin: 0; font-family: 'Lato', sans-serif; font-weight: 700;">${
+            section.title
+          }</h2>
         </div>
         
         ${image ? `
           <div style="text-align: center; padding: 24px; background: ${COLORS.lightBg};">
             <img src="${image}" alt="Section illustration" style="max-width: 100%; max-height: 280px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid ${COLORS.white};">
           </div>
-        ` : ''}
+        ` : ""}
         
         <div style="padding: 24px;">
           <!-- Dual Column Table -->
@@ -256,7 +301,7 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
       </div>
     `;
   });
-  
+
   // Quick insights header
   if (insightSections.length > 0) {
     html += `
@@ -269,11 +314,11 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
       </div>
     `;
   }
-  
+
   // Quick insights sections with remaining images
   insightSections.forEach((section, index) => {
     const image = getNextImage();
-    
+
     html += `
       <div style="margin-bottom: 32px; background: ${COLORS.white}; border-radius: 12px; border: 1px solid ${COLORS.borderColor}; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
         <div style="background: linear-gradient(90deg, ${COLORS.lightBg} 0%, ${COLORS.sectionBg} 100%); padding: 20px; border-bottom: 1px solid ${COLORS.borderColor};">
@@ -288,14 +333,16 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
             <div style="text-align: center; margin-bottom: 20px;">
               <img src="${image}" alt="Insight illustration" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             </div>
-          ` : ''}
+          ` : ""}
           
-          <p style="color: ${COLORS.darkText}; line-height: 1.6; margin: 0; font-family: 'Lato', sans-serif; font-size: 15px;">${section.content}</p>
+          <p style="color: ${COLORS.darkText}; line-height: 1.6; margin: 0; font-family: 'Lato', sans-serif; font-size: 15px;">${
+            section.content
+          }</p>
         </div>
       </div>
     `;
   });
-  
+
   // Add remaining images if any (distributed in a gallery at the end if needed)
   if (imageIndex < images.length) {
     html += `
@@ -303,7 +350,7 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
         <h3 style="color: ${COLORS.primaryNavy}; font-size: 24px; margin: 0 0 24px 0; font-family: 'Lato', sans-serif; font-weight: 600; text-align: center;">Additional Visual Context</h3>
         <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;">
     `;
-    
+
     for (let i = imageIndex; i < images.length; i++) {
       html += `
         <div style="flex: 1; min-width: 200px; max-width: 300px;">
@@ -311,17 +358,21 @@ function generateEnhancedHTML(parsedContent: { hook: string; sections: ParsedSec
         </div>
       `;
     }
-    
+
     html += `
         </div>
       </div>
     `;
   }
-  
+
   return html;
 }
 
-async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
+async function generateNewsletter(
+  userId: string,
+  selectedCount: number,
+  jwt: string,
+) {
   try {
     // 1) Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -392,10 +443,10 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         const j = await resp.json();
         if (j?.user?.result?.rest_id) {
           numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase.from("profiles")
-            .update({
-              numerical_id: numericalId,
-            }).eq("id", userId);
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({ numerical_id: numericalId })
+            .eq("id", userId);
           if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
           throw new Error(
@@ -436,9 +487,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         );
       }
       if (bookmarksResp.status === 429) {
-        throw new Error(
-          "Twitter API rate limit exceeded. Please try again later.",
-        );
+        throw new Error("Twitter API rate limit exceeded. Please try again later.");
       }
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
     }
@@ -515,19 +564,16 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         let dateStr = "N/A";
         try {
           dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-        } catch {
-        }
+        } catch {}
         const photo = t.extendedEntities?.media?.find(
           (m: any) => m.type === "photo",
         )?.media_url_https;
         out +=
-          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
-            t.replyCount || 0
-          }\nLikes: ${t.likeCount || 0}\nImpressions: ${
-            t.viewCount || 0
-          }\nDate: ${dateStr}\nAuthor: ${
-            t.author?.name || "Unknown"
-          }\nPhotoUrl: ${photo || "N/A"}\n`;
+          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${t.replyCount ||
+          0}\nLikes: ${t.likeCount ||
+          0}\nImpressions: ${t.viewCount ||
+          0}\nDate: ${dateStr}\nAuthor: ${t.author?.name ||
+          "Unknown"}\nPhotoUrl: ${photo || "N/A"}\n`;
         if (i < arr.length - 1) out += "\n---\n\n";
       });
       return out;
@@ -542,8 +588,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Missing OPENAI_API_KEY environment variable");
     }
 
-    const analysisSystemPrompt =
-      `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
+    const analysisSystemPrompt = `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
 
 CAPABILITIES:
 - Identify 3-4 main themes with dual perspectives or contrasting viewpoints
@@ -576,8 +621,7 @@ CRITICAL INSTRUCTIONS:
 Tweet data to analyze:
 ${formattedTweets}`;
 
-    const analysisUserPrompt =
-      `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
+    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
 
 1. HOOK (1-2 sentences)
 2. 3-4 MAIN FOCUS AREAS, each with:
@@ -624,8 +668,7 @@ ${formattedTweets}`;
 
     // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt =
-      `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
+    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
 TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
 FORMAT:
 ===
@@ -763,8 +806,7 @@ ${analysisResult}`;
     let finalAnalysisForMarkdown = analysisResult;
     if (webEnrichmentContent && webEnrichmentContent.length > 0) {
       logStep("Integrating web content with original Twin Focus analysis");
-      const integrationPrompt =
-        `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
+      const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
 RULES: Maintain original structure. For focus areas with web enrichment, weave 3-4+ points from 'webSummary' into 'Synthesis', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
 ORIGINAL ANALYSIS:
 ${analysisResult}
@@ -797,13 +839,17 @@ Provide complete, integrated analysis.`;
       );
       if (integrationRes.ok) {
         const integrationJson = await integrationRes.json();
-        finalAnalysisForMarkdown = integrationJson.choices[0].message.content
-          .trim();
+        finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
         logStep("Successfully integrated web content with Twin Focus analysis");
       } else {
         const txt = await integrationRes.text();
-        console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-        logStep("Failed to integrate web content, continuing with original analysis");
+        console.error(
+          `OpenAI integration error (${integrationRes.status}):`,
+          txt
+        );
+        logStep(
+          "Failed to integrate web content, continuing with original analysis"
+        );
       }
     }
 
@@ -811,7 +857,7 @@ Provide complete, integrated analysis.`;
     logStep("Parsing content and generating enhanced HTML layout");
     const parsedContent = parseNewsletterContent(finalAnalysisForMarkdown);
     const enhancedHTMLBody = generateEnhancedHTML(parsedContent);
-    
+
     // 12) Generate final email HTML with enhanced styling
     const emailHtml = juice(`
 <html>
@@ -821,72 +867,72 @@ Provide complete, integrated analysis.`;
     <style>
       /* Reset and base styles */
       * { box-sizing: border-box; }
-      
+
       /* Default styles */
-      html, body { 
-        background: ${COLORS.lightBg} !important; 
-        margin: 0; 
-        padding: 0; 
+      html, body {
+        background: ${COLORS.lightBg} !important;
+        margin: 0;
+        padding: 0;
         width: 100%;
         height: 100%;
         font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       }
-      
-      .email-body-container-td { 
-        padding: 20px 0; 
-        background-color: ${COLORS.lightBg}; 
+
+      .email-body-container-td {
+        padding: 20px 0;
+        background-color: ${COLORS.lightBg};
       }
-      
+
       /* Enhanced responsive styles */
       @media screen and (max-width: 600px) {
-        html, body, table, table[bgcolor], td, .email-body-container-td { 
-          background: ${COLORS.white} !important; 
+        html, body, table, table[bgcolor], td, .email-body-container-td {
+          background: ${COLORS.white} !important;
           background-color: ${COLORS.white} !important;
         }
-        
+
         body { padding: 0 !important; margin: 0 !important; }
         .email-body-container-td { padding: 0 !important; }
-        
-        .wrapper { 
-          width: 100% !important; 
-          max-width: 100% !important; 
-          margin: 0 !important; 
-          border-radius: 0 !important; 
-          background: ${COLORS.white} !important; 
+
+        .wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          background: ${COLORS.white} !important;
           box-shadow: none !important;
         }
-        
-        .content-body { 
-          padding: 16px 12px !important; 
-          background: ${COLORS.white} !important; 
+
+        .content-body {
+          padding: 16px 12px !important;
+          background: ${COLORS.white} !important;
         }
-        
+
         /* Mobile typography */
         h1 { font-size: 32px !important; }
         h2 { font-size: 24px !important; }
         h3 { font-size: 20px !important; }
-        
+
         /* Mobile table adjustments */
         table { width: 100% !important; }
-        th, td { 
-          display: block !important; 
-          width: 100% !important; 
+        th, td {
+          display: block !important;
+          width: 100% !important;
           border-right: none !important;
           border-bottom: 1px solid ${COLORS.borderColor} !important;
         }
-        
+
         /* Mobile image adjustments */
         img { max-width: 100% !important; height: auto !important; }
       }
-      
+
       /* Print styles */
       @media print {
-        body, html { 
-          background: ${COLORS.white} !important; 
+        body, html {
+          background: ${COLORS.white} !important;
         }
-        .wrapper { 
-          width: 100% !important; 
-          max-width: none !important; 
+        .wrapper {
+          width: 100% !important;
+          max-width: none !important;
           box-shadow: none !important;
         }
         h1, h2, h3 { page-break-after: avoid; }
@@ -897,7 +943,7 @@ Provide complete, integrated analysis.`;
   <body bgcolor="${COLORS.lightBg}" style="background-color: ${COLORS.lightBg}; margin: 0; padding: 0; font-family: 'Lato', sans-serif;">
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}">
       <tr>
-        <td align="center" class="email-body-container-td"> 
+        <td align="center" class="email-body-container-td">
           <div class="wrapper" style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background: ${COLORS.white}; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); text-align: left;">
             <div class="content-body" style="padding: 32px 28px; background: ${COLORS.white};">
               ${enhancedHTMLBody}
@@ -922,8 +968,8 @@ Provide complete, integrated analysis.`;
 
     // 13) Send email via Resend
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") ||
-        "newsletter@newsletters.letternest.ai";
+      const fromEmail =
+        Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
       const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`,
@@ -943,7 +989,8 @@ Provide complete, integrated analysis.`;
 
     // 14) Save the newsletter to newsletter_storage table
     try {
-      const { error: storageError } = await supabase.from("newsletter_storage")
+      const { error: storageError } = await supabase
+        .from("newsletter_storage")
         .insert({
           user_id: userId,
           markdown_text: finalAnalysisForMarkdown,
@@ -963,9 +1010,12 @@ Provide complete, integrated analysis.`;
     // 15) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({
-        remaining_newsletter_generations: newCount,
-      }).eq("id", userId);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          remaining_newsletter_generations: newCount,
+        })
+        .eq("id", userId);
       if (updateError) {
         console.error("Failed to update remaining generations:", updateError);
       } else {
@@ -986,8 +1036,7 @@ Provide complete, integrated analysis.`;
     });
     return {
       status: "success",
-      message:
-        "Twin Focus newsletter generated and process initiated for email.",
+      message: "Twin Focus newsletter generated and process initiated for email.",
       remainingGenerations:
         profile.remaining_newsletter_generations > 0
           ? profile.remaining_newsletter_generations - 1
@@ -1006,7 +1055,8 @@ Provide complete, integrated analysis.`;
     return {
       status: "error",
       message:
-        (error as Error).message || "Internal server error during Twin Focus generation",
+        (error as Error).message ||
+        "Internal server error during Twin Focus generation",
     };
   }
 }
@@ -1062,11 +1112,13 @@ serve(async (req: Request) => {
       // @ts-ignore
       EdgeRuntime.waitUntil(backgroundTask);
     } else {
-      backgroundTask.then((result) => {
-        logStep("Background task completed (local/fallback)", result);
-      }).catch((err) => {
-        console.error("Background task error (local/fallback):", err);
-      });
+      backgroundTask
+        .then((result) => {
+          logStep("Background task completed (local/fallback)", result);
+        })
+        .catch((err) => {
+          console.error("Background task error (local/fallback):", err);
+        });
     }
     return new Response(
       JSON.stringify({
