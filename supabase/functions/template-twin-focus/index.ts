@@ -9,24 +9,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Initialize Resend client
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const COLORS = {
+  primaryNavy: "#142a4b",
+  accentBlue: "#5774cd",
+  lightBg: "#f7f9fc",
+  white: "#ffffff",
+  darkText: "#293041",
+};
 
-// Helper function for logging
+const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details, null, 2)}` : "";
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
-// Main function for newsletter generation - runs in the background
 async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
   try {
-    // 2) Set up Supabase client
+    // 1) Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 3) Load profile
+    // 2) Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
@@ -38,7 +43,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Subscription & plan & tokens checks
+    // 3) Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
       throw new Error("You must have an active subscription to generate newsletters");
     }
@@ -53,7 +58,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id
+    // 4) Ensure numerical_id
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
       try {
@@ -87,7 +92,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
-    // 6) Fetch bookmarks
+    // 5) Fetch bookmarks
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -112,7 +117,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const tweetIds = bookmarksData.data.map((t: any) => t.id);
     logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 7) Fetch detailed tweets via Apify
+    // 6) Fetch detailed tweets via Apify
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -152,7 +157,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 8) Format tweets for OpenAI
+    // 7) Format tweets for OpenAI
     function parseToOpenAI(data: any) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -169,7 +174,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis
+    // 8) Call OpenAI for main analysis
     logStep("Calling OpenAI for Twin Focus analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
@@ -205,7 +210,7 @@ CRITICAL INSTRUCTIONS:
 - Include image URLs where available
 
 Tweet data to analyze:
-${formattedTweets}`;
+${formattedTweets};`;
 
     const analysisUserPrompt = `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
 
@@ -225,13 +230,13 @@ ${formattedTweets}`;
 Ensure balanced, comparative content that works well in a side-by-side layout. Dynamically name each column header meaningfully based on content.
 
 Tweet collection:
-${formattedTweets}`;
+${formattedTweets};`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: analysisSystemPrompt },
           { role: "user", content: analysisUserPrompt }
@@ -249,7 +254,7 @@ ${formattedTweets}`;
     let analysisResult = openaiJson.choices[0].message.content.trim();
     logStep("Successfully generated Twin Focus analysis");
 
-    // 10) Topic Selection and Query Generation for Perplexity
+    // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
     const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
 TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
@@ -261,13 +266,13 @@ ENRICHMENT GOAL: [Goal]
 ... (up to 3)
 ===
 TWIN FOCUS ANALYSIS:
-${analysisResult}`;
+${analysisResult};`;
 
     const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "You are a search query optimization specialist." },
           { role: "user", content: queryGenerationPrompt }
@@ -275,6 +280,7 @@ ${analysisResult}`;
         temperature: 0.3, max_tokens: 1000
       })
     });
+
     let webEnrichmentContent: { focusName: string; webSummary: string; sources: any[] }[] | null = null;
     if (!queryGenRes.ok) {
       const txt = await queryGenRes.text();
@@ -295,7 +301,7 @@ ${analysisResult}`;
         logStep("Missing Perplexity API key or no focus areas to enrich, continuing without web enrichment");
       } else {
         logStep("Making Perplexity API calls for web enrichment", { focusCount: focusesToEnrich.length });
-        const enrichmentResults = [];
+        const enrichmentResults: { focusName: string; webSummary: string; sources: any[] }[] = [];
         for (const focus of focusesToEnrich) {
           try {
             const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
@@ -330,12 +336,13 @@ ORIGINAL ANALYSIS:
 ${analysisResult}
 WEB-SOURCED INFO:
 ${JSON.stringify(webEnrichmentContent, null, 2)}
-Provide complete, integrated analysis.`;
+Provide complete, integrated analysis.;`;
+
       const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information." },
             { role: "user", content: integrationPrompt }
@@ -386,7 +393,7 @@ FORMATTING GUIDELINES:
 - Bold and italic formatting for emphasis
 - Do not invent content - only format
 
-OUTPUT: ONLY the formatted Markdown content.`;
+OUTPUT: ONLY the formatted Markdown content.;`;
 
       const markdownUserPrompt = `Format this Twin Focus analysis into the "Twin Focus" Markdown newsletter. Prioritize balanced layouts and include images.
 Date: ${
@@ -397,14 +404,14 @@ Date: ${
         })
       }
 TWIN FOCUS ANALYSIS CONTENT:
-${finalAnalysisForMarkdown}`;
+${finalAnalysisForMarkdown};`;
 
       try {
         const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
+            model: "gpt-4o-mini",
             messages: [
               { role: "system", content: markdownSystemPrompt },
               { role: "user", content: markdownUserPrompt }
@@ -469,112 +476,110 @@ ${finalAnalysisForMarkdown}`;
       if (text.trim().startsWith("<div") || text.trim().startsWith("<span")) {
         return text.trim() + "\n";
       }
-      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #293041; font-family: 'Lato',sans-serif;">${text}</p>\n`;
+      return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif;">${text}</p>\n`;
     };
 
     // List item renderer
     renderer.listitem = (text, task, checked) => {
       if (task) {
-        return `<li class="task-list-item" style="color:#0c4160;"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
+        return `<li class="task-list-item" style="color:${COLORS.primaryNavy};"><input type="checkbox" ${checked ? "checked" : ""} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: #0c4160; font-family: 'Lato',sans-serif;">${text}</li>\n`;
+      return `<li style="margin: 0 0 1em 0; font-size: 16px; line-height: 1.6; color: ${COLORS.primaryNavy}; font-family: 'Lato',sans-serif;">${text}</li>\n`;
     };
 
     // Blockquote renderer
     renderer.blockquote = (quote) => {
-      return `<blockquote style="background-color: #cfdce4; border-left: 5px solid #c7d7c0; margin: 16px 0; padding: 10px 16px; color: #293041; font-family: 'Lato',sans-serif; font-size:16px; line-height:1.6;">${quote}</blockquote>\n`;
+      return `<blockquote style="background-color: ${COLORS.lightBg}; border-left: 5px solid ${COLORS.accentBlue}; margin: 16px 0; padding: 10px 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif; font-size: 16px; line-height: 1.6;">${quote}</blockquote>\n`;
     };
 
     // Heading renderer
     renderer.heading = (text, level) => {
       const sizes: Record<number, string> = { 1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px" };
       const margins: Record<number, string> = { 1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0" };
-      let color = "#0c4160";
-      if (level >= 3) color = "#293041";
-
+      let color = COLORS.primaryNavy;
+      if (level >= 3) color = COLORS.darkText;
       const size = sizes[level] || "18px";
       const margin = margins[level] || "12px 0 8px 0";
-
-      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid #0c4160; padding-left: 8px;">${text}</h${level}>\n`;
+      return `<h${level} style="color:${color}; font-size:${size}; margin:${margin}; font-weight:700; line-height:1.3; font-family: 'Lato',sans-serif; border-left: 4px solid ${COLORS.primaryNavy}; padding-left: 8px;">${text}</h${level}>\n`;
     };
 
     // Image renderer
-    renderer.image = (href, _title, alt) => `
-      <div style="text-align:center; margin: 24px 0;">
+    renderer.image = (href, _title, alt) =>
+      `<div style="text-align:center; margin: 24px 0;">
         <img src="${href}"
              alt="${alt || "Newsletter image"}"
-             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid #293041;">
+             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:2px solid ${COLORS.darkText};">
       </div>`;
 
     // Table renderer – 2-column responsive
-    renderer.table = (header, body) => `
-      <table style="width:100%;border-collapse:collapse;margin:24px 0; border-radius:6px; overflow:hidden;">
+    renderer.table = (header, body) => 
+      `<table style="width:100%; border-collapse:collapse; margin:24px 0; border-radius:6px; overflow:hidden;">
         <thead>
           ${header.replace(
-      /<th>/g,
-      '<th style="background:#cfdce4;color:#0c4160;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #293041;">',
-    )}
+            /<th>/g,
+            `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`,
+          )}
         </thead>
         <tbody>
           ${body.replace(
-      /<td>/g,
-      '<td style="padding:10px 12px;font-size:15px;vertical-align:top;border-bottom:1px solid #293041;color:#293041;background: rgba(207,220,228,0.05); border-right:2px solid #c7d7c0;">',
-    )}
+            /<td>/g,
+            `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`,
+          )}
         </tbody>
       </table>`;
 
-    // Convert markdown to HTML
     const htmlBody = marked(finalMarkdown, { renderer });
 
-    // Generate email HTML with updated color scheme
-    const emailHtml = juice(`
-      <body style="background-color:#ffffff;margin:0;padding:0;font-family:'Lato',sans-serif;-webkit-text-size-adjust:100%; text-size-adjust:100%;">
+    // 16) Generate email HTML with updated color scheme
+    const emailHtml = juice(
+      `<body style="background-color:${COLORS.white}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
         <style>
-          @media print{
-            body,html{width:100%;margin:0;background:#ffffff !important;}
-            .wrapper{width:100% !important;max-width:none !important;}
-            table{width:100% !important;border-collapse:collapse;}
-            table td{padding:10px !important;font-size:14px !important;line-height:1.4 !important;}
-            h1,h2,h3{page-break-after:avoid;}
+          @media print {
+            body, html { width:100%; margin:0; background:${COLORS.white} !important; }
+            .wrapper { width:100% !important; max-width:none !important; }
+            table { width:100% !important; border-collapse:collapse; }
+            table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
+            h1, h2, h3 { page-break-after:avoid; }
           }
-          @media screen and (min-width:640px){
-            .content-body{padding:28px 32px !important;background:#ffffff !important;border-radius:8px !important;}
+          @media screen and (min-width:640px) {
+            .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
           }
-          @media screen and (max-width:600px){
-            body{background-color:#ffffff !important;}
-            .wrapper{max-width:100% !important;margin:0 !important;border-radius:0 !important;background-color:#ffffff !important;}
-            .content-body{padding:20px 16px !important;background:#ffffff !important;}
-            h1{font-size:32px !important;color:#0c4160 !important;}
-            h2{font-size:28px !important;color:#0c4160 !important;}
-            h3{font-size:24px !important;color:#293041 !important;}
-            blockquote{background-color:#ffffff !important;border-left:5px solid #c7d7c0 !important;color:#293041 !important;}
+          @media screen and (max-width:600px) {
+            body { background-color:${COLORS.white} !important; }
+            .wrapper { max-width:100% !important; margin:0 !important; border-radius:0 !important; background-color:${COLORS.white} !important; }
+            .content-body { padding:20px 16px !important; background:${COLORS.white} !important; }
+            h1 { font-size:32px !important; color:${COLORS.primaryNavy} !important; }
+            h2 { font-size:28px !important; color:${COLORS.primaryNavy} !important; }
+            h3 { font-size:24px !important; color:${COLORS.darkText} !important; }
+            blockquote { background-color:${COLORS.white} !important; border-left:5px solid ${COLORS.lightBg} !important; color:${COLORS.darkText} !important; }
           }
         </style>
 
-        <div class="wrapper" style="display:block;width:100%;max-width:700px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.1);text-align:left;">
-          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#293041;font-size:16px;font-family:'Lato',sans-serif;background:#ffffff;">
+        <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
+          <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
             ${htmlBody}
           </div>
         </div>
 
-        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#293041;font-family:'Lato',sans-serif;">
-          Powered by <strong style="color:#0c4160;">LetterNest</strong><br>
-          <span style="color:#293041;font-size:12px;">Professional Newsletter Generation</span>
+        <div style="text-align:center; padding:30px 0 40px 0; font-size:14px; color:${COLORS.darkText}; font-family:'Lato',sans-serif;">
+          Powered by <strong style="color:${COLORS.primaryNavy};">LetterNest</strong><br>
+          <span style="color:${COLORS.darkText}; font-size:12px;">Professional Newsletter Generation</span>
         </div>
-      </body>`);
+      </body>`
+    );
 
     logStep("Converted Twin Focus markdown to HTML with updated color scheme");
 
-    // 16) Send email via Resend
+    // 17) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
-      const emailSubject = `Twin Focus: Your Newsletter from LetterNest`;
+      const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`, 
-        to: profile.sending_email, 
-        subject: emailSubject, 
-        html: emailHtml, 
-        text: finalMarkdown 
+        from: `LetterNest <${fromEmail}>`,
+        to: profile.sending_email,
+        subject: emailSubject,
+        html: emailHtml,
+        text: finalMarkdown
       });
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
@@ -585,7 +590,7 @@ ${finalAnalysisForMarkdown}`;
       console.error("Error sending email:", sendErr);
     }
 
-    // 17) Save the newsletter to newsletter_storage table
+    // 18) Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
         user_id: userId,
@@ -600,7 +605,7 @@ ${finalAnalysisForMarkdown}`;
       console.error("Error saving Twin Focus newsletter to storage:", storageErr);
     }
 
-    // 18) Update remaining generations count
+    // 19) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({
@@ -613,7 +618,7 @@ ${finalAnalysisForMarkdown}`;
       }
     }
 
-    // 19) Final log & response
+    // Final log & response data
     const timestamp = new Date().toISOString();
     logStep("Twin Focus newsletter generation successful", {
       userId,
@@ -636,7 +641,6 @@ ${finalAnalysisForMarkdown}`;
   }
 }
 
-// Main serve function
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
