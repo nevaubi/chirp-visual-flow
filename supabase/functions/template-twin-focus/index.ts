@@ -451,28 +451,30 @@ You are a newsletter UI/UX specialist. Take the "Chain of Thought" markdown and 
 ======================
 1.  **Section Wrappers**  
     • Wrap every MAIN THEME in  
-      `<div class="theme-card"> … </div>`  
-      Cards must **alternate** bg color: odd = `#f7f9fc`, even = `#ffffff`.  
+      \`<div class="theme-card"> … </div>\`  
+      Cards must **alternate** bg color: odd = \`#f7f9fc\`, even = \`#ffffff\`.  
     • Wrap NOTEWORTHY SIDETRACKS list in  
-      `<div class="sidetrack-card"> … </div>` with bg `#f7f9fc`.
+      \`<div class="sidetrack-card"> … </div>\` with bg \`#f7f9fc\`.
 
 2.  **Hero Table** – keep exactly one; leave its inline styles intact.
 
 3.  **Dividers & Spacers**  
-    • Insert `<div class="section-divider"></div>` between major areas (Hero → Themes, Themes → Sidetracks, Sidetracks → Footer).  
-    • A divider is a 2 px full-width gradient `#d2ddec → #5774cd → #d2ddec` with 32 px top/bottom margin.
+    • Insert \`<div class="section-divider"></div>\` between major areas (Hero → Themes, Themes → Sidetracks, Sidetracks → Footer).  
+    • A divider is a 2 px full-width gradient \`#d2ddec → #5774cd → #d2ddec\` with 32 px top/bottom margin.
 
 4.  **Card Styling**  
-    Inside theme & sidetrack cards add `padding: 24px 28px; border-radius: 12px; box-shadow: 0 3px 12px rgba(20,42,75,.04);`.
+    Inside theme & sidetrack cards add  
+    \`padding: 24px 28px; border-radius: 12px; box-shadow: 0 3px 12px rgba(20,42,75,.04);\`.
 
 5.  **Bullets & Tables**  
-    • Bullets: `<li>` text stays dark; bullet itself accent blue.  
-    • If the markdown contains \`| col | col |\` style tables, leave them—they’ll inherit card padding.
+    • Bullets: \`<li>\` text stays dark; bullet itself accent blue.  
+    • If the markdown contains tables like \`| col | col |\`, leave them—they inherit card padding.
 
-6.  **Email-Client Safety** – All CSS must be INLINE or in the `<style>` tag already present.
+6.  **Email-Client Safety** – All CSS must be INLINE or in the \`<style>\` tag already present.
 
 OUTPUT only the fully-formatted markdown/HTML blend.
 `;
+
 
       
       const enhancedUserPrompt = `
