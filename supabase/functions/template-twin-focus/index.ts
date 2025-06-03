@@ -457,6 +457,7 @@ ENHANCEMENT RULES:
     *   "The Gist" / Major Blockquotes: Wrap in \`<div style="background-color: #d2ddec; padding: 20px 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #142a4b; font-style: italic; color: #142a4b;">\`.
 
 3.  **Enhanced Special Structures:**
+    *   **Two-column hero table** appears exactly once. Keep its inline styles and leave content untouched.
     *   **KEY TAKEAWAY BOX**: Transform "> **KEY TAKEAWAY:**" into:
         \`<div style="background-color: #ffffff; padding: 18px 22px; border-radius: 8px; margin: 25px 0; border: 2px solid #a1c181; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"><strong style="color: #142a4b;">KEY TAKEAWAY:</strong> <span style="color: #333333;">[rest of text]</span></div>\`
     *   **THEME SNAPSHOT**: Transform "_THEME SNAPSHOT: \"[text]\"_" into:
