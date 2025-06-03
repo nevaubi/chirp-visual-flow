@@ -256,11 +256,7 @@ const Library = () => {
           'a', 'img', 'code', 'pre',
           'table', 'thead', 'tbody', 'tr', 'th', 'td'
         ],
-        ALLOWED_ATTR: {
-          'a': ['href', 'title'],
-          'img': ['src', 'alt', 'title', 'width', 'height'],
-          '*': ['class']
-        },
+        ALLOWED_ATTR: ['href', 'title', 'src', 'alt', 'width', 'height', 'class'],
         ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
       });
       
