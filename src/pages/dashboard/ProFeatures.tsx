@@ -112,8 +112,48 @@ const ProFeatures = () => {
       } finally {
         setLoadingTemplate(null);
       }
+    } else if (templateId === 3) {
+      // Creative Colorful template - NEW ADDITION
+      setLoadingTemplate(templateName);
+      
+      try {
+        const selectedCount = 20;
+        console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
+
+        const { data, error } = await supabase.functions.invoke('third-template', {
+          body: { selectedCount },
+        });
+
+        if (error) {
+          console.error(`Error generating ${templateName} newsletter:`, error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: error.message || 'Please try again later',
+          });
+          return;
+        }
+
+        if (data.error) {
+          console.error(`Function returned error:`, data.error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: data.error,
+          });
+          return;
+        }
+
+        toast.success(`${templateName} Newsletter Generated!`, {
+          description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
+        });
+
+      } catch (error) {
+        console.error(`Error in handleUseTemplate for ${templateName}:`, error);
+        toast.error(`Failed to generate ${templateName} newsletter`, {
+          description: 'An unexpected error occurred. Please try again later.',
+        });
+      } finally {
+        setLoadingTemplate(null);
+      }
     } else {
-      // Creative Colorful or other templates - coming soon
+      // Future templates - coming soon
       toast.error("Coming Soon", {
         description: `The ${templateName} template is not yet available.`,
       });
@@ -152,6 +192,13 @@ const ProFeatures = () => {
       name: "Creative Colorful",
       description: "Vibrant design perfect for creative and lifestyle newsletters",
       features: ["Bold colors", "Creative layouts", "Image-focused"],
+      layoutFeatures: [
+        "Vibrant color schemes",
+        "Dynamic visual elements", 
+        "Creative typography",
+        "Image-rich sections",
+        "Engaging visual hierarchy"
+      ],
       preview: "bg-gradient-to-br from-purple-50 to-pink-50"
     }
   ];
@@ -341,6 +388,88 @@ const ProFeatures = () => {
     </div>
   );
 
+  // Enhanced Creative Colorful Card Component
+  const CreativeColorfulCard = ({ template }: { template: typeof templates[0] }) => (
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
+      {/* Decorative Header with Colorful Design */}
+      <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-orange-100 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
+        <div className="w-[30%] h-1.5 bg-purple-400 mb-1 rounded-full"></div>
+        <div className="w-[25%] h-1.5 bg-pink-400 mb-1 rounded-full"></div>
+        <div className="w-[35%] h-1.5 bg-orange-400 rounded-full"></div>
+      </div>
+
+      {/* Title and Description */}
+      <div className="px-5">
+        <h2 className="text-xl font-semibold text-gray-800 mb-1">{template.name}</h2>
+        <p className="text-gray-500 text-sm mb-5">{template.description}</p>
+      </div>
+
+      {/* Enhanced Preview with Colorful Layout */}
+      <div className="mx-5 mb-6 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-[10px] flex-1 flex flex-col justify-between">
+        <div>
+          <div className="h-2 bg-purple-300 rounded mb-2.5 w-[80%]"></div>
+          <div className="h-2 bg-pink-300 rounded mb-2.5 w-[60%]"></div>
+          <div className="h-2 bg-orange-300 rounded mb-2.5 w-full"></div>
+        </div>
+        <div className="bg-white/70 p-3 rounded-lg">
+          <div className="h-2 bg-purple-400 rounded mb-2.5 w-[60%]"></div>
+          <div className="h-2 bg-pink-400 rounded mb-2.5 w-[80%]"></div>
+        </div>
+        <div>
+          <div className="h-2 bg-orange-300 rounded mb-2.5 w-[80%]"></div>
+          <div className="h-2 bg-purple-300 rounded w-[60%]"></div>
+        </div>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="flex flex-col lg:flex-row mx-5 mb-5">
+        <div className="flex-1">
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
+          <ul className="list-none p-0 m-0">
+            {template.features.map((feature, index) => (
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex-1 lg:pl-4 lg:border-l border-gray-200 mt-3 lg:mt-0 lg:pt-0 pt-3 border-t lg:border-t-0">
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Layout Description:</h3>
+          <ul className="list-none p-0 m-0">
+            {template.layoutFeatures?.map((feature, index) => (
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-pink-500 rounded-full"></div>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Button and Text */}
+      <div className="mt-auto">
+        <Button 
+          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full text-sm font-medium"
+          onClick={() => handleUseTemplate(template.id, template.name)}
+          disabled={loadingTemplate === template.name}
+        >
+          {loadingTemplate === template.name ? (
+            <>
+              <span className="mr-2">Generating...</span>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </>
+          ) : (
+            'Generate Pro Newsletter'
+          )}
+        </Button>
+        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
+          (Defaults to 20 Bookmarks w/enriched context)
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full max-h-[calc(100vh-2rem)] overflow-hidden">
       {/* Header */}
@@ -365,6 +494,8 @@ const ProFeatures = () => {
             <ModernCleanCard key={template.id} template={template} />
           ) : template.id === 2 ? (
             <TwinFocusCard key={template.id} template={template} />
+          ) : template.id === 3 ? (
+            <CreativeColorfulCard key={template.id} template={template} />
           ) : (
             <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
               <CardHeader className="pb-4">
