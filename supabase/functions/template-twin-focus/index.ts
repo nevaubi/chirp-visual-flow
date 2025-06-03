@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -29,7 +28,7 @@ const extractAndParseJSON = (content: string): any => {
   const codeBlockPatterns = [
     /```(?:json)?\s*([\s\S]*?)\s*```/,
     /```\s*([\s\S]*?)\s*```/,
-    /`([\s\S]*?)`/
+    /`([\s\S]*?)`/,
   ];
 
   for (const pattern of codeBlockPatterns) {
@@ -50,51 +49,60 @@ const extractAndParseJSON = (content: string): any => {
   if (braceMatch) {
     try {
       let jsonStr = braceMatch[0];
-      
+
       // Clean up common issues
       jsonStr = jsonStr
         // Fix unescaped quotes in strings
-        .replace(/(['"])(.*?)\1/g, (match, quote, inner) => {
+        .replace(/(['"])(.*?)\1/g, (_match, _quote, inner) => {
           const escaped = inner.replace(/"/g, '\\"').replace(/'/g, "\\'");
           return `"${escaped}"`;
         })
         // Fix trailing commas
-        .replace(/,(\s*[}\]])/g, '$1')
+        .replace(/,(\s*[}\]])/g, "$1")
         // Fix missing quotes around keys
         .replace(/(\w+)(\s*:)/g, '"$1"$2');
-      
+
       return JSON.parse(jsonStr);
     } catch {
       // Continue to next strategy
     }
   }
 
-  // Strategy 4: Try to construct valid JSON from content
+  // Strategy 4: Construct fallback structure if possible
   try {
-    // Look for key patterns and try to build a basic structure
     const hookMatch = content.match(/hook['":\s]*['"]([^'"]*)['"]/i);
     const titleMatches = content.match(/title['":\s]*['"]([^'"]*)['"]/gi);
-    
+
     if (hookMatch || titleMatches) {
       const fallbackStructure = {
         hook: hookMatch ? hookMatch[1] : "Newsletter Update",
-        mainSections: titleMatches ? titleMatches.slice(0, 3).map((match, i) => ({
-          title: match.match(/['"]([^'"]*)['"]/)?.[1] || `Section ${i + 1}`,
-          image: null,
-          dualPerspective: {
-            columnA: { header: "Analysis", points: ["Key insight 1", "Key insight 2"] },
-            columnB: { header: "Context", points: ["Supporting detail 1", "Supporting detail 2"] }
-          },
-          synthesis: "This section provides comprehensive analysis of the trending topics."
-        })) : [],
+        mainSections: titleMatches
+          ? titleMatches.slice(0, 3).map((match, i) => ({
+              title:
+                match.match(/['"]([^'"]*)['"]/)?.[1] || `Section ${i + 1}`,
+              image: null,
+              dualPerspective: {
+                columnA: {
+                  header: "Analysis",
+                  points: ["Key insight 1", "Key insight 2"],
+                },
+                columnB: {
+                  header: "Context",
+                  points: ["Supporting detail 1", "Supporting detail 2"],
+                },
+              },
+              synthesis:
+                "This section provides comprehensive analysis of the trending topics.",
+            }))
+          : [],
         quickInsights: [
           {
             title: "Key Takeaway",
             summary: "Important insights from the analyzed content.",
             quote: null,
-            image: null
-          }
-        ]
+            image: null,
+          },
+        ],
       };
       return fallbackStructure;
     }
@@ -108,30 +116,30 @@ const extractAndParseJSON = (content: string): any => {
 // Helper function to convert text to proper HTML formatting with visual breaks
 const formatTextForHTML = (text: string): string => {
   if (!text) return '';
-  
+
   // Split long text into paragraphs for better readability
   const sentences = text.split(/[.!?]+/);
   let formattedText = '';
   let currentParagraph = '';
-  
+
   sentences.forEach((sentence, index) => {
     sentence = sentence.trim();
     if (sentence.length === 0) return;
-    
+
     currentParagraph += sentence + '. ';
-    
+
     // Create paragraph breaks every 2-3 sentences or at natural breaks
     if ((index + 1) % 3 === 0 || sentence.includes('**') || currentParagraph.length > 300) {
-      formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
+      formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
       currentParagraph = '';
     }
   });
-  
+
   // Add any remaining text
   if (currentParagraph.trim()) {
-    formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
+    formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
   }
-  
+
   return formattedText
     // Convert markdown bold to HTML
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #01caa6;">$1</strong>')
@@ -143,11 +151,11 @@ const formatTextForHTML = (text: string): string => {
 const createVisualSections = (synthesis: string): string => {
   const sections = synthesis.split(/\*\*(.*?)\*\*/);
   let result = '';
-  
+
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i].trim();
     if (!section) continue;
-    
+
     if (i % 2 === 1) {
       // This is a header (was between **)
       result += `
@@ -159,346 +167,236 @@ const createVisualSections = (synthesis: string): string => {
       result += formatTextForHTML(section);
     }
   }
-  
+
   return result || formatTextForHTML(synthesis);
 };
 
-// Clean HTML template with placeholders for dynamic content
+// Updated HTML template with improved layout, additional images in upper/mid sections, and no images at the bottom
 const getNewsletterHTML = (data: any) => {
   const { hook, mainSections, quickInsights, date } = data;
-  
+
   return `<!DOCTYPE html>
-<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
+<html lang="en">
 <head>
-	<title>Newsletter from LetterNest</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!--[if mso]>
-	<xml><w:WordDocument xmlns:w="urn:schemas-microsoft-com:office:word"><w:DontUseAdvancedTypographyReadingMail/></w:WordDocument>
-	<o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml>
-	<![endif]-->
-	<!--[if !mso]><!-->
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@700&display=swap" rel="stylesheet" type="text/css">
-	<!--<![endif]-->
-	<style>
-		* { box-sizing: border-box; }
-		body { margin: 0; padding: 0; }
-		a[x-apple-data-detectors] { color: inherit !important; text-decoration: inherit !important; }
-		#MessageViewBody a { color: inherit; text-decoration: none; }
-		p { line-height: inherit }
-		.desktop_hide, .desktop_hide table { mso-hide: all; display: none; max-height: 0px; overflow: hidden; }
-		.image_block img+div { display: none; }
-		sup, sub { font-size: 75%; line-height: 0; }
-		
-		@media (max-width:620px) {
-			.desktop_hide table.icons-inner { display: inline-block !important; }
-			.icons-inner { text-align: center; }
-			.icons-inner td { margin: 0 auto; }
-			.mobile_hide { display: none; }
-			.row-content { width: 100% !important; }
-			.stack .column { width: 100%; display: block; }
-			.mobile_hide { min-height: 0; max-height: 0; max-width: 0; overflow: hidden; font-size: 0px; }
-			.desktop_hide, .desktop_hide table { display: table !important; max-height: none !important; }
-		}
-	</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--[if mso]>
+    <xml>
+      <w:WordDocument>
+        <w:DontUseAdvancedTypographyReadingMail/>
+      </w:WordDocument>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+        <o:AllowPNG/>
+      </o:OfficeDocumentSettings>
+    </xml>
+  <![endif]-->
+  <!-- Web Fonts for non-Outlook clients -->
+  <!--[if !mso]><!-->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" type="text/css">
+  <!--<![endif]-->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f6f6f6;
+    }
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: inherit !important;
+    }
+    #MessageViewBody a {
+      color: inherit;
+      text-decoration: none;
+    }
+    p {
+      margin: 0;
+      line-height: 1.6;
+      font-family: 'Inter', sans-serif;
+      color: #333333;
+      font-size: 16px;
+    }
+    h1, h2, h3, h4 {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      color: #1f254a;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .button {
+      display: inline-block;
+      background-color: #01caa6;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .section-divider {
+      height: 4px;
+      background-color: #e0e0e0;
+      margin: 24px 0;
+    }
+    @media (max-width: 620px) {
+      .stack .column {
+        display: block !important;
+        width: 100% !important;
+      }
+      .hide-mobile {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 
-<body class="body" style="background-color: #f6f6f6; margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
-	<table class="nl-container" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #f6f6f6;">
-		<tbody>
-			<tr>
-				<td>
-					<!-- Header Spacer -->
-					<table class="row row-1" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #201f42; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;">
-													<div class="spacer_block block-1" style="height:6px;line-height:6px;font-size:1px;">&#8202;</div>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+<body style="background-color: #f6f6f6; margin: 0; padding: 0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f6f6f6; width: 100%;">
+    <tr>
+      <td align="center">
+        <!-- Outer wrapper (centered, max-width: 600px) -->
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff;">
+          
+          <!-- 1) TOP HEADER BAR (Solid Color) -->
+          <tr>
+            <td style="background-color: #1f254a; padding: 16px 24px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; line-height: 1.2;">Newsletter Update</h1>
+              <p style="color: #d1d1d1; font-size: 14px; margin-top: 4px;">${date}</p>
+            </td>
+          </tr>
 
-					<!-- Main Hook Section -->
-					<table class="row row-3" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #f8fbf7; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 24px; padding-left: 24px; padding-right: 24px; padding-top: 24px; vertical-align: top;">
-													<table class="heading_block block-1" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad">
-																<h1 style="margin: 0; color: #01caa6; direction: ltr; font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 34px;">
-																	<span style="word-break: break-word;">Newsletter Update</span>
-																	<br><span style="word-break: break-word; color: #515151; font-size: 16px;">${date}</span>
-																</h1>
-															</td>
-														</tr>
-													</table>
-													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:15px;padding-left:10px;padding-right:10px;padding-top:10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.8;text-align:left;mso-line-height-alt:29px;">
-																	<p style="margin: 0;">${hook}</p>
-																</div>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+          <!-- 2) HOOK SECTION (Light Teal Background) -->
+          <tr>
+            <td style="background-color: #e8f5f3; padding: 24px;">
+              <h2 style="color: #1f254a; margin-bottom: 12px;">${hook}</h2>
+            </td>
+          </tr>
+          
+          <!-- 3) SECTION DIVIDER -->
+          <tr>
+            <td>
+              <div class="section-divider"></div>
+            </td>
+          </tr>
 
-					${mainSections.map((section: any, index: number) => `
-					<!-- Main Section ${index + 1} -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 24px; padding-right: 24px; padding-top: 32px; vertical-align: top;">
-													${section.image ? `
-													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="width:100%;">
-																<div class="alignment" align="center">
-																	<div style="max-width: 552px;"><img src="${section.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 300px; object-fit: cover;" width="552" alt="${section.title}" height="auto"></div>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad">
-																<h2 style="margin: 0; color: #201f42; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28px;">
-																	<span style="word-break: break-word;">${section.title}</span>
-																</h2>
-															</td>
-														</tr>
-													</table>
-													
-													<!-- Dual Perspective Table -->
-													${section.dualPerspective ? `
-													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad">
-																<table width="100%" border="1" cellpadding="12" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px; margin: 16px 0;">
-																	<tr style="background-color: #f8fbf7;">
-																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
-																			${section.dualPerspective.columnA.header}
-																		</th>
-																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
-																			${section.dualPerspective.columnB.header}
-																		</th>
-																	</tr>
-																	<tr>
-																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
-																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-																				${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
-																			</ul>
-																		</td>
-																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
-																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-																				${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
-																			</ul>
-																		</td>
-																	</tr>
-																</table>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-													
-													<table class="paragraph_block block-4" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding: 20px 10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
-																	${createVisualSections(section.synthesis)}
-																</div>
-															</td>
-														</tr>
-													</table>
-													
-													<!-- Section Divider -->
-													<table class="divider_block" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding: 10px;">
-																<div style="background-color: #e8f5f3; height: 2px; width: 100%; margin: 20px 0;"></div>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					`).join('')}
+          <!-- 4) MAIN SECTIONS (Color-coded Backgrounds, Images in Upper/Mid) -->
+          ${mainSections.map((section: any, index: number) => {
+            const bgColor = index % 2 === 0 ? '#ffffff' : '#f0f8fa';
+            return `
+            <tr>
+              <td style="background-color: ${bgColor}; padding: 24px;">
+                <!-- Title + Optional Image (if provided) -->
+                <h2 style="color: #1f254a; margin-bottom: 12px;">${section.title}</h2>
+                ${section.image ? `
+                  <div style="text-align: center; margin: 16px 0;">
+                    <img src="${section.image}" alt="${section.title}" width="552" style="width: 100%; max-width: 552px; height: auto; border-radius: 4px; object-fit: cover;">
+                  </div>
+                ` : ''}
+                
+                <!-- Dual-Perspective Table (two columns) -->
+                ${section.dualPerspective ? `
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 4px; overflow: hidden;">
+                    <tr style="background-color: #f8fbf7;">
+                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a; border-right: 1px solid #01caa6;">${section.dualPerspective.columnA.header}</th>
+                      <th style="width: 50%; padding: 12px; text-align: left; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #1f254a;">${section.dualPerspective.columnB.header}</th>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px; font-family: 'Inter', sans-serif; font-size: 15px; color: #333333; vertical-align: top; border-right: 1px solid #01caa6;">
+                        <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+                          ${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`).join('')}
+                        </ul>
+                      </td>
+                      <td style="padding: 12px; font-family: 'Inter', sans-serif; font-size: 15px; color: #333333; vertical-align: top;">
+                        <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+                          ${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 8px; line-height: 1.5;">${point}</li>`).join('')}
+                        </ul>
+                      </td>
+                    </tr>
+                  </table>
+                ` : ''}
 
-					<!-- Quick Insights Section -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 20px; padding-right: 20px; padding-top: 32px; vertical-align: top;">
-													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-left:10px;padding-right:10px;padding-top:10px;text-align:center;width:100%;">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 400; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 26px;">
-																	<span style="word-break: break-word;">QUICK INSIGHTS</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 35px;">
-																	<span style="word-break: break-word;">Key Takeaways & Additional Context</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+                <!-- Synthesis (broken into sub-sections if “**Header**” markers exist) -->
+                <div style="margin-top: 16px; font-family: 'Inter', sans-serif; color: #333333; font-size: 16px; line-height: 1.7;">
+                  ${createVisualSections(section.synthesis)}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="section-divider"></div>
+              </td>
+            </tr>
+            `;
+          }).join('')}
 
-					${quickInsights.map((insight: any, index: number) => `
-					<!-- Quick Insight ${index + 1} -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 16px; padding-left: 20px; padding-right: 20px; padding-top: 16px; vertical-align: top;">
-													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-left:10px;padding-right:10px;text-align:left;width:100%;">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 22px;">
-																	<span style="word-break: break-word;">${insight.title}</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:15px;padding-left:10px;padding-right:10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
-																	${formatTextForHTML(insight.summary)}
-																</div>
-															</td>
-														</tr>
-													</table>
-													${insight.quote ? `
-													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
-																<div style="color:#ffffff;direction:ltr;font-family:'Inter', sans-serif;font-size:14px;font-weight:400;letter-spacing:0px;line-height:1.6;text-align:left;mso-line-height-alt:22px; font-style: italic; border-left: 3px solid #ffffff; padding-left: 15px;">
-																	<p style="margin: 0;">"${insight.quote}"</p>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-												</td>
-												<td class="column column-2" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;">
-													${insight.image ? `
-													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-bottom:20px;padding-top:15px;width:100%;">
-																<div class="alignment" align="center">
-																	<div style="max-width: 280px;"><img src="${insight.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" width="280" alt="${insight.title}" height="auto"></div>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					`).join('')}
+          <!-- 5) QUICK INSIGHTS SECTION (Solid Teal Background & Cards) -->
+          <tr>
+            <td style="background-color: #01caa6; padding: 24px;">
+              <h3 style="color: #ffffff; text-align: center; margin-bottom: 16px;">QUICK INSIGHTS</h3>
+              ${quickInsights.map((insight: any) => `
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
+                  <tr>
+                    <td style="padding: 16px;">
+                      <h3 style="color: #1f254a; margin-bottom: 8px;">${insight.title}</h3>
+                      <!-- Summary -->
+                      <div style="font-family: 'Inter', sans-serif; color: #333333; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                        ${formatTextForHTML(insight.summary)}
+                      </div>
+                      <!-- Optional Quote -->
+                      ${insight.quote ? `
+                        <blockquote style="margin: 0; padding-left: 12px; border-left: 3px solid #01caa6; font-style: italic; color: #555555; font-size: 14px;">"${insight.quote}"</blockquote>
+                      ` : ''}
+                    </td>
+                    ${insight.image ? `
+                    <td style="width: 50%; text-align: center; padding: 16px;">
+                      <img src="${insight.image}" alt="${insight.title}" width="200" style="width: 100%; max-width: 200px; height: auto; border-radius: 4px; object-fit: cover;">
+                    </td>
+                    ` : `
+                    <td style="width: 50%;"></td>
+                    `}
+                  </tr>
+                </table>
+              `).join('')}
+            </td>
+          </tr>
 
-					<!-- Spacer -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-left: 20px; padding-right: 20px; vertical-align: top;">
-													<div class="spacer_block block-1" style="height:32px;line-height:32px;font-size:1px;">&#8202;</div>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+          <!-- 6) CALL-TO-ACTION BAR (Centered Button) -->
+          <tr>
+            <td style="padding: 24px; text-align: center; background-color: #f0f8fa;">
+              <a href="https://your-dashboard.link" class="button">Visit Your Dashboard</a>
+            </td>
+          </tr>
 
-					<!-- Footer -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 20px; padding-top: 15px; vertical-align: top;">
-													<table class="paragraph_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:10px;padding-left:20px;padding-right:20px;padding-top:10px;">
-																<div style="color:#666666;direction:ltr;font-family:'Inter', sans-serif;font-size:12px;font-weight:400;letter-spacing:0px;line-height:1.5;text-align:center;mso-line-height-alt:18px;">
-																	<p style="margin: 0;">Powered by <strong style="color: #01caa6;">LetterNest</strong><br>
-																	Professional Newsletter Generation</p>
-																</div>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-	</table>
+          <!-- 7) FOOTER (No Images, Minimal Text) -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 16px 24px; text-align: center;">
+              <p style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888888;">
+                Powered by <strong style="color: #01caa6;">LetterNest</strong><br>
+                You are receiving this email because you subscribed to our newsletter.<br>
+                <a href="#" style="color: #01caa6; text-decoration: none; font-weight: 600;">Unsubscribe</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 };
@@ -697,7 +595,7 @@ async function generateNewsletter(
         : [];
       let out = "";
       arr.forEach((t, i) => {
-        const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+        const txt = (t.text || "").replace(/https?:\\/\\/\\S+/g, "").trim();
         let dateStr = "N/A";
         try {
           dateStr = new Date(t.createdAt).toISOString().split("T")[0];
@@ -707,14 +605,14 @@ async function generateNewsletter(
           (m: any) => m.type === "photo",
         )?.media_url_https;
         out +=
-          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
+          `Tweet ${i + 1}\\nID: ${t.id}\\nText: ${txt}\\nReplies: ${
             t.replyCount || 0
-          }\nLikes: ${t.likeCount || 0}\nImpressions: ${
+          }\\nLikes: ${t.likeCount || 0}\\nImpressions: ${
             t.viewCount || 0
-          }\nDate: ${dateStr}\nAuthor: ${
+          }\\nDate: ${dateStr}\\nAuthor: ${
             t.author?.name || "Unknown"
-          }\nPhotoUrl: ${photo || "N/A"}\n`;
-        if (i < arr.length - 1) out += "\n---\n\n";
+          }\\nPhotoUrl: ${photo || "N/A"}\\n`;
+        if (i < arr.length - 1) out += "\\n---\\n\\n";
       });
       return out;
     }
@@ -788,7 +686,7 @@ ${formattedTweets}`;
     while (retryCount < maxRetries) {
       try {
         logStep(`OpenAI API call attempt ${retryCount + 1}`);
-        
+
         const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -805,30 +703,30 @@ ${formattedTweets}`;
             max_tokens: 12000,
           }),
         });
-        
+
         if (!openaiRes.ok) {
           const txt = await openaiRes.text();
           console.error(`OpenAI API error (${openaiRes.status}):`, txt);
           throw new Error(`OpenAI API error: ${openaiRes.status}`);
         }
-        
+
         const openaiJson = await openaiRes.json();
         const rawContent = openaiJson.choices[0].message.content.trim();
-        
-        logStep("Raw OpenAI response received", { 
+
+        logStep("Raw OpenAI response received", {
           length: rawContent.length,
-          preview: rawContent.substring(0, 200) + "..."
+          preview: rawContent.substring(0, 200) + "...",
         });
-        
+
         // Use enhanced JSON extraction
         analysisResult = extractAndParseJSON(rawContent);
         logStep("Successfully parsed OpenAI JSON response");
         break;
-        
+
       } catch (parseError) {
         retryCount++;
         console.error(`JSON parsing attempt ${retryCount} failed:`, parseError);
-        
+
         if (retryCount >= maxRetries) {
           logStep("All JSON parsing attempts failed, using fallback structure");
           // Provide a basic fallback structure
@@ -841,30 +739,32 @@ ${formattedTweets}`;
                 dualPerspective: {
                   columnA: {
                     header: "Main Points",
-                    points: ["Important trends identified", "Key developments noted", "Emerging patterns observed"]
+                    points: ["Important trends identified", "Key developments noted", "Emerging patterns observed"],
                   },
                   columnB: {
                     header: "Context",
-                    points: ["Market implications", "Industry impact", "Future considerations"]
-                  }
+                    points: ["Market implications", "Industry impact", "Future considerations"],
+                  },
                 },
-                synthesis: "This newsletter compilation highlights the most significant themes from your recent bookmark activity. The content reflects current market trends and important developments that warrant attention. These insights provide valuable context for understanding the broader landscape of topics you're following."
-              }
+                synthesis:
+                  "This newsletter compilation highlights the most significant themes from your recent bookmark activity. The content reflects current market trends and important developments that warrant attention. These insights provide valuable context for understanding the broader landscape of topics you're following.",
+              },
             ],
             quickInsights: [
               {
                 title: "Notable Trend",
-                summary: "A significant pattern has emerged from your bookmark collection, indicating important shifts in the topics you're tracking. This development suggests continued evolution in the areas of your interest.",
+                summary:
+                  "A significant pattern has emerged from your bookmark collection, indicating important shifts in the topics you're tracking. This development suggests continued evolution in the areas of your interest.",
                 quote: null,
-                image: null
-              }
-            ]
+                image: null,
+              },
+            ],
           };
           break;
         }
-        
+
         // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
       }
     }
 
@@ -872,14 +772,14 @@ ${formattedTweets}`;
 
     // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
-    const focusesToEnrich = analysisResult.mainSections.slice(0, 3); // Take first 3 main sections
-    
+    const focusesToEnrich = analysisResult.mainSections.slice(0, 3);
+
     const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
     if (PERPLEXITY_API_KEY && focusesToEnrich.length > 0) {
       logStep("Making Perplexity API calls for web enrichment", {
         focusCount: focusesToEnrich.length,
       });
-      
+
       for (const focus of focusesToEnrich) {
         try {
           const searchQuery = `${focus.title} latest news trends analysis`;
@@ -902,7 +802,7 @@ ${formattedTweets}`;
           if (perplexityRes.ok) {
             const data = await perplexityRes.json();
             const webContent = data.choices[0].message.content;
-            
+
             // Enhance synthesis with web content (full length, no truncation)
             focus.synthesis += `\n\n**Broader Context Online:** ${webContent}`;
             logStep(`Successfully enriched focus: ${focus.title}`);
@@ -919,27 +819,29 @@ ${formattedTweets}`;
       month: "long",
       day: "numeric",
     });
-    
+
     const emailHtml = getNewsletterHTML({
       hook: analysisResult.hook,
       mainSections: analysisResult.mainSections,
       quickInsights: analysisResult.quickInsights,
-      date: currentDate
+      date: currentDate,
     });
 
     logStep("Generated HTML newsletter with new template");
 
     // 11) Send email via Resend
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") ||
-        "newsletter@newsletters.letternest.ai";
+      const fromEmail =
+        Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
       const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`,
         to: profile.sending_email,
         subject: emailSubject,
         html: emailHtml,
-        text: `${analysisResult.hook}\n\n${analysisResult.mainSections.map((s: any) => `${s.title}\n${s.synthesis}`).join('\n\n')}`,
+        text: `${analysisResult.hook}\n\n${analysisResult.mainSections
+          .map((s: any) => `${s.title}\n${s.synthesis}`)
+          .join("\n\n")}`,
       });
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
@@ -952,9 +854,12 @@ ${formattedTweets}`;
 
     // 12) Save the newsletter to newsletter_storage table
     try {
-      const markdownContent = `# Newsletter Update - ${currentDate}\n\n${analysisResult.hook}\n\n${analysisResult.mainSections.map((s: any) => `## ${s.title}\n\n${s.synthesis}`).join('\n\n')}`;
-      
-      const { error: storageError } = await supabase.from("newsletter_storage")
+      const markdownContent = `# Newsletter Update - ${currentDate}\n\n${analysisResult.hook}\n\n${analysisResult.mainSections
+        .map((s: any) => `## ${s.title}\n\n${s.synthesis}`)
+        .join("\n\n")}`;
+
+      const { error: storageError } = await supabase
+        .from("newsletter_storage")
         .insert({
           user_id: userId,
           markdown_text: markdownContent,
@@ -974,9 +879,12 @@ ${formattedTweets}`;
     // 13) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({
-        remaining_newsletter_generations: newCount,
-      }).eq("id", userId);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          remaining_newsletter_generations: newCount,
+        })
+        .eq("id", userId);
       if (updateError) {
         console.error("Failed to update remaining generations:", updateError);
       } else {
@@ -997,8 +905,7 @@ ${formattedTweets}`;
     });
     return {
       status: "success",
-      message:
-        "Twin Focus newsletter generated and sent successfully.",
+      message: "Twin Focus newsletter generated and sent successfully.",
       remainingGenerations:
         profile.remaining_newsletter_generations > 0
           ? profile.remaining_newsletter_generations - 1
@@ -1016,89 +923,92 @@ ${formattedTweets}`;
     return {
       status: "error",
       message:
-        (error as Error).message || "Internal server error during Twin Focus generation",
+        (error as Error).message ||
+        "Internal server error during Twin Focus generation",
     };
   }
 }
 
-serve(
-  async (req: Request) => {
-    if (req.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
-    try {
-      logStep("Starting Twin Focus newsletter generation process (HTTP)");
-      const { selectedCount } = await req.json();
-      if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-        return new Response(
-          JSON.stringify({
-            error: "Invalid selection. Please choose 10, 20, or 30 tweets.",
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader) {
-        return new Response(
-          JSON.stringify({ error: "No authorization header" }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      const jwt = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        jwt,
-      );
-      if (userError || !user) {
-        console.error("Authentication error:", userError);
-        return new Response(
-          JSON.stringify({ error: "Authentication failed" }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
-      const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-      // @ts-ignore EdgeRuntime provided in Deno Deploy / Vercel Edge functions
-      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
-        // @ts-ignore
-        EdgeRuntime.waitUntil(backgroundTask);
-      } else {
-        backgroundTask.then((result) => {
-          logStep("Background task completed (local/fallback)", result);
-        }).catch((err) => {
-          console.error("Background task error (local/fallback):", err);
-        });
-      }
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+  try {
+    logStep("Starting Twin Focus newsletter generation process (HTTP)");
+    const { selectedCount } = await req.json();
+    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
       return new Response(
         JSON.stringify({
-          status: "processing",
-          message:
-            "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
+          error: "Invalid selection. Please choose 10, 20, or 30 tweets.",
         }),
         {
-          status: 202,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    } catch (error) {
-      console.error("Error in Twin Focus newsletter generation function:", error);
-      return new Response(
-        JSON.stringify({ error: "Internal server error" }),
-        {
-          status: 500,
+          status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );
     }
-  },
-);
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "No authorization header" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const jwt = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(jwt);
+    if (userError || !user) {
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Authentication failed" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
+    // @ts-ignore EdgeRuntime provided in Deno Deploy / Vercel Edge functions
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(backgroundTask);
+    } else {
+      backgroundTask
+        .then((result) => {
+          logStep("Background task completed (local/fallback)", result);
+        })
+        .catch((err) => {
+          console.error("Background task error (local/fallback):", err);
+        });
+    }
+    return new Response(
+      JSON.stringify({
+        status: "processing",
+        message:
+          "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
+      }),
+      {
+        status: 202,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  } catch (error) {
+    console.error("Error in Twin Focus newsletter generation function:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  }
+});
