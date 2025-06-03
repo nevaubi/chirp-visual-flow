@@ -678,193 +678,61 @@ ${finalAnalysisForMarkdown};`;
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
-    // 16) Generate email HTML with fixed mobile white background
-const emailHtml = juice(`
+    // 16) Generate email HTML with updated color scheme and reliable white background
+    const emailHtml = juice(`
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-    <!--[if mso]>
-    <noscript>
-      <xml>
-        <o:OfficeDocumentSettings>
-          <o:PixelsPerInch>96</o:PixelsPerInch>
-        </o:OfficeDocumentSettings>
-      </xml>
-    </noscript>
-    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <style>
-      /* Reset styles */
-      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-      img { -ms-interpolation-mode: bicubic; }
-      
-      /* Remove default styling */
-      img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-      table { border-collapse: collapse !important; }
-      body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-      
-      /* Mobile-first approach - default to white */
-      html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 100% !important;
-        width: 100% !important;
-        background-color: ${COLORS.white} !important;
-      }
-      
-      /* Hide mobile-specific elements on desktop */
-      .mobile-only { display: none !important; }
-      
-      /* Default styles */
-      .email-container {
-        width: 100%;
-        margin: 0 auto;
-        background-color: ${COLORS.white};
-      }
-      
-      .email-content {
-        background-color: ${COLORS.white};
-        padding: 20px 16px;
-      }
-      
-      /* Desktop styles */
-      @media only screen and (min-width: 640px) {
-        /* Show desktop background on larger screens */
-        html, body {
-          background-color: ${COLORS.lightBg} !important;
-        }
-        
-        .email-container {
-          max-width: 700px;
-          background-color: ${COLORS.white};
-          border-radius: 12px;
-          box-shadow: 0 6px 24px rgba(0,0,0,0.1);
-        }
-        
-        .email-content {
-          padding: 28px 32px !important;
-          background-color: ${COLORS.white};
-          border-radius: 8px;
-        }
-        
-        .wrapper-cell {
-          padding: 20px 0;
-          background-color: ${COLORS.lightBg};
-        }
-        
-        .mobile-only { display: none !important; }
-        .desktop-only { display: table-cell !important; }
-      }
-      
-      /* Force white background on small screens */
-      @media only screen and (max-width: 639px) {
-        html, body, table, td, div {
-          background-color: ${COLORS.white} !important;
-        }
-        
-        .wrapper-cell {
-          padding: 0 !important;
-          background-color: ${COLORS.white} !important;
-        }
-        
-        .email-container {
-          width: 100% !important;
-          max-width: 100% !important;
-          background-color: ${COLORS.white} !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-        }
-        
-        .email-content {
-          padding: 20px 16px !important;
-          background-color: ${COLORS.white} !important;
-        }
-        
-        .mobile-only { display: block !important; }
-        .desktop-only { display: none !important; }
-        
-        /* Typography adjustments for mobile */
-        h1 { font-size: 32px !important; }
-        h2 { font-size: 28px !important; }
-        h3 { font-size: 24px !important; }
-      }
-      
-      /* Print styles */
+      /* Default styles: Desktop uses lightBg for body */
+      html, body { background:${COLORS.lightBg} !important; margin:0; padding:0; }
+      .email-body-container-td { padding: 20px 0; background-color: ${COLORS.lightBg}; } /* Default padding and bg for desktop */
+
       @media print {
-        html, body {
-          background-color: ${COLORS.white} !important;
-          width: 100%;
-          margin: 0;
-        }
-        .email-container {
-          width: 100% !important;
-          max-width: none !important;
-        }
+        body, html { width:100%; margin:0; background:${COLORS.white} !important; }
+        .wrapper { width:100% !important; max-width:none !important; }
+        table { width:100% !important; border-collapse:collapse; }
+        table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
+        h1, h2, h3 { page-break-after:avoid; }
+      }
+      @media screen and (min-width:640px){ /* Desktop specific overrides for content body (if any beyond .wrapper) */
+        .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
+      }
+      @media screen and (max-width:600px){ /* Mobile styles */
+        html, body { background:${COLORS.white} !important; } /* Force entire page white on mobile */
+        .email-body-container-td { padding: 0 !important; background-color: ${COLORS.white} !important; } /* Remove padding and make td white on mobile */
+        .wrapper{ width:100% !important; max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
+        .content-body{ padding:20px 16px !important; background:${COLORS.white} !important; }
+        h1{ font-size:32px !important; color:${COLORS.primaryNavy} !important; }
+        h2{ font-size:28px !important; color:${COLORS.primaryNavy} !important; }
+        h3{ font-size:24px !important; color:${COLORS.darkText} !important; }
+        blockquote{ background:${COLORS.white} !important; border-left:5px solid ${COLORS.lightBg} !important; color:${COLORS.darkText} !important; }
       }
     </style>
-    <!--[if mso]>
-    <style type="text/css">
-      table { border-collapse: collapse; border-spacing: 0; margin: 0; }
-      div, td { padding: 0; }
-      div { margin: 0 !important; }
-    </style>
-    <![endif]-->
   </head>
-  <body style="margin: 0; padding: 0; word-spacing: normal; background-color: ${COLORS.white};">
-    <div role="article" aria-roledescription="email" lang="en" style="text-size-adjust: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
-      
-      <!-- Hidden preheader text -->
-      <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-        Twin Focus: Your Newsletter from LetterNest
-      </div>
-      
-      <!-- Main wrapper table -->
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
-        <tr>
-          <td align="center" class="wrapper-cell" style="padding: 0; background-color: ${COLORS.white};">
-            
-            <!-- Ghost table for Outlook -->
-            <!--[if mso]>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="700" style="margin: 0 auto;">
-            <tr>
-            <td>
-            <![endif]-->
-            
-            <!-- Email container -->
-            <div class="email-container" style="margin: 0 auto; width: 100%; max-width: 700px; background-color: ${COLORS.white};">
-              
-              <!-- Email content -->
-              <div class="email-content" style="padding: 20px 16px; line-height: 1.7; color: ${COLORS.darkText}; font-size: 16px; font-family: 'Lato', Arial, sans-serif; background-color: ${COLORS.white};">
-                ${htmlBody}
-              </div>
-              
+  <body bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.lightBg}" style="background-color:${COLORS.lightBg};">
+      <tr>
+        <td align="center" class="email-body-container-td"> 
+          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
+            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
+              ${htmlBody}
             </div>
-            
-            <!--[if mso]>
-            </td>
-            </tr>
-            </table>
-            <![endif]-->
-            
-            <!-- Footer -->
-            <div style="text-align: center; padding: 30px 20px 40px 20px; font-size: 14px; color: ${COLORS.darkText}; font-family: 'Lato', Arial, sans-serif; background-color: transparent;">
-              Powered by <strong style="color: ${COLORS.primaryNavy};">LetterNest</strong><br>
-              <span style="color: ${COLORS.darkText}; font-size: 12px;">Professional Newsletter Generation</span>
-            </div>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </div>
+          </div>
+
+          <div style="text-align:center; padding:30px 0 40px 0; font-size:14px; color:${COLORS.darkText}; font-family:'Lato',sans-serif;">
+            Powered by <strong style="color:${COLORS.primaryNavy};">LetterNest</strong><br/>
+            <span style="color:${COLORS.darkText}; font-size:12px;">Professional Newsletter Generation</span>
+          </div>
+
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
 `);
 
-logStep("Converted Twin Focus markdown to HTML with fixed mobile white background");
+    logStep("Converted Twin Focus markdown to HTML with updated color scheme");
 
     // ... (Steps 17-19 and the serve function remain unchanged from your provided code) ...
     // 17) Send email via Resend
