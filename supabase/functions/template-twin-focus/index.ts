@@ -501,47 +501,33 @@ ${finalAnalysisForMarkdown}`;
              style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:1px solid #dfe6e9;">
       </div>`;
 
-    // ---------------------------------------------------------
-// Table renderer – 2-column responsive + gradient frame
-// ---------------------------------------------------------
-renderer.table = (header, body) => `
-  <div class="table-wrapper">
-    <table role="presentation">
-      <thead>
-        ${header.replace(
-          /<th>/g,
-          '<th style="background:var(--brand-teal);color:#ffffff;padding:14px;font-size:16px;text-align:left;">'
-        )}
-      </thead>
-      <tbody>
-        ${body.replace(
-          /<td>/g,
-          '<td style="padding:14px;font-size:16px;vertical-align:top;border-top:1px solid #eaf4f2;">'
-        )}
-      </tbody>
-    </table>
-  </div>`;
+    // Table renderer – 2-column responsive
+    renderer.table = (header, body) => `
+      <table style="width:100%;border-collapse:collapse;margin:24px 0; border-radius:6px; overflow:hidden;">
+        <thead>
+          ${header.replace(
+      /<th>/g,
+      '<th style="background:#eaf2f8;color:#2c3e50;padding:10px;font-size:15px;text-align:left;border-bottom:2px solid #bdc3c7;">',
+    )}
+        </thead>
+        <tbody>
+          ${body.replace(
+      /<td>/g,
+      '<td style="padding:10px 12px;font-size:15px;vertical-align:top;border-bottom:1px solid #dfe6e9;">',
+    )}
+        </tbody>
+      </table>`;
 
-// ---------------------------------------------------------
-// Horizontal rule → visual divider
-// ---------------------------------------------------------
-renderer.hr = () => '<div class="section-divider"></div>';
+    // Convert markdown to HTML
+    const htmlBody = marked(finalMarkdown, { renderer });
 
-// ---------------------------------------------------------
-// Convert markdown to HTML
-// ---------------------------------------------------------
-const htmlBody = marked(finalMarkdown, { renderer });
-
-// ---------------------------------------------------------
-// Generate email HTML
-// ---------------------------------------------------------
-const emailHtml = juice(`
+    // Generate email HTML
+    const emailHtml = juice(`
   <head>
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
   </head>
   <body bgcolor="#f2f6fa" style="background:#f2f6fa;margin:0;padding:0;">
-
 
 
         <style>
