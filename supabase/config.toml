@@ -227,3 +227,12 @@ verify_jwt = false
 
 [functions.id-to-twitter-handle]
 verify_jwt = false
+
+[functions.ticker-drop-subscribe]
+verify_jwt = false
+
+[functions.chain-of-thought-subscribe]
+verify_jwt = false
+
+[functions.satoshi-summary-subscribe]
+verify_jwt = false
