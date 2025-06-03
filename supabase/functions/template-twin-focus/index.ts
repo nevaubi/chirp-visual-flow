@@ -595,13 +595,13 @@ RESPONSE FORMAT (JSON):
           "points": ["point 1", "point 2", "point 3"]
         }
       },
-      "synthesis": "150-250 word synthesis connecting both perspectives"
+      "synthesis": "300-500 word comprehensive synthesis connecting both perspectives"
     }
   ],
   "quickInsights": [
     {
       "title": "Insight title",
-      "summary": "2-3 sentence summary",
+      "summary": "100-150 word detailed summary",
       "quote": "notable quote or null",
       "image": "image_url_or_null"
     }
@@ -615,7 +615,9 @@ REQUIREMENTS:
 - NO direct tweet quotes, IDs, or authors
 - Conversational, accessible tone (10th grade reading level)
 - Focus on balanced, comparative analysis
-- Generate meaningful column headers based on content`;
+- Generate meaningful column headers based on content
+- Synthesis sections should be comprehensive (300-500 words each)
+- Quick insight summaries should be detailed (100-150 words each)`;
 
     const analysisUserPrompt =
       `Analyze the following tweet collection and generate a structured JSON response for the newsletter:
@@ -635,7 +637,7 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt },
         ],
         temperature: 0.5,
-        max_tokens: 8000,
+        max_tokens: 12000,
       }),
     });
     if (!openaiRes.ok) {
@@ -687,7 +689,7 @@ ${formattedTweets}`;
                 model: "sonar-pro",
                 messages: [{ role: "user", content: searchQuery }],
                 temperature: 0.2,
-                max_tokens: 400,
+                max_tokens: 1000,
               }),
             },
           );
@@ -695,8 +697,8 @@ ${formattedTweets}`;
             const data = await perplexityRes.json();
             const webContent = data.choices[0].message.content;
             
-            // Enhance synthesis with web content
-            focus.synthesis += `\n\n**Broader Context Online:** ${webContent.substring(0, 500)}...`;
+            // Enhance synthesis with web content (full length, no truncation)
+            focus.synthesis += `\n\n**Broader Context Online:** ${webContent}`;
             logStep(`Successfully enriched focus: ${focus.title}`);
           }
         } catch (err) {
