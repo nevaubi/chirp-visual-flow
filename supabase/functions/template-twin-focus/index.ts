@@ -435,49 +435,45 @@ ${finalAnalysisForMarkdown}`;
     try {
       logStep("Generating enhanced UI/UX markdown with professional color scheme");
       const enhancedSystemPrompt = `
-You are a newsletter UI/UX specialist. Your goal is to take "Chain of Thought" markdown (which may include specific structures like "KEY TAKEAWAY BOX:" or "THEME SNAPSHOT:") and output a **visually enhanced** markdown document using inline HTML/CSS with a sophisticated professional color palette.
+You are a newsletter UI/UX specialist. Take the "Chain of Thought" markdown and output a **visually-enhanced** markdown/HTML hybrid using inline CSS.  
 
-PROFESSIONAL COLOR PALETTE & STYLING:
-- **Primary Navy (Main Headings & Key Text):** #142a4b (Use for H1, H2, primary text emphasis)
-- **Accent Blue (Secondary Headings):** #5774cd (Use for H3, link color, subtle accents)
-- **Success Green (Highlights & Actions):** #a1c181 (Use for "THEME SNAPSHOT" text color, key callout borders)
-- **Prioritize visually appealing structures and ease of cognitive ability for users when reading the newsletter
-- **Callout backgrounds in visually appealing color schemes
-- **Table headers shaded lightly for readability.  
-- **Body Text:** #333333 (Standard readable text)
-- **Font:** "Lato, Tahoma, Verdana, Segoe, sans-serif" (Professional, clean typeface)
+======================
+◆ DESIGN LANGUAGE
+======================
+• **Primary Navy #142a4b** (headings)  
+• **Accent Blue #5774cd** (links, bullets)  
+• **Card BG Light #f7f9fc** (alternate theme sections)  
+• **Card BG White #ffffff** (every other section)  
+• **Body text #333** | Font "Lato, Tahoma, Verdana, Segoe, sans-serif"
 
-ENHANCEMENT RULES:
-1.  **Headings with Professional Hierarchy:**
-    *   H1: \`<h1 style="color: #142a4b; margin-bottom: 8px; font-weight: 700; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">Chain of Thought</h1>\`
-    *   H2: Wrap content in \`<span style="color: #142a4b; font-weight: 600; font-size: 24px;">\`.
-    *   H3: Wrap content in \`<span style="color: #5774cd; font-weight: 500; font-size: 20px;">\`.
+======================
+◆ ENHANCEMENT RULES
+======================
+1.  **Section Wrappers**  
+    • Wrap every MAIN THEME in  
+      `<div class="theme-card"> … </div>`  
+      Cards must **alternate** bg color: odd = `#f7f9fc`, even = `#ffffff`.  
+    • Wrap NOTEWORTHY SIDETRACKS list in  
+      `<div class="sidetrack-card"> … </div>` with bg `#f7f9fc`.
 
-2.  **Professional Layout & Spacing:**
-    *   Paragraphs: Add \`style="margin-bottom: 1.3em; line-height: 1.8; color: #333333; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"\` for optimal readability.
-    *   "The Gist" / Major Blockquotes: Wrap in \`<div style="background-color: #d2ddec; padding: 20px 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #142a4b; font-style: italic; color: #142a4b;">\`.
+2.  **Hero Table** – keep exactly one; leave its inline styles intact.
 
-3.  **Enhanced Special Structures:**
-    *   **Two-column hero table** appears exactly once. Keep its inline styles and leave content untouched.
-    *   **KEY TAKEAWAY BOX**: Transform "> **KEY TAKEAWAY:**" into:
-        \`<div style="background-color: #ffffff; padding: 18px 22px; border-radius: 8px; margin: 25px 0; border: 2px solid #a1c181; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"><strong style="color: #142a4b;">KEY TAKEAWAY:</strong> <span style="color: #333333;">[rest of text]</span></div>\`
-    *   **THEME SNAPSHOT**: Transform "_THEME SNAPSHOT: \"[text]\"_" into:
-        \`<div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;"><span style="color: #a1c181; font-weight: 500; font-size: 18px; border-bottom: 2px dotted #a1c181; padding-bottom: 3px;">THEME SNAPSHOT</span><p style="margin: 15px 0 0 0; font-style: italic; color: #142a4b; font-size: 16px;">"[text]"</p></div>\`
+3.  **Dividers & Spacers**  
+    • Insert `<div class="section-divider"></div>` between major areas (Hero → Themes, Themes → Sidetracks, Sidetracks → Footer).  
+    • A divider is a 2 px full-width gradient `#d2ddec → #5774cd → #d2ddec` with 32 px top/bottom margin.
 
-4.  **Professional List Styling:**
-    *   Bulleted lists (\`<ul>\`) items: \`<li style="color: #5774cd; margin-bottom: 10px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">[list item text]</span></li>\` (Accent bullet color, readable content)
-    *   Numbered lists: Similar professional styling with structured hierarchy.
-    *   Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
+4.  **Card Styling**  
+    Inside theme & sidetrack cards add `padding: 24px 28px; border-radius: 12px; box-shadow: 0 3px 12px rgba(20,42,75,.04);`.
 
-5.  **Section Dividers & Spacing:**
-    *   Replace markdown '---' or add strategic dividers with:
-        \`<div style="height: 2px; background: linear-gradient(to right, #d2ddec, #5774cd, #d2ddec); margin: 40px 0; border-radius: 1px;"></div>\`
-    *   Add breathing room between major sections.
+5.  **Bullets & Tables**  
+    • Bullets: `<li>` text stays dark; bullet itself accent blue.  
+    • If the markdown contains \`| col | col |\` style tables, leave them—they’ll inherit card padding.
 
-6.  **Email-Client Compatibility:** Ensure all styling uses inline CSS compatible with major email clients. Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.
+6.  **Email-Client Safety** – All CSS must be INLINE or in the `<style>` tag already present.
 
-Transform the markdown below into a visually enhanced, appealing, and professionally styled newsletter.
+OUTPUT only the fully-formatted markdown/HTML blend.
 `;
+
       
       const enhancedUserPrompt = `
 Transform the "Chain of Thought" markdown below into a **professionally enhanced** version using the sophisticated color palette and styling rules. Pay special attention to:
@@ -608,181 +604,84 @@ ${markdownNewsletter}
     const htmlBody = marked(finalMarkdown, { renderer });
 
     // Generate the final email HTML with professional design system
-    const emailHtml = juice(`
-      <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-        <!-- Professional print CSS for PDF generation -->
-        <style>
-          @media print {
-            body, html { 
-              width: 100%; 
-              height: auto; 
-              background-color: #ffffff !important; 
-            }
-            
-            h1, h2, h3 { 
-              page-break-after: avoid; 
-              margin-top: 1.2em;
-            }
-            
-            .image-container { 
-              page-break-inside: avoid; 
-            }
-            
-            p, ul, ol, dl, blockquote { 
-              page-break-inside: auto; 
-            }
-            
-            .section-break {
-              page-break-after: always;
-            }
-            
-            .content-container {
-              page-break-inside: auto !important;
-            }
-          }
-          
-          /* Mobile-first responsive design for full-width mobile experience */
-          @media screen and (max-width: 600px) {
-            body {
-              background-color: #ffffff !important;
-            }
-            
-            .content-wrapper {
-              padding: 0 !important;
-              background-color: #ffffff !important;
-            }
-            
-            .content-container {
-              max-width: 100% !important;
-              width: 100% !important;
-              margin: 0 !important;
-              border-radius: 0 !important;
-              box-shadow: none !important;
-              border: none !important;
-            }
-            
-            .content-body {
-              padding: 16px 10px !important;
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-            }
-            
-            /* Mobile-optimized headings */
-            h1 {
-              font-size: 28px !important;
-              margin: 0 0 16px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            h2 {
-              font-size: 22px !important;
-              margin: 24px 0 12px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            h3 {
-              font-size: 18px !important;
-              margin: 20px 0 10px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            /* Mobile-optimized paragraphs and text */
-            p {
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-              margin: 0 0 16px 0 !important;
-            }
-            
-            /* Mobile-optimized lists */
-            li {
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-              margin-bottom: 12px !important;
-            }
-            
-            /* Mobile-optimized special content blocks */
-            .image-container {
-              margin: 16px 0 20px 0 !important;
-              padding: 0 !important;
-            }
-            
-            .image-container img {
-              border-radius: 6px !important;
-              box-shadow: 0 2px 8px rgba(20,42,75,0.08) !important;
-              max-width: 100% !important;
-            }
-            
-            /* Mobile-optimized callout boxes with reduced padding */
-            div[style*="background-color: #d2ddec"] {
-              padding: 12px 10px !important;
-              margin: 16px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
-              padding: 10px 10px !important;
-              margin: 14px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            div[style*="background-color: #f8f9fa"] {
-              padding: 12px 10px !important;
-              margin: 16px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            /* Mobile footer optimization */
-            .footer {
-              padding: 20px 10px 24px 10px !important;
-              font-size: 14px !important;
-              background-color: #ffffff !important;
-            }
-          }
-          
-                    /* Enhanced typography and spacing for all devices */
-          .content-body h1, .content-body h2, .content-body h3 {
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          .content-body p, .content-body li {
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          /* Tablet optimization (601px to 900px) */
-          @media screen and (min-width: 601px) and (max-width: 900px) {
-            .content-container {
-              max-width: 95% !important;
-              margin: 0 auto !important;
-            }
-            
-            .content-body {
-              padding: 35px 30px !important;
-            }
-          }
+const emailHtml = juice(`
+  <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+    <!-- Professional print CSS for PDF generation -->
+    <style>
+      @media print {
+        body, html { width:100%; height:auto; background:#ffffff !important; }
+        h1, h2, h3  { page-break-after:avoid; margin-top:1.2em; }
+        .image-container { page-break-inside:avoid; }
+        p, ul, ol, dl, blockquote { page-break-inside:auto; }
+        .section-break { page-break-after:always; }
+        .content-container { page-break-inside:auto !important; }
+      }
 
-          /*–––––––– Two-column hero table – desktop & mobile ––––––––*/
-          .two-col-table ul {
-            margin: 12px 0 0 18px;
-            padding: 0;
-          }
-          .two-col-table li {
-            color: #5774cd;
-            margin-bottom: 8px;
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          @media screen and (max-width: 600px) {
-            .two-col-table,
-            .two-col-table tr,
-            .two-col-table td {
-              display: block !important;
-              width: 100% !important;
-            }
-            .two-col-table td {
-              padding: 0 !important;
-            }
-          }
+      /* Mobile-first full-width optimisation */
+      @media screen and (max-width:600px){
+        body              { background:#ffffff !important; }
+        .content-wrapper  { padding:0 !important; background:#ffffff !important; }
+        .content-container{ max-width:100% !important; width:100% !important; margin:0 !important;
+                            border-radius:0 !important; box-shadow:none !important; border:none !important; }
+        .content-body     { padding:16px 10px !important; font-size:16px !important; line-height:1.6 !important; }
+        h1                { font-size:28px !important; margin:0 0 16px 0 !important; line-height:1.3 !important; }
+        h2                { font-size:22px !important; margin:24px 0 12px 0 !important; line-height:1.4 !important; }
+        h3                { font-size:18px !important; margin:20px 0 10px 0 !important; line-height:1.4 !important; }
+        p                 { font-size:16px !important; line-height:1.6 !important; margin:0 0 16px 0 !important; }
+        li                { font-size:16px !important; line-height:1.6 !important; margin-bottom:12px !important; }
+        .image-container  { margin:16px 0 20px 0 !important; padding:0 !important; }
+        .image-container img { border-radius:6px !important; box-shadow:0 2px 8px rgba(20,42,75,.08) !important; max-width:100% !important; }
+        div[style*="background-color: #d2ddec"],
+        div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"],
+        div[style*="background-color: #f8f9fa"] { padding:12px 10px !important; margin:16px 0 !important; border-radius:4px !important; }
+        .footer           { padding:20px 10px 24px 10px !important; font-size:14px !important; background:#ffffff !important; }
+      }
 
-        </style>
+      /* Enhanced typography and spacing for all devices */
+      .content-body h1, .content-body h2, .content-body h3 { font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
+      .content-body p,  .content-body li                  { font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
+
+      /* Tablet optimisation (601-900px) */
+      @media screen and (min-width:601px) and (max-width:900px){
+        .content-container{ max-width:95% !important; margin:0 auto !important; }
+        .content-body     { padding:35px 30px !important; }
+      }
+
+      /*–––––––– Two-column hero table – desktop & mobile ––––––––*/
+      .two-col-table ul { margin:12px 0 0 18px; padding:0; }
+      .two-col-table li { color:#5774cd; margin-bottom:8px; font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
+      @media screen and (max-width:600px){
+        .two-col-table, .two-col-table tr, .two-col-table td{ display:block !important; width:100% !important; }
+        .two-col-table td{ padding:0 !important; }
+      }
+
+      /* === Card-based layout for MAIN THEMES & SIDETRACKS === */
+      .theme-card,
+      .sidetrack-card {
+        padding:24px 28px;
+        border-radius:12px;
+        box-shadow:0 3px 12px rgba(20,42,75,.04);
+        margin-bottom:42px;
+      }
+      .theme-card:nth-of-type(odd)  { background:#f7f9fc; }
+      .theme-card:nth-of-type(even) { background:#ffffff; }
+      .sidetrack-card               { background:#f7f9fc; }
+
+      /* === Gradient section divider === */
+      .section-divider{
+        height:2px;
+        background:linear-gradient(to right,#d2ddec,#5774cd,#d2ddec);
+        margin:32px 0;
+      }
+
+      /* Better hero-table alignment & bullets everywhere */
+      .two-col-table td { vertical-align:top; }
+      .two-col-table ul { margin:18px 0 0 20px; }
+      .two-col-table li,
+      .theme-card li,
+      .sidetrack-card li { color:#5774cd; }
+    </style>
+
 
 
         <!-- Professional newsletter container -->
