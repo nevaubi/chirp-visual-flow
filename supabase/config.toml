@@ -236,3 +236,6 @@ verify_jwt = false
 
 [functions.satoshi-summary-subscribe]
 verify_jwt = false
+
+[functions.template-twin-focus]
+verify_jwt = true
