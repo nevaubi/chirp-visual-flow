@@ -15,11 +15,21 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
+// --- Fixes from Instructions: Start ---
+
+// Step 1.2: Insert the new helper (sanitizePlain)
+// Remove hashtags (#Word) and lone asterisks (*word*)
+const sanitizePlain = (txt: string) =>
+  txt
+    .replace(/(^|\s)#(\w+)/g, '$1$2')      // drops the # symbol
+    .replace(/\*{1}(.*?)\*{1}/g, '$1');    // converts *bold?* -> bold?
+
 // Helper function to convert text to proper HTML formatting with visual breaks
-const formatTextForHTML = (text: string): string => {
+const formatTextForHTML = (raw: string): string => {
+  // Step 1.3: Call sanitizePlain
+  const text = sanitizePlain(raw || '');
   if (!text) return '';
   
-  // Split long text into paragraphs for better readability
   const sentences = text.split(/[.!?]+/);
   let formattedText = '';
   let currentParagraph = '';
@@ -30,22 +40,18 @@ const formatTextForHTML = (text: string): string => {
     
     currentParagraph += sentence + '. ';
     
-    // Create paragraph breaks every 2-3 sentences or at natural breaks
     if ((index + 1) % 3 === 0 || sentence.includes('**') || currentParagraph.length > 300) {
       formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
       currentParagraph = '';
     }
   });
   
-  // Add any remaining text
   if (currentParagraph.trim()) {
     formattedText += `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #201f42; font-family: 'Inter', sans-serif;">${currentParagraph.trim()}</p>`;
   }
   
   return formattedText
-    // Convert markdown bold to HTML
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #01caa6;">$1</strong>')
-    // Fix any double periods
     .replace(/\.\./g, '.');
 };
 
@@ -55,27 +61,199 @@ const createVisualSections = (synthesis: string): string => {
   let result = '';
   
   for (let i = 0; i < sections.length; i++) {
-    const section = sections[i].trim();
-    if (!section) continue;
+    const sectionText = sections[i].trim(); // Renamed to avoid conflict
+    if (!sectionText) continue;
     
     if (i % 2 === 1) {
-      // This is a header (was between **)
-      result += `
-        <div style="background-color: #f8fbf7; padding: 16px; margin: 16px 0; border-left: 4px solid #01caa6; border-radius: 4px;">
-          <h4 style="margin: 0 0 12px 0; color: #01caa6; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;">${section}</h4>
+      result += 
+        `<div style="background-color: #f8fbf7; padding: 16px; margin: 16px 0; border-left: 4px solid #01caa6; border-radius: 4px;">
+          <h4 style="margin: 0 0 12px 0; color: #01caa6; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;">${sectionText}</h4>
         </div>`;
     } else {
-      // Regular text content
-      result += formatTextForHTML(section);
+      result += formatTextForHTML(sectionText);
     }
   }
   
   return result || formatTextForHTML(synthesis);
 };
 
+// Step 2.4: Create two tiny renderer helpers
+function renderMainSection(section: any, idx: number): string {
+  return `
+  <!-- Main Section ${idx + 1} -->
+  <table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+    <tbody>
+      <tr>
+        <td>
+          <table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
+            <tbody>
+              <tr>
+                <td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 24px; padding-right: 24px; padding-top: 32px; vertical-align: top;">
+                  ${section.image ? `
+                  <table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <tr>
+                      <td class="pad" style="width:100%;">
+                        <div class="alignment" align="center">
+                          <div style="max-width: 552px;"><img src="${section.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 300px; object-fit: cover;" width="552" alt="${section.title || 'Main Section Image'}" height="auto"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ''}
+                  <table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <tr>
+                      <td class="pad">
+                        {/* Step 3.2: Headline color changed */}
+                        <h2 style="margin: 0; color: #142a4b; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28px;">
+                          <span style="word-break: break-word;">${section.title}</span>
+                        </h2>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  ${section.dualPerspective ? `
+                  <table class="paragraph_block block-3" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+                    <tr>
+                      <td class="pad">
+                        <table width="100%" border="1" cellpadding="12" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px; margin: 16px 0;">
+                          <tr style="background-color: #f8fbf7;">
+                            <th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+                              ${section.dualPerspective.columnA.header}
+                            </th>
+                            <th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
+                              ${section.dualPerspective.columnB.header}
+                            </th>
+                          </tr>
+                          <tr>
+                            <td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
+                              <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+                                ${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
+                              </ul>
+                            </td>
+                            <td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
+                              <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
+                                ${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
+                              </ul>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ''}
+                  
+                  <table class="paragraph_block block-4" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+                    <tr>
+                      {/* Step 3.1: Paragraph padding changed */}
+                      <td class="pad" style="padding: 14px 10px;">
+                        <div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
+                          ${createVisualSections(section.synthesis)}
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <table class="divider_block" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <tr>
+                      <td class="pad" style="padding: 10px;">
+                        <div style="background-color: #e8f5f3; height: 2px; width: 100%; margin: 20px 0;"></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
+function renderQuickInsight(insight: any, idx: number): string {
+  return `
+  <!-- Quick Insight ${idx + 1} -->
+  <table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+    <tbody>
+      <tr>
+        <td>
+          <table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
+            <tbody>
+              <tr>
+                <td class="column column-1" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 16px; padding-left: 20px; padding-right: 20px; padding-top: 16px; vertical-align: top;">
+                  <table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <tr>
+                      <td class="pad" style="padding-left:10px;padding-right:10px;text-align:left;width:100%;">
+                        {/* Headline color for Quick Insight title remains #ffffff as it's on a green background */}
+                        <h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 22px;">
+                          <span style="word-break: break-word;">${insight.title}</span>
+                        </h3>
+                      </td>
+                    </tr>
+                  </table>
+                  <table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+                    <tr>
+                      {/* Step 3.1: Paragraph padding changed */}
+                      <td class="pad" style="padding: 14px 10px;">
+                        <div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
+                          ${formatTextForHTML(insight.summary)}
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                  ${insight.quote ? `
+                  <table class="paragraph_block block-3" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
+                    <tr>
+                      <td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                        <div style="color:#ffffff;direction:ltr;font-family:'Inter', sans-serif;font-size:14px;font-weight:400;letter-spacing:0px;line-height:1.6;text-align:left;mso-line-height-alt:22px; font-style: italic; border-left: 3px solid #ffffff; padding-left: 15px;">
+                          <p style="margin: 0;">"${insight.quote}"</p>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ''}
+                </td>
+                <td class="column column-2" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;">
+                  ${insight.image ? `
+                  <table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <tr>
+                      <td class="pad" style="padding-bottom:20px;padding-top:15px;width:100%;">
+                        <div class="alignment" align="center">
+                          <div style="max-width: 280px;"><img src="${insight.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" width="280" alt="${insight.title || 'Quick Insight Image'}" height="auto"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ''}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
 // Clean HTML template with placeholders for dynamic content
 const getNewsletterHTML = (data: any) => {
   const { hook, mainSections, quickInsights, date } = data;
+  
+  // Step 2.3: NEW interleaved-table builder
+  const rows: {type:'main'|'quick', payload:any}[] = [];
+  mainSections.forEach((m: any, i: number) => {
+    rows.push({ type:'main', payload: m });
+    if (quickInsights[i]) {
+      rows.push({ type:'quick', payload: quickInsights[i] });
+    }
+  });
+
+  // Step 5: Edge-case handling (if more Quick Insights than Main Sections)
+  if (quickInsights.length > mainSections.length) {
+    rows.push(
+      ...quickInsights.slice(mainSections.length).map((q: any) => ({type:'quick', payload:q}))
+    );
+  }
   
   return `<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
@@ -127,7 +305,7 @@ const getNewsletterHTML = (data: any) => {
 										<tbody>
 											<tr>
 												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;">
-													<div class="spacer_block block-1" style="height:6px;line-height:6px;font-size:1px;">&#8202;</div>
+													<div class="spacer_block block-1" style="height:6px;line-height:6px;font-size:1px;"> </div>
 												</td>
 											</tr>
 										</tbody>
@@ -174,196 +352,16 @@ const getNewsletterHTML = (data: any) => {
 						</tbody>
 					</table>
 
-					${mainSections.map((section: any, index: number) => `
-					<!-- Main Section ${index + 1} -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 24px; padding-right: 24px; padding-top: 32px; vertical-align: top;">
-													${section.image ? `
-													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="width:100%;">
-																<div class="alignment" align="center">
-																	<div style="max-width: 552px;"><img src="${section.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 300px; object-fit: cover;" width="552" alt="${section.title}" height="auto"></div>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad">
-																<h2 style="margin: 0; color: #201f42; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28px;">
-																	<span style="word-break: break-word;">${section.title}</span>
-																</h2>
-															</td>
-														</tr>
-													</table>
-													
-													<!-- Dual Perspective Table -->
-													${section.dualPerspective ? `
-													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad">
-																<table width="100%" border="1" cellpadding="12" cellspacing="0" style="border-collapse: collapse; border: 2px solid #01caa6; border-radius: 8px; margin: 16px 0;">
-																	<tr style="background-color: #f8fbf7;">
-																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
-																			${section.dualPerspective.columnA.header}
-																		</th>
-																		<th style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: #201f42; text-align: left; width: 50%;">
-																			${section.dualPerspective.columnB.header}
-																		</th>
-																	</tr>
-																	<tr>
-																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
-																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-																				${section.dualPerspective.columnA.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
-																			</ul>
-																		</td>
-																		<td style="border: 1px solid #01caa6; padding: 15px; font-family: 'Inter', sans-serif; font-size: 15px; color: #201f42; vertical-align: top; line-height: 1.6;">
-																			<ul style="margin: 0; padding-left: 18px; list-style-type: disc;">
-																				${section.dualPerspective.columnB.points.map((point: string) => `<li style="margin-bottom: 10px; line-height: 1.6;">${point}</li>`).join('')}
-																			</ul>
-																		</td>
-																	</tr>
-																</table>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-													
-													<table class="paragraph_block block-4" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding: 20px 10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
-																	${createVisualSections(section.synthesis)}
-																</div>
-															</td>
-														</tr>
-													</table>
-													
-													<!-- Section Divider -->
-													<table class="divider_block" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding: 10px;">
-																<div style="background-color: #e8f5f3; height: 2px; width: 100%; margin: 20px 0;"></div>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					`).join('')}
+					${/* Step 2.5: Output the rows using render helpers */''}
+					${rows.map((row, idx) =>
+            row.type === 'main'
+              ? renderMainSection(row.payload, idx)
+              : renderQuickInsight(row.payload, idx) // Pass idx to match original comment format
+          ).join('')}
 
-					<!-- Quick Insights Section -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 20px; padding-right: 20px; padding-top: 32px; vertical-align: top;">
-													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-left:10px;padding-right:10px;padding-top:10px;text-align:center;width:100%;">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 400; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 26px;">
-																	<span style="word-break: break-word;">QUICK INSIGHTS</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-													<table class="heading_block block-2" width="100%" border="0" cellpadding="10" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 700; letter-spacing: normal; line-height: 1.5; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 35px;">
-																	<span style="word-break: break-word;">Key Takeaways & Additional Context</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-
-					${quickInsights.map((insight: any, index: number) => `
-					<!-- Quick Insight ${index + 1} -->
-					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-						<tbody>
-							<tr>
-								<td>
-									<table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #01caa6; color: #000000; width: 600px; margin: 0 auto;" width="600">
-										<tbody>
-											<tr>
-												<td class="column column-1" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 16px; padding-left: 20px; padding-right: 20px; padding-top: 16px; vertical-align: top;">
-													<table class="heading_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-left:10px;padding-right:10px;text-align:left;width:100%;">
-																<h3 style="margin: 0; color: #ffffff; direction: ltr; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 22px;">
-																	<span style="word-break: break-word;">${insight.title}</span>
-																</h3>
-															</td>
-														</tr>
-													</table>
-													<table class="paragraph_block block-2" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:15px;padding-left:10px;padding-right:10px;">
-																<div style="color:#201f42;direction:ltr;font-family:'Inter', sans-serif;font-size:16px;font-weight:400;letter-spacing:0px;line-height:1.7;text-align:left;">
-																	${formatTextForHTML(insight.summary)}
-																</div>
-															</td>
-														</tr>
-													</table>
-													${insight.quote ? `
-													<table class="paragraph_block block-3" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;">
-														<tr>
-															<td class="pad" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
-																<div style="color:#ffffff;direction:ltr;font-family:'Inter', sans-serif;font-size:14px;font-weight:400;letter-spacing:0px;line-height:1.6;text-align:left;mso-line-height-alt:22px; font-style: italic; border-left: 3px solid #ffffff; padding-left: 15px;">
-																	<p style="margin: 0;">"${insight.quote}"</p>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-												</td>
-												<td class="column column-2" width="50%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;">
-													${insight.image ? `
-													<table class="image_block block-1" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
-														<tr>
-															<td class="pad" style="padding-bottom:20px;padding-top:15px;width:100%;">
-																<div class="alignment" align="center">
-																	<div style="max-width: 280px;"><img src="${insight.image}" style="display: block; height: auto; border: 0; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" width="280" alt="${insight.title}" height="auto"></div>
-																</div>
-															</td>
-														</tr>
-													</table>
-													` : ''}
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					`).join('')}
-
-					<!-- Spacer -->
+					<!-- Spacer (This was previously after Quick Insights header, now acts as a general spacer before footer if needed) -->
+					<!-- If Quick Insights were the last items, this spacer might need to be inside the loop or handled differently -->
+          <!-- For now, assuming it's a generic spacer before the footer if all content is above -->
 					<table class="row" align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
 						<tbody>
 							<tr>
@@ -372,7 +370,7 @@ const getNewsletterHTML = (data: any) => {
 										<tbody>
 											<tr>
 												<td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-left: 20px; padding-right: 20px; vertical-align: top;">
-													<div class="spacer_block block-1" style="height:32px;line-height:32px;font-size:1px;">&#8202;</div>
+													<div class="spacer_block block-1" style="height:32px;line-height:32px;font-size:1px;"> </div>
 												</td>
 											</tr>
 										</tbody>
@@ -416,11 +414,12 @@ const getNewsletterHTML = (data: any) => {
 </body>
 </html>`;
 };
+// --- Fixes from Instructions: End ---
 
 async function generateNewsletter(
   userId: string,
   selectedCount: number,
-  jwt: string,
+  jwt: string, // jwt is passed but not used directly in this function after Supabase client init with service key
 ) {
   try {
     // 1) Initialize Supabase client
@@ -449,7 +448,7 @@ async function generateNewsletter(
       );
     }
     if (
-      !profile.remaining_newsletter_generations ||
+      profile.remaining_newsletter_generations === null || // Explicitly check for null
       profile.remaining_newsletter_generations <= 0
     ) {
       throw new Error("You have no remaining newsletter generations");
@@ -477,9 +476,7 @@ async function generateNewsletter(
         if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
         const cleanHandle = profile.twitter_handle.trim().replace("@", "");
         const resp = await fetch(
-          `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(
-            cleanHandle,
-          )}`,
+          `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`,
           {
             method: "GET",
             headers: {
@@ -499,13 +496,13 @@ async function generateNewsletter(
           if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
           throw new Error(
-            "Could not retrieve your Twitter ID. Please try again later.",
+            "Could not retrieve your Twitter ID from RapidAPI response. Please try again later.",
           );
         }
       } catch (err) {
         console.error("Error fetching numerical_id:", err);
         throw new Error(
-          "Could not retrieve your Twitter ID. Please try again later.",
+          `Could not retrieve your Twitter ID. Please try again later. Details: ${(err as Error).message}`,
         );
       }
     }
@@ -587,7 +584,7 @@ async function generateNewsletter(
           "filter:videos": false,
           "filter:vine": false,
           lang: "en",
-          maxItems: selectedCount,
+          maxItems: selectedCount, // Use selectedCount here
           tweetIDs: tweetIds,
         }),
       },
@@ -615,13 +612,11 @@ async function generateNewsletter(
         let dateStr = "N/A";
         try {
           dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-        } catch {
-        }
+        } catch { /* Do nothing, keep N/A */ }
         const photo = t.extendedEntities?.media?.find(
           (m: any) => m.type === "photo",
         )?.media_url_https;
-        out +=
-          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
+        out += `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
             t.replyCount || 0
           }\nLikes: ${t.likeCount || 0}\nImpressions: ${
             t.viewCount || 0
@@ -704,7 +699,8 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt },
         ],
         temperature: 0.5,
-        max_tokens: 12000,
+        max_tokens: 12000, // Increased from example, ensure it's appropriate
+        response_format: { type: "json_object" }, // Request JSON output
       }),
     });
     if (!openaiRes.ok) {
@@ -715,25 +711,31 @@ ${formattedTweets}`;
     const openaiJson = await openaiRes.json();
     let analysisResult = openaiJson.choices[0].message.content.trim();
     
-    // Parse JSON from OpenAI response
     let parsedAnalysis;
     try {
-      // Extract JSON from potential markdown code blocks
-      const jsonMatch = analysisResult.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        analysisResult = jsonMatch[1];
-      }
+      // Since we requested json_object, it should be direct JSON
       parsedAnalysis = JSON.parse(analysisResult);
     } catch (e) {
-      console.error("Failed to parse OpenAI JSON response:", e);
-      throw new Error("Failed to parse analysis results");
+      console.error("Failed to parse OpenAI JSON response:", e, "\nRaw response:", analysisResult);
+      // Fallback for cases where it might still be wrapped in markdown
+      const jsonMatch = analysisResult.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          parsedAnalysis = JSON.parse(jsonMatch[1]);
+        } catch (e2) {
+          console.error("Failed to parse OpenAI JSON response even after markdown extraction:", e2);
+          throw new Error("Failed to parse analysis results from OpenAI");
+        }
+      } else {
+        throw new Error("Failed to parse analysis results from OpenAI");
+      }
     }
     
     logStep("Successfully generated Twin Focus analysis");
 
     // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
-    const focusesToEnrich = parsedAnalysis.mainSections.slice(0, 3); // Take first 3 main sections
+    const focusesToEnrich = parsedAnalysis.mainSections.slice(0, 3); 
     
     const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
     if (PERPLEXITY_API_KEY && focusesToEnrich.length > 0) {
@@ -753,10 +755,10 @@ ${formattedTweets}`;
                 Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
               },
               body: JSON.stringify({
-                model: "sonar-pro",
+                model: "llama-3-sonar-large-32k-online", // Using recommended online model
                 messages: [{ role: "user", content: searchQuery }],
                 temperature: 0.2,
-                max_tokens: 1000,
+                // max_tokens: 1000, // Let model decide or adjust as needed
               }),
             },
           );
@@ -764,9 +766,10 @@ ${formattedTweets}`;
             const data = await perplexityRes.json();
             const webContent = data.choices[0].message.content;
             
-            // Enhance synthesis with web content (full length, no truncation)
             focus.synthesis += `\n\n**Broader Context Online:** ${webContent}`;
             logStep(`Successfully enriched focus: ${focus.title}`);
+          } else {
+            console.error(`Perplexity API error for "${focus.title}" (${perplexityRes.status}):`, await perplexityRes.text());
           }
         } catch (err) {
           console.error(`Perplexity fetch failed for "${focus.title}":`, err);
@@ -792,8 +795,7 @@ ${formattedTweets}`;
 
     // 11) Send email via Resend
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") ||
-        "newsletter@newsletters.letternest.ai";
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
       const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`,
@@ -809,6 +811,8 @@ ${formattedTweets}`;
       logStep("Twin Focus Email sent successfully", { id: emailData?.id });
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
+      // Do not re-throw here if you want to continue with storage and count update
+      // Or, if sending is critical, then re-throw or handle appropriately
     }
 
     // 12) Save the newsletter to newsletter_storage table
@@ -819,6 +823,8 @@ ${formattedTweets}`;
         .insert({
           user_id: userId,
           markdown_text: markdownContent,
+          html_content: emailHtml, // Also storing HTML content
+          generation_type: 'twin_focus', // Example type
         });
       if (storageError) {
         console.error(
@@ -845,28 +851,23 @@ ${formattedTweets}`;
       }
     }
 
-    // Final log & response data
-    const timestamp = new Date().toISOString();
+    const finalRemainingGenerations = profile.remaining_newsletter_generations > 0
+      ? profile.remaining_newsletter_generations - 1
+      : 0;
+
     logStep("Twin Focus newsletter generation successful", {
       userId,
-      timestamp,
+      timestamp: new Date().toISOString(),
       tweetCount: selectedCount,
-      remainingGenerations:
-        profile.remaining_newsletter_generations > 0
-          ? profile.remaining_newsletter_generations - 1
-          : 0,
+      remainingGenerations: finalRemainingGenerations,
     });
     return {
       status: "success",
-      message:
-        "Twin Focus newsletter generated and sent successfully.",
-      remainingGenerations:
-        profile.remaining_newsletter_generations > 0
-          ? profile.remaining_newsletter_generations - 1
-          : 0,
+      message: "Twin Focus newsletter generated and process completed.", // Adjusted message
+      remainingGenerations: finalRemainingGenerations,
       data: {
         analysisResult: parsedAnalysis,
-        timestamp,
+        timestamp: new Date().toISOString(),
       },
     };
   } catch (error) {
@@ -876,8 +877,7 @@ ${formattedTweets}`;
     );
     return {
       status: "error",
-      message:
-        (error as Error).message || "Internal server error during Twin Focus generation",
+      message: (error as Error).message || "Internal server error during Twin Focus generation",
     };
   }
 }
@@ -889,7 +889,9 @@ serve(
     }
     try {
       logStep("Starting Twin Focus newsletter generation process (HTTP)");
-      const { selectedCount } = await req.json();
+      const body = await req.json();
+      const selectedCount = body.selectedCount; // Ensure this matches request body
+
       if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
         return new Response(
           JSON.stringify({
@@ -912,34 +914,41 @@ serve(
         );
       }
       const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      // Using service role key for user lookup from JWT is fine here,
+      // as this is a backend function.
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? ""; // For auth.getUser
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
       const jwt = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        jwt,
-      );
+      const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+
       if (userError || !user) {
         console.error("Authentication error:", userError);
         return new Response(
-          JSON.stringify({ error: "Authentication failed" }),
+          JSON.stringify({ error: `Authentication failed: ${userError?.message || 'No user'}` }),
           {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           },
         );
       }
-      const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-      // @ts-ignore EdgeRuntime provided in Deno Deploy / Vercel Edge functions
-      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
-        // @ts-ignore
-        EdgeRuntime.waitUntil(backgroundTask);
-      } else {
-        backgroundTask.then((result) => {
-          logStep("Background task completed (local/fallback)", result);
-        }).catch((err) => {
-          console.error("Background task error (local/fallback):", err);
-        });
+
+      // Don't await generateNewsletter directly for background processing
+      const backgroundTaskPromise = generateNewsletter(user.id, selectedCount, jwt);
+      
+      // Deno Deploy waitUntil for background tasks
+      // @ts-ignore Deno Deploy specific
+      if (typeof Deno !== "undefined" && Deno.serveHttp && Deno.waitUntil) {
+          // @ts-ignore Deno Deploy specific
+          Deno.waitUntil(backgroundTaskPromise);
+      } else { // Fallback for local development or other environments
+          backgroundTaskPromise.then((result) => {
+              logStep("Background task completed (local/fallback)", result.status);
+          }).catch((err) => {
+              console.error("Background task error (local/fallback):", err);
+          });
       }
+
       return new Response(
         JSON.stringify({
           status: "processing",
@@ -952,9 +961,9 @@ serve(
         },
       );
     } catch (error) {
-      console.error("Error in Twin Focus newsletter generation function:", error);
+      console.error("Error in Twin Focus newsletter generation function (HTTP Handler):", error);
       return new Response(
-        JSON.stringify({ error: "Internal server error" }),
+        JSON.stringify({ error: `Internal server error: ${(error as Error).message}` }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
