@@ -6,7 +6,8 @@ import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const COLORS = {
@@ -24,7 +25,11 @@ const logStep = (step: string, details?: any) => {
   console.log(`[NEWSLETTER-GEN] ${step}${detailsStr}`);
 };
 
-async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
+async function generateNewsletter(
+  userId: string,
+  selectedCount: number,
+  jwt: string,
+) {
   try {
     // 1) Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -34,7 +39,9 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     // 2) Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
+      .select(
+        "subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle",
+      )
       .eq("id", userId)
       .single();
 
@@ -45,17 +52,29 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
 
     // 3) Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
-      throw new Error("You must have an active subscription to generate newsletters");
+      throw new Error(
+        "You must have an active subscription to generate newsletters",
+      );
     }
-    if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
+    if (
+      !profile.remaining_newsletter_generations ||
+      profile.remaining_newsletter_generations <= 0
+    ) {
       throw new Error("You have no remaining newsletter generations");
     }
     if (!profile.twitter_bookmark_access_token) {
-      throw new Error("Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings.");
+      throw new Error(
+        "Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings.",
+      );
     }
     const now = Math.floor(Date.now() / 1000);
-    if (profile.twitter_bookmark_token_expires_at && profile.twitter_bookmark_token_expires_at < now) {
-      throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
+    if (
+      profile.twitter_bookmark_token_expires_at &&
+      profile.twitter_bookmark_token_expires_at < now
+    ) {
+      throw new Error(
+        "Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.",
+      );
     }
 
     // 4) Ensure numerical_id
@@ -65,53 +84,80 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
         const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
         if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
         const cleanHandle = profile.twitter_handle.trim().replace("@", "");
-        const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
-          method: "GET",
-          headers: {
-            "x-rapidapi-key": RAPIDAPI_KEY,
-            "x-rapidapi-host": "twitter293.p.rapidapi.com",
+        const resp = await fetch(
+          `https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(
+            cleanHandle,
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "x-rapidapi-key": RAPIDAPI_KEY,
+              "x-rapidapi-host": "twitter293.p.rapidapi.com",
+            },
           },
-        });
+        );
         if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
         const j = await resp.json();
         if (j?.user?.result?.rest_id) {
           numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase.from("profiles").update({
-            numerical_id: numericalId,
-          }).eq("id", userId);
+          const { error: updateError } = await supabase.from("profiles")
+            .update({
+              numerical_id: numericalId,
+            }).eq("id", userId);
           if (updateError) console.error("Error updating numerical_id:", updateError);
         } else {
-          throw new Error("Could not retrieve your Twitter ID. Please try again later.");
+          throw new Error(
+            "Could not retrieve your Twitter ID. Please try again later.",
+          );
         }
       } catch (err) {
         console.error("Error fetching numerical_id:", err);
-        throw new Error("Could not retrieve your Twitter ID. Please try again later.");
+        throw new Error(
+          "Could not retrieve your Twitter ID. Please try again later.",
+        );
       }
     }
     if (!numericalId) {
-      throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
+      throw new Error(
+        "Could not determine your Twitter ID. Please update your Twitter handle in settings.",
+      );
     }
 
     // 5) Fetch bookmarks
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
-    const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
-        "Content-Type": "application/json",
+    const bookmarksResp = await fetch(
+      `https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     if (!bookmarksResp.ok) {
       const text = await bookmarksResp.text();
       console.error(`Twitter API error (${bookmarksResp.status}):`, text);
-      if (bookmarksResp.status === 401) throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
-      if (bookmarksResp.status === 429) throw new Error("Twitter API rate limit exceeded. Please try again later.");
+      if (bookmarksResp.status === 401) {
+        throw new Error(
+          "Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.",
+        );
+      }
+      if (bookmarksResp.status === 429) {
+        throw new Error(
+          "Twitter API rate limit exceeded. Please try again later.",
+        );
+      }
       throw new Error(`Twitter API error: ${bookmarksResp.status}`);
     }
     const bookmarksData = await bookmarksResp.json();
     if (!bookmarksData?.data) {
       console.error("Invalid or empty bookmark data:", bookmarksData);
-      if (bookmarksData.meta?.result_count === 0) throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
+      if (bookmarksData.meta?.result_count === 0) {
+        throw new Error(
+          "You don't have any bookmarks. Please save some tweets before generating a newsletter.",
+        );
+      }
       throw new Error("Failed to retrieve bookmarks from Twitter");
     }
     const tweetIds = bookmarksData.data.map((t: any) => t.id);
@@ -120,53 +166,76 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     // 6) Fetch detailed tweets via Apify
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-    if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
-    const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        "filter:blue_verified": false,
-        "filter:consumer_video": false,
-        "filter:has_engagement": false,
-        "filter:hashtags": false,
-        "filter:images": false,
-        "filter:links": false,
-        "filter:media": false,
-        "filter:mentions": false,
-        "filter:native_video": false,
-        "filter:nativeretweets": false,
-        "filter:news": false,
-        "filter:pro_video": false,
-        "filter:quote": false,
-        "filter:replies": false,
-        "filter:safe": false,
-        "filter:spaces": false,
-        "filter:twimg": false,
-        "filter:videos": false,
-        "filter:vine": false,
-        lang: "en",
-        maxItems: selectedCount,
-        tweetIDs: tweetIds,
-      }),
-    });
+    if (!APIFY_API_KEY) {
+      throw new Error("Missing APIFY_API_KEY environment variable");
+    }
+    const apifyResp = await fetch(
+      `https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          "filter:blue_verified": false,
+          "filter:consumer_video": false,
+          "filter:has_engagement": false,
+          "filter:hashtags": false,
+          "filter:images": false,
+          "filter:links": false,
+          "filter:media": false,
+          "filter:mentions": false,
+          "filter:native_video": false,
+          "filter:nativeretweets": false,
+          "filter:news": false,
+          "filter:pro_video": false,
+          "filter:quote": false,
+          "filter:replies": false,
+          "filter:safe": false,
+          "filter:spaces": false,
+          "filter:twimg": false,
+          "filter:videos": false,
+          "filter:vine": false,
+          lang: "en",
+          maxItems: selectedCount,
+          tweetIDs: tweetIds,
+        }),
+      },
+    );
     if (!apifyResp.ok) {
       const text = await apifyResp.text();
       console.error(`Apify API error (${apifyResp.status}):`, text);
       throw new Error(`Apify API error: ${apifyResp.status}`);
     }
     const apifyData = await apifyResp.json();
-    logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
+    logStep("Successfully fetched detailed tweet data", {
+      tweetCount: apifyData.length || 0,
+    });
 
     // 7) Format tweets for OpenAI
     function parseToOpenAI(data: any) {
-      const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+      const arr = Array.isArray(data)
+        ? data
+        : Array.isArray(data.items)
+        ? data.items
+        : [];
       let out = "";
       arr.forEach((t, i) => {
         const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
         let dateStr = "N/A";
-        try { dateStr = new Date(t.createdAt).toISOString().split("T")[0]; } catch {}
-        const photo = t.extendedEntities?.media?.find((m: any) => m.type === "photo")?.media_url_https;
-        out += `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${t.replyCount || 0}\nLikes: ${t.likeCount || 0}\nImpressions: ${t.viewCount || 0}\nDate: ${dateStr}\nAuthor: ${t.author?.name || "Unknown"}\nPhotoUrl: ${photo || "N/A"}\n`;
+        try {
+          dateStr = new Date(t.createdAt).toISOString().split("T")[0];
+        } catch {
+        }
+        const photo = t.extendedEntities?.media?.find(
+          (m: any) => m.type === "photo",
+        )?.media_url_https;
+        out +=
+          `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${
+            t.replyCount || 0
+          }\nLikes: ${t.likeCount || 0}\nImpressions: ${
+            t.viewCount || 0
+          }\nDate: ${dateStr}\nAuthor: ${
+            t.author?.name || "Unknown"
+          }\nPhotoUrl: ${photo || "N/A"}\n`;
         if (i < arr.length - 1) out += "\n---\n\n";
       });
       return out;
@@ -177,9 +246,12 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     // 8) Call OpenAI for main analysis
     logStep("Calling OpenAI for Twin Focus analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
+    if (!OPENAI_API_KEY) {
+      throw new Error("Missing OPENAI_API_KEY environment variable");
+    }
 
-    const analysisSystemPrompt = `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
+    const analysisSystemPrompt =
+      `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
 
 CAPABILITIES:
 - Identify 3-4 main themes with dual perspectives or contrasting viewpoints
@@ -212,7 +284,8 @@ CRITICAL INSTRUCTIONS:
 Tweet data to analyze:
 ${formattedTweets};`;
 
-    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
+    const analysisUserPrompt =
+      `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
 
 1. HOOK (1-2 sentences)
 2. 3-4 MAIN FOCUS AREAS, each with:
@@ -234,16 +307,19 @@ ${formattedTweets};`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: analysisSystemPrompt },
-          { role: "user", content: analysisUserPrompt }
+          { role: "user", content: analysisUserPrompt },
         ],
         temperature: 0.5,
-        max_tokens: 8000
-      })
+        max_tokens: 8000,
+      }),
     });
     if (!openaiRes.ok) {
       const txt = await openaiRes.text();
@@ -256,7 +332,8 @@ ${formattedTweets};`;
 
     // 9) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
+    const queryGenerationPrompt =
+      `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
 TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
 FORMAT:
 ===
@@ -268,61 +345,117 @@ ENRICHMENT GOAL: [Goal]
 TWIN FOCUS ANALYSIS:
 ${analysisResult};`;
 
-    const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a search query optimization specialist." },
-          { role: "user", content: queryGenerationPrompt }
-        ],
-        temperature: 0.3, max_tokens: 1000
-      })
-    });
+    const queryGenRes = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a search query optimization specialist." },
+            { role: "user", content: queryGenerationPrompt },
+          ],
+          temperature: 0.3,
+          max_tokens: 1000,
+        }),
+      },
+    );
 
-    let webEnrichmentContent: { focusName: string; webSummary: string; sources: any[] }[] | null = null;
+    let webEnrichmentContent:
+      | { focusName: string; webSummary: string; sources: any[] }[]
+      | null = null;
     if (!queryGenRes.ok) {
       const txt = await queryGenRes.text();
       console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
-      logStep("Failed to generate search queries, continuing without Perplexity enrichment");
+      logStep(
+        "Failed to generate search queries, continuing without Perplexity enrichment",
+      );
     } else {
       const queryGenJson = await queryGenRes.json();
       const searchQueriesText = queryGenJson.choices[0].message.content.trim();
       logStep("Successfully generated search queries", { searchQueriesText });
       const focusesToEnrich: { focus: string; query: string; goal: string }[] = [];
-      const regex = /FOCUS \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*FOCUS \d+:|$)/gis;
+      const regex =
+        /FOCUS \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*FOCUS \d+:|$)/gis;
       let match;
       while ((match = regex.exec(searchQueriesText)) !== null) {
-        focusesToEnrich.push({ focus: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
+        focusesToEnrich.push({
+          focus: match[1].trim(),
+          query: match[2].trim(),
+          goal: match[3].trim(),
+        });
       }
       const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
       if (!PERPLEXITY_API_KEY || focusesToEnrich.length === 0) {
-        logStep("Missing Perplexity API key or no focus areas to enrich, continuing without web enrichment");
+        logStep(
+          "Missing Perplexity API key or no focus areas to enrich, continuing without web enrichment",
+        );
       } else {
-        logStep("Making Perplexity API calls for web enrichment", { focusCount: focusesToEnrich.length });
-        const enrichmentResults: { focusName: string; webSummary: string; sources: any[] }[] = [];
+        logStep("Making Perplexity API calls for web enrichment", {
+          focusCount: focusesToEnrich.length,
+        });
+        const enrichmentResults: {
+          focusName: string;
+          webSummary: string;
+          sources: any[];
+        }[] = [];
         for (const focus of focusesToEnrich) {
           try {
-            const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
-              body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: focus.query }], temperature: 0.2, max_tokens: 400 })
-            });
+            const perplexityRes = await fetch(
+              "https://api.perplexity.ai/chat/completions",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+                },
+                body: JSON.stringify({
+                  model: "sonar-pro",
+                  messages: [{ role: "user", content: focus.query }],
+                  temperature: 0.2,
+                  max_tokens: 400,
+                }),
+              },
+            );
             if (perplexityRes.ok) {
               const data = await perplexityRes.json();
-              enrichmentResults.push({ focusName: focus.focus, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
+              enrichmentResults.push({
+                focusName: focus.focus,
+                webSummary: data.choices[0].message.content,
+                sources: data.choices[0].message.citations ?? [],
+              });
               logStep(`Successfully enriched focus: ${focus.focus}`);
             } else {
-              console.error(`Perplexity API error for "${focus.query}": ${perplexityRes.status}`, await perplexityRes.text());
-              enrichmentResults.push({ focusName: focus.focus, webSummary: `[Perplexity error ${perplexityRes.status}]`, sources: [] });
+              console.error(
+                `Perplexity API error for "${focus.query}": ${perplexityRes.status}`,
+                await perplexityRes.text(),
+              );
+              enrichmentResults.push({
+                focusName: focus.focus,
+                webSummary: `[Perplexity error ${perplexityRes.status}]`,
+                sources: [],
+              });
             }
           } catch (err) {
-            console.error(`Perplexity fetch failed for "${focus.query}":`, err);
-            enrichmentResults.push({ focusName: focus.focus, webSummary: "[Perplexity request failed]", sources: [] });
+            console.error(
+              `Perplexity fetch failed for "${focus.query}":`,
+              err,
+            );
+            enrichmentResults.push({
+              focusName: focus.focus,
+              webSummary: "[Perplexity request failed]",
+              sources: [],
+            });
           }
         }
-        if (enrichmentResults.length > 0) { webEnrichmentContent = enrichmentResults; logStep("Web enrichment data collected"); }
+        if (enrichmentResults.length > 0) {
+          webEnrichmentContent = enrichmentResults;
+          logStep("Web enrichment data collected");
+        }
       }
     }
 
@@ -330,7 +463,8 @@ ${analysisResult};`;
     let finalAnalysisForMarkdown = analysisResult;
     if (webEnrichmentContent && webEnrichmentContent.length > 0) {
       logStep("Integrating web content with original Twin Focus analysis");
-      const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
+      const integrationPrompt =
+        `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
 RULES: Maintain original structure. For focus areas with web enrichment, weave 3-4+ points from 'webSummary' into 'Synthesis', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
 ORIGINAL ANALYSIS:
 ${analysisResult}
@@ -338,21 +472,33 @@ WEB-SOURCED INFO:
 ${JSON.stringify(webEnrichmentContent, null, 2)}
 Provide complete, integrated analysis.;`;
 
-      const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information." },
-            { role: "user", content: integrationPrompt }
-          ],
-          temperature: 0.3, max_tokens: 8000
-        })
-      });
+      const integrationRes = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are an expert content editor, skilled at seamlessly integrating supplementary information.",
+              },
+              { role: "user", content: integrationPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 8000,
+          }),
+        },
+      );
       if (integrationRes.ok) {
         const integrationJson = await integrationRes.json();
-        finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
+        finalAnalysisForMarkdown = integrationJson.choices[0].message.content
+          .trim();
         logStep("Successfully integrated web content with Twin Focus analysis");
       } else {
         const txt = await integrationRes.text();
@@ -365,7 +511,8 @@ Provide complete, integrated analysis.;`;
     let markdownNewsletter = "";
     try {
       logStep("Starting Twin Focus markdown newsletter formatting");
-      const markdownSystemPrompt = `You are a professional newsletter editor for the "Twin Focus" template. Format pre-analyzed content (hook, main focus areas with dual perspectives, quick insights, image URLs) into clean, beautiful, well-structured Markdown optimized for side-by-side layouts.
+      const markdownSystemPrompt =
+        `You are a professional newsletter editor for the "Twin Focus" template. Format pre-analyzed content (hook, main focus areas with dual perspectives, quick insights, image URLs) into clean, beautiful, well-structured Markdown optimized for side-by-side layouts.
 
 NEWSLETTER STRUCTURE:
 1. HEADER: Title (H1 "Twin Focus"), Date (H3/Subtitle), Horizontal rule
@@ -395,51 +542,68 @@ FORMATTING GUIDELINES:
 
 OUTPUT: ONLY the formatted Markdown content.;`;
 
-      const markdownUserPrompt = `Format this Twin Focus analysis into the "Twin Focus" Markdown newsletter. Prioritize balanced layouts and include images.
+      const markdownUserPrompt =
+        `Format this Twin Focus analysis into the "Twin Focus" Markdown newsletter. Prioritize balanced layouts and include images.
 Date: ${
-        new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      }
+          new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        }
 TWIN FOCUS ANALYSIS CONTENT:
 ${finalAnalysisForMarkdown};`;
 
       try {
-        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: markdownSystemPrompt },
-              { role: "user", content: markdownUserPrompt }
-            ],
-            temperature: 0.2, max_tokens: 8000
-          })
-        });
+        const markdownOpenaiRes = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                { role: "system", content: markdownSystemPrompt },
+                { role: "user", content: markdownUserPrompt },
+              ],
+              temperature: 0.2,
+              max_tokens: 8000,
+            }),
+          },
+        );
         if (markdownOpenaiRes.ok) {
           const markdownJson = await markdownOpenaiRes.json();
           markdownNewsletter = markdownJson.choices[0].message.content;
           logStep("Twin Focus Markdown generated successfully");
         } else {
           const errorText = await markdownOpenaiRes.text();
-          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          markdownNewsletter = `Error: Unable to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+          console.error(
+            `Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`,
+            errorText,
+          );
+          markdownNewsletter =
+            `Error: Unable to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
         }
       } catch (markdownError) {
         console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter = `Error: API error in markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+        markdownNewsletter =
+          `Error: API error in markdown. Analysis:\n${finalAnalysisForMarkdown}`;
       }
     } catch (err) {
       console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+      markdownNewsletter =
+        `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
     }
 
     // 14) Clean up markdown
     function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, "$1");
+      let cleaned = md.replace(
+        /^```(?:markdown)?\s*([\s\S]*?)\s*```$/i,
+        "$1",
+      );
       cleaned = cleaned.trim();
       const lines = cleaned.split("\n");
       for (let i = 0; i < lines.length; i++) {
@@ -449,7 +613,9 @@ ${finalAnalysisForMarkdown};`;
             !lines[i].trim().startsWith("<h1") &&
             !lines[i].trim().startsWith("<div")
           ) {
-            const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/);
+            const headingMatch = cleaned.match(
+              /(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/,
+            );
             if (
               headingMatch &&
               typeof headingMatch.index === "number" &&
@@ -473,7 +639,9 @@ ${finalAnalysisForMarkdown};`;
 
     // Paragraph renderer
     renderer.paragraph = (text) => {
-      if (text.trim().startsWith("<div") || text.trim().startsWith("<span")) {
+      if (
+        text.trim().startsWith("<div") || text.trim().startsWith("<span")
+      ) {
         return text.trim() + "\n";
       }
       return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: ${COLORS.darkText}; font-family: 'Lato',sans-serif;">${text}</p>\n`;
@@ -494,8 +662,22 @@ ${finalAnalysisForMarkdown};`;
 
     // Heading renderer
     renderer.heading = (text, level) => {
-      const sizes: Record<number, string> = { 1: "40px", 2: "32px", 3: "28px", 4: "24px", 5: "20px", 6: "18px" };
-      const margins: Record<number, string> = { 1: "0 0 20px 0", 2: "24px 0 16px 0", 3: "20px 0 14px 0", 4: "16px 0 12px 0", 5: "14px 0 10px 0", 6: "12px 0 8px 0" };
+      const sizes: Record<number, string> = {
+        1: "40px",
+        2: "32px",
+        3: "28px",
+        4: "24px",
+        5: "20px",
+        6: "18px",
+      };
+      const margins: Record<number, string> = {
+        1: "0 0 20px 0",
+        2: "24px 0 16px 0",
+        3: "20px 0 14px 0",
+        4: "16px 0 12px 0",
+        5: "14px 0 10px 0",
+        6: "12px 0 8px 0",
+      };
       let color = COLORS.primaryNavy;
       if (level >= 3) color = COLORS.darkText;
       const size = sizes[level] || "18px";
@@ -512,74 +694,87 @@ ${finalAnalysisForMarkdown};`;
       </div>`;
 
     // Table renderer – 2-column responsive
-    renderer.table = (header, body) => 
+    renderer.table = (header, body) =>
       `<table style="width:100%; border-collapse:collapse; margin:24px 0; border-radius:6px; overflow:hidden;">
         <thead>
           ${header.replace(
-            /<th>/g,
-            `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`,
-          )}
+        /<th>/g,
+        `<th style="background:${COLORS.lightBg}; color:${COLORS.primaryNavy}; padding:10px; font-size:15px; text-align:left; border-bottom:2px solid ${COLORS.darkText};">`,
+      )}
         </thead>
         <tbody>
           ${body.replace(
-            /<td>/g,
-            `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`,
-          )}
+        /<td>/g,
+        `<td style="padding:10px 12px; font-size:15px; vertical-align:top; border-bottom:1px solid ${COLORS.darkText}; color:${COLORS.darkText}; background: rgba(207,220,228,0.05); border-right:2px solid ${COLORS.lightBg};">`,
+      )}
         </tbody>
       </table>`;
 
     const htmlBody = marked(finalMarkdown, { renderer });
 
-    // 16) Generate email HTML with updated color scheme
-    const emailHtml = juice(
-      `<body style="background-color:${COLORS.white}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
-        <style>
-          @media print {
-            body, html { width:100%; margin:0; background:${COLORS.white} !important; }
-            .wrapper { width:100% !important; max-width:none !important; }
-            table { width:100% !important; border-collapse:collapse; }
-            table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
-            h1, h2, h3 { page-break-after:avoid; }
-          }
-          @media screen and (min-width:640px) {
-            .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
-          }
-          @media screen and (max-width:600px) {
-            body { background-color:${COLORS.white} !important; }
-            .wrapper { max-width:100% !important; margin:0 !important; border-radius:0 !important; background-color:${COLORS.white} !important; }
-            .content-body { padding:20px 16px !important; background:${COLORS.white} !important; }
-            h1 { font-size:32px !important; color:${COLORS.primaryNavy} !important; }
-            h2 { font-size:28px !important; color:${COLORS.primaryNavy} !important; }
-            h3 { font-size:24px !important; color:${COLORS.darkText} !important; }
-            blockquote { background-color:${COLORS.white} !important; border-left:5px solid ${COLORS.lightBg} !important; color:${COLORS.darkText} !important; }
-          }
-        </style>
+    // 16) Generate email HTML with updated color scheme and reliable white background
+    const emailHtml = juice(`
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      html, body { background:${COLORS.white} !important; }
+      @media print {
+        body, html { width:100%; margin:0; background:${COLORS.white} !important; }
+        .wrapper { width:100% !important; max-width:none !important; }
+        table { width:100% !important; border-collapse:collapse; }
+        table td { padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
+        h1, h2, h3 { page-break-after:avoid; }
+      }
+      @media screen and (min-width:640px){
+        .content-body { padding:28px 32px !important; background:${COLORS.white} !important; border-radius:8px !important; }
+      }
+      @media screen and (max-width:600px){
+        .wrapper{ max-width:100% !important; margin:0 !important; border-radius:0 !important; background:${COLORS.white} !important; box-shadow:none !important; }
+        .content-body{ padding:20px 16px !important; background:${COLORS.white} !important; }
+        h1{ font-size:32px !important; color:${COLORS.primaryNavy} !important; }
+        h2{ font-size:28px !important; color:${COLORS.primaryNavy} !important; }
+        h3{ font-size:24px !important; color:${COLORS.darkText} !important; }
+        blockquote{ background:${COLORS.white} !important; border-left:5px solid ${COLORS.lightBg} !important; color:${COLORS.darkText} !important; }
+      }
+    </style>
+  </head>
+  <body bgcolor="${COLORS.white}" style="background-color:${COLORS.white}; margin:0; padding:0; font-family:'Lato',sans-serif; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="${COLORS.white}" style="background:${COLORS.white};">
+      <tr>
+        <td align="center">
 
-        <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
-          <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
-            ${htmlBody}
+          <div class="wrapper" style="display:block; width:100%; max-width:700px; margin:0 auto; background:${COLORS.white}; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:left;">
+            <div class="content-body" style="padding:20px 16px; line-height:1.7; color:${COLORS.darkText}; font-size:16px; font-family:'Lato',sans-serif; background:${COLORS.white};">
+              ${htmlBody}
+            </div>
           </div>
-        </div>
 
-        <div style="text-align:center; padding:30px 0 40px 0; font-size:14px; color:${COLORS.darkText}; font-family:'Lato',sans-serif;">
-          Powered by <strong style="color:${COLORS.primaryNavy};">LetterNest</strong><br>
-          <span style="color:${COLORS.darkText}; font-size:12px;">Professional Newsletter Generation</span>
-        </div>
-      </body>`
-    );
+          <div style="text-align:center; padding:30px 0 40px 0; font-size:14px; color:${COLORS.darkText}; font-family:'Lato',sans-serif;">
+            Powered by <strong style="color:${COLORS.primaryNavy};">LetterNest</strong><br/>
+            <span style="color:${COLORS.darkText}; font-size:12px;">Professional Newsletter Generation</span>
+          </div>
+
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`);
 
     logStep("Converted Twin Focus markdown to HTML with updated color scheme");
 
     // 17) Send email via Resend
     try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
+      const fromEmail = Deno.env.get("FROM_EMAIL") ||
+        "newsletter@newsletters.letternest.ai";
       const emailSubject = "Twin Focus: Your Newsletter from LetterNest";
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`,
         to: profile.sending_email,
         subject: emailSubject,
         html: emailHtml,
-        text: finalMarkdown
+        text: finalMarkdown,
       });
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
@@ -592,12 +787,16 @@ ${finalAnalysisForMarkdown};`;
 
     // 18) Save the newsletter to newsletter_storage table
     try {
-      const { error: storageError } = await supabase.from('newsletter_storage').insert({
-        user_id: userId,
-        markdown_text: finalMarkdown,
-      });
+      const { error: storageError } = await supabase.from("newsletter_storage")
+        .insert({
+          user_id: userId,
+          markdown_text: finalMarkdown,
+        });
       if (storageError) {
-        console.error("Failed to save Twin Focus newsletter to storage:", storageError);
+        console.error(
+          "Failed to save Twin Focus newsletter to storage:",
+          storageError,
+        );
       } else {
         logStep("Twin Focus Newsletter successfully saved to storage");
       }
@@ -624,65 +823,116 @@ ${finalAnalysisForMarkdown};`;
       userId,
       timestamp,
       tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
+      remainingGenerations:
+        profile.remaining_newsletter_generations > 0
+          ? profile.remaining_newsletter_generations - 1
+          : 0,
     });
     return {
       status: "success",
-      message: "Twin Focus newsletter generated and process initiated for email.",
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
+      message:
+        "Twin Focus newsletter generated and process initiated for email.",
+      remainingGenerations:
+        profile.remaining_newsletter_generations > 0
+          ? profile.remaining_newsletter_generations - 1
+          : 0,
+      data: {
+        analysisResult: finalAnalysisForMarkdown,
+        markdownNewsletter: finalMarkdown,
+        timestamp,
+      },
     };
   } catch (error) {
-    console.error("Error in background Twin Focus newsletter generation process:", error);
+    console.error(
+      "Error in background Twin Focus newsletter generation process:",
+      error,
+    );
     return {
       status: "error",
-      message: (error as Error).message || "Internal server error during Twin Focus generation"
+      message:
+        (error as Error).message || "Internal server error during Twin Focus generation",
     };
   }
 }
 
-serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-  try {
-    logStep("Starting Twin Focus newsletter generation process (HTTP)");
-    const { selectedCount } = await req.json();
-    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-      return new Response(JSON.stringify({ error: "Invalid selection. Please choose 10, 20, or 30 tweets." }), 
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+serve(
+  async (req: Request) => {
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
     }
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), 
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    try {
+      logStep("Starting Twin Focus newsletter generation process (HTTP)");
+      const { selectedCount } = await req.json();
+      if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid selection. Please choose 10, 20, or 30 tweets.",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "No authorization header" }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const jwt = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        jwt,
+      );
+      if (userError || !user) {
+        console.error("Authentication error:", userError);
+        return new Response(
+          JSON.stringify({ error: "Authentication failed" }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
+      // @ts-ignore EdgeRuntime provided in Deno Deploy / Vercel Edge functions
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(backgroundTask);
+      } else {
+        backgroundTask.then((result) => {
+          logStep("Background task completed (local/fallback)", result);
+        }).catch((err) => {
+          console.error("Background task error (local/fallback):", err);
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          status: "processing",
+          message:
+            "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
+        }),
+        {
+          status: 202,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      console.error("Error in Twin Focus newsletter generation function:", error);
+      return new Response(
+        JSON.stringify({ error: "Internal server error" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(JSON.stringify({ error: "Authentication failed" }), 
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-    // @ts-ignore 
-    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
-      // @ts-ignore
-      EdgeRuntime.waitUntil(backgroundTask);
-    } else {
-      backgroundTask.then(result => { logStep("Background task completed (local/fallback)", result); })
-      .catch(err => { console.error("Background task error (local/fallback):", err); });
-    }
-    return new Response(JSON.stringify({
-      status: "processing",
-      message: "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
-    }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (error) {
-    console.error("Error in Twin Focus newsletter generation function:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), 
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-});
+  },
+);
