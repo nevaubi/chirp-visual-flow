@@ -55,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Adding contact to Chain of Thought audience:", { email, firstName, lastName });
 
     // Replace with your actual Chain of Thought audience ID
-    const audienceId = "YOUR_CHAIN_OF_THOUGHT_AUDIENCE_ID";
+    const audienceId = "26cd8c51-64b9-4bd5-92c0-87d2e5ffa2f1";
 
     const resendResponse = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
       method: "POST",
