@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,7 +118,7 @@ const ProFeatures = () => {
 
   // Enhanced Modern Clean Card Component
   const ModernCleanCard = ({ template }: { template: typeof templates[0] }) => (
-    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full max-w-[600px] mx-auto">
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
       {/* Decorative Header */}
       <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
         <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
@@ -127,12 +128,12 @@ const ProFeatures = () => {
 
       {/* Title and Description */}
       <div className="px-5">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-1">{template.name}</h2>
-        <p className="text-gray-500 text-base mb-7">{template.description}</p>
+        <h2 className="text-xl font-semibold text-gray-800 mb-1">{template.name}</h2>
+        <p className="text-gray-500 text-sm mb-5">{template.description}</p>
       </div>
 
       {/* Enhanced Preview */}
-      <div className="mx-5 mb-10 p-5 bg-gray-50 rounded-[10px] h-[200px] flex flex-col justify-between">
+      <div className="mx-5 mb-6 p-4 bg-gray-50 rounded-[10px] flex-1 flex flex-col justify-between">
         <div>
           <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
           <div className="h-2 bg-gray-300 rounded mb-2.5 w-[60%]"></div>
@@ -149,24 +150,24 @@ const ProFeatures = () => {
       </div>
 
       {/* Two Column Layout */}
-      <div className="flex flex-col md:flex-row mx-5 mb-7">
+      <div className="flex flex-col lg:flex-row mx-5 mb-5">
         <div className="flex-1">
-          <h3 className="text-base font-medium text-gray-800 mb-2.5">Features:</h3>
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
           <ul className="list-none p-0 m-0">
             {template.features.map((feature, index) => (
-              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
-                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 {feature}
               </li>
             ))}
           </ul>
         </div>
-        <div className="flex-1 md:pl-5 md:border-l border-gray-200 mt-4 md:mt-0 md:pt-0 pt-4 border-t md:border-t-0">
-          <h3 className="text-base font-medium text-gray-800 mb-2.5">Layout Description:</h3>
+        <div className="flex-1 lg:pl-4 lg:border-l border-gray-200 mt-3 lg:mt-0 lg:pt-0 pt-3 border-t lg:border-t-0">
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Layout Description:</h3>
           <ul className="list-none p-0 m-0">
             {template.layoutFeatures?.map((feature, index) => (
-              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
-                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 {feature}
               </li>
             ))}
@@ -177,7 +178,7 @@ const ProFeatures = () => {
       {/* Button and Text */}
       <div className="mt-auto">
         <Button 
-          className="w-[calc(100%-40px)] mx-5 mb-2.5 h-[50px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-base font-medium"
+          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
           onClick={() => handleUseTemplate(template.id, template.name)}
           disabled={loadingTemplate === template.name}
         >
@@ -190,7 +191,7 @@ const ProFeatures = () => {
             'Generate Pro Newsletter'
           )}
         </Button>
-        <p className="text-center text-gray-400 text-sm italic mx-5 mb-5">
+        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
           (Defaults to 20 Bookmarks w/enriched context)
         </p>
       </div>
@@ -199,7 +200,7 @@ const ProFeatures = () => {
 
   // Enhanced Twin Focus Card Component
   const TwinFocusCard = ({ template }: { template: typeof templates[0] }) => (
-    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full max-w-[600px] mx-auto">
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
       {/* Decorative Header */}
       <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
         <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
@@ -209,67 +210,67 @@ const ProFeatures = () => {
 
       {/* Title and Description */}
       <div className="px-5">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-1">{template.name}</h2>
-        <p className="text-gray-500 text-base mb-7">{template.description}</p>
+        <h2 className="text-xl font-semibold text-gray-800 mb-1">{template.name}</h2>
+        <p className="text-gray-500 text-sm mb-5">{template.description}</p>
       </div>
 
       {/* Enhanced Preview with Twin Focus Layout */}
-      <div className="mx-5 mb-10 p-4 bg-gray-50 rounded-[10px] flex flex-col">
+      <div className="mx-5 mb-6 p-3 bg-gray-50 rounded-[10px] flex flex-col flex-1">
         {/* Two-column layout at top */}
-        <div className="flex gap-5 mb-5 md:flex-row flex-col">
+        <div className="flex gap-4 mb-4 md:flex-row flex-col">
           {/* Left column with image and bullets */}
-          <div className="flex-1 bg-gray-200 rounded-lg p-3 shadow-sm">
+          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
             {/* Grey image placeholder */}
-            <div className="bg-gray-300 h-20 rounded-md mb-3"></div>
+            <div className="bg-gray-300 h-16 rounded-md mb-2.5"></div>
             {/* Three bullet points */}
-            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4 mb-2.5"></div>
-            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4 mb-2.5"></div>
-            <div className="h-2 bg-gray-400 rounded w-[60%] ml-4"></div>
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3"></div>
           </div>
           
           {/* Right column with text mockup */}
-          <div className="flex-1 bg-gray-200 rounded-lg p-3 shadow-sm">
-            <div className="h-2 bg-gray-350 rounded w-[80%] mb-2.5"></div>
-            <div className="h-2 bg-gray-350 rounded w-full mb-2.5"></div>
-            <div className="h-2 bg-gray-350 rounded w-[60%] mb-2.5"></div>
-            <div className="h-2 bg-gray-350 rounded w-[80%] mb-2.5"></div>
-            <div className="h-2 bg-gray-350 rounded w-[60%]"></div>
+          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
+            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-full mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[60%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[60%]"></div>
           </div>
         </div>
         
         {/* First horizontal section */}
-        <div className="bg-gray-100 p-2.5 rounded-md mb-3">
-          <div className="h-2 bg-gray-300 rounded w-[80%] mb-2.5"></div>
-          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
+        <div className="bg-gray-100 p-2 rounded-md mb-2.5">
+          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
         </div>
         
         {/* Second horizontal section */}
-        <div className="p-2.5">
-          <div className="h-2 bg-gray-300 rounded w-[80%] mb-2.5"></div>
-          <div className="h-2 bg-gray-300 rounded w-full mb-2.5"></div>
-          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
+        <div className="p-2">
+          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-full mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
         </div>
       </div>
 
       {/* Two Column Layout */}
-      <div className="flex flex-col md:flex-row mx-5 mb-7">
+      <div className="flex flex-col lg:flex-row mx-5 mb-5">
         <div className="flex-1">
-          <h3 className="text-base font-medium text-gray-800 mb-2.5">Features:</h3>
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
           <ul className="list-none p-0 m-0">
             {template.features.map((feature, index) => (
-              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
-                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 {feature}
               </li>
             ))}
           </ul>
         </div>
-        <div className="flex-1 md:pl-5 md:border-l border-gray-200 mt-4 md:mt-0 md:pt-0 pt-4 border-t md:border-t-0">
-          <h3 className="text-base font-medium text-gray-800 mb-2.5">Layout Description:</h3>
+        <div className="flex-1 lg:pl-4 lg:border-l border-gray-200 mt-3 lg:mt-0 lg:pt-0 pt-3 border-t lg:border-t-0">
+          <h3 className="text-sm font-medium text-gray-800 mb-2">Layout Description:</h3>
           <ul className="list-none p-0 m-0">
             {template.layoutFeatures?.map((feature, index) => (
-              <li key={index} className="relative pl-6 mb-2.5 text-sm text-gray-600">
-                <div className="absolute left-0 top-1.5 w-2 h-2 bg-green-500 rounded-full"></div>
+              <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+                <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 {feature}
               </li>
             ))}
@@ -280,7 +281,7 @@ const ProFeatures = () => {
       {/* Button and Text */}
       <div className="mt-auto">
         <Button 
-          className="w-[calc(100%-40px)] mx-5 mb-2.5 h-[50px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-base font-medium"
+          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
           onClick={() => handleUseTemplate(template.id, template.name)}
           disabled={loadingTemplate === template.name}
         >
@@ -293,7 +294,7 @@ const ProFeatures = () => {
             'Generate Pro Newsletter'
           )}
         </Button>
-        <p className="text-center text-gray-400 text-sm italic mx-5 mb-5">
+        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
           (Defaults to 20 Bookmarks w/enriched context)
         </p>
       </div>
@@ -301,9 +302,9 @@ const ProFeatures = () => {
   );
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full max-h-[calc(100vh-2rem)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-4 flex-shrink-0">
         <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-lg">
           <Crown className="w-5 h-5 text-yellow-600" />
         </div>
@@ -318,32 +319,32 @@ const ProFeatures = () => {
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 overflow-auto">
         {templates.map((template) => (
           template.id === 1 ? (
             <ModernCleanCard key={template.id} template={template} />
           ) : template.id === 2 ? (
             <TwinFocusCard key={template.id} template={template} />
           ) : (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200 flex flex-col">
-              <CardHeader>
-                <div className={`w-full h-32 rounded-lg ${template.preview} border border-gray-200 mb-4 flex items-center justify-center`}>
+            <Card key={template.id} className="hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
+              <CardHeader className="pb-4">
+                <div className={`w-full h-24 rounded-lg ${template.preview} border border-gray-200 mb-3 flex items-center justify-center`}>
                   <div className="text-center text-gray-500">
-                    <div className="w-16 h-2 bg-gray-300 rounded mb-2 mx-auto"></div>
-                    <div className="w-12 h-2 bg-gray-300 rounded mb-2 mx-auto"></div>
-                    <div className="w-20 h-2 bg-gray-300 rounded mx-auto"></div>
+                    <div className="w-12 h-1.5 bg-gray-300 rounded mb-1.5 mx-auto"></div>
+                    <div className="w-8 h-1.5 bg-gray-300 rounded mb-1.5 mx-auto"></div>
+                    <div className="w-16 h-1.5 bg-gray-300 rounded mx-auto"></div>
                   </div>
                 </div>
                 <CardTitle className="text-lg">{template.name}</CardTitle>
-                <CardDescription>{template.description}</CardDescription>
+                <CardDescription className="text-sm">{template.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-end">
-                <div className="space-y-4">
+              <CardContent className="flex-1 flex flex-col justify-end pt-0">
+                <div className="space-y-3">
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-900">Features:</h4>
                     <ul className="space-y-1">
                       {template.features.map((feature, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                        <li key={index} className="text-xs text-gray-600 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                           {feature}
                         </li>
@@ -352,7 +353,7 @@ const ProFeatures = () => {
                   </div>
                   <div className="space-y-2">
                     <Button 
-                      className="w-full bg-[#0087C8] hover:bg-[#006CA1]"
+                      className="w-full bg-[#0087C8] hover:bg-[#006CA1] h-10"
                       onClick={() => handleUseTemplate(template.id, template.name)}
                       disabled={loadingTemplate === template.name}
                     >
