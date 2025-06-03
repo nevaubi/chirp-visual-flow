@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SatoshiSummarySignup() {
   const [email, setEmail] = useState("");
@@ -21,19 +22,36 @@ export default function SatoshiSummarySignup() {
     setStatus('idle');
 
     try {
-      // TODO: Integrate with Resend API
-      console.log('Newsletter subscription data:', {
+      console.log('Subscribing to Satoshi Summary:', {
         email: email.toLowerCase().trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        newsletter: 'satoshi-summary'
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.functions.invoke('satoshi-summary-subscribe', {
+        body: {
+          email: email.toLowerCase().trim(),
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
+        }
+      });
+
+      if (error) {
+        console.error('Subscription error:', error);
+        setStatus('error');
+        setMessage(error.message || "Something went wrong. Please try again.");
+        return;
+      }
+
+      if (data?.error) {
+        console.error('API error:', data.error);
+        setStatus('error');
+        setMessage(data.error);
+        return;
+      }
 
       setStatus('success');
-      setMessage("Success! You're now subscribed to Satoshi Summary.");
+      setMessage(data?.message || "Success! You're now subscribed to Satoshi Summary.");
       setEmail("");
       setFirstName("");
       setLastName("");
