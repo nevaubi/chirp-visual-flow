@@ -20,12 +20,12 @@ const logStep = (step: string, details?: any) => {
 // Main function for newsletter generation - runs in the background
 async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
   try {
-    // 2) Set up Supabase client
+    // Set up Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // 3) Load profile
+    // Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("subscription_tier, newsletter_day_preference, remaining_newsletter_generations, sending_email, newsletter_content_preferences, twitter_bookmark_access_token, twitter_bookmark_refresh_token, twitter_bookmark_token_expires_at, numerical_id, twitter_handle")
@@ -37,7 +37,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Subscription & plan & tokens checks
+    // Subscription & plan & tokens checks
     if (!profile.subscription_tier) {
       throw new Error("You must have an active subscription to generate newsletters");
     }
@@ -52,7 +52,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id
+    // Ensure numerical_id
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
       try {
@@ -86,7 +86,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
-    // 6) Fetch bookmarks
+    // Fetch bookmarks
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -111,7 +111,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const tweetIds = bookmarksData.data.map((t: any) => t.id);
     logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 7) Fetch detailed tweets via Apify
+    // Fetch detailed tweets via Apify
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -119,12 +119,28 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        "filter:blue_verified": false, "filter:consumer_video": false, "filter:has_engagement": false,
-        "filter:hashtags": false, "filter:images": false, "filter:links": false, "filter:media": false,
-        "filter:mentions": false, "filter:native_video": false, "filter:nativeretweets": false,
-        "filter:news": false, "filter:pro_video": false, "filter:quote": false, "filter:replies": false,
-        "filter:safe": false, "filter:spaces": false, "filter:twimg": false, "filter:videos": false,
-        "filter:vine": false, lang: "en", maxItems: selectedCount, tweetIDs: tweetIds
+        "filter:blue_verified": false, 
+        "filter:consumer_video": false, 
+        "filter:has_engagement": false,
+        "filter:hashtags": false, 
+        "filter:images": false, 
+        "filter:links": false, 
+        "filter:media": false,
+        "filter:mentions": false, 
+        "filter:native_video": false, 
+        "filter:nativeretweets": false,
+        "filter:news": false, 
+        "filter:pro_video": false, 
+        "filter:quote": false, 
+        "filter:replies": false,
+        "filter:safe": false, 
+        "filter:spaces": false, 
+        "filter:twimg": false, 
+        "filter:videos": false,
+        "filter:vine": false, 
+        lang: "en", 
+        maxItems: selectedCount, 
+        tweetIDs: tweetIds
       })
     });
     if (!apifyResp.ok) {
@@ -135,7 +151,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 8) Format tweets for OpenAI
+    // Format tweets for OpenAI
     function parseToOpenAI(data: any) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -152,7 +168,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis (CREATIVE COLORFUL STYLE)
+    // Call OpenAI for main analysis (CREATIVE COLORFUL STYLE)
     logStep("Calling OpenAI for creative content analysis and vibrant storytelling");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
@@ -216,7 +232,7 @@ ${formattedTweets}`;
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: analysisSystemPrompt },
           { role: "user", content: analysisUserPrompt }
@@ -234,9 +250,7 @@ ${formattedTweets}`;
     let analysisResult = openaiJson.choices[0].message.content.trim();
     logStep("Successfully generated creative content analysis");
 
-    // Skip Perplexity integration for creative template to maintain fast generation
-
-    // 10) Generate Markdown formatted newsletter (CREATIVE COLORFUL STYLE)
+    // Generate Markdown formatted newsletter (CREATIVE COLORFUL STYLE)
     let markdownNewsletter = "";
     try {
       logStep("Starting 'Creative Colorful' markdown newsletter formatting");
@@ -267,43 +281,39 @@ FORMATTING GUIDELINES:
 
 OUTPUT: Clean, standard Markdown only.`;
       
-      const markdownUserPrompt = `Format this creative analysis into the "Creative Colorful" Markdown newsletter with vibrant styling and dynamic visual elements.
+      const markdownUserPrompt = `Format this creative analysis into the "Creative Colorful" Markdown newsletter with clean styling.
 Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 CREATIVE CONTENT ANALYSIS:
 ${analysisResult}`;
       
-      try {
-        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              { role: "system", content: markdownSystemPrompt },
-              { role: "user", content: markdownUserPrompt }
-            ],
-            temperature: 0.3, max_tokens: 10000
-          })
-        });
-        if (markdownOpenaiRes.ok) {
-          const markdownJson = await markdownOpenaiRes.json();
-          markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("'Creative Colorful' Markdown generated successfully");
-        } else {
-          const errorText = await markdownOpenaiRes.text();
-          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          markdownNewsletter = `Error: Unable to generate markdown. Analysis:\n${analysisResult}`;
-        }
-      } catch (markdownError) {
-        console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter = `Error: API error in markdown. Analysis:\n${analysisResult}`;
+      const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: markdownSystemPrompt },
+            { role: "user", content: markdownUserPrompt }
+          ],
+          temperature: 0.3, 
+          max_tokens: 10000
+        })
+      });
+      if (markdownOpenaiRes.ok) {
+        const markdownJson = await markdownOpenaiRes.json();
+        markdownNewsletter = markdownJson.choices[0].message.content;
+        logStep("'Creative Colorful' Markdown generated successfully");
+      } else {
+        const errorText = await markdownOpenaiRes.text();
+        console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+        markdownNewsletter = `# Creative Colorful Newsletter\n\n${analysisResult}`;
       }
     } catch (err) {
       console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${analysisResult}`;
+      markdownNewsletter = `# Creative Colorful Newsletter\n\n${analysisResult}`;
     }
 
-    // 11) Generate Enhanced Markdown with Creative Colorful UI/UX
+    // Generate Enhanced Markdown with Creative Colorful UI/UX
     let enhancedMarkdownNewsletter = markdownNewsletter;
     try {
       logStep("Generating enhanced UI/UX markdown with refined creative color scheme");
@@ -341,65 +351,46 @@ Creative Colorful Markdown:
 ${markdownNewsletter}
 `;
       
-      try {
-        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", 
-            messages: [
-              { role: "system", content: enhancedSystemPrompt },
-              { role: "user", content: enhancedUserPrompt }
-            ],
-            temperature: 0.1, max_tokens: 10000 
-          })
-        });
-        if (enhancedOpenaiRes.ok) {
-          const enhancedJson = await enhancedOpenaiRes.json();
-          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced Creative Colorful markdown with refined colors generated");
-        } else {
-          const errorText = await enhancedOpenaiRes.text();
-          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
-        }
-      } catch (enhancedError) {
-        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
+      const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4o", 
+          messages: [
+            { role: "system", content: enhancedSystemPrompt },
+            { role: "user", content: enhancedUserPrompt }
+          ],
+          temperature: 0.1, 
+          max_tokens: 10000 
+        })
+      });
+      if (enhancedOpenaiRes.ok) {
+        const enhancedJson = await enhancedOpenaiRes.json();
+        enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
+        logStep("Enhanced Creative Colorful markdown with refined colors generated");
+      } else {
+        logStep("Enhanced markdown generation failed, using original");
       }
     } catch (err) {
       console.error("Error generating Enhanced Creative Colorful Markdown newsletter:", err);
     }
 
-    // 12) Clean up stray text around enhanced Markdown
+    // Clean up stray text around enhanced Markdown
     function cleanMarkdown(md: string): string {
       let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
       cleaned = cleaned.trim();
-      const lines = cleaned.split('\n');
-      for(let i = 0; i < lines.length; i++){
-        if (lines[i].trim() !== "") {
-          if (!lines[i].trim().startsWith("#") && !lines[i].trim().startsWith("<h1") && !lines[i].trim().startsWith("<div")) {
-            const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/);
-            if (headingMatch && typeof headingMatch.index === 'number' && headingMatch.index > 0) {
-              if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
-                cleaned = cleaned.substring(headingMatch.index).trim();
-              }
-            }
-          }
-          break;
-        }
-      }
       return cleaned;
     }
     const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
     logStep("Cleaned up final Creative Colorful markdown");
 
-    // 13) Convert final Markdown to HTML with proper structure and error handling
+    // Convert final Markdown to HTML with proper structure and error handling
     let htmlBody = "";
     try {
         const renderer = new marked.Renderer();
         
         // Enhanced paragraph rendering
         renderer.paragraph = (text) => {
-            // Don't wrap already formatted divs
             if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
                 return text.trim() + '\n';
             }
@@ -462,7 +453,7 @@ ${markdownNewsletter}
                                margin: 32px 0; border-radius: 1px;">\n`;
         };
 
-        // Configure marked options for better parsing
+        // Configure marked options
         marked.setOptions({
             breaks: true,
             gfm: true,
@@ -474,15 +465,14 @@ ${markdownNewsletter}
         
         // Clean up any malformed HTML
         htmlBody = htmlBody
-            .replace(/(<\/[^>]+>)\s*(<[^>\/][^>]*>)/g, '$1\n$2') // Add line breaks between tags
-            .replace(/\n\s*\n/g, '\n') // Remove extra blank lines
+            .replace(/(<\/[^>]+>)\s*(<[^>\/][^>]*>)/g, '$1\n$2')
+            .replace(/\n\s*\n/g, '\n')
             .trim();
         
         logStep("Generated clean HTML body", { length: htmlBody.length });
         
     } catch (htmlError) {
         console.error("Error converting markdown to HTML:", htmlError);
-        // Fallback: create simple HTML from markdown
         htmlBody = `<div style="color: #2d3748; font-family: Arial, sans-serif; line-height: 1.6;">
             <h1 style="color: #1a365d;">Creative Colorful Newsletter</h1>
             <p>Your newsletter content is being processed. Please check your email for the latest version.</p>
@@ -492,30 +482,18 @@ ${markdownNewsletter}
         logStep("Used fallback HTML due to conversion error");
     }
 
-    // Generate the final email HTML with proper structure and refined creative design
-    const emailHtml = `
-<!DOCTYPE html>
+    // Generate the final email HTML
+    const emailHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creative Colorful Newsletter</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
     <style>
-        /* Reset styles */
         body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
         img { -ms-interpolation-mode: bicubic; border: 0; }
         
-        /* Mobile styles */
         @media screen and (max-width: 600px) {
             .mobile-hide { display: none !important; }
             .mobile-full { width: 100% !important; }
@@ -531,15 +509,12 @@ ${markdownNewsletter}
     </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f7fafc; font-family: Arial, sans-serif;">
-    <!-- Main container -->
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f7fafc;">
         <tr>
             <td style="padding: 20px 0;">
-                <!-- Email wrapper -->
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="650" style="margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 25px rgba(26,54,93,0.1);" class="mobile-full">
                     <tr>
                         <td style="padding: 24px;" class="mobile-padding">
-                            <!-- Content area -->
                             <div style="color: #2d3748; font-size: 16px; line-height: 1.6; font-family: Arial, sans-serif;">
                                 ${htmlBody}
                             </div>
@@ -547,77 +522,6 @@ ${markdownNewsletter}
                     </tr>
                 </table>
                 
-                <!-- Footer -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="650" style="margin: 20px auto 0;" class="mobile-full">
-                    <tr>
-                        <td style="text-align: center; padding: 20px; color: #81a084; font-size: 14px; font-family: Arial, sans-serif;">
-                            ✨ Crafted with creativity by <strong style="color: #1a365d;">LetterNest</strong> ✨<br>
-                            <span style="color: #888; font-size: 12px;">Creative Newsletter Generation</span>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>`;
-
-    // Generate the final email HTML with proper structure and refined creative design
-    const emailHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creative Colorful Newsletter</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-    <style>
-        /* Reset styles */
-        body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { -ms-interpolation-mode: bicubic; border: 0; }
-        
-        /* Mobile styles */
-        @media screen and (max-width: 600px) {
-            .mobile-hide { display: none !important; }
-            .mobile-full { width: 100% !important; }
-            .mobile-padding { padding: 10px !important; }
-            .mobile-text { font-size: 16px !important; line-height: 1.5 !important; }
-            .mobile-header { font-size: 24px !important; }
-        }
-        
-        @media print {
-            body { background-color: #ffffff !important; }
-            .no-print { display: none !important; }
-        }
-    </style>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f7fafc; font-family: Arial, sans-serif;">
-    <!-- Main container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f7fafc;">
-        <tr>
-            <td style="padding: 20px 0;">
-                <!-- Email wrapper -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="650" style="margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 25px rgba(26,54,93,0.1);" class="mobile-full">
-                    <tr>
-                        <td style="padding: 24px;" class="mobile-padding">
-                            <!-- Content area -->
-                            <div style="color: #2d3748; font-size: 16px; line-height: 1.6; font-family: Arial, sans-serif;">
-                                ${htmlBody}
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <!-- Footer -->
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="650" style="margin: 20px auto 0;" class="mobile-full">
                     <tr>
                         <td style="text-align: center; padding: 20px; color: #81a084; font-size: 14px; font-family: Arial, sans-serif;">
@@ -634,7 +538,7 @@ ${markdownNewsletter}
 
     logStep("Generated Creative Colorful email HTML with proper structure");
 
-    // 14) Send email via Resend
+    // Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai"; 
       const emailSubject = `Creative Colorful: Your Vibrant Newsletter from LetterNest`; 
@@ -652,10 +556,9 @@ ${markdownNewsletter}
       logStep("Creative Colorful Email sent successfully", { id: emailData?.id });
     } catch (sendErr) { 
       console.error("Error sending email:", sendErr); 
-      // Continue with saving to database even if email fails
     }
 
-    // 15) Save newsletter and update generations
+    // Save newsletter and update generations
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({ 
         user_id: userId, 
@@ -683,7 +586,7 @@ ${markdownNewsletter}
       }
     }
 
-    // 16) Final response
+    // Final response
     const timestamp = new Date().toISOString();
     logStep("Creative Colorful newsletter generation successful with refined design", {
       userId, 
@@ -788,94 +691,5 @@ serve(async (req: Request) => {
       status: 500, 
       headers: { ...corsHeaders, "Content-Type": "application/json" } 
     });
-  }
-});
-
-    // 14) Send email via Resend
-    try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai"; 
-      const emailSubject = `Creative Colorful: Your Vibrant Newsletter from LetterNest`; 
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
-      });
-      if (emailError) { console.error("Error sending email with Resend:", emailError); throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`); }
-      logStep("Creative Colorful Email sent successfully", { id: emailData?.id });
-    } catch (sendErr) { console.error("Error sending email:", sendErr); }
-
-    // 15) Save newsletter and update generations
-    try {
-      const { error: storageError } = await supabase.from('newsletter_storage').insert({ user_id: userId, markdown_text: finalMarkdown });
-      if (storageError) { console.error("Failed to save Creative Colorful newsletter to storage:", storageError); } 
-      else { logStep("Creative Colorful Newsletter successfully saved to storage"); }
-    } catch (storageErr) { console.error("Error saving Creative Colorful newsletter to storage:", storageErr); }
-
-    if (profile.remaining_newsletter_generations > 0) {
-      const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({ remaining_newsletter_generations: newCount }).eq("id", userId);
-      if (updateError) { console.error("Failed to update remaining generations:", updateError); } 
-      else { logStep("Updated remaining generations count", { newCount }); }
-    }
-
-    const timestamp = new Date().toISOString();
-    logStep("Creative Colorful newsletter generation successful with refined design", {
-      userId, timestamp, tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
-    });
-    return {
-      status: "success",
-      message: "Creative Colorful newsletter generated and emailed successfully",
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: { analysisResult, markdownNewsletter: finalMarkdown, timestamp }
-    };
-  } catch (error) {
-    console.error("Error in Creative Colorful newsletter generation:", error);
-    return {
-      status: "error",
-      message: (error as Error).message || "Internal server error during Creative Colorful generation"
-    };
-  }
-}
-
-// Main serve function
-serve(async (req: Request) => {
-  if (req.method === "OPTIONS") { return new Response(null, { headers: corsHeaders }); }
-  try {
-    logStep("Starting Creative Colorful newsletter generation process");
-    const { selectedCount } = await req.json();
-    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-      return new Response(JSON.stringify({ error: "Invalid selection. Please choose 10, 20, or 30 tweets." }), 
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), 
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(JSON.stringify({ error: "Authentication failed" }), 
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
-    // @ts-ignore 
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) { // @ts-ignore
-      EdgeRuntime.waitUntil(backgroundTask);
-    } else {
-      backgroundTask.then(result => { logStep("Background task completed (local/fallback)", result); })
-      .catch(err => { console.error("Background task error (local/fallback):", err); });
-    }
-    return new Response(JSON.stringify({
-      status: "processing",
-      message: "Your Creative Colorful newsletter generation has started. You will receive an email when it's ready.",
-    }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (error) {
-    console.error("Error in third-template function:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), 
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
