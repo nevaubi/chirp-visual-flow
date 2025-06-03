@@ -1,7 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@3.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +30,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    console.log("API Key found, length:", apiKey.length);
 
     const { email, firstName, lastName }: SubscriptionRequest = await req.json();
 
@@ -67,24 +66,41 @@ const handler = async (req: Request): Promise<Response> => {
     const contactData = {
       email: email.toLowerCase().trim(),
       audienceId: audienceId,
-      unsubscribed: false, // This was missing in your original code
+      unsubscribed: false,
       ...(firstName?.trim() && { firstName: firstName.trim() }),
       ...(lastName?.trim() && { lastName: lastName.trim() }),
     };
 
     console.log("Contact data being sent to Resend:", contactData);
 
-    const result = await resend.contacts.create(contactData);
+    // Use fetch directly instead of Resend SDK to avoid dependency issues
+    const resendResponse = await fetch("https://api.resend.com/contacts", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(contactData),
+    });
 
-    console.log("Contact added successfully:", result);
+    console.log("Resend API response status:", resendResponse.status);
 
-    // Handle both success and error cases from Resend
-    if (result.error) {
-      console.error("Resend API error:", result.error);
+    if (!resendResponse.ok) {
+      const errorText = await resendResponse.text();
+      console.error("Resend API error:", errorText);
       
+      // Parse error response
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
+
       // Handle specific error cases
-      if (result.error.message?.includes("Contact already exists") || 
-          result.error.message?.includes("already exists")) {
+      if (resendResponse.status === 409 || 
+          errorData.message?.includes("Contact already exists") || 
+          errorData.message?.includes("already exists")) {
         return new Response(
           JSON.stringify({ error: "You're already subscribed to The Ticker Drop!" }),
           {
@@ -94,8 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      if (result.error.message?.includes("Invalid email") || 
-          result.error.message?.includes("email")) {
+      if (resendResponse.status === 400) {
         return new Response(
           JSON.stringify({ error: "Please enter a valid email address" }),
           {
@@ -105,8 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      if (result.error.message?.includes("Audience not found") ||
-          result.error.message?.includes("audienceId")) {
+      if (resendResponse.status === 404 || errorData.message?.includes("Audience not found")) {
         return new Response(
           JSON.stringify({ error: "Configuration error. Please contact support." }),
           {
@@ -126,11 +140,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const responseData = await resendResponse.json();
+    console.log("Contact added successfully:", responseData);
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Successfully subscribed to The Ticker Drop!",
-        contactId: result.data?.id 
+        contactId: responseData.id 
       }),
       {
         status: 200,
@@ -141,35 +158,13 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in ticker-drop-subscribe function:", error);
     
-    // Handle specific Resend API errors
+    // Handle specific error cases that might be in the error message
     if (error.message?.includes("Contact already exists") || 
         error.message?.includes("already exists")) {
       return new Response(
         JSON.stringify({ error: "You're already subscribed to The Ticker Drop!" }),
         {
           status: 409,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    if (error.message?.includes("Invalid email") || 
-        error.message?.includes("email")) {
-      return new Response(
-        JSON.stringify({ error: "Please enter a valid email address" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    if (error.message?.includes("Audience not found") ||
-        error.message?.includes("audienceId")) {
-      return new Response(
-        JSON.stringify({ error: "Configuration error. Please contact support." }),
-        {
-          status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
