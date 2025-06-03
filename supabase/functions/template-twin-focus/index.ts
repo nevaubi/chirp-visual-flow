@@ -523,7 +523,12 @@ ${finalAnalysisForMarkdown}`;
 
     // Generate email HTML
     const emailHtml = juice(`
-      <body style="background-color:#ffffff;margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <head>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+  </head>
+  <body bgcolor="#ffffff" style="background-color:#ffffff; ...
+
         <style>
           @media print{
             body,html{width:100%;margin:0;background:#ffffff !important;}
