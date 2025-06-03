@@ -153,61 +153,59 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis (MODIFIED FOR VARIED STRUCTURE, MORE COLOR INFO)
-    logStep("Calling OpenAI for initial thematic analysis and hook generation");
+    // 9) Call OpenAI for main analysis (MODIFIED FOR TWIN FOCUS STRUCTURE)
+    logStep("Calling OpenAI for Twin Focus analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
     
-    const analysisSystemPrompt = `You are an expert content strategist and analyst for LetterNest. Your task is to analyze a collection of tweets and synthesize them into substantial, insightful, and structurally varied themes for the "Chain of Thought" newsletter. This includes crafting an engaging hook and proactively identifying relevant imagery.
+    const analysisSystemPrompt = `You are an expert content strategist for the "Twin Focus" newsletter template. Your task is to analyze a collection of tweets and organize them into a structured, balanced format that emphasizes dual perspectives and comparative analysis.
 
 CAPABILITIES:
-- Identify 4-5 main thematic clusters.
-- For each theme, synthesize core ideas into detailed explanations, incorporating varied text structures.
-- Identify 3-4 secondary themes (sidetracks) with comprehensive summaries.
-- Generate a compelling 1-2 sentence "hook".
-- For EACH main theme and EACH noteworthy sidetrack, actively select a highly relevant PhotoUrl.
+- Identify 3-4 main themes with dual perspectives or contrasting viewpoints
+- Create balanced side-by-side comparisons
+- Synthesize comprehensive insights with clear structure
+- Generate engaging content with varied formatting
 
 OUTPUT STRUCTURE:
-1.  **HOOK:** A 1-2 sentence engaging teaser.
-2.  **MAIN THEMES (4-5 identified):**
-    *   **Theme Title:** Concise, engaging.
-    *   **The Gist:** 3-4 sentence summary.
-    *   **Key Insights:** 4-5 bullet points (50-70 words each).
-    *   **Deeper Dive (Varied Structure):** A substantial section (approx. 300-450 words). Within this, incorporate:
-        *   Standard paragraphs for explanation. And visually appealing text formatting and spacing so as to not jam too much text in one block at a time
-        *   **Where appropriate for clarity or emphasis, use a numbered list for sequential points or a short series of related ideas.**
-        *   **Include one "Key Takeaway Box":** A distinct, brief (1-2 sentences) summary of the most crucial point from the Deeper Dive, labeled clearly (e.g., "KEY TAKEAWAY: ...").
-        *   **Optionally, a "Synthesized Quote":** If a powerful, synthesized statement (NOT a direct tweet quote) can encapsulate a core aspect of the theme, include it, labeled "THEME SNAPSHOT: '...'".
-    *   **RepresentativeImageURL (Strive to include):** The most compelling image. If none, state "N/A".
-3.  **NOTEWORTHY SIDETRACKS (3-4 identified):**
-    *   **Sidetrack Title:** Brief, descriptive.
-    *   **Quick Take:** 2-3 sentence summary.
-    *   **RepresentativeImageURL (Strive to include):** Relevant image. If none, "N/A".
+1. **HOOK:** A compelling 1-2 sentence opener
+2. **MAIN FOCUS AREAS (3-4 identified):**
+   * **Focus Title:** Clear, engaging headline
+   * **Dual Perspective:** Two contrasting viewpoints or complementary angles
+     - **Perspective A:** One angle with 2-3 key points
+     - **Perspective B:** Contrasting/complementary angle with 2-3 key points
+   * **Synthesis:** How these perspectives connect (150-250 words)
+   * **RepresentativeImageURL:** Most relevant image or "N/A"
+3. **QUICK INSIGHTS (2-3 brief items):**
+   * **Insight Title:** Brief, descriptive
+   * **Summary:** 2-3 sentence overview
+   * **RepresentativeImageURL:** Relevant image or "N/A"
 
 CRITICAL INSTRUCTIONS:
-- NO direct tweet quotes, IDs, or authors.
-- Focus on comprehensive synthesis, abstraction, and thematic storytelling with varied presentation.
-- Tone: Human-like accessible natural dialogue and clear wording with naturally flowing sentences with no abrupt breaks or unnecessary punctuation like those commonly found in AI generated text
-- Write like the way people actually talk. Clear communication and at a 10th grade speaking level
-- Actively seek and include 'RepresentativeImageURL' for all themes/sidetracks.
+- NO direct tweet quotes, IDs, or authors
+- Focus on balanced, comparative analysis
+- Tone: Conversational, accessible, 10th grade reading level
+- Structure content for side-by-side presentation
+- Include image URLs where available
 
 Tweet data to analyze:
 ${formattedTweets}`;
     
-    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Chain of Thought" newsletter:
-1.  HOOK (1-2 sentences).
-2.  4-5 MAIN THEMES, each with:
-    *   Theme Title.
-    *   "The Gist" (3-4 sentences).
-    *   4-5 "Key Insights" (bullet points, 50-70 words each).
-    *   "Deeper Dive" (300-450 words) incorporating paragraphs and ensure to break up the text as needed so it's more readable—good spacing and layout, not everything jammed into one block.And where logical, a numbered list and one "KEY TAKEAWAY BOX". Optionally, a "THEME SNAPSHOT" synthesized quote.
-    *   'RepresentativeImageURL' (or "N/A").
-3.  3-4 NOTEWORTHY SIDETRACKS, each with:
-    *   Sidetrack Title.
-    *   "Quick Take" (2-3 sentences).
-    *   'RepresentativeImageURL' (or "N/A").
+    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Twin Focus" newsletter template:
 
-Ensure substantial, insightful content with varied text structures and proactive image inclusion.
+1. HOOK (1-2 sentences)
+2. 3-4 MAIN FOCUS AREAS, each with:
+   * Focus Title
+   * Dual Perspective with:
+     - Perspective A (2-3 key points)
+     - Perspective B (2-3 key points)
+   * Synthesis (150-250 words connecting both perspectives)
+   * RepresentativeImageURL (or "N/A")
+3. 2-3 QUICK INSIGHTS, each with:
+   * Insight Title
+   * Summary (2-3 sentences)
+   * RepresentativeImageURL (or "N/A")
+
+Ensure balanced, comparative content that works well in a side-by-side layout.
 
 Tweet collection:
 ${formattedTweets}`;
@@ -222,7 +220,7 @@ ${formattedTweets}`;
           { role: "user", content: analysisUserPrompt }
         ],
         temperature: 0.5,
-        max_tokens: 10000
+        max_tokens: 8000
       })
     });
     if (!openaiRes.ok) {
@@ -232,20 +230,20 @@ ${formattedTweets}`;
     }
     const openaiJson = await openaiRes.json();
     let analysisResult = openaiJson.choices[0].message.content.trim();
-    logStep("Successfully generated initial thematic analysis (varied structure, image focus)");
+    logStep("Successfully generated Twin Focus analysis");
 
     // 10) Topic Selection and Query Generation for Perplexity (No changes needed here)
     logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a thematic analysis, select up to 3 themes that would benefit most from additional web-based context.
-TASK: Review analysis, select up to 3 themes (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
+    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
+TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
 FORMAT:
 ===
-THEME 1: [Theme Name]
+FOCUS 1: [Focus Name]
 QUERY: [Search Query]
 ENRICHMENT GOAL: [Goal]
 ... (up to 3)
 ===
-THEMATIC ANALYSIS:
+TWIN FOCUS ANALYSIS:
 ${analysisResult}`;
 
     const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -257,10 +255,10 @@ ${analysisResult}`;
           { role: "system", content: "You are a search query optimization specialist." },
           { role: "user", content: queryGenerationPrompt }
         ],
-        temperature: 0.3, max_tokens: 10000
+        temperature: 0.3, max_tokens: 1000
       })
     });
-    let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
+    let webEnrichmentContent: { focusName: string; webSummary: string; sources: any[] }[] | null = null;
     if (!queryGenRes.ok) {
       const txt = await queryGenRes.text();
       console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
@@ -269,48 +267,48 @@ ${analysisResult}`;
       const queryGenJson = await queryGenRes.json();
       const searchQueriesText = queryGenJson.choices[0].message.content.trim();
       logStep("Successfully generated search queries", { searchQueriesText });
-      const topicsToEnrich: { theme: string; query: string; goal: string }[] = [];
-      const regex = /THEME \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*THEME \d+:|$)/gis;
+      const focusesToEnrich: { focus: string; query: string; goal: string }[] = [];
+      const regex = /FOCUS \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*FOCUS \d+:|$)/gis;
       let match;
       while ((match = regex.exec(searchQueriesText)) !== null) {
-        topicsToEnrich.push({ theme: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
+        focusesToEnrich.push({ focus: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
       }
       const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-      if (!PERPLEXITY_API_KEY || topicsToEnrich.length === 0) {
-        logStep("Missing Perplexity API key or no topics to enrich, continuing without web enrichment");
+      if (!PERPLEXITY_API_KEY || focusesToEnrich.length === 0) {
+        logStep("Missing Perplexity API key or no focus areas to enrich, continuing without web enrichment");
       } else {
-        logStep("Making Perplexity API calls for web enrichment", { topicsCount: topicsToEnrich.length });
+        logStep("Making Perplexity API calls for web enrichment", { focusCount: focusesToEnrich.length });
         const enrichmentResults = [];
-        for (const topic of topicsToEnrich) {
+        for (const focus of focusesToEnrich) {
           try {
             const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
-                body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: topic.query }], temperature: 0.2, max_tokens: 400 })
+                body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: focus.query }], temperature: 0.2, max_tokens: 400 })
             });
             if (perplexityRes.ok) {
               const data = await perplexityRes.json();
-              enrichmentResults.push({ themeName: topic.theme, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
-              logStep(`Successfully enriched theme: ${topic.theme}`);
+              enrichmentResults.push({ focusName: focus.focus, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
+              logStep(`Successfully enriched focus: ${focus.focus}`);
             } else {
-              console.error(`Perplexity API error for "${topic.query}": ${perplexityRes.status}`, await perplexityRes.text());
-              enrichmentResults.push({ themeName: topic.theme, webSummary: `[Perplexity error ${perplexityRes.status}]`, sources: [] });
+              console.error(`Perplexity API error for "${focus.query}": ${perplexityRes.status}`, await perplexityRes.text());
+              enrichmentResults.push({ focusName: focus.focus, webSummary: `[Perplexity error ${perplexityRes.status}]`, sources: [] });
             }
           } catch (err) {
-            console.error(`Perplexity fetch failed for "${topic.query}":`, err);
-            enrichmentResults.push({ themeName: topic.theme, webSummary: "[Perplexity request failed]", sources: [] });
+            console.error(`Perplexity fetch failed for "${focus.query}":`, err);
+            enrichmentResults.push({ focusName: focus.focus, webSummary: "[Perplexity request failed]", sources: [] });
           }
         }
         if (enrichmentResults.length > 0) { webEnrichmentContent = enrichmentResults; logStep("Web enrichment data collected"); }
       }
     }
 
-    // 12) Integrate Web Content (No changes needed here other than accommodating potentially longer base analysis)
+    // 12) Integrate Web Content
     let finalAnalysisForMarkdown = analysisResult; 
     if (webEnrichmentContent && webEnrichmentContent.length > 0) {
-        logStep("Integrating web content with original thematic analysis");
-        const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided thematic analysis.
-RULES: Maintain original structure. For themes with web enrichment, weave 3-4+ points from 'webSummary' into 'Deeper Dive', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
+        logStep("Integrating web content with original Twin Focus analysis");
+        const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided Twin Focus analysis.
+RULES: Maintain original structure. For focus areas with web enrichment, weave 3-4+ points from 'webSummary' into 'Synthesis', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
 ORIGINAL ANALYSIS:
 ${analysisResult}
 WEB-SOURCED INFO:
@@ -322,81 +320,59 @@ Provide complete, integrated analysis.`;
             body: JSON.stringify({
                 model: "gpt-4.1-2025-04-14",
                 messages: [
-                    { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
+                    { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information." },
                     { role: "user", content: integrationPrompt }
                 ],
-                temperature: 0.3, max_tokens: 10000
+                temperature: 0.3, max_tokens: 8000
             })
         });
         if (integrationRes.ok) {
             const integrationJson = await integrationRes.json();
             finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
-            logStep("Successfully integrated web content with thematic analysis");
+            logStep("Successfully integrated web content with Twin Focus analysis");
         } else {
             const txt = await integrationRes.text();
             console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-            logStep("Failed to integrate web content, continuing with original thematic analysis");
+            logStep("Failed to integrate web content, continuing with original analysis");
         }
     }
 
-    // 13) Generate Markdown formatted newsletter (MODIFIED FOR VARIED STRUCTURE)
+    // 13) Generate Markdown formatted newsletter for Twin Focus
     let markdownNewsletter = "";
     try {
-      logStep("Starting 'Chain of Thought' markdown newsletter formatting (varied structure)");
-      // 13) Generate Markdown formatted newsletter (MODIFIED FOR VARIED STRUCTURE + TWO-COLUMN HERO)
-const markdownSystemPrompt = `
-You are a professional newsletter editor for "Chain of Thought" by LetterNest.  
-Your job: take pre-analysed thematic content and output clean, beautiful Markdown **that now opens with a two-column hero section**.
+      logStep("Starting Twin Focus markdown newsletter formatting");
+      const markdownSystemPrompt = `You are a professional newsletter editor for the "Twin Focus" template. Format pre-analyzed content (hook, main focus areas with dual perspectives, quick insights, image URLs) into clean, beautiful, well-structured Markdown optimized for side-by-side layouts.
 
-===============================
-◆ NEWSLETTER STRUCTURE
-===============================
-1.  **HEADER** – H1 “Chain of Thought”, date (H3), subtle <hr>.
-2.  **INTRODUCTION** – the generated HOOK (1-2 sentences).
-3.  **HERO TWO-COLUMN OVERVIEW** (⚠️ **New**):
-    <table role="presentation" class="two-col-table" style="width:100%;border-spacing:0;margin:30px 0;">
-      <tr>
-        <!-- LEFT COLUMN – HERO IMAGE + BULLETS -->
-        <td style="width:50%;padding:0 12px;vertical-align:top;">
-          <img src="{{HERO_IMAGE_URL}}" alt="Hero image" style="width:100%;max-width:100%;border-radius:8px;"/>
-          <ul>
-            <li>Bullet point 1 (concise takeaway)</li>
-            <li>Bullet point 2 …</li>
-            <li>Bullet point 3 …</li>
-          </ul>
-        </td>
-        <!-- RIGHT COLUMN – PARAGRAPH SUMMARY -->
-        <td style="width:50%;padding:0 12px;vertical-align:top;">
-          <p>{{HERO_PARAGRAPH_1}}</p>
-          <p>{{HERO_PARAGRAPH_2}}</p>
-        </td>
-      </tr>
-    </table>
+NEWSLETTER STRUCTURE:
+1. HEADER: Title (H1 "Twin Focus"), Date (H3/Subtitle), Horizontal rule
+2. INTRODUCTION: The "HOOK"
+3. MAIN FOCUS SECTIONS: For each focus area:
+   * Section Title (H2)
+   * Image: If 'RepresentativeImageURL' is valid, include it
+   * Dual Perspective layout:
+     - Perspective A (H3 + bullet points)
+     - Perspective B (H3 + bullet points)
+   * Synthesis (detailed explanation connecting both perspectives)
+   * Horizontal rule for separation
+4. QUICK INSIGHTS: Section Title (H2). For each insight:
+   * Sub-section Title (H3)
+   * Image: If 'RepresentativeImageURL' is valid, include it
+   * Summary content
+5. FOOTER: Horizontal rule, "Generated by LetterNest."
 
-    • \`{{HERO_IMAGE_URL}}\` → use *the first valid* \`RepresentativeImageURL\` from Main Theme 1.  
-    • Bullets → derive from Main Theme 1 “Key Insights”.  
-    • Paragraphs → 2-3 sentence plain-language summary of Main Theme 1’s “The Gist”.
+FORMATTING GUIDELINES:
+- Clean Markdown with generous white space
+- Professional, balanced, accessible tone
+- Image Usage: Include 'RepresentativeImageURL' where valid
+- Dual-column friendly structure
+- Bold and italic formatting for emphasis
+- Do not invent content - only format
 
-4.  **MAIN THEMATIC SECTIONS** – unchanged (titles, gist, key insights, deeper dive, etc.).
-5.  **NOTEWORTHY SIDETRACKS** – unchanged.
-6.  **FOOTER** – unchanged.
-
-===============================
-◆ FORMATTING RULES
-===============================
-• Keep all existing bold / italic / call-out formatting rules.  
-• Raw HTML blocks (the <table> above) are allowed in Markdown.  
-• Do **not** invent new content; pull from the supplied analysis.  
-• Tone: human, 10th-grade reading level, clear spacing.
-
-OUTPUT **only** the fully-formatted Markdown.
-`;
-
-
+OUTPUT: ONLY the formatted Markdown content.`;
       
-      const markdownUserPrompt = `Format this thematic analysis (with varied structures) into the "Chain of Thought" Markdown newsletter. Prioritize including images and correctly formatting special text structures.
+      const markdownUserPrompt = `Format this Twin Focus analysis into the "Twin Focus" Markdown newsletter. Prioritize balanced layouts and include images.
 Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-THEMATIC ANALYSIS CONTENT:
+TWIN FOCUS ANALYSIS CONTENT:
 ${finalAnalysisForMarkdown}`;
       
       try {
@@ -409,13 +385,13 @@ ${finalAnalysisForMarkdown}`;
               { role: "system", content: markdownSystemPrompt },
               { role: "user", content: markdownUserPrompt }
             ],
-            temperature: 0.2, max_tokens: 10000
+            temperature: 0.2, max_tokens: 8000
           })
         });
         if (markdownOpenaiRes.ok) {
           const markdownJson = await markdownOpenaiRes.json();
           markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("'Chain of Thought' Markdown (varied structure) generated successfully");
+          logStep("Twin Focus Markdown generated successfully");
         } else {
           const errorText = await markdownOpenaiRes.text();
           console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
@@ -430,97 +406,7 @@ ${finalAnalysisForMarkdown}`;
       markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
     }
 
-    // 14) Generate Enhanced Markdown with UI/UX (UPDATED WITH NEW PROFESSIONAL COLOR SCHEME)
-    let enhancedMarkdownNewsletter = markdownNewsletter;
-    try {
-      logStep("Generating enhanced UI/UX markdown with professional color scheme");
-      const enhancedSystemPrompt = `
-You are a newsletter UI/UX specialist. Take the "Chain of Thought" markdown and output a **visually-enhanced** markdown/HTML hybrid using inline CSS.  
-
-======================
-◆ DESIGN LANGUAGE
-======================
-• **Primary Navy #142a4b** (headings)  
-• **Accent Blue #5774cd** (links, bullets)  
-• **Card BG Light #f7f9fc** (alternate theme sections)  
-• **Card BG White #ffffff** (every other section)  
-• **Body text #333** | Font "Lato, Tahoma, Verdana, Segoe, sans-serif"
-
-======================
-◆ ENHANCEMENT RULES
-======================
-1.  **Section Wrappers**  
-    • Wrap every MAIN THEME in  
-      \`<div class="theme-card"> … </div>\`  
-      Cards must **alternate** bg color: odd = \`#f7f9fc\`, even = \`#ffffff\`.  
-    • Wrap NOTEWORTHY SIDETRACKS list in  
-      \`<div class="sidetrack-card"> … </div>\` with bg \`#f7f9fc\`.
-
-2.  **Hero Table** – keep exactly one; leave its inline styles intact.
-
-3.  **Dividers & Spacers**  
-    • Insert \`<div class="section-divider"></div>\` between major areas (Hero → Themes, Themes → Sidetracks, Sidetracks → Footer).  
-    • A divider is a 2 px full-width gradient \`#d2ddec → #5774cd → #d2ddec\` with 32 px top/bottom margin.
-
-4.  **Card Styling**  
-    Inside theme & sidetrack cards add  
-    \`padding: 24px 28px; border-radius: 12px; box-shadow: 0 3px 12px rgba(20,42,75,.04);\`.
-
-5.  **Bullets & Tables**  
-    • Bullets: \`<li>\` text stays dark; bullet itself accent blue.  
-    • If the markdown contains tables like \`| col | col |\`, leave them—they inherit card padding.
-
-6.  **Email-Client Safety** – All CSS must be INLINE or in the \`<style>\` tag already present.
-
-OUTPUT only the fully-formatted markdown/HTML blend.
-`;
-
-
-      
-      const enhancedUserPrompt = `
-Transform the "Chain of Thought" markdown below into a **professionally enhanced** version using the sophisticated color palette and styling rules. Pay special attention to:
-- Professional hierarchy with the navy/blue color scheme
-- Enhanced styling for "KEY TAKEAWAY BOX:" and "THEME SNAPSHOT:" elements
-- Improved spacing and typography for excellent readability
-- Section dividers that create visual flow
-- User friendliness and and visuals
-
-"Chain of Thought" Markdown Draft:
-<current newsletter>
-${markdownNewsletter}
-</current newsletter>
-`;
-      
-      try {
-        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", 
-            messages: [
-              { role: "system", content: enhancedSystemPrompt },
-              { role: "user", content: enhancedUserPrompt }
-            ],
-            temperature: 0.1, // Very low temp for precise styling application
-            max_tokens: 10000 
-          })
-        });
-        if (enhancedOpenaiRes.ok) {
-          const enhancedJson = await enhancedOpenaiRes.json();
-          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced UI/UX markdown with professional color scheme generated");
-        } else {
-          const errorText = await enhancedOpenaiRes.text();
-          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
-        }
-      } catch (enhancedError) {
-        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
-      }
-    } catch (err) {
-      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-    }
-
-    // 15) Clean up stray text around enhanced Markdown (No changes needed here)
+    // 14) Clean up markdown
     function cleanMarkdown(md: string): string {
       let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
       cleaned = cleaned.trim();
@@ -540,163 +426,79 @@ ${markdownNewsletter}
       }
       return cleaned;
     }
-    const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
-    logStep("Cleaned up final markdown for 'Chain of Thought'");
+    const finalMarkdown = cleanMarkdown(markdownNewsletter);
+    logStep("Cleaned up final markdown for Twin Focus");
 
-    // 16) Convert final Markdown to HTML & inline CSS (UPDATED RENDERER WITH PROFESSIONAL STYLING)
+    // 15) Convert final Markdown to HTML with basic styling
     const renderer = new marked.Renderer();
     
-    // Override paragraph rendering with professional styling
+    // Basic paragraph rendering
     renderer.paragraph = (text) => {
-        if (text.trim().startsWith('<div style="height: 2px;') || text.trim().startsWith('<div style="background-color:')) {
+        if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
             return text.trim() + '\n';
         }
-        return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px; color: #333333; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</p>\n`;
+        return `<p style="margin: 0 0 1.2em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
     };
 
-    // Professional list item rendering
+    // Basic list item rendering
     renderer.listitem = (text, task, checked) => {
       if (task) {
         return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
       }
-      return `<li style="margin: 0 0 0.9em 0; font-size: 16px; line-height: 1.7; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">${text}</span></li>\n`;
+      return `<li style="margin: 0 0 0.8em 0; font-size: 16px; line-height: 1.6; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
     };
 
-    // Professional heading renderer with enhanced typography
+    // Basic heading renderer
     renderer.heading = (text, level) => {
-      const colors = {
-        1: '#142a4b',
-        2: '#142a4b', 
-        3: '#5774cd'
-      };
-      const sizes = {
-        1: '32px',
-        2: '26px',
-        3: '22px'
-      };
-      const weights = {
-        1: '700',
-        2: '600',
-        3: '500'
-      };
+      const sizes = { 1: '28px', 2: '24px', 3: '20px', 4: '18px', 5: '16px', 6: '14px' };
+      const margins = { 1: '0 0 16px 0', 2: '24px 0 12px 0', 3: '20px 0 10px 0', 4: '16px 0 8px 0', 5: '14px 0 6px 0', 6: '12px 0 6px 0' };
       
-      const color = colors[level as keyof typeof colors] || '#142a4b';
-      const size = sizes[level as keyof typeof sizes] || '18px';
-      const weight = weights[level as keyof typeof weights] || '500';
+      const size = sizes[level as keyof typeof sizes] || '16px';
+      const margin = margins[level as keyof typeof margins] || '12px 0 6px 0';
       
-      const sectionClass = level === 2 ? ' class="section-heading"' : '';
-      
-      return `<h${level}${sectionClass} style="color:${color};
-                               font-size:${size};
-                               margin:1.5em 0 0.8em;
-                               font-weight:${weight};
-                               font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</h${level}>\n`;
+      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; line-height:1.3; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
     };
 
-    // Enhanced image renderer with professional container styling
+    // Basic image renderer
     renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 25px 0 35px; padding: 0;">
+      <div style="text-align:center; margin: 20px 0;">
         <img src="${href}"
              alt="${alt || 'Newsletter image'}"
-             style="max-width:100%; width:auto; max-height:500px; height:auto; border-radius:12px;
-                    display:inline-block; box-shadow: 0 6px 20px rgba(20,42,75,0.15); border: 1px solid #d2ddec;">
+             style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px;
+                    display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
       </div>`;
 
-    // Convert the final markdown to HTML using the enhanced renderer
+    // Convert the final markdown to HTML
     const htmlBody = marked(finalMarkdown, { renderer });
 
-    // Generate the final email HTML with professional design system
-const emailHtml = juice(`
-  <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-    <!-- Professional print CSS for PDF generation -->
-    <style>
-      @media print {
-        body, html { width:100%; height:auto; background:#ffffff !important; }
-        h1, h2, h3  { page-break-after:avoid; margin-top:1.2em; }
-        .image-container { page-break-inside:avoid; }
-        p, ul, ol, dl, blockquote { page-break-inside:auto; }
-        .section-break { page-break-after:always; }
-        .content-container { page-break-inside:auto !important; }
-      }
+    // Generate basic email HTML
+    const emailHtml = juice(`
+      <body style="background-color:#f8f9fa; margin:0; padding:0; font-family: Arial, sans-serif;">
+        <style>
+          @media print {
+            body, html { width: 100%; background-color: #ffffff !important; }
+            h1, h2, h3 { page-break-after: avoid; }
+            .image-container { page-break-inside: avoid; }
+          }
+          
+          @media screen and (max-width: 600px) {
+            body { background-color: #ffffff !important; }
+            .content-container { max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+            .content-body { padding: 16px 12px !important; }
+            h1 { font-size: 24px !important; }
+            h2 { font-size: 20px !important; }
+            h3 { font-size: 18px !important; }
+          }
+        </style>
 
-      /* Mobile-first full-width optimisation */
-      @media screen and (max-width:600px){
-        body              { background:#ffffff !important; }
-        .content-wrapper  { padding:0 !important; background:#ffffff !important; }
-        .content-container{ max-width:100% !important; width:100% !important; margin:0 !important;
-                            border-radius:0 !important; box-shadow:none !important; border:none !important; }
-        .content-body     { padding:16px 10px !important; font-size:16px !important; line-height:1.6 !important; }
-        h1                { font-size:28px !important; margin:0 0 16px 0 !important; line-height:1.3 !important; }
-        h2                { font-size:22px !important; margin:24px 0 12px 0 !important; line-height:1.4 !important; }
-        h3                { font-size:18px !important; margin:20px 0 10px 0 !important; line-height:1.4 !important; }
-        p                 { font-size:16px !important; line-height:1.6 !important; margin:0 0 16px 0 !important; }
-        li                { font-size:16px !important; line-height:1.6 !important; margin-bottom:12px !important; }
-        .image-container  { margin:16px 0 20px 0 !important; padding:0 !important; }
-        .image-container img { border-radius:6px !important; box-shadow:0 2px 8px rgba(20,42,75,.08) !important; max-width:100% !important; }
-        div[style*="background-color: #d2ddec"],
-        div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"],
-        div[style*="background-color: #f8f9fa"] { padding:12px 10px !important; margin:16px 0 !important; border-radius:4px !important; }
-        .footer           { padding:20px 10px 24px 10px !important; font-size:14px !important; background:#ffffff !important; }
-      }
-
-      /* Enhanced typography and spacing for all devices */
-      .content-body h1, .content-body h2, .content-body h3 { font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
-      .content-body p,  .content-body li                  { font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
-
-      /* Tablet optimisation (601-900px) */
-      @media screen and (min-width:601px) and (max-width:900px){
-        .content-container{ max-width:95% !important; margin:0 auto !important; }
-        .content-body     { padding:35px 30px !important; }
-      }
-
-      /*–––––––– Two-column hero table – desktop & mobile ––––––––*/
-      .two-col-table ul { margin:12px 0 0 18px; padding:0; }
-      .two-col-table li { color:#5774cd; margin-bottom:8px; font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif; }
-      @media screen and (max-width:600px){
-        .two-col-table, .two-col-table tr, .two-col-table td{ display:block !important; width:100% !important; }
-        .two-col-table td{ padding:0 !important; }
-      }
-
-      /* === Card-based layout for MAIN THEMES & SIDETRACKS === */
-      .theme-card,
-      .sidetrack-card {
-        padding:24px 28px;
-        border-radius:12px;
-        box-shadow:0 3px 12px rgba(20,42,75,.04);
-        margin-bottom:42px;
-      }
-      .theme-card:nth-of-type(odd)  { background:#f7f9fc; }
-      .theme-card:nth-of-type(even) { background:#ffffff; }
-      .sidetrack-card               { background:#f7f9fc; }
-
-      /* === Gradient section divider === */
-      .section-divider{
-        height:2px;
-        background:linear-gradient(to right,#d2ddec,#5774cd,#d2ddec);
-        margin:32px 0;
-      }
-
-      /* Better hero-table alignment & bullets everywhere */
-      .two-col-table td { vertical-align:top; }
-      .two-col-table ul { margin:18px 0 0 20px; }
-      .two-col-table li,
-      .theme-card li,
-      .sidetrack-card li { color:#5774cd; }
-    </style>
-
-
-
-        <!-- Professional newsletter container -->
-        <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f5f7fa; padding: 20px 0;">
-         <div class="content-container" style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
-
-            <div class="content-body" style="padding: 24px 16px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-
+        <div style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f8f9fa; padding: 20px 0;">
+          <div style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.1); text-align: left;">
+            <div style="padding: 24px 20px; line-height: 1.7; color: #333333; font-size: 16px; font-family: Arial, sans-serif;">
               ${htmlBody}
             </div>
           </div>
           
-          <div class="footer" style="text-align: center; padding: 35px 0 45px 0; font-size: 14px; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+          <div style="text-align: center; padding: 30px 0 40px 0; font-size: 14px; color: #666; font-family: Arial, sans-serif;">
             Powered by <strong>LetterNest</strong><br>
             <span style="color: #888; font-size: 12px;">Professional Newsletter Generation</span>
           </div>
@@ -704,27 +506,27 @@ const emailHtml = juice(`
       </body>
     `);
 
-    logStep("Converted 'Chain of Thought' markdown to HTML with professional design system");
+    logStep("Converted Twin Focus markdown to HTML with basic styling");
 
-    // 17) Send email via Resend (No changes here)
+    // 16) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai"; 
-      const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; 
+      const emailSubject = `Twin Focus: Your Newsletter from LetterNest`; 
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
       });
       if (emailError) { console.error("Error sending email with Resend:", emailError); throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`); }
-      logStep("'Chain of Thought' Email sent successfully", { id: emailData?.id });
+      logStep("Twin Focus Email sent successfully", { id: emailData?.id });
     } catch (sendErr) { console.error("Error sending email:", sendErr); }
 
-    // 18) Save the newsletter to newsletter_storage table (No changes here)
+    // 17) Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({ user_id: userId, markdown_text: finalMarkdown });
-      if (storageError) { console.error("Failed to save 'Chain of Thought' newsletter to storage:", storageError); } 
-      else { logStep("'Chain of Thought' Newsletter successfully saved to storage"); }
-    } catch (storageErr) { console.error("Error saving 'Chain of Thought' newsletter to storage:", storageErr); }
+      if (storageError) { console.error("Failed to save Twin Focus newsletter to storage:", storageError); } 
+      else { logStep("Twin Focus Newsletter successfully saved to storage"); }
+    } catch (storageErr) { console.error("Error saving Twin Focus newsletter to storage:", storageErr); }
 
-    // 19) Update remaining generations count (No changes here)
+    // 18) Update remaining generations count
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({ remaining_newsletter_generations: newCount }).eq("id", userId);
@@ -732,32 +534,32 @@ const emailHtml = juice(`
       else { logStep("Updated remaining generations count", { newCount }); }
     }
 
-    // 20) Final log & response (No changes here)
+    // 19) Final log & response
     const timestamp = new Date().toISOString();
-    logStep("'Chain of Thought' newsletter generation successful with professional design", {
+    logStep("Twin Focus newsletter generation successful", {
       userId, timestamp, tweetCount: selectedCount,
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
     });
     return {
       status: "success",
-      message: "'Chain of Thought' newsletter generated and process initiated for email.",
+      message: "Twin Focus newsletter generated and process initiated for email.",
       remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
       data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
     };
   } catch (error) {
-    console.error("Error in background 'Chain of Thought' newsletter generation process:", error);
+    console.error("Error in background Twin Focus newsletter generation process:", error);
     return {
       status: "error",
-      message: (error as Error).message || "Internal server error during 'Chain of Thought' generation"
+      message: (error as Error).message || "Internal server error during Twin Focus generation"
     };
   }
 }
 
-// Main serve function (No changes here)
+// Main serve function
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") { return new Response(null, { headers: corsHeaders }); }
   try {
-    logStep("Starting 'Chain of Thought' newsletter generation process (HTTP)");
+    logStep("Starting Twin Focus newsletter generation process (HTTP)");
     const { selectedCount } = await req.json();
     if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
       return new Response(JSON.stringify({ error: "Invalid selection. Please choose 10, 20, or 30 tweets." }), 
@@ -788,10 +590,10 @@ serve(async (req: Request) => {
     }
     return new Response(JSON.stringify({
       status: "processing",
-      message: "Your 'Chain of Thought' newsletter generation has started. You will receive an email when it's ready.",
+      message: "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
     }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("Error in manual-newsletter-generation function:", error);
+    console.error("Error in Twin Focus newsletter generation function:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), 
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
