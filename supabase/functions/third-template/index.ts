@@ -501,127 +501,122 @@ ${finalAnalysisForMarkdown}`;
              style="max-width:100%; width:auto; max-height:400px; height:auto; border-radius:8px; display:inline-block; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border:1px solid #dfe6e9;">
       </div>`;
 
-// ---------------- TABLE -> gradient card ----------------
-renderer.table = (header, body) => `
-  <div class="table-wrapper">
-    <table role="presentation">
-      <thead>
-        ${header.replace(
-          /<th>/g,
-          '<th style="background:var(--c-teal);color:#ffffff;padding:16px;font-size:16px;text-align:left;">'
-        )}
-      </thead>
-      <tbody>
-        ${body.replace(
-          /<td>/g,
-          '<td style="padding:16px;font-size:16px;vertical-align:top;border-top:1px solid #ede6dc;">'
-        )}
-      </tbody>
-    </table>
-  </div>`;
+    // TABLE -> gradient card
+    renderer.table = (header, body) => `
+      <div class="table-wrapper">
+        <table role="presentation">
+          <thead>
+            ${header.replace(
+              /<th>/g,
+              '<th style="background:var(--c-teal);color:#ffffff;padding:16px;font-size:16px;text-align:left;">'
+            )}
+          </thead>
+          <tbody>
+            ${body.replace(
+              /<td>/g,
+              '<td style="padding:16px;font-size:16px;vertical-align:top;border-top:1px solid #ede6dc;">'
+            )}
+          </tbody>
+        </table>
+      </div>`;
 
-// ---------------- MD '---' -> visual divider ------------
-renderer.hr = () => '<div class="section-divider"></div>';
+    // MD '---' -> visual divider
+    renderer.hr = () => '<div class="section-divider"></div>';
 
-// ---------------- markdown → HTML -----------------------
-const htmlBody = marked(finalMarkdown, { renderer });
+    // markdown → HTML
+    const htmlBody = marked(finalMarkdown, { renderer });
 
-// ---------------- email HTML ----------------------------
-const emailHtml = juice(`
-  <head>
-    <meta name="color-scheme" content="light">
-    <meta name="supported-color-schemes" content="light">
-  </head>
-  <body bgcolor="#ece9e4" style="background:#ece9e4;margin:0;padding:0;">
+    // email HTML - FIXED: Properly closed template string
+    const emailHtml = juice(`
+      <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
+      </head>
+      <body bgcolor="#ece9e4" style="background:#ece9e4;margin:0;padding:0;">
 
-  <style>
-  /* ----------  BRAND PALETTE  ---------- */
-  :root{
-    --c-teal:  #01caa6;
-    --c-beige: #fdf8f2;
-    --c-navy:  #1f254a;
-    --outer-bg:#ece9e4;
-    --grad-beige:linear-gradient(135deg,#fffdfa 0%,#fef5ea 100%);
-  }
+      <style>
+      /* ----------  BRAND PALETTE  ---------- */
+      :root{
+        --c-teal:  #01caa6;
+        --c-beige: #fdf8f2;
+        --c-navy:  #1f254a;
+        --outer-bg:#ece9e4;
+        --grad-beige:linear-gradient(135deg,#fffdfa 0%,#fef5ea 100%);
+      }
 
-  /* ----------  GLOBAL  ---------- */
-  body         { background:var(--outer-bg); margin:0; padding:0;
-                 font-family:'Inter', Arial, sans-serif; color:var(--c-navy); }
-  p, li        { font-size:17px; line-height:1.9; margin:0 0 1.3em; }
-  .wrapper     { max-width:640px; margin:0 auto; background:var(--c-beige);
-                 border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.08); }
-  .content-body{ padding:40px 34px; background:#ffffff; border-radius:16px; }
+      /* ----------  GLOBAL  ---------- */
+      body         { background:var(--outer-bg); margin:0; padding:0;
+                     font-family:'Inter', Arial, sans-serif; color:var(--c-navy); }
+      p, li        { font-size:17px; line-height:1.9; margin:0 0 1.3em; }
+      .wrapper     { max-width:640px; margin:0 auto; background:var(--c-beige);
+                     border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.08); }
+      .content-body{ padding:40px 34px; background:#ffffff; border-radius:16px; }
 
-  /* ----------  TYPOGRAPHY  ---------- */
-  h1{ font-size:32px; margin:0 0 28px; font-weight:800; color:var(--c-navy);}
-  h2{ font-size:26px; margin:34px 0 16px; font-weight:700; color:var(--c-teal);}
-  h3{ font-size:22px; margin:28px 0 14px; font-weight:700; color:var(--c-navy);}
+      /* ----------  TYPOGRAPHY  ---------- */
+      h1{ font-size:32px; margin:0 0 28px; font-weight:800; color:var(--c-navy);}
+      h2{ font-size:26px; margin:34px 0 16px; font-weight:700; color:var(--c-teal);}
+      h3{ font-size:22px; margin:28px 0 14px; font-weight:700; color:var(--c-navy);}
 
-  /* ----------  VISUAL SEPARATORS  ---------- */
-  .section-divider{
-    height:3px; margin:48px 0;
-    background:linear-gradient(90deg,transparent 0%,var(--c-teal) 50%,transparent 100%);
-  }
+      /* ----------  VISUAL SEPARATORS  ---------- */
+      .section-divider{
+        height:3px; margin:48px 0;
+        background:linear-gradient(90deg,transparent 0%,var(--c-teal) 50%,transparent 100%);
+      }
 
-  /* ----------  TABLE WRAPPER  ---------- */
-  .table-wrapper{
-    background:var(--grad-beige); padding:2px; border-radius:14px;
-    box-shadow:0 2px 12px rgba(0,0,0,.05); margin:28px 0;
-  }
-  table{ width:100%; border-collapse:collapse; }
-  table th{
-    background:var(--c-teal); color:#ffffff; padding:16px;
-    font-size:16px; text-align:left;
-  }
-  table td{
-    padding:16px; font-size:16px; vertical-align:top;
-    border-top:1px solid #ede6dc;
-  }
+      /* ----------  TABLE WRAPPER  ---------- */
+      .table-wrapper{
+        background:var(--grad-beige); padding:2px; border-radius:14px;
+        box-shadow:0 2px 12px rgba(0,0,0,.05); margin:28px 0;
+      }
+      table{ width:100%; border-collapse:collapse; }
+      table th{
+        background:var(--c-teal); color:#ffffff; padding:16px;
+        font-size:16px; text-align:left;
+      }
+      table td{
+        padding:16px; font-size:16px; vertical-align:top;
+        border-top:1px solid #ede6dc;
+      }
 
-  /* ----------  IMAGES  ---------- */
-  img.responsive{
-    max-width:100%; height:auto; border-radius:12px;
-    box-shadow:0 5px 20px rgba(0,0,0,.08); margin:26px 0;
-  }
+      /* ----------  IMAGES  ---------- */
+      img.responsive{
+        max-width:100%; height:auto; border-radius:12px;
+        box-shadow:0 5px 20px rgba(0,0,0,.08); margin:26px 0;
+      }
 
-  /* ----------  BLOCKQUOTE  ---------- */
-  blockquote{
-    border-left:5px solid var(--c-teal); padding-left:16px;
-    margin:0 0 1.3em; font-style:italic; color:#58606f;
-  }
+      /* ----------  BLOCKQUOTE  ---------- */
+      blockquote{
+        border-left:5px solid var(--c-teal); padding-left:16px;
+        margin:0 0 1.3em; font-style:italic; color:#58606f;
+      }
 
-  /* ----------  RESPONSIVE  ---------- */
-  @media(max-width:600px){
-    .content-body{ padding:30px 22px; }
-    h1{ font-size:28px; }
-    h2{ font-size:23px; }
-    h3{ font-size:20px; }
-    p, li{ font-size:16px; }
-  }
+      /* ----------  RESPONSIVE  ---------- */
+      @media(max-width:600px){
+        .content-body{ padding:30px 22px; }
+        h1{ font-size:28px; }
+        h2{ font-size:23px; }
+        h3{ font-size:20px; }
+        p, li{ font-size:16px; }
+      }
 
-  @media print{
-    body,html{ width:100%; margin:0; background:#ffffff !important; }
-    .wrapper{ width:100% !important; max-width:none !important; border-radius:0 !important; }
-    table td{ padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
-    h1,h2,h3{ page-break-after:avoid; }
-  }
-  </style>
-`);
+      @media print{
+        body,html{ width:100%; margin:0; background:#ffffff !important; }
+        .wrapper{ width:100% !important; max-width:none !important; border-radius:0 !important; }
+        table td{ padding:10px !important; font-size:14px !important; line-height:1.4 !important; }
+        h1,h2,h3{ page-break-after:avoid; }
+      }
+      </style>
 
-
-
-
-
-        <div class="wrapper" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
-          <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#2c3e50;font-size:16px;font-family:'Helvetica Neue',Arial,sans-serif;background:#ffffff;">
-            ${htmlBody}
-          </div>
+      <div class="wrapper" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
+        <div class="content-body" style="padding:20px 16px;line-height:1.7;color:#2c3e50;font-size:16px;font-family:'Helvetica Neue',Arial,sans-serif;background:#ffffff;">
+          ${htmlBody}
         </div>
+      </div>
 
-        <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#95a5a6;font-family:'Helvetica Neue',Arial,sans-serif;">
-          Powered by <strong style="color:#2c3e50;">LetterNest</strong><br>
-          <span style="color:#bdc3c7;font-size:12px;">Professional Newsletter Generation</span>
-        </div>
+      <div style="text-align:center;padding:30px 0 40px 0;font-size:14px;color:#95a5a6;font-family:'Helvetica Neue',Arial,sans-serif;">
+        Powered by <strong style="color:#2c3e50;">LetterNest</strong><br>
+        <span style="color:#bdc3c7;font-size:12px;">Professional Newsletter Generation</span>
+      </div>
       </body>`);
 
     logStep("Converted Twin Focus markdown to HTML with styling improvements");
