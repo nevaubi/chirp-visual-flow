@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -167,12 +168,17 @@ const NewsletterDashboard = ({ profile }) => {
   };
 
   // Standardized Newsletter Card Component
-  const NewsletterCard = ({ title, description, templateId, templateName, buttonText, isManual = false }) => (
+  const NewsletterCard = ({ title, description, templateId, templateName, buttonText, isManual = false, templateNumber }) => (
     <Card className="border border-gray-200 bg-white shadow-sm h-full flex flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl font-semibold text-gray-900">
           {title}
         </CardTitle>
+        {templateNumber && (
+          <div className="text-sm text-gray-500 -mt-1">
+            Template {templateNumber}
+          </div>
+        )}
         <CardDescription className="text-sm text-gray-600">
           {description}
         </CardDescription>
@@ -284,12 +290,13 @@ const NewsletterDashboard = ({ profile }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Manual Newsletter Generation */}
         <NewsletterCard
-          title="Generate Newsletter Manually"
-          description="Instantly trigger a newsletter from your saved bookmarks. It will be sent to your email and displayed here."
+          title="Classic Layout"
+          description="Manually generate a newsletter with your chosen bookmark count - clean, structured layout for polished daily reading."
           templateId={null}
           templateName=""
           buttonText="Generate Newsletter"
           isManual={true}
+          templateNumber="1"
         />
 
         {/* Twin Focus Template - moved to second position */}
@@ -300,6 +307,7 @@ const NewsletterDashboard = ({ profile }) => {
           templateName="Twin Focus"
           buttonText="Generate Newsletter"
           isManual={false}
+          templateNumber="2"
         />
 
         {/* Modern Clean Template - moved to third position */}
@@ -310,6 +318,7 @@ const NewsletterDashboard = ({ profile }) => {
           templateName="Modern Clean"
           buttonText="Generate Newsletter"
           isManual={false}
+          templateNumber="3"
         />
       </div>
 
