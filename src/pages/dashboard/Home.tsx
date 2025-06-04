@@ -1,9 +1,8 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield, ArrowLeft } from 'lucide-react';
+import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,50 +55,30 @@ const NewsletterDashboard = ({ profile }) => {
 
   return (
     <div className="space-y-6">
-      {/* Restructured header layout */}
+      {/* Updated header layout - full width */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left side - Visual indicator only - Hidden on mobile */}
-        <div className="hidden lg:block lg:w-1/4">
-          <Card className="border-2 border-[#0087C8] bg-gradient-to-r from-[#0087C8]/5 to-[#0087C8]/10 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="pt-6 pb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-[#0087C8] text-white">
-                  <ArrowLeft size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#0087C8]">Generate your newsletter</h3>
-                  <p className="text-sm text-gray-600">Create from your X bookmarks</p>
+        {/* Center - Welcome text */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+          </div>
+        </div>
+        
+        {/* Right - Instructions - Center aligned on mobile */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center lg:justify-end">
+          <div className="text-center lg:text-right">
+            <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-center lg:justify-end gap-2">
+                <span>Authorize X access via popup</span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
+                  1
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Center and Right - Welcome and Instructions */}
-        <div className="w-full lg:w-3/4 flex flex-col lg:flex-row gap-6">
-          {/* Center - Welcome text only */}
-          <div className="w-full lg:w-1/2 flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
-            </div>
-          </div>
-          
-          {/* Right - Instructions - Center aligned on mobile */}
-          <div className="w-full lg:w-1/2 flex items-center justify-center lg:justify-end">
-            <div className="text-center lg:text-right">
-              <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-center lg:justify-end gap-2">
-                  <span>Authorize X access via popup</span>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
-                    1
-                  </div>
-                </div>
-                <div className="flex items-center justify-center lg:justify-end gap-2">
-                  <span>Upgrade to subscription</span>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
-                    2
-                  </div>
+              <div className="flex items-center justify-center lg:justify-end gap-2">
+                <span>Upgrade to subscription</span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
+                  2
                 </div>
               </div>
             </div>
