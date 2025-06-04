@@ -181,15 +181,6 @@ const NewsletterDashboard = ({ profile }) => {
         {isManual && (
           null
         )}
-        
-        {!isManual && (
-          <div className="text-center space-y-3">
-            <p className="text-sm text-gray-700">Choose how many recent bookmarks to use for your newsletter</p>
-            <div className="flex justify-center">
-              <span className="text-2xl text-gray-400">↓</span>
-            </div>
-          </div>
-        )}
 
         {/* Scrollable Container */}
         <div className="border border-gray-200 rounded-lg h-32 overflow-hidden">
