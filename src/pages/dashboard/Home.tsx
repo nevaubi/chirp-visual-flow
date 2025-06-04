@@ -180,7 +180,7 @@ const NewsletterDashboard = ({ profile }) => {
     researchDepthActive = 5,
     mediaActive = 3
   }) => (
-    <Card className="border border-gray-200 bg-white shadow-sm h-full flex flex-col">
+    <Card className="bg-white rounded-xl shadow-sm h-full flex flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl font-semibold text-gray-900">
           {title}
@@ -195,36 +195,32 @@ const NewsletterDashboard = ({ profile }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 flex-1">
-        {isManual && (
-          null
-        )}
-
-        {/* Scrollable Container - increased height from h-32 to h-48 */}
-        <div className="border border-gray-200 rounded-lg h-48 overflow-hidden">
-          <ScrollArea className="h-full w-full p-4">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        {/* Enhanced Content Preview Area */}
+        <div className="bg-gray-50 rounded-lg p-4 h-48 overflow-hidden">
+          <ScrollArea className="h-full w-full">
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-4/5"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-2/5"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-3/5"></div>
             </div>
           </ScrollArea>
         </div>
 
-        {/* 2-Column Metrics Display */}
-        <div className="space-y-2">
+        {/* Enhanced Metrics Display */}
+        <div className="space-y-3">
           {/* Avg Length */}
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Avg Length</span>
-            <div className="flex gap-1">
+            <span className="text-gray-700 font-medium">Avg Length</span>
+            <div className="flex space-x-1">
               {[...Array(5)].map((_, i) => (
                 <span 
                   key={i} 
                   className={`text-base ${i >= avgLengthActive ? 'opacity-20' : ''}`}
                 >
-                  📜
+                  📄
                 </span>
               ))}
             </div>
@@ -232,8 +228,8 @@ const NewsletterDashboard = ({ profile }) => {
           
           {/* Research Depth */}
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Research Depth</span>
-            <div className="flex gap-1">
+            <span className="text-gray-700 font-medium">Research Depth</span>
+            <div className="flex space-x-1">
               {[...Array(5)].map((_, i) => (
                 <span 
                   key={i} 
@@ -247,9 +243,9 @@ const NewsletterDashboard = ({ profile }) => {
           
           {/* Media */}
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Media</span>
-            <div className="flex gap-1">
-              {['📝', '🖼️', '📽️'].map((emoji, i) => (
+            <span className="text-gray-700 font-medium">Media</span>
+            <div className="flex space-x-2">
+              {['📝', '🖼️', '📊'].map((emoji, i) => (
                 <span 
                   key={i} 
                   className={`text-base ${i >= mediaActive ? 'opacity-20' : ''}`}
@@ -267,7 +263,9 @@ const NewsletterDashboard = ({ profile }) => {
         
         <Button 
           onClick={isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName)}
-          className={isManual ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" : "bg-[#0078d7] hover:bg-[#106ebe] text-white"}
+          className={`w-full font-medium py-3 px-4 rounded-full transition-all duration-200 transform hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
+            isManual ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" : "bg-[#0078d7] hover:bg-[#106ebe] text-white"
+          }`}
           disabled={isManual ? remainingGenerations <= 0 : loadingTemplate === templateName}
         >
           {!isManual && loadingTemplate === templateName ? (
