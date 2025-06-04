@@ -222,7 +222,7 @@ const NewsletterDashboard = ({ profile }) => {
               {[...Array(5)].map((_, i) => (
                 <span 
                   key={i} 
-                  className={`text-base ${i >= avgLengthActive ? 'opacity-30' : ''}`}
+                  className={`text-base ${i >= avgLengthActive ? 'opacity-20' : ''}`}
                 >
                   📜
                 </span>
@@ -237,7 +237,7 @@ const NewsletterDashboard = ({ profile }) => {
               {[...Array(5)].map((_, i) => (
                 <span 
                   key={i} 
-                  className={`text-base ${i >= researchDepthActive ? 'opacity-30' : ''}`}
+                  className={`text-base ${i >= researchDepthActive ? 'opacity-20' : ''}`}
                 >
                   🔍
                 </span>
@@ -252,7 +252,7 @@ const NewsletterDashboard = ({ profile }) => {
               {['📝', '🖼️', '📽️'].map((emoji, i) => (
                 <span 
                   key={i} 
-                  className={`text-base ${i >= mediaActive ? 'opacity-30' : ''}`}
+                  className={`text-base ${i >= mediaActive ? 'opacity-20' : ''}`}
                 >
                   {emoji}
                 </span>
