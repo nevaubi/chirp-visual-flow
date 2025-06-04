@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -56,10 +55,15 @@ const NewsletterDashboard = ({ profile }) => {
 
   return (
     <div className="space-y-6">
-      {/* Updated header layout with left column */}
+      {/* Full-width Welcome Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+      </div>
+
+      {/* Two-column layout: Manual Generation (left) + Instructions (right) */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left - Manual Newsletter Generation */}
-        <div className="w-full lg:w-1/4">
+        <div className="w-full lg:w-1/3">
           <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -99,31 +103,21 @@ const NewsletterDashboard = ({ profile }) => {
           </Card>
         </div>
 
-        {/* Center and Right - Welcome and Instructions */}
-        <div className="w-full lg:w-3/4 flex flex-col lg:flex-row gap-6">
-          {/* Center - Welcome text */}
-          <div className="w-full lg:w-1/2 flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
-            </div>
-          </div>
-          
-          {/* Right - Instructions - Center aligned on mobile */}
-          <div className="w-full lg:w-1/2 flex items-center justify-center lg:justify-end">
-            <div className="text-center lg:text-right">
-              <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-center lg:justify-end gap-2">
-                  <span>Authorize X access via popup</span>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
-                    1
-                  </div>
+        {/* Right - Instructions */}
+        <div className="w-full lg:w-2/3 flex items-center justify-center lg:justify-end">
+          <div className="text-center lg:text-right">
+            <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-center lg:justify-end gap-2">
+                <span>Authorize X access via popup</span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
+                  1
                 </div>
-                <div className="flex items-center justify-center lg:justify-end gap-2">
-                  <span>Upgrade to subscription</span>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
-                    2
-                  </div>
+              </div>
+              <div className="flex items-center justify-center lg:justify-end gap-2">
+                <span>Upgrade to subscription</span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
+                  2
                 </div>
               </div>
             </div>
