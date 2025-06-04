@@ -55,14 +55,35 @@ const NewsletterDashboard = ({ profile }) => {
 
   return (
     <div className="space-y-6">
-      {/* Full-width Welcome Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+      {/* Header row with welcome text on left and instructions on right */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Left - Welcome text */}
+        <div className="text-center lg:text-left">
+          <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+        </div>
+
+        {/* Right - Instructions */}
+        <div className="text-center lg:text-right">
+          <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-center lg:justify-end gap-2">
+              <span>Authorize X access via popup</span>
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
+                1
+              </div>
+            </div>
+            <div className="flex items-center justify-center lg:justify-end gap-2">
+              <span>Upgrade to subscription</span>
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
+                2
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Two-column layout: Manual Generation (left) + Instructions (right) */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left - Manual Newsletter Generation */}
+      {/* Main content - Manual Newsletter Generation */}
+      <div className="flex justify-start">
         <div className="w-full lg:w-1/3">
           <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader className="pb-4">
@@ -101,27 +122,6 @@ const NewsletterDashboard = ({ profile }) => {
               </Button>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Right - Instructions */}
-        <div className="w-full lg:w-2/3 flex items-center justify-center lg:justify-end">
-          <div className="text-center lg:text-right">
-            <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-center lg:justify-end gap-2">
-                <span>Authorize X access via popup</span>
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
-                  1
-                </div>
-              </div>
-              <div className="flex items-center justify-center lg:justify-end gap-2">
-                <span>Upgrade to subscription</span>
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
-                  2
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
