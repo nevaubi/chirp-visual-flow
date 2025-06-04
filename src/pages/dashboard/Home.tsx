@@ -1,5 +1,3 @@
-
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -15,6 +13,7 @@ const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [selectedCount, setSelectedCount] = useState(10);
+  const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
   const { refreshProfile } = useAuth();
 
   // Check if user has a subscription
@@ -24,6 +23,10 @@ const NewsletterDashboard = ({ profile }) => {
   
   // Number of remaining manual generations
   const remainingGenerations = profile?.remaining_newsletter_generations || 0;
+  
+  // Check if user has required subscription tier for pro templates
+  const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
+                          profile?.subscription_tier === "Newsletter Premium";
   
   // Function to handle subscription checkout
   const handleUpgradeSubscription = async () => {
@@ -62,6 +65,265 @@ const NewsletterDashboard = ({ profile }) => {
     setShowManualDialog(true);
   };
 
+  const handleUseTemplate = async (templateId: number, templateName: string) => {
+    // Check if user has required subscription tier
+    if (!hasRequiredTier) {
+      toast.error("Subscription Required", {
+        description: "Please upgrade to Newsletter Standard or Premium to use templates.",
+      });
+      return;
+    }
+
+    if (!profile?.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
+      toast.error("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
+      });
+      return;
+    }
+
+    // Handle different templates
+    if (templateId === 1) {
+      // Modern Clean template
+      setLoadingTemplate(templateName);
+      
+      try {
+        const selectedCount = 20;
+        console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
+
+        const { data, error } = await supabase.functions.invoke('template-modern-clean', {
+          body: { selectedCount },
+        });
+
+        if (error) {
+          console.error(`Error generating ${templateName} newsletter:`, error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: error.message || 'Please try again later',
+          });
+          return;
+        }
+
+        if (data.error) {
+          console.error(`Function returned error:`, data.error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: data.error,
+          });
+          return;
+        }
+
+        toast.success(`${templateName} Newsletter Generated!`, {
+          description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
+        });
+
+      } catch (error) {
+        console.error(`Error in handleUseTemplate for ${templateName}:`, error);
+        toast.error(`Failed to generate ${templateName} newsletter`, {
+          description: 'An unexpected error occurred. Please try again later.',
+        });
+      } finally {
+        setLoadingTemplate(null);
+      }
+    } else if (templateId === 2) {
+      // Twin Focus template
+      setLoadingTemplate(templateName);
+      
+      try {
+        const selectedCount = 20;
+        console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
+
+        const { data, error } = await supabase.functions.invoke('template-twin-focus', {
+          body: { selectedCount },
+        });
+
+        if (error) {
+          console.error(`Error generating ${templateName} newsletter:`, error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: error.message || 'Please try again later',
+          });
+          return;
+        }
+
+        if (data.error) {
+          console.error(`Function returned error:`, data.error);
+          toast.error(`Failed to generate ${templateName} newsletter`, {
+            description: data.error,
+          });
+          return;
+        }
+
+        toast.success(`${templateName} Newsletter Generated!`, {
+          description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
+        });
+
+      } catch (error) {
+        console.error(`Error in handleUseTemplate for ${templateName}:`, error);
+        toast.error(`Failed to generate ${templateName} newsletter`, {
+          description: 'An unexpected error occurred. Please try again later.',
+        });
+      } finally {
+        setLoadingTemplate(null);
+      }
+    }
+  };
+
+  // Enhanced Modern Clean Card Component
+  const ModernCleanCard = () => (
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
+      {/* Decorative Header */}
+      <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
+        <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[25%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[35%] h-1.5 bg-gray-300 rounded-full"></div>
+      </div>
+
+      {/* Title and Description */}
+      <div className="px-5">
+        <h2 className="text-xl font-semibold text-gray-800 mb-1">Modern Clean</h2>
+        <p className="text-gray-500 text-sm mb-5">A minimalist design perfect for tech and startup newsletters</p>
+      </div>
+
+      {/* Enhanced Preview */}
+      <div className="mx-5 mb-6 p-4 bg-gray-50 rounded-[10px] flex-1 flex flex-col justify-between">
+        <div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[60%]"></div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-full"></div>
+        </div>
+        <div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[60%]"></div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
+        </div>
+        <div>
+          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
+          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="mx-5 mb-5">
+        <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
+        <ul className="list-none p-0 m-0">
+          {["Clean typography", "Minimal layout", "Mobile optimized"].map((feature, index) => (
+            <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+              {feature}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Button and Text */}
+      <div className="mt-auto">
+        <Button 
+          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
+          onClick={() => handleUseTemplate(1, "Modern Clean")}
+          disabled={loadingTemplate === "Modern Clean"}
+        >
+          {loadingTemplate === "Modern Clean" ? (
+            <>
+              <span className="mr-2">Generating...</span>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </>
+          ) : (
+            'Generate Pro Newsletter'
+          )}
+        </Button>
+        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
+          (Defaults to 20 Bookmarks w/enriched context)
+        </p>
+      </div>
+    </div>
+  );
+
+  // Enhanced Twin Focus Card Component
+  const TwinFocusCard = () => (
+    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
+      {/* Decorative Header */}
+      <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
+        <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[25%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
+        <div className="w-[35%] h-1.5 bg-gray-300 rounded-full"></div>
+      </div>
+
+      {/* Title and Description */}
+      <div className="px-5">
+        <h2 className="text-xl font-semibold text-gray-800 mb-1">Twin Focus</h2>
+        <p className="text-gray-500 text-sm mb-5">A more structured perspective for visually appealing layouts</p>
+      </div>
+
+      {/* Enhanced Preview with Twin Focus Layout */}
+      <div className="mx-5 mb-6 p-3 bg-gray-50 rounded-[10px] flex flex-col flex-1">
+        {/* Two-column layout at top */}
+        <div className="flex gap-4 mb-4 md:flex-row flex-col">
+          {/* Left column with image and bullets */}
+          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
+            {/* Grey image placeholder */}
+            <div className="bg-gray-300 h-16 rounded-md mb-2.5"></div>
+            {/* Three bullet points */}
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
+            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3"></div>
+          </div>
+          
+          {/* Right column with text mockup */}
+          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
+            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-full mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[60%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
+            <div className="h-1.5 bg-gray-350 rounded w-[60%]"></div>
+          </div>
+        </div>
+        
+        {/* First horizontal section */}
+        <div className="bg-gray-100 p-2 rounded-md mb-2.5">
+          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
+        </div>
+        
+        {/* Second horizontal section */}
+        <div className="p-2">
+          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-full mb-2"></div>
+          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="mx-5 mb-5">
+        <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
+        <ul className="list-none p-0 m-0">
+          {["Dual-column structure", "Visual content blocks", "Clean separation"].map((feature, index) => (
+            <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+              {feature}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Button and Text */}
+      <div className="mt-auto">
+        <Button 
+          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
+          onClick={() => handleUseTemplate(2, "Twin Focus")}
+          disabled={loadingTemplate === "Twin Focus"}
+        >
+          {loadingTemplate === "Twin Focus" ? (
+            <>
+              <span className="mr-2">Generating...</span>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </>
+          ) : (
+            'Generate Pro Newsletter'
+          )}
+        </Button>
+        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
+          (Defaults to 20 Bookmarks w/enriched context)
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header row with welcome text on left and instructions on right */}
@@ -91,10 +353,11 @@ const NewsletterDashboard = ({ profile }) => {
         </div>
       </div>
 
-      {/* Main content - Manual Newsletter Generation */}
-      <div className="flex justify-start">
-        <div className="w-full lg:w-2/3 xl:w-1/2">
-          <Card className="border border-gray-200 bg-white shadow-sm">
+      {/* Main content grid - Manual Newsletter Generation and Pro Templates */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Manual Newsletter Generation */}
+        <div className="xl:col-span-1">
+          <Card className="border border-gray-200 bg-white shadow-sm h-full">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-semibold text-gray-900">
                 Generate Newsletter Manually
@@ -142,10 +405,24 @@ const NewsletterDashboard = ({ profile }) => {
             </CardFooter>
           </Card>
         </div>
+
+        {/* Pro Templates */}
+        <div className="xl:col-span-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-gray-900">Pro Templates</h2>
+              <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">Premium</div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ModernCleanCard />
+              <TwinFocusCard />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Add processing status card when a newsletter is being generated */}
-      {isLoading && (
+      {(isLoading || loadingTemplate) && (
         <Card className="border border-amber-200 bg-amber-50 shadow-sm">
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
@@ -210,4 +487,3 @@ const DashboardHome = () => {
 };
 
 export default DashboardHome;
-
