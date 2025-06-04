@@ -1,4 +1,5 @@
 
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,10 +8,12 @@ import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, Trendin
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 // Newsletter Platform Dashboard - enhanced version
 const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
   const [selectedCount, setSelectedCount] = useState(10);
   const { refreshProfile } = useAuth();
 
@@ -55,59 +58,8 @@ const NewsletterDashboard = ({ profile }) => {
     }
   };
 
-  const handleGenerateNewsletter = async () => {
-    console.log("Starting newsletter generation process");
-    
-    // Validation checks
-    if (!subscriptionTier) {
-      toast.error("You need an active subscription to generate newsletters");
-      return;
-    }
-
-    if (remainingGenerations <= 0) {
-      toast.error("You have no remaining newsletter generations");
-      return;
-    }
-
-    if (!profile?.twitter_bookmark_access_token) {
-      toast.error("Please connect your Twitter bookmarks first");
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      console.log(`Generating newsletter with ${selectedCount} tweets`);
-      
-      const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
-        body: { selectedCount }
-      });
-
-      if (error) {
-        console.error("Error calling newsletter generation function:", error);
-        toast.error(error.message || "Failed to generate newsletter");
-        return;
-      }
-
-      console.log("Newsletter generation response:", data);
-      
-      if (data?.status === "processing") {
-        toast.success("Newsletter generation started! You'll receive an email when it's ready.");
-        // Refresh profile to update remaining generations count
-        await refreshProfile();
-      } else if (data?.error) {
-        toast.error(data.error);
-      } else {
-        toast.success("Newsletter generated successfully!");
-        await refreshProfile();
-      }
-      
-    } catch (error) {
-      console.error("Error in newsletter generation:", error);
-      toast.error("Something went wrong generating your newsletter");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleGenerateNewsletter = () => {
+    setShowManualDialog(true);
   };
 
   return (
@@ -183,9 +135,9 @@ const NewsletterDashboard = ({ profile }) => {
               <Button 
                 onClick={handleGenerateNewsletter}
                 className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
-                disabled={remainingGenerations <= 0 || isLoading}
+                disabled={remainingGenerations <= 0}
               >
-                {isLoading ? "Generating..." : "Generate Newsletter"}
+                Generate Newsletter
               </Button>
             </CardFooter>
           </Card>
@@ -208,6 +160,13 @@ const NewsletterDashboard = ({ profile }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Manual Newsletter Dialog */}
+      <ManualNewsletterDialog
+        open={showManualDialog}
+        onOpenChange={setShowManualDialog}
+        remainingGenerations={remainingGenerations}
+      />
     </div>
   );
 };
@@ -251,3 +210,4 @@ const DashboardHome = () => {
 };
 
 export default DashboardHome;
+
