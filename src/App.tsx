@@ -69,18 +69,16 @@ function App() {
               <Route path="/tools/tweet-screenshot" element={<TweetScreenshot />} />
               
               {/* Protected dashboard routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }>
-                <Route path="home" element={<DashboardHome />} />
-                <Route path="analytics" element={<Library />} />
-                <Route path="community" element={<GenerateTweets />} />
-                <Route path="create-newsletter" element={<CreateNewsletter />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="checkout/success" element={<CheckoutSuccess />} />
-                <Route path="checkout/cancel" element={<CheckoutCancel />} />
+              <Route path="/dashboard" element={<ProtectedRoute />}>
+                <Route path="" element={<DashboardLayout />}>
+                  <Route path="home" element={<DashboardHome />} />
+                  <Route path="analytics" element={<Library />} />
+                  <Route path="community" element={<GenerateTweets />} />
+                  <Route path="create-newsletter" element={<CreateNewsletter />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="checkout/success" element={<CheckoutSuccess />} />
+                  <Route path="checkout/cancel" element={<CheckoutCancel />} />
+                </Route>
               </Route>
               
               {/* Catch all route */}
