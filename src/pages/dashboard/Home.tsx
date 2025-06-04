@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -169,7 +168,18 @@ const NewsletterDashboard = ({ profile }) => {
   };
 
   // Standardized Newsletter Card Component
-  const NewsletterCard = ({ title, description, templateId, templateName, buttonText, isManual = false, templateNumber }) => (
+  const NewsletterCard = ({ 
+    title, 
+    description, 
+    templateId, 
+    templateName, 
+    buttonText, 
+    isManual = false, 
+    templateNumber,
+    avgLengthActive = 5,
+    researchDepthActive = 5,
+    mediaActive = 3
+  }) => (
     <Card className="border border-gray-200 bg-white shadow-sm h-full flex flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl font-semibold text-gray-900">
@@ -210,7 +220,12 @@ const NewsletterDashboard = ({ profile }) => {
             <span className="text-sm font-medium text-gray-800">Avg Length</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-base">📜</span>
+                <span 
+                  key={i} 
+                  className={`text-base ${i >= avgLengthActive ? 'opacity-30' : ''}`}
+                >
+                  📜
+                </span>
               ))}
             </div>
           </div>
@@ -220,7 +235,12 @@ const NewsletterDashboard = ({ profile }) => {
             <span className="text-sm font-medium text-gray-800">Research Depth</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-base">🔍</span>
+                <span 
+                  key={i} 
+                  className={`text-base ${i >= researchDepthActive ? 'opacity-30' : ''}`}
+                >
+                  🔍
+                </span>
               ))}
             </div>
           </div>
@@ -229,9 +249,14 @@ const NewsletterDashboard = ({ profile }) => {
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-gray-800">Media</span>
             <div className="flex gap-1">
-              <span className="text-base">📝</span>
-              <span className="text-base">🖼️</span>
-              <span className="text-base">📽️</span>
+              {['📝', '🖼️', '📽️'].map((emoji, i) => (
+                <span 
+                  key={i} 
+                  className={`text-base ${i >= mediaActive ? 'opacity-30' : ''}`}
+                >
+                  {emoji}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -289,7 +314,7 @@ const NewsletterDashboard = ({ profile }) => {
 
       {/* Main content grid - 3 equal columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Manual Newsletter Generation */}
+        {/* Manual Newsletter Generation - Classic Layout (3/5, 3/5, 2/3) */}
         <NewsletterCard
           title="Classic Layout"
           description="Manually generate a newsletter with your chosen bookmark count - clean, structured layout for polished daily reading."
@@ -298,9 +323,12 @@ const NewsletterDashboard = ({ profile }) => {
           buttonText="Generate Newsletter"
           isManual={true}
           templateNumber="1"
+          avgLengthActive={3}
+          researchDepthActive={3}
+          mediaActive={2}
         />
 
-        {/* Twin Focus Template - moved to second position */}
+        {/* Twin Focus Template - Daily Bytes (3/5, 4/5, 2/3) */}
         <NewsletterCard
           title="Daily Bytes"
           description="A sleek, balanced layout designed for fast yet detailed insights—built to inform, not overload."
@@ -309,9 +337,12 @@ const NewsletterDashboard = ({ profile }) => {
           buttonText="Generate Newsletter"
           isManual={false}
           templateNumber="2"
+          avgLengthActive={3}
+          researchDepthActive={4}
+          mediaActive={2}
         />
 
-        {/* Modern Clean Template - moved to third position */}
+        {/* Modern Clean Template - Weekly Lens (4/5, 5/5, 2/3) */}
         <NewsletterCard
           title="Weekly Lens"
           description="A minimalist design with white background and clean formatting, perfect for audiences or production use cases"
@@ -320,6 +351,9 @@ const NewsletterDashboard = ({ profile }) => {
           buttonText="Generate Newsletter"
           isManual={false}
           templateNumber="3"
+          avgLengthActive={4}
+          researchDepthActive={5}
+          mediaActive={2}
         />
       </div>
 
