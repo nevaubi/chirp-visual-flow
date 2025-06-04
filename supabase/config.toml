@@ -239,6 +239,3 @@ verify_jwt = false
 
 [functions.template-twin-focus]
 verify_jwt = true
-
-[functions.third-template]
-verify_jwt = true
