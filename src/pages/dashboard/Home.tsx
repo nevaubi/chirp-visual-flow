@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
@@ -165,163 +166,104 @@ const NewsletterDashboard = ({ profile }) => {
     }
   };
 
-  // Enhanced Modern Clean Card Component
-  const ModernCleanCard = () => (
-    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
-      {/* Decorative Header */}
-      <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
-        <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
-        <div className="w-[25%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
-        <div className="w-[35%] h-1.5 bg-gray-300 rounded-full"></div>
-      </div>
+  // Standardized Newsletter Card Component
+  const NewsletterCard = ({ title, description, templateId, templateName, buttonText, isManual = false }) => (
+    <Card className="border border-gray-200 bg-white shadow-sm h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-semibold text-gray-900">
+          {title}
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-600">
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 flex-1">
+        {isManual && (
+          <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
+            <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
+          </div>
+        )}
+        
+        {!isManual && (
+          <div className="text-center space-y-3">
+            <p className="text-sm text-gray-700">Choose how many recent bookmarks to use for your newsletter</p>
+            <div className="flex justify-center">
+              <span className="text-2xl text-gray-400">↓</span>
+            </div>
+          </div>
+        )}
 
-      {/* Title and Description */}
-      <div className="px-5">
-        <h2 className="text-xl font-semibold text-gray-800 mb-1">Modern Clean</h2>
-        <p className="text-gray-500 text-sm mb-5">A minimalist design perfect for tech and startup newsletters</p>
-      </div>
-
-      {/* Enhanced Preview */}
-      <div className="mx-5 mb-6 p-4 bg-gray-50 rounded-[10px] flex-1 flex flex-col justify-between">
-        <div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[60%]"></div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-full"></div>
+        {/* Scrollable Container */}
+        <div className="border border-gray-200 rounded-lg h-32 overflow-hidden">
+          <ScrollArea className="h-full w-full p-4">
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </ScrollArea>
         </div>
-        <div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[60%]"></div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
-        </div>
-        <div>
-          <div className="h-2 bg-gray-300 rounded mb-2.5 w-[80%]"></div>
-          <div className="h-2 bg-gray-300 rounded w-[60%]"></div>
-        </div>
-      </div>
 
-      {/* Features */}
-      <div className="mx-5 mb-5">
-        <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
-        <ul className="list-none p-0 m-0">
-          {["Clean typography", "Minimal layout", "Mobile optimized"].map((feature, index) => (
-            <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
-              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Button and Text */}
-      <div className="mt-auto">
-        <Button 
-          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
-          onClick={() => handleUseTemplate(1, "Modern Clean")}
-          disabled={loadingTemplate === "Modern Clean"}
-        >
-          {loadingTemplate === "Modern Clean" ? (
-            <>
-              <span className="mr-2">Generating...</span>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </>
-          ) : (
-            'Generate Pro Newsletter'
-          )}
-        </Button>
-        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
-          (Defaults to 20 Bookmarks w/enriched context)
-        </p>
-      </div>
-    </div>
-  );
-
-  // Enhanced Twin Focus Card Component
-  const TwinFocusCard = () => (
-    <div className="bg-white rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
-      {/* Decorative Header */}
-      <div className="bg-gray-50 p-5 m-5 rounded-[10px] flex flex-col items-center justify-center">
-        <div className="w-[30%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
-        <div className="w-[25%] h-1.5 bg-gray-300 mb-1 rounded-full"></div>
-        <div className="w-[35%] h-1.5 bg-gray-300 rounded-full"></div>
-      </div>
-
-      {/* Title and Description */}
-      <div className="px-5">
-        <h2 className="text-xl font-semibold text-gray-800 mb-1">Twin Focus</h2>
-        <p className="text-gray-500 text-sm mb-5">A more structured perspective for visually appealing layouts</p>
-      </div>
-
-      {/* Enhanced Preview with Twin Focus Layout */}
-      <div className="mx-5 mb-6 p-3 bg-gray-50 rounded-[10px] flex flex-col flex-1">
-        {/* Two-column layout at top */}
-        <div className="flex gap-4 mb-4 md:flex-row flex-col">
-          {/* Left column with image and bullets */}
-          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
-            {/* Grey image placeholder */}
-            <div className="bg-gray-300 h-16 rounded-md mb-2.5"></div>
-            {/* Three bullet points */}
-            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
-            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3 mb-2"></div>
-            <div className="h-1.5 bg-gray-400 rounded w-[60%] ml-3"></div>
+        {/* 2-Column Metrics Display */}
+        <div className="space-y-3">
+          {/* Avg Length */}
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-700">Avg Length</span>
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-sm">📜</span>
+              ))}
+            </div>
           </div>
           
-          {/* Right column with text mockup */}
-          <div className="flex-1 bg-gray-200 rounded-lg p-2.5 shadow-sm">
-            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
-            <div className="h-1.5 bg-gray-350 rounded w-full mb-2"></div>
-            <div className="h-1.5 bg-gray-350 rounded w-[60%] mb-2"></div>
-            <div className="h-1.5 bg-gray-350 rounded w-[80%] mb-2"></div>
-            <div className="h-1.5 bg-gray-350 rounded w-[60%]"></div>
+          {/* Research Depth */}
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-700">Research Depth</span>
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-sm">🔍</span>
+              ))}
+            </div>
+          </div>
+          
+          {/* Media */}
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-700">Media</span>
+            <div className="flex gap-1">
+              <span className="text-sm">📝</span>
+              <span className="text-sm">🖼️</span>
+              <span className="text-sm">📽️</span>
+            </div>
           </div>
         </div>
+      </CardContent>
+      
+      <CardFooter className="flex flex-col items-center gap-3 pt-4">
+        {isManual && (
+          <div className="text-sm text-gray-500">
+            {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
+          </div>
+        )}
         
-        {/* First horizontal section */}
-        <div className="bg-gray-100 p-2 rounded-md mb-2.5">
-          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
-          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
-        </div>
-        
-        {/* Second horizontal section */}
-        <div className="p-2">
-          <div className="h-1.5 bg-gray-300 rounded w-[80%] mb-2"></div>
-          <div className="h-1.5 bg-gray-300 rounded w-full mb-2"></div>
-          <div className="h-1.5 bg-gray-300 rounded w-[60%]"></div>
-        </div>
-      </div>
-
-      {/* Features */}
-      <div className="mx-5 mb-5">
-        <h3 className="text-sm font-medium text-gray-800 mb-2">Features:</h3>
-        <ul className="list-none p-0 m-0">
-          {["Dual-column structure", "Visual content blocks", "Clean separation"].map((feature, index) => (
-            <li key={index} className="relative pl-5 mb-2 text-xs text-gray-600">
-              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Button and Text */}
-      <div className="mt-auto">
         <Button 
-          className="w-[calc(100%-40px)] mx-5 mb-2 h-[40px] bg-[#0078d7] hover:bg-[#106ebe] text-white rounded-full text-sm font-medium"
-          onClick={() => handleUseTemplate(2, "Twin Focus")}
-          disabled={loadingTemplate === "Twin Focus"}
+          onClick={isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName)}
+          className={isManual ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" : "bg-[#0078d7] hover:bg-[#106ebe] text-white"}
+          disabled={isManual ? remainingGenerations <= 0 : loadingTemplate === templateName}
         >
-          {loadingTemplate === "Twin Focus" ? (
+          {!isManual && loadingTemplate === templateName ? (
             <>
               <span className="mr-2">Generating...</span>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             </>
           ) : (
-            'Generate Pro Newsletter'
+            buttonText
           )}
         </Button>
-        <p className="text-center text-gray-400 text-xs italic mx-5 mb-4">
-          (Defaults to 20 Bookmarks w/enriched context)
-        </p>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 
   return (
@@ -353,59 +295,37 @@ const NewsletterDashboard = ({ profile }) => {
         </div>
       </div>
 
-      {/* Main content grid - Manual Newsletter Generation and Pro Templates */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Main content grid - 3 equal columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Manual Newsletter Generation */}
-        <div className="xl:col-span-1">
-          <Card className="border border-gray-200 bg-white shadow-sm h-full">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-semibold text-gray-900">
-                Generate Newsletter Manually
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600">
-                Instantly trigger a newsletter from your saved bookmarks. It will be sent to your email and displayed here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
-                <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
-              </div>
-              
-              <div className="text-center space-y-3">
-                <p className="text-sm text-gray-700">Choose how many recent bookmarks to use for your newsletter</p>
-                <div className="flex justify-center">
-                  <span className="text-2xl text-gray-400">↓</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col items-center gap-3 pt-4">
-              <div className="text-sm text-gray-500">
-                {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
-              </div>
-              <Button 
-                onClick={handleGenerateNewsletter}
-                className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
-                disabled={remainingGenerations <= 0}
-              >
-                Generate Newsletter
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+        <NewsletterCard
+          title="Generate Newsletter Manually"
+          description="Instantly trigger a newsletter from your saved bookmarks. It will be sent to your email and displayed here."
+          templateId={null}
+          templateName=""
+          buttonText="Generate Newsletter"
+          isManual={true}
+        />
 
-        {/* Pro Templates */}
-        <div className="xl:col-span-2">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-gray-900">Pro Templates</h2>
-              <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">Premium</div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ModernCleanCard />
-              <TwinFocusCard />
-            </div>
-          </div>
-        </div>
+        {/* Modern Clean Template */}
+        <NewsletterCard
+          title="Modern Clean"
+          description="A minimalist design perfect for tech and startup newsletters"
+          templateId={1}
+          templateName="Modern Clean"
+          buttonText="Generate Pro Newsletter"
+          isManual={false}
+        />
+
+        {/* Twin Focus Template */}
+        <NewsletterCard
+          title="Twin Focus"
+          description="A more structured perspective for visually appealing layouts"
+          templateId={2}
+          templateName="Twin Focus"
+          buttonText="Generate Pro Newsletter"
+          isManual={false}
+        />
       </div>
 
       {/* Add processing status card when a newsletter is being generated */}
