@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -206,32 +205,32 @@ const NewsletterDashboard = ({ profile }) => {
         {/* 2-Column Metrics Display */}
         <div className="space-y-2">
           {/* Avg Length */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Avg Length</span>
+          <div className="flex justify-start items-center gap-6">
+            <span className="text-base font-medium text-gray-800">Avg Length</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-base">📜</span>
+                <span key={i} className="text-lg">📜</span>
               ))}
             </div>
           </div>
           
           {/* Research Depth */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Research Depth</span>
+          <div className="flex justify-start items-center gap-6">
+            <span className="text-base font-medium text-gray-800">Research Depth</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-base">🔍</span>
+                <span key={i} className="text-lg">🔍</span>
               ))}
             </div>
           </div>
           
           {/* Media */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-800">Media</span>
+          <div className="flex justify-start items-center gap-6">
+            <span className="text-base font-medium text-gray-800">Media</span>
             <div className="flex gap-1">
-              <span className="text-base">📝</span>
-              <span className="text-base">🖼️</span>
-              <span className="text-base">📽️</span>
+              <span className="text-lg">📝</span>
+              <span className="text-lg">🖼️</span>
+              <span className="text-lg">📽️</span>
             </div>
           </div>
         </div>
