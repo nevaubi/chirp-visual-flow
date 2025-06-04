@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -55,25 +54,6 @@ const NewsletterDashboard = ({ profile }) => {
     }
   };
 
-  // Steps for how the newsletter generation works
-  const steps = [
-    {
-      title: "Bookmark tweets",
-      description: "Save tweets you find valuable by bookmarking them on X (Twitter).",
-      icon: Bookmark
-    },
-    {
-      title: "Connect your X account",
-      description: "Allow us to access your bookmarks securely.",
-      icon: Twitter
-    },
-    {
-      title: "Generate newsletters",
-      description: "We'll transform your bookmarks into a well-formatted newsletter.",
-      icon: TrendingUp
-    }
-  ];
-
   return (
     <div className="space-y-6">
       {/* Restructured header layout */}
@@ -126,32 +106,6 @@ const NewsletterDashboard = ({ profile }) => {
           </div>
         </div>
       </div>
-
-      {/* How It Works Section */}
-      <Card className="border-none shadow-sm hover:shadow transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info size={18} className="text-[#0087C8]" />
-            How It Works
-          </CardTitle>
-          <CardDescription>
-            Turn your X (Twitter) bookmarks into beautiful newsletters in just a few steps
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {steps.map((step, index) => (
-              <div key={index} className="flex flex-col items-center text-center p-4 rounded-lg border border-gray-100 hover:border-[#0087C8]/20 hover:bg-blue-50/30 transition-colors">
-                <div className="p-3 rounded-full bg-[#0087C8]/10 mb-4">
-                  <step.icon size={24} className="text-[#0087C8]" />
-                </div>
-                <h3 className="font-semibold mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-600">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Newsletter Tips Section - replaces the subscription card */}
       <NewsletterTips />
