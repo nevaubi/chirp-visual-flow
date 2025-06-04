@@ -371,27 +371,14 @@ const NewsletterDashboard = ({ profile }) => {
                 <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
               </div>
               
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-700">How many of your most recent bookmarks to use:</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[10, 20, 30].map((count) => (
-                    <div
-                      key={count}
-                      onClick={() => setSelectedCount(count)}
-                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedCount === count
-                          ? 'border-[#FF6B35] bg-[#FF6B35]/10'
-                          : 'border-gray-200 hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5'
-                      }`}
-                    >
-                      <div className="text-2xl font-bold mb-2">{count}</div>
-                      <div className="text-sm text-gray-600">tweets</div>
-                    </div>
-                  ))}
+              <div className="text-center space-y-3">
+                <p className="text-sm text-gray-700">Choose how many recent bookmarks to use for your newsletter</p>
+                <div className="flex justify-center">
+                  <span className="text-2xl text-gray-400">↓</span>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between items-center pt-4">
+            <CardFooter className="flex flex-col items-center gap-3 pt-4">
               <div className="text-sm text-gray-500">
                 {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
               </div>
