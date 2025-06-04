@@ -362,40 +362,24 @@ const DashboardLayout = () => {
           <nav className="flex-1 py-6">
             <ul className="space-y-2 px-2">
               {isNewsletterPlatform && (
-                <>
-                  <li>
-                    <Button
-                      className={cn(
-                        "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
-                        !shouldShowExpanded && !isMobile && "justify-center px-0",
-                        hasRequiredTier 
-                          ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
-                          : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
-                      )}
-                      onClick={handleCreateNewsletter}
-                      disabled={!hasRequiredTier}
-                    >
-                      <Bookmark size={20} />
-                      {shouldShowExpanded && (
-                        <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
-                      )}
-                    </Button>
-                  </li>
-                  <li>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full flex items-center gap-3 justify-start px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
-                        location.pathname === '/dashboard/pro-features' && "bg-[#0087C8] hover:bg-[#0087C8]/90",
-                        !shouldShowExpanded && !isMobile && "justify-center px-0"
-                      )}
-                      onClick={() => handleNavigate('/dashboard/pro-features')}
-                    >
-                      <Crown size={20} />
-                      {shouldShowExpanded && <span className="overflow-hidden whitespace-nowrap">Pro Features</span>}
-                    </Button>
-                  </li>
-                </>
+                <li>
+                  <Button
+                    className={cn(
+                      "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
+                      !shouldShowExpanded && !isMobile && "justify-center px-0",
+                      hasRequiredTier 
+                        ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
+                        : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
+                    )}
+                    onClick={handleCreateNewsletter}
+                    disabled={!hasRequiredTier}
+                  >
+                    <Bookmark size={20} />
+                    {shouldShowExpanded && (
+                      <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
+                    )}
+                  </Button>
+                </li>
               )}
               {sidebarItems.map((item) => {
                 const isActive = location.pathname === item.path;
