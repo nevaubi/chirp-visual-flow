@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +26,7 @@ import CheckoutCancel from "./pages/dashboard/CheckoutCancel";
 import { AuthProvider } from "./contexts/AuthContext";
 import Settings from "./pages/dashboard/Settings";
 import Library from "./pages/dashboard/Library";
+import ProFeatures from "./pages/dashboard/ProFeatures";
 import ChainOfThought from "./pages/ChainOfThought";
 import SatoshiSummary from "./pages/SatoshiSummary";
 
@@ -80,6 +80,7 @@ const App = () => {
                 <Route element={<DashboardLayout />}>
                   <Route index element={<Navigate to="/dashboard/home" replace />} />
                   <Route path="home" element={<DashboardHome />} />
+                  <Route path="pro-features" element={<ProFeatures />} />
                   <Route path="checkout-success" element={<CheckoutSuccess />} />
                   <Route path="checkout-cancel" element={<CheckoutCancel />} />
                   <Route path="analytics" element={<Library />} />
