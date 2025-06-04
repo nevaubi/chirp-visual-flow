@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -299,8 +298,8 @@ const NewsletterDashboard = ({ profile }) => {
 
         {/* Twin Focus Template - moved to second position */}
         <NewsletterCard
-          title="Twin Focus"
-          description="A more structured perspective for visually appealing layouts"
+          title="Daily Bytes"
+          description="A sleek, balanced layout designed for fast yet detailed insights—built to inform, not overload."
           templateId={2}
           templateName="Twin Focus"
           buttonText="Generate Pro Newsletter"
@@ -309,8 +308,8 @@ const NewsletterDashboard = ({ profile }) => {
 
         {/* Modern Clean Template - moved to third position */}
         <NewsletterCard
-          title="Modern Clean"
-          description="A minimalist design perfect for tech and startup newsletters"
+          title="Weekly Lens"
+          description="A minimalist design with white background and clean formatting, perfect for audiences or production use cases"
           templateId={1}
           templateName="Modern Clean"
           buttonText="Generate Pro Newsletter"
