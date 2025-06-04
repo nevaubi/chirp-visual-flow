@@ -179,9 +179,7 @@ const NewsletterDashboard = ({ profile }) => {
       </CardHeader>
       <CardContent className="space-y-4 flex-1">
         {isManual && (
-          <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
-            <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
-          </div>
+          null
         )}
         
         {!isManual && (
