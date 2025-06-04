@@ -182,8 +182,8 @@ const NewsletterDashboard = ({ profile }) => {
           null
         )}
 
-        {/* Scrollable Container */}
-        <div className="border border-gray-200 rounded-lg h-32 overflow-hidden">
+        {/* Scrollable Container - increased height from h-32 to h-48 */}
+        <div className="border border-gray-200 rounded-lg h-48 overflow-hidden">
           <ScrollArea className="h-full w-full p-4">
             <div className="space-y-2">
               <div className="h-4 bg-gray-200 rounded w-full"></div>
@@ -231,11 +231,7 @@ const NewsletterDashboard = ({ profile }) => {
       </CardContent>
       
       <CardFooter className="flex flex-col items-center gap-3 pt-4">
-        {isManual && (
-          <div className="text-sm text-gray-500">
-            {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
-          </div>
-        )}
+        {/* Removed generation counter display for home page manual card */}
         
         <Button 
           onClick={isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName)}
@@ -259,9 +255,9 @@ const NewsletterDashboard = ({ profile }) => {
     <div className="space-y-6">
       {/* Header row with welcome text on left and instructions on right */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        {/* Left - Welcome text */}
+        {/* Left - Welcome text - updated from "Welcome to Newsletters" to "Welcome" */}
         <div className="text-center lg:text-left">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to Newsletters, {profile?.twitter_username || 'User'}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome, {profile?.twitter_username || 'User'}</h1>
         </div>
 
         {/* Right - Instructions */}
@@ -302,7 +298,7 @@ const NewsletterDashboard = ({ profile }) => {
           description="A sleek, balanced layout designed for fast yet detailed insights—built to inform, not overload."
           templateId={2}
           templateName="Twin Focus"
-          buttonText="Generate Pro Newsletter"
+          buttonText="Generate Newsletter"
           isManual={false}
         />
 
@@ -312,7 +308,7 @@ const NewsletterDashboard = ({ profile }) => {
           description="A minimalist design with white background and clean formatting, perfect for audiences or production use cases"
           templateId={1}
           templateName="Modern Clean"
-          buttonText="Generate Pro Newsletter"
+          buttonText="Generate Newsletter"
           isManual={false}
         />
       </div>
