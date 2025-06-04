@@ -33,7 +33,7 @@ import Settings from '@/pages/dashboard/Settings';
 import CheckoutSuccess from '@/pages/dashboard/CheckoutSuccess';
 import CheckoutCancel from '@/pages/dashboard/CheckoutCancel';
 
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 const queryClient = new QueryClient({
   defaultOptions: {
