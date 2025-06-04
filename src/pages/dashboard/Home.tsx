@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -203,34 +204,34 @@ const NewsletterDashboard = ({ profile }) => {
         </div>
 
         {/* 2-Column Metrics Display */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Avg Length */}
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-700">Avg Length</span>
+            <span className="text-sm font-medium text-gray-800">Avg Length</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-sm">📜</span>
+                <span key={i} className="text-base">📜</span>
               ))}
             </div>
           </div>
           
           {/* Research Depth */}
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-700">Research Depth</span>
+            <span className="text-sm font-medium text-gray-800">Research Depth</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-sm">🔍</span>
+                <span key={i} className="text-base">🔍</span>
               ))}
             </div>
           </div>
           
           {/* Media */}
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-700">Media</span>
+            <span className="text-sm font-medium text-gray-800">Media</span>
             <div className="flex gap-1">
-              <span className="text-sm">📝</span>
-              <span className="text-sm">🖼️</span>
-              <span className="text-sm">📽️</span>
+              <span className="text-base">📝</span>
+              <span className="text-base">🖼️</span>
+              <span className="text-base">📽️</span>
             </div>
           </div>
         </div>
