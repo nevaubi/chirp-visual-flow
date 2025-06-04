@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -65,7 +66,7 @@ const NewsletterDashboard = ({ profile }) => {
         {/* Right - Instructions */}
         <div className="text-center lg:text-right">
           <p className="text-base text-gray-600 mb-2">To generate newsletters you need to:</p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col lg:flex-row lg:gap-6 gap-2">
             <div className="flex items-center justify-center lg:justify-end gap-2">
               <span>Authorize X access via popup</span>
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-semibold">
