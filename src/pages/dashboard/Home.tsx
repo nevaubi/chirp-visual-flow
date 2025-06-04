@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -6,7 +7,6 @@ import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, Trendin
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import NewsletterTips from '@/components/newsletter/NewsletterTips';
 
 // Newsletter Platform Dashboard - enhanced version
 const NewsletterDashboard = ({ profile }) => {
@@ -106,9 +106,6 @@ const NewsletterDashboard = ({ profile }) => {
           </div>
         </div>
       </div>
-
-      {/* Newsletter Tips Section - replaces the subscription card */}
-      <NewsletterTips />
 
       {/* Add processing status card when a newsletter is being generated */}
       {isLoading && (
