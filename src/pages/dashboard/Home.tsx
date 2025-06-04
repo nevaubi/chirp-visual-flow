@@ -1,4 +1,5 @@
 
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,10 +8,13 @@ import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, Trendin
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
 
 // Newsletter Platform Dashboard - enhanced version
 const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [selectedCount, setSelectedCount] = useState(10);
   const { refreshProfile } = useAuth();
 
   // Check if user has a subscription
@@ -54,6 +58,10 @@ const NewsletterDashboard = ({ profile }) => {
     }
   };
 
+  const handleGenerateNewsletter = () => {
+    setShowManualDialog(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header row with welcome text on left and instructions on right */}
@@ -85,43 +93,53 @@ const NewsletterDashboard = ({ profile }) => {
 
       {/* Main content - Manual Newsletter Generation */}
       <div className="flex justify-start">
-        <div className="w-full lg:w-1/3">
+        <div className="w-full lg:w-2/3 xl:w-1/2">
           <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Bookmark className="h-5 w-5 text-[#FF6B35]" />
-                Manual Generation
+              <CardTitle className="text-xl font-semibold text-gray-900">
+                Generate Newsletter Manually
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">
-                Create newsletters from your X bookmarks
+                Instantly trigger a newsletter from your saved bookmarks. It will be sent to your email and displayed here.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2 h-12 border-gray-200 hover:bg-gray-50"
-                disabled
-              >
-                <Bookmark className="h-4 w-4" />
-                <span className="font-medium">10 Bookmarks</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2 h-12 border-gray-200 hover:bg-gray-50"
-                disabled
-              >
-                <Bookmark className="h-4 w-4" />
-                <span className="font-medium">20 Bookmarks</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2 h-12 border-gray-200 hover:bg-gray-50"
-                disabled
-              >
-                <Bookmark className="h-4 w-4" />
-                <span className="font-medium">30 Bookmarks</span>
-              </Button>
+            <CardContent className="space-y-4">
+              <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
+                <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-700">How many of your most recent bookmarks to use:</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[10, 20, 30].map((count) => (
+                    <div
+                      key={count}
+                      onClick={() => setSelectedCount(count)}
+                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedCount === count
+                          ? 'border-[#FF6B35] bg-[#FF6B35]/10'
+                          : 'border-gray-200 hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5'
+                      }`}
+                    >
+                      <div className="text-2xl font-bold mb-2">{count}</div>
+                      <div className="text-sm text-gray-600">tweets</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
+            <CardFooter className="flex justify-between items-center pt-4">
+              <div className="text-sm text-gray-500">
+                {remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} remaining
+              </div>
+              <Button 
+                onClick={handleGenerateNewsletter}
+                className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                disabled={remainingGenerations <= 0}
+              >
+                Generate Newsletter
+              </Button>
+            </CardFooter>
           </Card>
         </div>
       </div>
@@ -142,6 +160,13 @@ const NewsletterDashboard = ({ profile }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Manual Newsletter Dialog */}
+      <ManualNewsletterDialog
+        open={showManualDialog}
+        onOpenChange={setShowManualDialog}
+        remainingGenerations={remainingGenerations}
+      />
     </div>
   );
 };
@@ -185,3 +210,4 @@ const DashboardHome = () => {
 };
 
 export default DashboardHome;
+
