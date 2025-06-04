@@ -21,7 +21,7 @@ interface AuthContextProps {
   signOut: (force?: boolean) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   checkSubscription: () => Promise<void>;
-  refreshProfile: () => Promise<Profile | null>;
+  refreshProfile: () => Promise<Profile | null>; // Modified to return the updated profile
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -72,27 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Function to check subscription status with better error handling
+  // Function to check subscription status
   const checkSubscription = async () => {
-    // Only check subscription if we have a valid user and session
-    if (!authState.user || !authState.session) {
-      console.log('Skipping subscription check - no valid user or session');
-      return;
-    }
-    
-    // Additional check to ensure the session has proper tokens
-    if (!authState.session.access_token) {
-      console.log('Skipping subscription check - no access token');
+    if (!authState.user) {
       return;
     }
     
     try {
-      console.log('Checking subscription status...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        console.error('Subscription check error:', error);
-        // Don't show error toast for subscription checks as it's not critical
         return;
       }
       
@@ -114,11 +103,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           };
         });
-        console.log('Subscription status updated successfully');
       }
     } catch (error) {
-      console.error('Error checking subscription:', error);
-      // Silent error handling for subscription checks
+      // Silent error handling
     }
   };
 
@@ -210,6 +197,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return null;
         }
         
+        // Don't automatically show welcome popup for new users
+        // They will be directed to the newuser-direct page instead
+        // if (data.is_new === null) {
+        //   setShowWelcomePopup(true);
+        // }
+        
         return data as Profile;
       } catch (err) {
         return null;
@@ -219,8 +212,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
-        
         if (event === 'SIGNED_IN' && session) {
           try {
             // Use setTimeout to defer profile fetch and avoid potential race conditions
@@ -234,21 +225,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 error: null,
               });
               
-              // Only check subscription after profile is loaded and we have a stable session
-              // Add additional delay for new users to ensure everything is properly set up
+              // Check subscription status after login
               setTimeout(() => {
-                if (profile && session.access_token) {
-                  checkSubscription();
-                }
-              }, 2000); // Increased delay for better stability
+                checkSubscription();
+              }, 500);
               
               // Redirect to dashboard if not already there
               if (!window.location.pathname.includes('/dashboard')) {
                 navigate('/dashboard/home', { replace: true });
               }
-            }, 100); // Small delay to ensure session is stable
+            }, 0);
           } catch (error) {
-            console.error('Error in SIGNED_IN handler:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         } else if (event === 'SIGNED_OUT') {
@@ -271,15 +258,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 error: null,
               });
               
-              // Check subscription status whenever session changes, but only if we have a profile
+              // Check subscription status whenever session changes
               setTimeout(() => {
-                if (profile && session.access_token) {
-                  checkSubscription();
-                }
-              }, 1000);
-            }, 100);
+                checkSubscription();
+              }, 500);
+            }, 0);
           } catch (error) {
-            console.error('Error in session handler:', error);
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         } else {
@@ -297,7 +281,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Session initialization error:', error);
           setAuthState({
             ...initialState,
             loading: false,
@@ -317,18 +300,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               error: null,
             });
             
-            // Check subscription status on initialization, but only if we have everything we need
+            // Check subscription status on initialization
             setTimeout(() => {
-              if (profile && data.session.access_token) {
-                checkSubscription();
-              }
-            }, 1500);
+              checkSubscription();
+            }, 500);
             
             // Redirect to dashboard if on auth or root page
             if (window.location.pathname === '/' || window.location.pathname === '/auth') {
               navigate('/dashboard/home', { replace: true });
             }
-          }, 100);
+          }, 0);
         } else {
           setAuthState({
             ...initialState,
@@ -336,7 +317,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         setAuthState({
           ...initialState,
           loading: false,
@@ -455,7 +435,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signOut, 
       updateProfile, 
       checkSubscription,
-      refreshProfile
+      refreshProfile // Add refreshProfile to the context value
     }}>
       {children}
       

@@ -64,17 +64,11 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
-
     // Parse request body if present to get session_id
     let sessionId = null;
     if (req.method === "POST") {
-      try {
-        const requestBody = await req.json();
-        sessionId = requestBody.session_id;
-      } catch (e) {
-        // Not critical if body parsing fails
-      }
+      const requestBody = await req.json();
+      sessionId = requestBody.session_id;
     }
 
     // Initialize Supabase client with service role key to update profiles
@@ -87,11 +81,7 @@ serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      logStep("ERROR: No authorization header provided");
-      return new Response(JSON.stringify({ 
-        error: "Authorization header is required",
-        subscribed: false 
-      }), {
+      return new Response(JSON.stringify({ error: "Authorization header is required" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -99,80 +89,24 @@ serve(async (req) => {
 
     // Get the user from the token
     const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     
-    // Validate token format
-    if (!token || token.length < 10) {
-      logStep("ERROR: Invalid token format", { tokenLength: token?.length });
-      return new Response(JSON.stringify({ 
-        error: "Invalid authorization token",
-        subscribed: false 
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    let userData;
-    try {
-      const result = await supabaseAdmin.auth.getUser(token);
-      userData = result.data;
-      
-      if (result.error) {
-        logStep("ERROR: Authentication failed", { error: result.error.message });
-        return new Response(JSON.stringify({ 
-          error: "Authentication failed", 
-          details: result.error.message,
-          subscribed: false 
-        }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-    } catch (authError) {
-      logStep("ERROR: Token validation failed", { error: authError });
-      return new Response(JSON.stringify({ 
-        error: "Token validation failed",
-        subscribed: false 
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-    
-    if (!userData.user) {
-      logStep("ERROR: No user found in token");
-      return new Response(JSON.stringify({ 
-        error: "User not found",
-        subscribed: false 
-      }), {
+    if (userError || !userData.user) {
+      return new Response(JSON.stringify({ error: "Authentication failed", details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const user = userData.user;
-    logStep("User authenticated successfully", { userId: user.id });
 
     // Initialize Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      logStep("ERROR: Stripe secret key not configured");
-      return new Response(JSON.stringify({ 
-        error: "Payment system not configured",
-        subscribed: false 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
     // First, check if we have a session ID from a checkout success
     if (sessionId) {
-      logStep("Processing checkout session", { sessionId });
       try {
         // Retrieve the checkout session to get customer info
         const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -244,7 +178,6 @@ serve(async (req) => {
             .eq('id', user.id);
             
           if (customerUpdateError) {
-            logStep("Warning: Failed to update customer ID", { error: customerUpdateError.message });
             // Continue despite error - we want to try retrieving subscription info
           }
           
@@ -291,14 +224,12 @@ serve(async (req) => {
                 .eq('id', user.id);
                 
               if (updateError) {
-                logStep("ERROR: Failed to update profile with subscription", { error: updateError.message });
                 return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
                   headers: { ...corsHeaders, "Content-Type": "application/json" },
                   status: 500,
                 });
               }
               
-              logStep("Successfully processed checkout session");
               // Return subscription details
               return new Response(JSON.stringify({
                 subscribed: true,
@@ -318,7 +249,6 @@ serve(async (req) => {
           }
         }
       } catch (error) {
-        logStep("Warning: Checkout session processing failed", { error: error.message });
         // We'll continue with the regular flow below, don't return error response here
       }
     }
@@ -331,10 +261,8 @@ serve(async (req) => {
       .single();
       
     if (profileError) {
-      logStep("Warning: Failed to fetch user profile", { error: profileError.message });
-      // For new users, this is expected - return unsubscribed status
-      return new Response(JSON.stringify({ subscribed: false }), {
-        status: 200,
+      return new Response(JSON.stringify({ error: "Failed to fetch user profile" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -355,7 +283,6 @@ serve(async (req) => {
 
     // If no Stripe customer ID, user has no subscription
     if (!customerId) {
-      logStep("No Stripe customer ID found - user unsubscribed");
       await supabaseAdmin
         .from('profiles')
         .update({
@@ -374,28 +301,16 @@ serve(async (req) => {
       });
     }
 
-    logStep("Checking Stripe subscriptions", { customerId });
-
     // Retrieve active subscriptions for the customer
-    let subscriptions;
-    try {
-      subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "active",
-        expand: ["data.items.data.price"]
-      });
-    } catch (stripeError) {
-      logStep("ERROR: Failed to retrieve Stripe subscriptions", { error: stripeError.message });
-      // If Stripe is having issues, return current state without updating
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    // FIX: Removed excessive nesting in expansion to avoid the 4-level limit error
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      expand: ["data.items.data.price"]
+    });
 
     // If no active subscriptions, update profile and return
     if (subscriptions.data.length === 0) {
-      logStep("No active subscriptions found");
       await supabaseAdmin
         .from('profiles')
         .update({
@@ -416,10 +331,25 @@ serve(async (req) => {
 
     // Get the active subscription
     const subscription = subscriptions.data[0];
-    logStep("Active subscription found", { subscriptionId: subscription.id });
     
     // Get price info
     const priceId = subscription.items.data[0].price.id;
+    
+    // Fetch product information in a separate call to avoid excessive nesting
+    const price = subscription.items.data[0].price;
+    let productId = null;
+    
+    try {
+      // Check if price has product data, if not fetch it separately
+      if (price.product && typeof price.product === 'string') {
+        const product = await stripe.products.retrieve(price.product);
+        productId = product.id;
+      } else if (price.product && typeof price.product === 'object') {
+        productId = price.product.id;
+      }
+    } catch (error) {
+      // Continue despite product error
+    }
     
     // Determine subscription tier based on price ID
     let subscriptionTier = null;
@@ -452,14 +382,12 @@ serve(async (req) => {
       .eq('id', user.id);
       
     if (updateError) {
-      logStep("ERROR: Failed to update profile with subscription details", { error: updateError.message });
       return new Response(JSON.stringify({ error: "Failed to update profile", details: updateError.message }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
 
-    logStep("Successfully updated subscription status");
     // Return subscription details
     return new Response(JSON.stringify({
       subscribed: true,
@@ -475,12 +403,8 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("CRITICAL ERROR in check-subscription", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     
-    return new Response(JSON.stringify({ 
-      error: "Internal server error",
-      subscribed: false 
-    }), {
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
