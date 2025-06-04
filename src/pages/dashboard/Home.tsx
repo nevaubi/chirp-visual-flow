@@ -1,9 +1,9 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import { toast } from 'sonner';
@@ -175,9 +175,9 @@ const NewsletterDashboard = ({ profile }) => {
           {title}
         </CardTitle>
         {templateNumber && (
-          <div className="text-sm text-gray-500 -mt-1">
+          <Badge variant="secondary" className="w-fit text-xs">
             Template {templateNumber}
-          </div>
+          </Badge>
         )}
         <CardDescription className="text-sm text-gray-600">
           {description}
