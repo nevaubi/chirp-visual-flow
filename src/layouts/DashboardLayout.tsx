@@ -307,7 +307,7 @@ const DashboardLayout = () => {
             // On mobile: use full width when open, hide when closed
             isMobile 
               ? "fixed inset-y-0 left-0 w-64" 
-              : shouldShowExpanded ? "w-60" : "w-16",
+              : shouldShowExpanded ? "w-64" : "w-18",
             isMobile && !mobileMenuOpen && "transform -translate-x-full",
             isMobile && mobileMenuOpen && "transform translate-x-0"
           )}
@@ -316,19 +316,19 @@ const DashboardLayout = () => {
         >
           {/* Logo */}
           <div className={cn(
-            "flex items-center gap-2 p-4 border-b border-gray-700",
-            !shouldShowExpanded && !isMobile && "justify-center",
-            shouldShowExpanded && !isMobile && "justify-center"
+            "flex items-center gap-3 p-5 border-b border-gray-700",
+            !shouldShowExpanded && !isMobile && "justify-center px-3",
+            shouldShowExpanded && !isMobile && "justify-start"
           )}>
             <Link to="/" className={cn(
-              "flex items-center gap-2",
+              "flex items-center gap-3",
               !shouldShowExpanded && !isMobile && "justify-center",
-              shouldShowExpanded && !isMobile && "justify-center"
+              shouldShowExpanded && !isMobile && "justify-start"
             )}>
               <img 
                 src="/logoo.png" 
                 alt="Letternest Logo" 
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
               />
               {shouldShowExpanded && (
                 <span className="font-bold text-xl whitespace-nowrap overflow-hidden">
@@ -341,19 +341,19 @@ const DashboardLayout = () => {
 
           {/* Enhanced Feedback Section */}
           <div className="border-b border-gray-600">
-            <div className="p-3">
+            <div className="p-4">
               <FeedbackDialog>
                 <Button 
                   variant="ghost" 
                   className={cn(
-                    "w-full text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
-                    !shouldShowExpanded && !isMobile && "justify-center px-0",
-                    shouldShowExpanded && !isMobile && "justify-center"
+                    "w-full text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg py-3",
+                    !shouldShowExpanded && !isMobile && "justify-center px-2",
+                    shouldShowExpanded && !isMobile && "justify-start px-4"
                   )}
                 >
-                  <MessageSquare size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+                  <MessageSquare size={18} className={cn("shrink-0", shouldShowExpanded && "mr-3")} />
                   {shouldShowExpanded && (
-                    <span className="overflow-hidden whitespace-nowrap font-medium">Feedback</span>
+                    <span className="overflow-hidden whitespace-nowrap font-medium text-sm">Feedback</span>
                   )}
                 </Button>
               </FeedbackDialog>
@@ -362,14 +362,14 @@ const DashboardLayout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 py-6">
-            <ul className="space-y-2 px-2">
+            <ul className="space-y-3 px-3">
               {isNewsletterPlatform && (
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-3 text-white rounded-md transition-colors",
-                      !shouldShowExpanded && !isMobile && "justify-center px-0",
-                      shouldShowExpanded && !isMobile && "justify-center",
+                      "w-full flex items-center gap-4 px-4 py-4 text-white rounded-lg transition-colors font-medium text-sm",
+                      !shouldShowExpanded && !isMobile && "justify-center px-2",
+                      shouldShowExpanded && !isMobile && "justify-start",
                       hasRequiredTier 
                         ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
                         : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
@@ -377,7 +377,7 @@ const DashboardLayout = () => {
                     onClick={handleCreateNewsletter}
                     disabled={!hasRequiredTier}
                   >
-                    <Bookmark size={20} />
+                    <Bookmark size={22} className="shrink-0" />
                     {shouldShowExpanded && (
                       <span className="overflow-hidden whitespace-nowrap">Quick Create</span>
                     )}
@@ -391,14 +391,14 @@ const DashboardLayout = () => {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
+                        "w-full flex items-center gap-4 px-4 py-4 text-white hover:bg-white/10 rounded-lg transition-colors font-medium text-sm",
                         isActive && "bg-[#0087C8] hover:bg-[#0087C8]/90",
-                        !shouldShowExpanded && !isMobile && "justify-center px-0",
-                        shouldShowExpanded && !isMobile && "justify-center"
+                        !shouldShowExpanded && !isMobile && "justify-center px-2",
+                        shouldShowExpanded && !isMobile && "justify-start"
                       )}
                       onClick={() => handleNavigate(item.path)}
                     >
-                      <item.icon size={20} />
+                      <item.icon size={22} className="shrink-0" />
                       {shouldShowExpanded && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
                     </Button>
                   </li>
@@ -416,15 +416,15 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full mb-4 text-white hover:bg-white/10",
-                !shouldShowExpanded && !isMobile && "justify-center px-0",
-                shouldShowExpanded && !isMobile && "justify-center",
+                "w-full mb-4 text-white hover:bg-white/10 py-3 font-medium text-sm",
+                !shouldShowExpanded && !isMobile && "justify-center px-2",
+                shouldShowExpanded && !isMobile && "justify-start px-4",
                 isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
               )}
               onClick={handleManageSubscription}
               disabled={isPortalLoading || isCheckoutLoading}
             >
-              <CreditCard size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+              <CreditCard size={18} className={cn("shrink-0", shouldShowExpanded && "mr-3")} />
               {shouldShowExpanded && (
                 <span className="overflow-hidden whitespace-nowrap">
                   {isSubscribed ? "Manage Subscription" : "Upgrade Subscription"}
@@ -433,8 +433,8 @@ const DashboardLayout = () => {
             </Button>
             
             {shouldShowExpanded ? (
-              <div className="flex items-center gap-2 mb-4">
-                <Avatar className="h-9 w-9 border border-gray-700">
+              <div className="flex items-center gap-3 mb-4 px-2">
+                <Avatar className="h-10 w-10 border border-gray-700">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
@@ -444,7 +444,7 @@ const DashboardLayout = () => {
                 </div>
               </div>
             ) : !isMobile && (
-              <Avatar className="h-9 w-9 border border-gray-700 mb-4">
+              <Avatar className="h-10 w-10 border border-gray-700 mb-4">
                 <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -452,13 +452,13 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full text-white hover:bg-white/10",
-                !shouldShowExpanded && !isMobile && "justify-center px-0",
-                shouldShowExpanded && !isMobile && "justify-center"
+                "w-full text-white hover:bg-white/10 py-3 font-medium text-sm",
+                !shouldShowExpanded && !isMobile && "justify-center px-2",
+                shouldShowExpanded && !isMobile && "justify-start px-4"
               )}
               onClick={handleSignOut}
             >
-              <LogOut size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+              <LogOut size={18} className={cn("shrink-0", shouldShowExpanded && "mr-3")} />
               {shouldShowExpanded && <span>Sign out</span>}
             </Button>
           </div>
