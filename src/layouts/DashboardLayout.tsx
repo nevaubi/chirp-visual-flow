@@ -317,11 +317,13 @@ const DashboardLayout = () => {
           {/* Logo */}
           <div className={cn(
             "flex items-center gap-2 p-4 border-b border-gray-700",
-            !shouldShowExpanded && !isMobile && "justify-center"
+            !shouldShowExpanded && !isMobile && "justify-center",
+            shouldShowExpanded && !isMobile && "justify-center"
           )}>
             <Link to="/" className={cn(
               "flex items-center gap-2",
-              !shouldShowExpanded && !isMobile && "justify-center"
+              !shouldShowExpanded && !isMobile && "justify-center",
+              shouldShowExpanded && !isMobile && "justify-center"
             )}>
               <img 
                 src="/logoo.png" 
@@ -344,8 +346,9 @@ const DashboardLayout = () => {
                 <Button 
                   variant="ghost" 
                   className={cn(
-                    "w-full justify-start text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
-                    !shouldShowExpanded && !isMobile && "justify-center px-0"
+                    "w-full text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
+                    !shouldShowExpanded && !isMobile && "justify-center px-0",
+                    shouldShowExpanded && !isMobile && "justify-center"
                   )}
                 >
                   <MessageSquare size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
@@ -364,8 +367,9 @@ const DashboardLayout = () => {
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
+                      "w-full flex items-center gap-3 px-3 py-3 text-white rounded-md transition-colors",
                       !shouldShowExpanded && !isMobile && "justify-center px-0",
+                      shouldShowExpanded && !isMobile && "justify-center",
                       hasRequiredTier 
                         ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
                         : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
@@ -387,9 +391,10 @@ const DashboardLayout = () => {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full flex items-center gap-3 justify-start px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
+                        "w-full flex items-center gap-3 px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
                         isActive && "bg-[#0087C8] hover:bg-[#0087C8]/90",
-                        !shouldShowExpanded && !isMobile && "justify-center px-0"
+                        !shouldShowExpanded && !isMobile && "justify-center px-0",
+                        shouldShowExpanded && !isMobile && "justify-center"
                       )}
                       onClick={() => handleNavigate(item.path)}
                     >
@@ -411,8 +416,9 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full mb-4 justify-start text-white hover:bg-white/10",
+                "w-full mb-4 text-white hover:bg-white/10",
                 !shouldShowExpanded && !isMobile && "justify-center px-0",
+                shouldShowExpanded && !isMobile && "justify-center",
                 isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
               )}
               onClick={handleManageSubscription}
@@ -446,8 +452,9 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full justify-start text-white hover:bg-white/10",
-                !shouldShowExpanded && !isMobile && "justify-center px-0"
+                "w-full text-white hover:bg-white/10",
+                !shouldShowExpanded && !isMobile && "justify-center px-0",
+                shouldShowExpanded && !isMobile && "justify-center"
               )}
               onClick={handleSignOut}
             >
