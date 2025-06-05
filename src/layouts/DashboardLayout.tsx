@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,30 +59,62 @@ const DashboardLayout = () => {
 
   // Listen for topic selection events
   useEffect(() => {
-    // Function to handle the topicSelected custom event
     const handleTopicSelected = (event: CustomEvent) => {
       const topic = event.detail;
       if (topic) {
         setSelectedTopic(topic);
-        setIsTweetPanelOpen(true); // Open the tweet panel when a topic is selected
+        setIsTweetPanelOpen(true);
       }
     };
 
-    // Add event listener for the topicSelected event
     window.addEventListener('topicSelected', handleTopicSelected as EventListener);
 
-    // Clean up event listener
     return () => {
       window.removeEventListener('topicSelected', handleTopicSelected as EventListener);
     };
   }, []);
+
+  // Add swipe gesture support for mobile
+  useEffect(() => {
+    if (!isMobile) return;
+
+    let startX = 0;
+    let currentX = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!mobileMenuOpen) return;
+      startX = e.touches[0].clientX;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!mobileMenuOpen) return;
+      currentX = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+      if (!mobileMenuOpen) return;
+      const diffX = startX - currentX;
+      if (diffX > 50) { // Swipe left to close
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, mobileMenuOpen]);
 
   const handleSignOut = () => {
     signOut();
   };
 
   const handleCreateNewsletter = () => {
-    // Check if user has required subscription tier
     if (!hasRequiredTier) {
       toast.error("Subscription Required", {
         description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
@@ -89,7 +122,6 @@ const DashboardLayout = () => {
       return;
     }
     
-    // Check if manual generation is available for the user
     if (profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0) {
       setIsManualGenerationOpen(true);
     } else {
@@ -98,7 +130,6 @@ const DashboardLayout = () => {
       });
     }
     
-    // Close mobile menu if open
     if (isMobile && mobileMenuOpen) {
       setMobileMenuOpen(false);
     }
@@ -220,7 +251,6 @@ const DashboardLayout = () => {
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/dashboard/home' },
     { icon: Book, label: 'Library', path: '/dashboard/analytics' },
-    // For Creator platform, show "Trending Topics" instead of "Community"
     ...(isCreatorPlatform 
         ? [{ icon: TrendingUp, label: 'Trending Topics', path: '/dashboard/community' }] 
         : !isNewsletterPlatform 
@@ -229,32 +259,26 @@ const DashboardLayout = () => {
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 
-  // Handle navigation with mobile menu auto-close
   const handleNavigate = (path: string) => {
     navigate(path);
-    // Close mobile menu after navigation
     if (isMobile && mobileMenuOpen) {
       setMobileMenuOpen(false);
     }
   };
 
-  // Handle topic selection for Tweet Generation panel
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
-    setIsTweetPanelOpen(true); // Open the panel when a topic is selected
+    setIsTweetPanelOpen(true);
   };
 
-  // Close the tweet panel
   const handleCloseTweetPanel = () => {
     setIsTweetPanelOpen(false);
   };
 
-  // Determine if sidebar should show expanded (full text)
   const shouldShowExpanded = !isMobile ? expanded : mobileMenuOpen;
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Manual Newsletter Generation Dialog */}
       <ManualNewsletterDialog
         open={isManualGenerationOpen}
         onOpenChange={setIsManualGenerationOpen}
@@ -262,20 +286,21 @@ const DashboardLayout = () => {
       />
       
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
-        <div className="flex items-center gap-2">
+      <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b shadow-sm">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="hover:bg-gray-100 transition-colors duration-200"
           >
             <Menu size={20} />
           </Button>
-          <Link to="/" className="flex items-center gap-1.5">
+          <Link to="/" className="flex items-center gap-2">
             <img 
               src="/logoo.png" 
               alt="Letternest Logo" 
-              className="h-8 w-8"
+              className="h-8 w-8 transition-transform duration-200 hover:scale-105"
             />
             <span className="font-bold text-xl">
               <span className="text-black">letter</span>
@@ -285,7 +310,7 @@ const DashboardLayout = () => {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="h-9 w-9 cursor-pointer">
+            <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-transparent hover:ring-gray-200 transition-all duration-200">
               <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
@@ -300,36 +325,32 @@ const DashboardLayout = () => {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
+        {/* Enhanced Sidebar */}
         <aside 
           className={cn(
-            "bg-[#181F2C] text-white z-30 flex flex-col transition-all duration-300 ease-in-out",
-            // On mobile: use full width when open, hide when closed
+            "bg-gradient-to-b from-[#181F2C] to-[#1a2332] text-white z-30 flex flex-col transition-all duration-300 ease-out shadow-xl",
             isMobile 
               ? "fixed inset-y-0 left-0 w-64" 
-              : shouldShowExpanded ? "w-60" : "w-16",
+              : shouldShowExpanded ? "w-64" : "w-16",
             isMobile && !mobileMenuOpen && "transform -translate-x-full",
             isMobile && mobileMenuOpen && "transform translate-x-0"
           )}
           onMouseEnter={() => !isMobile && setExpanded(true)}
           onMouseLeave={() => !isMobile && setExpanded(false)}
         >
-          {/* Logo */}
+          {/* Enhanced Logo Section */}
           <div className={cn(
-            "flex items-center gap-2 p-4 border-b border-gray-700",
-            !shouldShowExpanded && !isMobile && "justify-center"
+            "flex items-center gap-3 p-4 border-b border-gray-600/50",
+            shouldShowExpanded ? "justify-center" : "justify-center"
           )}>
-            <Link to="/" className={cn(
-              "flex items-center gap-2",
-              !shouldShowExpanded && !isMobile && "justify-center"
-            )}>
+            <Link to="/" className="flex items-center gap-2 group">
               <img 
                 src="/logoo.png" 
                 alt="Letternest Logo" 
-                className="h-8 w-8 shrink-0"
+                className="h-8 w-8 shrink-0 transition-transform duration-200 group-hover:scale-110"
               />
               {shouldShowExpanded && (
-                <span className="font-bold text-xl whitespace-nowrap overflow-hidden">
+                <span className="font-bold text-xl whitespace-nowrap animate-fade-in">
                   <span className="text-white">letter</span>
                   <span className="text-[#FF6B35]">nest</span>
                 </span>
@@ -338,36 +359,36 @@ const DashboardLayout = () => {
           </div>
 
           {/* Enhanced Feedback Section */}
-          <div className="border-b border-gray-600">
+          <div className="border-b border-gray-600/50">
             <div className="p-3">
               <FeedbackDialog>
                 <Button 
                   variant="ghost" 
                   className={cn(
-                    "w-full justify-start text-white hover:bg-white/10 transition-colors bg-white/5 border border-gray-600/50 rounded-lg",
-                    !shouldShowExpanded && !isMobile && "justify-center px-0"
+                    "w-full text-white hover:bg-white/10 transition-all duration-200 bg-white/5 border border-gray-600/50 rounded-lg hover:scale-[1.02] hover:shadow-lg hover:border-gray-500/50",
+                    shouldShowExpanded ? "justify-center" : "justify-center px-0"
                   )}
                 >
                   <MessageSquare size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
                   {shouldShowExpanded && (
-                    <span className="overflow-hidden whitespace-nowrap font-medium">Feedback</span>
+                    <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">Feedback</span>
                   )}
                 </Button>
               </FeedbackDialog>
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Enhanced Navigation */}
           <nav className="flex-1 py-6">
-            <ul className="space-y-2 px-2">
+            <ul className="space-y-2 px-3">
               {isNewsletterPlatform && (
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 justify-start px-3 py-3 text-white rounded-md transition-colors",
-                      !shouldShowExpanded && !isMobile && "justify-center px-0",
+                      "w-full flex items-center gap-3 px-4 py-3 text-white rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
+                      shouldShowExpanded ? "justify-center" : "justify-center px-0",
                       hasRequiredTier 
-                        ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
+                        ? "bg-gradient-to-r from-[#FF6B35] to-[#ff5722] hover:from-[#ff5722] hover:to-[#e64a19] shadow-md" 
                         : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
                     )}
                     onClick={handleCreateNewsletter}
@@ -375,7 +396,7 @@ const DashboardLayout = () => {
                   >
                     <Bookmark size={20} />
                     {shouldShowExpanded && (
-                      <span className="overflow-hidden whitespace-nowrap">Quick Create</span>
+                      <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">Quick Create</span>
                     )}
                   </Button>
                 </li>
@@ -387,14 +408,16 @@ const DashboardLayout = () => {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full flex items-center gap-3 justify-start px-3 py-2 text-white hover:bg-white/10 rounded-md transition-colors",
-                        isActive && "bg-[#0087C8] hover:bg-[#0087C8]/90",
-                        !shouldShowExpanded && !isMobile && "justify-center px-0"
+                        "w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-md group",
+                        isActive && "bg-gradient-to-r from-[#0087C8] to-[#006fa8] hover:from-[#006fa8] hover:to-[#005a8b] shadow-md",
+                        shouldShowExpanded ? "justify-center" : "justify-center px-0"
                       )}
                       onClick={() => handleNavigate(item.path)}
                     >
-                      <item.icon size={20} />
-                      {shouldShowExpanded && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
+                      <item.icon size={20} className="transition-transform duration-200 group-hover:scale-110" />
+                      {shouldShowExpanded && (
+                        <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">{item.label}</span>
+                      )}
                     </Button>
                   </li>
                 );
@@ -402,33 +425,34 @@ const DashboardLayout = () => {
             </ul>
           </nav>
 
-          {/* User Profile */}
+          {/* Enhanced User Profile Section */}
           <div className={cn(
-            "border-t border-gray-700 p-4",
+            "border-t border-gray-600/50 p-4 space-y-4",
             !shouldShowExpanded && !isMobile && "flex flex-col items-center"
           )}>
-            {/* Subscription management button */}
+            {/* Enhanced Subscription Button */}
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full mb-4 justify-start text-white hover:bg-white/10",
-                !shouldShowExpanded && !isMobile && "justify-center px-0",
-                isSubscribed ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
+                "w-full text-white hover:bg-white/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded-lg border border-gray-600/30 hover:border-gray-500/50",
+                shouldShowExpanded ? "justify-center" : "justify-center px-0",
+                isSubscribed ? "text-green-400 hover:text-green-300 bg-green-900/20" : "text-amber-400 hover:text-amber-300 bg-amber-900/20"
               )}
               onClick={handleManageSubscription}
               disabled={isPortalLoading || isCheckoutLoading}
             >
-              <CreditCard size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
+              <CreditCard size={16} className={cn("shrink-0 transition-transform duration-200 hover:scale-110", shouldShowExpanded && "mr-2")} />
               {shouldShowExpanded && (
-                <span className="overflow-hidden whitespace-nowrap">
+                <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">
                   {isSubscribed ? "Manage Subscription" : "Upgrade Subscription"}
                 </span>
               )}
             </Button>
             
+            {/* Enhanced Profile Display */}
             {shouldShowExpanded ? (
-              <div className="flex items-center gap-2 mb-4">
-                <Avatar className="h-9 w-9 border border-gray-700">
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
+                <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
@@ -438,21 +462,23 @@ const DashboardLayout = () => {
                 </div>
               </div>
             ) : !isMobile && (
-              <Avatar className="h-9 w-9 border border-gray-700 mb-4">
+              <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200 hover:scale-105">
                 <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             )}
+
+            {/* Enhanced Sign Out Button */}
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full justify-start text-white hover:bg-white/10",
-                !shouldShowExpanded && !isMobile && "justify-center px-0"
+                "w-full text-white hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded-lg border border-gray-600/30 hover:border-red-500/50",
+                shouldShowExpanded ? "justify-center" : "justify-center px-0"
               )}
               onClick={handleSignOut}
             >
-              <LogOut size={16} className={cn("shrink-0", shouldShowExpanded && "mr-2")} />
-              {shouldShowExpanded && <span>Sign out</span>}
+              <LogOut size={16} className={cn("shrink-0 transition-transform duration-200 hover:scale-110", shouldShowExpanded && "mr-2")} />
+              {shouldShowExpanded && <span className="font-medium animate-fade-in">Sign out</span>}
             </Button>
           </div>
         </aside>
@@ -462,19 +488,19 @@ const DashboardLayout = () => {
           "flex-1 flex flex-col overflow-y-auto bg-gray-50 transition-all duration-300 relative",
           isMobile && mobileMenuOpen && "filter blur-sm"
         )}>
-          {/* Desktop Header with notification bell and avatar moved to top right */}
-          <header className="hidden lg:flex items-center justify-end p-4 bg-white border-b gap-4">
+          {/* Enhanced Desktop Header */}
+          <header className="hidden lg:flex items-center justify-end p-4 bg-white border-b shadow-sm gap-4">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-gray-600">
+              <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100 hover:scale-105 transition-all duration-200">
                 <Bell size={20} />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                  <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 hover:scale-[1.02]">
                     <span className="text-sm font-medium text-gray-700">
                       {profile?.twitter_username || 'User'}
                     </span>
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="h-9 w-9 ring-2 ring-transparent hover:ring-gray-200 transition-all duration-200">
                       <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
@@ -507,10 +533,10 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* Mobile Overlay */}
+      {/* Enhanced Mobile Overlay */}
       {isMobile && mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 transition-all duration-300"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
