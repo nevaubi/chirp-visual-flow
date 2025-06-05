@@ -364,7 +364,7 @@ const DashboardLayout = () => {
                 <Button 
                   variant="ghost" 
                   className={cn(
-                    "w-full text-white hover:bg-white/10 transition-all duration-200 bg-white/5 border border-gray-600/50 rounded-lg hover:scale-[1.02] hover:shadow-lg hover:border-gray-500/50",
+                    "w-full text-white hover:bg-white/10 transition-all duration-200 bg-white/5 border border-gray-600/50 rounded hover:scale-[1.02] hover:shadow-lg hover:border-gray-500/50",
                     shouldShowExpanded ? "justify-center" : "justify-center px-0"
                   )}
                 >
@@ -433,7 +433,7 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full text-white hover:bg-white/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded-lg border border-gray-600/30 hover:border-gray-500/50",
+                "w-full text-white hover:bg-white/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded border border-gray-600/30 hover:border-gray-500/50",
                 shouldShowExpanded ? "justify-center" : "justify-center px-0",
                 isSubscribed ? "text-green-400 hover:text-green-300 bg-green-900/20" : "text-amber-400 hover:text-amber-300 bg-amber-900/20"
               )}
@@ -449,7 +449,7 @@ const DashboardLayout = () => {
             
             {/* Enhanced Profile Display */}
             {shouldShowExpanded ? (
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 justify-center">
+              <div className="flex items-center gap-3 p-2 rounded bg-white/5 hover:bg-white/10 transition-colors duration-200 justify-center">
                 <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
@@ -460,7 +460,7 @@ const DashboardLayout = () => {
                 </div>
               </div>
             ) : !isMobile && (
-              <div className="flex justify-center">
+              <div className="flex justify-center w-full">
                 <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200 hover:scale-105">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
@@ -472,7 +472,7 @@ const DashboardLayout = () => {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full text-white hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded-lg border border-gray-600/30 hover:border-red-500/50",
+                "w-full text-white hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 hover:scale-[1.02] hover:shadow-md rounded border border-gray-600/30 hover:border-red-500/50",
                 shouldShowExpanded ? "justify-center" : "justify-center px-0"
               )}
               onClick={handleSignOut}
@@ -496,7 +496,7 @@ const DashboardLayout = () => {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 hover:scale-[1.02]">
+                  <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded p-2 transition-all duration-200 hover:scale-[1.02]">
                     <span className="text-sm font-medium text-gray-700">
                       {profile?.twitter_username || 'User'}
                     </span>
