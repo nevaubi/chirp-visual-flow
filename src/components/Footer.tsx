@@ -1,6 +1,5 @@
 
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -40,8 +39,10 @@ const Footer = () => {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors"
             >
-              <span>Follow us on X</span>
-              <X className="h-4 w-4" />
+              <span>Follow us on</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="fill-current">
+                <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+              </svg>
               <span>@letternest_ai</span>
             </a>
           </div>
