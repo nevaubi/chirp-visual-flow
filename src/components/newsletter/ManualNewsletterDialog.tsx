@@ -33,15 +33,15 @@ const TweetCountOption = ({
 }) => (
   <Card 
     className={cn(
-      "flex flex-col items-center justify-center p-4 cursor-pointer border-2 transition-all",
+      "flex flex-col items-center justify-center p-3 sm:p-4 cursor-pointer border-2 transition-all",
       selected 
         ? "border-[#FF6B35] bg-[#FF6B35]/10" 
         : "border-gray-200 hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5"
     )}
     onClick={onSelect}
   >
-    <div className="text-2xl font-bold mb-2">{count}</div>
-    <div className="text-sm text-gray-600">tweets</div>
+    <div className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">{count}</div>
+    <div className="text-xs sm:text-sm text-gray-600">tweets</div>
   </Card>
 );
 
@@ -211,10 +211,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         }
       `}</style>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md md:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Generate Newsletter Manually</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[90vw] sm:max-w-md md:max-w-lg max-h-[85vh] sm:max-h-[80vh]">
+          <DialogHeader className="space-y-2 sm:space-y-3">
+            <DialogTitle className="text-lg sm:text-xl">Generate Newsletter Manually</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               Instantly trigger a newsletter from your saved bookmarks. 
               It will be sent to your email and displayed here.
             </DialogDescription>
@@ -222,16 +222,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
           
           {/* Processing overlay */}
           {isGenerating && (
-            <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-lg px-4">
-              <div className="w-80 h-64 mb-6 relative">
+            <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-lg px-3 sm:px-4">
+              <div className="w-64 sm:w-80 h-48 sm:h-64 mb-4 sm:mb-6 relative">
                 <div className="flex justify-center items-center h-full">
                   {/* Newsletter illustration */}
-                  <div className={`relative w-48 h-64 transition-all duration-500 ${progress >= 100 ? 'animate-pulse-soft' : ''}`}>
+                  <div className={`relative w-32 sm:w-48 h-40 sm:h-64 transition-all duration-500 ${progress >= 100 ? 'animate-pulse-soft' : ''}`}>
                     {/* Newsletter paper */}
-                    <div className={`absolute top-0 left-0 w-48 h-64 bg-white border-2 ${progress >= 100 ? 'border-green-400' : 'border-gray-300'} rounded-md shadow-lg overflow-hidden flex flex-col transition-colors duration-300`}>
+                    <div className={`absolute top-0 left-0 w-32 sm:w-48 h-40 sm:h-64 bg-white border-2 ${progress >= 100 ? 'border-green-400' : 'border-gray-300'} rounded-md shadow-lg overflow-hidden flex flex-col transition-colors duration-300`}>
                       {/* Newsletter header with pulse effect */}
-                      <div className={`h-10 w-full ${progress >= 100 ? 'bg-gradient-to-r from-green-50 to-green-100' : 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FF6B35]/20'} border-b ${progress >= 100 ? 'border-green-200' : 'border-[#FF6B35]/30'} flex items-center justify-center transition-colors duration-300`}>
-                        <div className={`w-24 h-3 ${progress >= 100 ? 'bg-green-400' : 'bg-[#FF6B35]'} rounded-full relative overflow-hidden transition-colors duration-300`}>
+                      <div className={`h-6 sm:h-10 w-full ${progress >= 100 ? 'bg-gradient-to-r from-green-50 to-green-100' : 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FF6B35]/20'} border-b ${progress >= 100 ? 'border-green-200' : 'border-[#FF6B35]/30'} flex items-center justify-center transition-colors duration-300`}>
+                        <div className={`w-16 sm:w-24 h-2 sm:h-3 ${progress >= 100 ? 'bg-green-400' : 'bg-[#FF6B35]'} rounded-full relative overflow-hidden transition-colors duration-300`}>
                           <div className="absolute inset-0 overflow-hidden">
                             <div className="h-full w-full animate-shimmer bg-gradient-to-r from-transparent via-white via-20% to-transparent to-40% bg-opacity-20"></div>
                           </div>
@@ -239,25 +239,25 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                       </div>
                       
                       {/* Newsletter content - fills up gradually based on progress */}
-                      <div className="flex-1 p-3">
+                      <div className="flex-1 p-2 sm:p-3">
                         {/* Content lines that appear based on progress - with staggered delays and varied widths */}
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out transform ${progress > 10 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out transform ${progress > 10 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-3 transition-all duration-700 ease-out delay-100 transform ${progress > 20 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out delay-100 transform ${progress > 20 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-200 transform ${progress > 30 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out delay-200 transform ${progress > 30 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-3 transition-all duration-700 ease-out delay-300 transform ${progress > 40 ? 'w-4/5 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-[#FF6B35]/60 to-[#FF6B35]/40'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out delay-300 transform ${progress > 40 ? 'w-4/5 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-400 transform ${progress > 50 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out delay-400 transform ${progress > 50 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-500 transform ${progress > 60 ? 'w-3/4 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-2 sm:mb-3 transition-all duration-700 ease-out delay-500 transform ${progress > 60 ? 'w-3/4 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-600 transform ${progress > 70 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-1 sm:mb-3 transition-all duration-700 ease-out delay-600 transform ${progress > 70 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-3 transition-all duration-700 ease-out delay-700 transform ${progress > 80 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full mb-1 sm:mb-3 transition-all duration-700 ease-out delay-700 transform ${progress > 80 ? 'w-5/6 opacity-100' : 'w-0 opacity-0'}`}></div>
                         
-                        <div className={`h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full transition-all duration-700 ease-out delay-800 transform ${progress > 90 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+                        <div className={`h-1.5 sm:h-2.5 bg-gradient-to-r ${progress >= 100 ? 'from-green-300 to-green-200' : 'from-gray-300 to-gray-200'} rounded-full transition-all duration-700 ease-out delay-800 transform ${progress > 90 ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
                       </div>
                     </div>
                     
@@ -265,8 +265,8 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                     {progress >= 100 && (
                       <div className="absolute inset-0">
                         {/* Generate confetti particles */}
-                        {Array.from({ length: 30 }).map((_, i) => {
-                          const size = 4 + Math.random() * 8;
+                        {Array.from({ length: 20 }).map((_, i) => {
+                          const size = 3 + Math.random() * 5;
                           const startX = 10 + Math.random() * 60;
                           const fallSpeed = 1.5 + Math.random() * 3.5;
                           const delay = Math.random() * 1.2;
@@ -311,22 +311,22 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                   {progress < 100 && (
                     <div className="absolute w-full h-full">
                       {/* Generate bookmark icons that fly toward the newsletter */}
-                      {Array.from({ length: 8 }).map((_, i) => {
+                      {Array.from({ length: 6 }).map((_, i) => {
                         // Calculate when this bookmark should appear based on progress
-                        const progressThreshold = Math.min(5 + (i * 10), 85);
+                        const progressThreshold = Math.min(5 + (i * 12), 85);
                         const shouldShow = progress > progressThreshold;
                         
                         // Different starting positions for each bookmark
                         const side = i % 2 === 0 ? 'left' : 'right';
-                        const topPosition = -10 + (i * 15);
+                        const topPosition = -10 + (i * 18);
                         const leftPosition = side === 'left' ? -20 - (i % 3 * 10) : 120 + (i % 3 * 10);
                         
                         // Different delays for more natural movement
-                        const animationDelay = `${(i * 0.15)}s`;
+                        const animationDelay = `${(i * 0.2)}s`;
                         const animationName = side === 'left' ? 'bookmark-right' : 'bookmark-left';
                         
                         // Different sizes for depth effect
-                        const size = 32 + (i % 3 * 4);
+                        const size = 20 + (i % 3 * 3);
                         
                         // Different colors for visual interest - using orange variations
                         const colors = [
@@ -359,16 +359,16 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                       })}
                       
                       {/* Add some decorative smaller bookmarks that just float around */}
-                      {Array.from({ length: 6 }).map((_, i) => {
+                      {Array.from({ length: 4 }).map((_, i) => {
                         // Only show these decorative bookmarks after some progress
                         const shouldShow = progress > 30;
                         
                         // Random positions
-                        const topPosition = 10 + (i * 12);
-                        const leftPosition = 20 + (i * 10);
+                        const topPosition = 15 + (i * 15);
+                        const leftPosition = 25 + (i * 12);
                         
                         // Small sizes for background effect
-                        const size = 15 + (i % 3 * 2);
+                        const size = 12 + (i % 3 * 2);
                         
                         // Different colors - using orange variations
                         const colors = [
@@ -386,7 +386,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                               top: `${topPosition}%`, 
                               left: `${leftPosition}%`,
                               animation: shouldShow ? `float-${i % 2 === 0 ? 'right' : 'left'} ${3 + (i % 3)}s infinite ease-in-out` : 'none',
-                              animationDelay: `${i * 0.2}s`
+                              animationDelay: `${i * 0.3}s`
                             }}
                           >
                             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={colorClass}>
@@ -401,7 +401,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
               </div>
               
               {/* Progress bar */}
-              <div className="w-64 mb-4">
+              <div className="w-48 sm:w-64 mb-3 sm:mb-4">
                 <Progress 
                   value={progress} 
                   className="h-2 bg-gray-200"
@@ -416,17 +416,17 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
               
               {/* Success message that appears when progress reaches 100% */}
               {progress >= 100 ? (
-                <div className="text-center space-y-2">
-                  <p className="text-lg font-semibold text-green-700">
+                <div className="text-center space-y-1 sm:space-y-2 px-2">
+                  <p className="text-base sm:text-lg font-semibold text-green-700">
                     Newsletter generating in background - check Library/email in 2-3 mins!
                   </p>
-                  <p className="text-sm text-green-600">
+                  <p className="text-xs sm:text-sm text-green-600">
                     Your newsletter with {selectedCount} tweets is being processed
                   </p>
                 </div>
               ) : (
-                <div className="text-center space-y-2">
-                  <p className="text-sm text-gray-600">
+                <div className="text-center space-y-1 sm:space-y-2 px-2">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Analyzing your bookmarks and generating newsletter...
                   </p>
                   {/* New message that appears after 40% progress */}
@@ -442,14 +442,14 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
             </div>
           )}
           
-          <div className="py-4 space-y-4">
-            <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-3 text-sm text-[#FF6B35]">
+          <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
+            <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-2 sm:p-3 text-xs sm:text-sm text-[#FF6B35]">
               <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <h3 className="text-sm font-medium text-gray-700">How many of your most recent bookmarks to use:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <TweetCountOption 
                   count={10} 
                   selected={selectedCount === 10} 
@@ -469,20 +469,20 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
             </div>
           </div>
           
-          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
-            <div className="text-sm text-gray-500">
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 sm:gap-4 pt-2">
+            <div className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
               {displayRemainingGenerations} generation{displayRemainingGenerations !== 1 ? 's' : ''} remaining
             </div>
             <Button 
               type="button" 
-              className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+              className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white w-full sm:w-auto order-1 sm:order-2 text-sm sm:text-base py-2 sm:py-3 px-4 sm:px-6"
               onClick={handleGenerate}
               disabled={isGenerating || displayRemainingGenerations <= 0}
             >
               {isGenerating ? (
                 <>
                   <span className="mr-2">Processing...</span>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 </>
               ) : (
                 'Generate Newsletter'
