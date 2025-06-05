@@ -329,8 +329,8 @@ const DashboardLayout = () => {
           className={cn(
             "bg-gradient-to-b from-[#181F2C] to-[#1a2332] text-white z-30 flex flex-col transition-all duration-300 ease-out shadow-xl",
             isMobile 
-              ? "fixed inset-y-0 left-0 w-64" 
-              : shouldShowExpanded ? "w-64" : "w-16",
+              ? "fixed inset-y-0 left-0 w-56" 
+              : shouldShowExpanded ? "w-56" : "w-16",
             isMobile && !mobileMenuOpen && "transform -translate-x-full",
             isMobile && mobileMenuOpen && "transform translate-x-0"
           )}
@@ -384,7 +384,7 @@ const DashboardLayout = () => {
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 text-white rounded-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
+                      "w-full flex items-center gap-3 px-4 py-3 text-white rounded transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
                       shouldShowExpanded ? "justify-center" : "justify-center px-0",
                       hasRequiredTier 
                         ? "bg-gradient-to-r from-[#FF6B35] to-[#ff5722] hover:from-[#ff5722] hover:to-[#e64a19] shadow-md" 
@@ -407,7 +407,7 @@ const DashboardLayout = () => {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-md transition-all duration-200 hover:scale-[1.02] hover:shadow-md group",
+                        "w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded transition-all duration-200 hover:scale-[1.02] hover:shadow-md group",
                         isActive && "bg-gradient-to-r from-[#0087C8] to-[#006fa8] hover:from-[#006fa8] hover:to-[#005a8b] shadow-md",
                         shouldShowExpanded ? "justify-center" : "justify-center px-0"
                       )}
@@ -460,10 +460,12 @@ const DashboardLayout = () => {
                 </div>
               </div>
             ) : !isMobile && (
-              <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200 hover:scale-105">
-                <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
+              <div className="flex justify-center">
+                <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200 hover:scale-105">
+                  <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+              </div>
             )}
 
             {/* Enhanced Sign Out Button */}
