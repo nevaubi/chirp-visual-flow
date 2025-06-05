@@ -375,7 +375,7 @@ const DashboardLayout = () => {
                   >
                     <Bookmark size={20} />
                     {shouldShowExpanded && (
-                      <span className="overflow-hidden whitespace-nowrap">Create Newsletter</span>
+                      <span className="overflow-hidden whitespace-nowrap">Quick Create</span>
                     )}
                   </Button>
                 </li>
