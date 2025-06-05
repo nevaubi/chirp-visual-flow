@@ -1,4 +1,6 @@
+
 import { Link } from "react-router-dom";
+import { X } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -28,6 +30,20 @@ const Footer = () => {
             <Link to="/privacy" className="text-gray-600 dark:text-gray-400 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors">
               Privacy Policy
             </Link>
+          </div>
+
+          {/* Social Media Link */}
+          <div className="mb-6">
+            <a 
+              href="https://x.com/letternest_ai" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-twitter-blue dark:hover:text-twitter-blue transition-colors"
+            >
+              <span>Follow us on X</span>
+              <X className="h-4 w-4" />
+              <span>@letternest_ai</span>
+            </a>
           </div>
 
           {/* Copyright */}
