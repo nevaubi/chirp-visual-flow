@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -385,7 +384,7 @@ const DashboardLayout = () => {
                 <li>
                   <Button
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 text-white rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
+                      "w-full flex items-center gap-3 px-4 py-3 text-white rounded-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
                       shouldShowExpanded ? "justify-center" : "justify-center px-0",
                       hasRequiredTier 
                         ? "bg-gradient-to-r from-[#FF6B35] to-[#ff5722] hover:from-[#ff5722] hover:to-[#e64a19] shadow-md" 
@@ -408,15 +407,15 @@ const DashboardLayout = () => {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-md group",
+                        "w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-md transition-all duration-200 hover:scale-[1.02] hover:shadow-md group",
                         isActive && "bg-gradient-to-r from-[#0087C8] to-[#006fa8] hover:from-[#006fa8] hover:to-[#005a8b] shadow-md",
                         shouldShowExpanded ? "justify-center" : "justify-center px-0"
                       )}
                       onClick={() => handleNavigate(item.path)}
                     >
-                      <item.icon size={20} className="transition-transform duration-200 group-hover:scale-110" />
+                      <item.icon size={22} className="transition-transform duration-200 group-hover:scale-110" />
                       {shouldShowExpanded && (
-                        <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">{item.label}</span>
+                        <span className="overflow-hidden whitespace-nowrap font-medium text-base animate-fade-in">{item.label}</span>
                       )}
                     </Button>
                   </li>
@@ -441,7 +440,6 @@ const DashboardLayout = () => {
               onClick={handleManageSubscription}
               disabled={isPortalLoading || isCheckoutLoading}
             >
-              <CreditCard size={16} className={cn("shrink-0 transition-transform duration-200 hover:scale-110", shouldShowExpanded && "mr-2")} />
               {shouldShowExpanded && (
                 <span className="overflow-hidden whitespace-nowrap font-medium animate-fade-in">
                   {isSubscribed ? "Manage Subscription" : "Upgrade Subscription"}
@@ -451,12 +449,12 @@ const DashboardLayout = () => {
             
             {/* Enhanced Profile Display */}
             {shouldShowExpanded ? (
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200">
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 justify-center">
                 <Avatar className="h-10 w-10 border-2 border-gray-600 ring-2 ring-transparent hover:ring-gray-500 transition-all duration-200">
                   <AvatarImage src={profile?.twitter_profilepic_url || undefined} alt={profile?.twitter_username || 'User'} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden text-center">
                   <p className="font-medium text-sm text-white truncate">{profile?.twitter_username || 'User'}</p>
                   <p className="text-xs text-gray-400 truncate">@{profile?.twitter_handle || 'handle'}</p>
                 </div>
