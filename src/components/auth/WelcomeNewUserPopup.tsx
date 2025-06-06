@@ -86,10 +86,10 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
               {tabs.map((tab, index) => (
                 <div 
                   key={tab.name}
-                  className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-gray-100"
+                  className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-gray-100 animate-fade-in"
                   style={{ 
                     animationDelay: `${index * 0.2}s`,
-                    animation: showContent ? 'fadeInUp 0.6s ease-out forwards' : 'none'
+                    animationFillMode: 'both'
                   }}
                 >
                   <h4 className="font-semibold text-gray-900 mb-1">{tab.name}</h4>
@@ -117,7 +117,7 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
             </h3>
             <Button 
               onClick={onGotIt}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-[1.02] shadow-lg animate-fadeIn"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-[1.02] shadow-lg animate-fade-in"
             >
               Got it!
             </Button>
@@ -130,47 +130,23 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
   };
 
   return (
-    <>
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
-      
-      <Dialog 
-        open={open} 
-        onOpenChange={() => {}} // Prevent closing by any means
+    <Dialog 
+      open={open} 
+      onOpenChange={() => {}} // Prevent closing by any means
+    >
+      <DialogContent 
+        className="sm:max-w-md bg-white rounded-lg shadow-xl border-0"
+        hideCloseButton={true}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        style={{ zIndex: 9999 }} // Higher z-index than any other popup
       >
-        <DialogContent 
-          className="sm:max-w-md bg-white rounded-lg shadow-xl border-0"
-          hideCloseButton={true}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          style={{ zIndex: 9999 }} // Higher z-index than any other popup
-        >
-          <div className="p-6 min-h-[300px] flex items-center justify-center">
-            {renderContent()}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        <div className="p-6 min-h-[300px] flex items-center justify-center">
+          {renderContent()}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
