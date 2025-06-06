@@ -1,9 +1,8 @@
-
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Book, TrendingUp, Settings } from 'lucide-react';
+import { Home, Book, Settings } from 'lucide-react';
 
 interface WelcomeNewUserPopupProps {
   open: boolean;
@@ -20,10 +19,9 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
   const username = authState.profile?.twitter_username || 'User';
 
   const tabs = [
-    { name: 'Home', description: 'Generate custom newsletters easily', icon: Home },
-    { name: 'Library', description: 'Access your newsletter history', icon: Book },
-    { name: 'Tweets', description: 'Create engaging social content', icon: TrendingUp },
-    { name: 'Settings', description: 'Customize your preferences completely', icon: Settings }
+    { name: 'Home', description: 'Generate newsletters', icon: Home },
+    { name: 'Library', description: 'Saved newsletters', icon: Book },
+    { name: 'Settings', description: 'Manage subscriptions', icon: Settings }
   ];
 
   useEffect(() => {
