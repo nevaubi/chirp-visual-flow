@@ -659,7 +659,7 @@ ${markdownNewsletter}
             }
             
             h3 {
-              font-size: 18px !important;
+              font-size: 20px !important;
               margin: 20px 0 10px 0 !important;
               line-height: 1.4 !important;
             }
@@ -806,14 +806,15 @@ ${markdownNewsletter}
   }
 }
 
-// Main serve function (No changes here)
+// Main serve function (UPDATED VALIDATION - ONLY CHANGE)
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") { return new Response(null, { headers: corsHeaders }); }
   try {
     logStep("Starting 'Chain of Thought' newsletter generation process (HTTP)");
     const { selectedCount } = await req.json();
-    if (!selectedCount || ![10, 20, 30].includes(selectedCount)) {
-      return new Response(JSON.stringify({ error: "Invalid selection. Please choose 10, 20, or 30 tweets." }), 
+    // UPDATED VALIDATION: Modern Clean template only accepts 20 or 30 bookmarks
+    if (!selectedCount || ![20, 30].includes(selectedCount)) {
+      return new Response(JSON.stringify({ error: "Invalid selection. Please choose 20 or 30 tweets for the Weekly Lens template." }), 
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const authHeader = req.headers.get("Authorization");
@@ -841,10 +842,10 @@ serve(async (req: Request) => {
     }
     return new Response(JSON.stringify({
       status: "processing",
-      message: "Your 'Chain of Thought' newsletter generation has started. You will receive an email when it's ready.",
+      message: "Your Weekly Lens newsletter generation has started. You will receive an email when it's ready.",
     }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("Error in manual-newsletter-generation function:", error);
+    console.error("Error in Weekly Lens newsletter generation function:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), 
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
