@@ -58,171 +58,217 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id
-    let numericalId = profile.numerical_id;
-    if (!numericalId && profile.twitter_handle) {
+    // 4.5) IMMEDIATE DECREMENT - This is the key fix!
+    // Atomically decrement the generation count to prevent spam clicking
+    let newGenerationCount = profile.remaining_newsletter_generations;
+    if (profile.remaining_newsletter_generations > 0) {
+      const { data: updateResult, error: decrementError } = await supabase
+        .from("profiles")
+        .update({ 
+          remaining_newsletter_generations: profile.remaining_newsletter_generations - 1 
+        })
+        .eq("id", userId)
+        .eq("remaining_newsletter_generations", profile.remaining_newsletter_generations) // Ensure count hasn't changed
+        .select("remaining_newsletter_generations")
+        .single();
+        
+      if (decrementError || !updateResult) {
+        console.error("Failed to decrement generations (possibly already decremented by another request):", decrementError);
+        throw new Error("Unable to reserve newsletter generation slot. Please try again.");
+      }
+      
+      // Update local variable for use throughout the function
+      newGenerationCount = updateResult.remaining_newsletter_generations;
+      logStep("Successfully reserved generation slot", { 
+        originalCount: profile.remaining_newsletter_generations,
+        remainingAfterDecrement: newGenerationCount 
+      });
+    }
+
+    // Helper function to rollback the decrement if generation fails
+    const rollbackDecrement = async () => {
       try {
-        const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-        if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
-        
-        const cleanHandle = profile.twitter_handle.trim().replace("@", "");
-        const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
-          method: "GET",
-          headers: {
-            "x-rapidapi-key": RAPIDAPI_KEY,
-            "x-rapidapi-host": "twitter293.p.rapidapi.com"
-          }
-        });
-        
-        if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
-        
-        const j = await resp.json();
-        if (j?.user?.result?.rest_id) {
-          numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase
+        if (profile.remaining_newsletter_generations >= 0) {
+          await supabase
             .from("profiles")
-            .update({
-              numerical_id: numericalId
+            .update({ 
+              remaining_newsletter_generations: profile.remaining_newsletter_generations // Restore original count
             })
             .eq("id", userId);
-            
-          if (updateError) console.error("Error updating numerical_id:", updateError);
-        } else {
+          logStep("Rolled back generation count due to failure");
+        }
+      } catch (rollbackError) {
+        console.error("Failed to rollback generation count:", rollbackError);
+      }
+    };
+
+    // Wrap the entire generation process in try-catch for rollback
+    try {
+      // 5) Ensure numerical_id
+      let numericalId = profile.numerical_id;
+      if (!numericalId && profile.twitter_handle) {
+        try {
+          const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+          if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
+          
+          const cleanHandle = profile.twitter_handle.trim().replace("@", "");
+          const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
+            method: "GET",
+            headers: {
+              "x-rapidapi-key": RAPIDAPI_KEY,
+              "x-rapidapi-host": "twitter293.p.rapidapi.com"
+            }
+          });
+          
+          if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
+          
+          const j = await resp.json();
+          if (j?.user?.result?.rest_id) {
+            numericalId = j.user.result.rest_id;
+            const { error: updateError } = await supabase
+              .from("profiles")
+              .update({
+                numerical_id: numericalId
+              })
+              .eq("id", userId);
+              
+            if (updateError) console.error("Error updating numerical_id:", updateError);
+          } else {
+            throw new Error("Could not retrieve your Twitter ID. Please try again later.");
+          }
+        } catch (err) {
+          console.error("Error fetching numerical_id:", err);
           throw new Error("Could not retrieve your Twitter ID. Please try again later.");
         }
-      } catch (err) {
-        console.error("Error fetching numerical_id:", err);
-        throw new Error("Could not retrieve your Twitter ID. Please try again later.");
       }
-    }
-    
-    if (!numericalId) {
-      throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
-    }
+      
+      if (!numericalId) {
+        throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
+      }
 
-    // 6) Fetch bookmarks
-    logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
-    const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
-        "Content-Type": "application/json"
-      }
-    });
-    
-    if (!bookmarksResp.ok) {
-      const text = await bookmarksResp.text();
-      console.error(`Twitter API error (${bookmarksResp.status}):`, text);
-      
-      if (bookmarksResp.status === 401) {
-        throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
-      }
-      
-      if (bookmarksResp.status === 429) {
-        throw new Error("Twitter API rate limit exceeded. Please try again later.");
-      }
-      
-      throw new Error(`Twitter API error: ${bookmarksResp.status}`);
-    }
-    
-    const bookmarksData = await bookmarksResp.json();
-    if (!bookmarksData?.data) {
-      console.error("Invalid or empty bookmark data:", bookmarksData);
-      
-      if (bookmarksData.meta?.result_count === 0) {
-        throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
-      }
-      
-      throw new Error("Failed to retrieve bookmarks from Twitter");
-    }
-    
-    const tweetIds = bookmarksData.data.map((t) => t.id);
-    logStep("Successfully fetched bookmarks", { count: tweetIds.length });
-
-    // 7) Fetch detailed tweets via Apify
-    logStep("Fetching detailed tweet data via Apify");
-    const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-    if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
-    
-    const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "filter:blue_verified": false,
-        "filter:consumer_video": false,
-        "filter:has_engagement": false,
-        "filter:hashtags": false,
-        "filter:images": false,
-        "filter:links": false,
-        "filter:media": false,
-        "filter:mentions": false,
-        "filter:native_video": false,
-        "filter:nativeretweets": false,
-        "filter:news": false,
-        "filter:pro_video": false,
-        "filter:quote": false,
-        "filter:replies": false,
-        "filter:safe": false,
-        "filter:spaces": false,
-        "filter:twimg": false,
-        "filter:videos": false,
-        "filter:vine": false,
-        lang: "en",
-        maxItems: selectedCount,
-        tweetIDs: tweetIds
-      })
-    });
-    
-    if (!apifyResp.ok) {
-      const text = await apifyResp.text();
-      console.error(`Apify API error (${apifyResp.status}):`, text);
-      throw new Error(`Apify API error: ${apifyResp.status}`);
-    }
-    
-    const apifyData = await apifyResp.json();
-    logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
-
-    // 8) Format tweets for OpenAI
-    function parseToOpenAI(data) {
-      const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
-      let out = "";
-      
-      arr.forEach((t, i) => {
-        const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-        let dateStr = "N/A";
-        try {
-          dateStr = new Date(t.createdAt).toISOString().split("T")[0];
-        } catch {}
-        
-        const photo = t.extendedEntities?.media?.find((m) => m.type === "photo")?.media_url_https;
-        
-        out += `Tweet ${i + 1}\n`;
-        out += `Tweet ID: ${t.id}\n`;
-        out += `Tweet text: ${txt}\n`;
-        out += `ReplyAmount: ${t.replyCount || 0}\n`;
-        out += `LikesAmount: ${t.likeCount || 0}\n`;
-        out += `Impressions: ${t.viewCount || 0}\n`;
-        out += `Date: ${dateStr}\n`;
-        out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
-        out += `PhotoUrl: ${photo || "N/A"}\n`;
-        
-        if (i < arr.length - 1) out += "\n---\n\n";
+      // 6) Fetch bookmarks
+      logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
+      const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
+          "Content-Type": "application/json"
+        }
       });
       
-      return out;
-    }
-    
-    const formattedTweets = parseToOpenAI(apifyData);
-    logStep("Formatted tweets for analysis");
+      if (!bookmarksResp.ok) {
+        const text = await bookmarksResp.text();
+        console.error(`Twitter API error (${bookmarksResp.status}):`, text);
+        
+        if (bookmarksResp.status === 401) {
+          throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
+        }
+        
+        if (bookmarksResp.status === 429) {
+          throw new Error("Twitter API rate limit exceeded. Please try again later.");
+        }
+        
+        throw new Error(`Twitter API error: ${bookmarksResp.status}`);
+      }
+      
+      const bookmarksData = await bookmarksResp.json();
+      if (!bookmarksData?.data) {
+        console.error("Invalid or empty bookmark data:", bookmarksData);
+        
+        if (bookmarksData.meta?.result_count === 0) {
+          throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
+        }
+        
+        throw new Error("Failed to retrieve bookmarks from Twitter");
+      }
+      
+      const tweetIds = bookmarksData.data.map((t) => t.id);
+      logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 9) Call OpenAI for main analysis
-    logStep("Calling OpenAI for initial topic analysis");
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
-    
-    const systemPrompt = `You are a sophisticated tweet analysis system designed to identify key topics, trends, and insights from collections of tweets. Your purpose is to transform raw tweet data into structured, insightful analysis that captures the most significant discussions and themes.
+      // 7) Fetch detailed tweets via Apify
+      logStep("Fetching detailed tweet data via Apify");
+      const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
+      if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
+      
+      const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "filter:blue_verified": false,
+          "filter:consumer_video": false,
+          "filter:has_engagement": false,
+          "filter:hashtags": false,
+          "filter:images": false,
+          "filter:links": false,
+          "filter:media": false,
+          "filter:mentions": false,
+          "filter:native_video": false,
+          "filter:nativeretweets": false,
+          "filter:news": false,
+          "filter:pro_video": false,
+          "filter:quote": false,
+          "filter:replies": false,
+          "filter:safe": false,
+          "filter:spaces": false,
+          "filter:twimg": false,
+          "filter:videos": false,
+          "filter:vine": false,
+          lang: "en",
+          maxItems: selectedCount,
+          tweetIDs: tweetIds
+        })
+      });
+      
+      if (!apifyResp.ok) {
+        const text = await apifyResp.text();
+        console.error(`Apify API error (${apifyResp.status}):`, text);
+        throw new Error(`Apify API error: ${apifyResp.status}`);
+      }
+      
+      const apifyData = await apifyResp.json();
+      logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
+
+      // 8) Format tweets for OpenAI
+      function parseToOpenAI(data) {
+        const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+        let out = "";
+        
+        arr.forEach((t, i) => {
+          const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+          let dateStr = "N/A";
+          try {
+            dateStr = new Date(t.createdAt).toISOString().split("T")[0];
+          } catch {}
+          
+          const photo = t.extendedEntities?.media?.find((m) => m.type === "photo")?.media_url_https;
+          
+          out += `Tweet ${i + 1}\n`;
+          out += `Tweet ID: ${t.id}\n`;
+          out += `Tweet text: ${txt}\n`;
+          out += `ReplyAmount: ${t.replyCount || 0}\n`;
+          out += `LikesAmount: ${t.likeCount || 0}\n`;
+          out += `Impressions: ${t.viewCount || 0}\n`;
+          out += `Date: ${dateStr}\n`;
+          out += `Tweet Author: ${t.author?.name || "Unknown"}\n`;
+          out += `PhotoUrl: ${photo || "N/A"}\n`;
+          
+          if (i < arr.length - 1) out += "\n---\n\n";
+        });
+        
+        return out;
+      }
+      
+      const formattedTweets = parseToOpenAI(apifyData);
+      logStep("Formatted tweets for analysis");
+
+      // 9) Call OpenAI for main analysis
+      logStep("Calling OpenAI for initial topic analysis");
+      const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+      if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
+      
+      const systemPrompt = `You are a sophisticated tweet analysis system designed to identify key topics, trends, and insights from collections of tweets. Your purpose is to transform raw tweet data into structured, insightful analysis that captures the most significant discussions and themes.
 
 CAPABILITIES:
 - Analyze collections of 30-50 tweets to identify main topics and sub-topics
@@ -264,8 +310,8 @@ Organization criteria:
 Here is the tweet collection to analyze:
 
 ${formattedTweets}`;
-    
-    const userPrompt = `Analyze the following collection of tweets to identify the FIVE most prevalent main topics and FOUR sub-topics. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
+      
+      const userPrompt = `Analyze the following collection of tweets to identify the FIVE most prevalent main topics and FOUR sub-topics. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
 
 For each MAIN TOPIC (5):
 1. Create a concise header (20-30 words) that captures the essence of the topic
@@ -293,43 +339,43 @@ Organization criteria:
 Here is the tweet collection to analyze:
 
 ${formattedTweets}`;
-    
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user",
-            content: userPrompt
-          }
-        ],
-        temperature: 0.4,
-        max_tokens: 6000
-      })
-    });
-    
-    if (!openaiRes.ok) {
-      const txt = await openaiRes.text();
-      console.error(`OpenAI API error (${openaiRes.status}):`, txt);
-      throw new Error(`OpenAI API error: ${openaiRes.status}`);
-    }
-    
-    const openaiJson = await openaiRes.json();
-    let analysisResult = openaiJson.choices[0].message.content.trim();
-    logStep("Successfully generated initial topic analysis");
+      
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14",
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            },
+            {
+              role: "user",
+              content: userPrompt
+            }
+          ],
+          temperature: 0.4,
+          max_tokens: 6000
+        })
+      });
+      
+      if (!openaiRes.ok) {
+        const txt = await openaiRes.text();
+        console.error(`OpenAI API error (${openaiRes.status}):`, txt);
+        throw new Error(`OpenAI API error: ${openaiRes.status}`);
+      }
+      
+      const openaiJson = await openaiRes.json();
+      let analysisResult = openaiJson.choices[0].message.content.trim();
+      logStep("Successfully generated initial topic analysis");
 
-    // 10) NEW STEP: Topic Selection and Query Generation for Perplexity
-    logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying the most promising topics for web search enrichment from a content analysis. Given an analysis of Twitter bookmarks, select the 3 most significant topics that would benefit from additional web-based context and information.
+      // 10) NEW STEP: Topic Selection and Query Generation for Perplexity
+      logStep("Selecting topics and generating search queries for Perplexity");
+      const queryGenerationPrompt = `You are an expert at identifying the most promising topics for web search enrichment from a content analysis. Given an analysis of Twitter bookmarks, select the 3 most significant topics that would benefit from additional web-based context and information.
 
 For each selected topic, create a precise search query that will return the most relevant, current, and comprehensive information. These queries will be sent to a web search API.
 
@@ -362,130 +408,130 @@ ENRICHMENT GOAL: [What specific information or context we want to add]
 CONTENT ANALYSIS TO REVIEW:
 ${analysisResult}`;
 
-    const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
-        messages: [
-          {
-            role: "system",
-            content: "You are a search query optimization specialist who helps select the most promising topics for enrichment and creates perfect search queries."
-          },
-          {
-            role: "user",
-            content: queryGenerationPrompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000
-      })
-    });
-    
-    if (!queryGenRes.ok) {
-      const txt = await queryGenRes.text();
-      console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
-      logStep("Failed to generate search queries, continuing without Perplexity enrichment");
-      // Continue with the original analysis rather than failing the whole process
-    } else {
-      const queryGenJson = await queryGenRes.json();
-      const searchQueries = queryGenJson.choices[0].message.content.trim();
-      logStep("Successfully generated search queries", { searchQueries });
-
-      // 11) Perplexity API Calls for Web Enrichment
-      // Parse the search queries
-      const topics: { topic: string; query: string; goal: string }[] = [];
-      const regex = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
-      let match;
+      const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14",
+          messages: [
+            {
+              role: "system",
+              content: "You are a search query optimization specialist who helps select the most promising topics for enrichment and creates perfect search queries."
+            },
+            {
+              role: "user",
+              content: queryGenerationPrompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 1000
+        })
+      });
       
-      while ((match = regex.exec(searchQueries)) !== null) {
-        topics.push({
-          topic: match[1].trim(),
-          query: match[2].trim(),
-          goal: match[3].trim()
-        });
-      }
-      
-      // Get Perplexity API key
-      const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-      if (!PERPLEXITY_API_KEY) {
-        logStep("Missing Perplexity API key, continuing without web enrichment");
+      if (!queryGenRes.ok) {
+        const txt = await queryGenRes.text();
+        console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
+        logStep("Failed to generate search queries, continuing without Perplexity enrichment");
+        // Continue with the original analysis rather than failing the whole process
       } else {
-        logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
+        const queryGenJson = await queryGenRes.json();
+        const searchQueries = queryGenJson.choices[0].message.content.trim();
+        logStep("Successfully generated search queries", { searchQueries });
+
+        // 11) Perplexity API Calls for Web Enrichment
+        // Parse the search queries
+        const topics: { topic: string; query: string; goal: string }[] = [];
+        const regex = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
+        let match;
         
-        // 11) Perplexity API calls
-        const enrichmentResults = [];
+        while ((match = regex.exec(searchQueries)) !== null) {
+          topics.push({
+            topic: match[1].trim(),
+            query: match[2].trim(),
+            goal: match[3].trim()
+          });
+        }
+        
+        // Get Perplexity API key
+        const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+        if (!PERPLEXITY_API_KEY) {
+          logStep("Missing Perplexity API key, continuing without web enrichment");
+        } else {
+          logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
+          
+          // 11) Perplexity API calls
+          const enrichmentResults = [];
 
-        for (const topic of topics) {
-          try {
-            const perplexityRes = await fetch(
-              "https://api.perplexity.ai/chat/completions",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
-                },
-                body: JSON.stringify({
-                  model: "sonar-pro",                 // search-enabled model
-                  messages: [
-                    { role: "user", content: topic.query }
-                  ],
-                  temperature: 0.2,
-                  max_tokens: 500,
+          for (const topic of topics) {
+            try {
+              const perplexityRes = await fetch(
+                "https://api.perplexity.ai/chat/completions",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
+                  },
+                  body: JSON.stringify({
+                    model: "sonar-pro",                 // search-enabled model
+                    messages: [
+                      { role: "user", content: topic.query }
+                    ],
+                    temperature: 0.2,
+                    max_tokens: 500,
 
-                  // recency: only results from the last 7 days
-                  search_recency_filter: "week"
-                })
-              }
-            );
-
-            if (perplexityRes.ok) {
-              const data = await perplexityRes.json();
-
-              enrichmentResults.push({
-                topic:      topic.topic,
-                query:      topic.query,
-                goal:       topic.goal,
-                webContent: data.choices[0].message.content,
-                sources:    data.citations ?? []           // updated citations field
-              });
-
-              logStep(`Successfully enriched topic: ${topic.topic}`);
-            } else {
-              console.error(
-                `Perplexity API error for "${topic.query}":`,
-                await perplexityRes.text()
+                    // recency: only results from the last 7 days
+                    search_recency_filter: "week"
+                  })
+                }
               );
+
+              if (perplexityRes.ok) {
+                const data = await perplexityRes.json();
+
+                enrichmentResults.push({
+                  topic:      topic.topic,
+                  query:      topic.query,
+                  goal:       topic.goal,
+                  webContent: data.choices[0].message.content,
+                  sources:    data.citations ?? []           // updated citations field
+                });
+
+                logStep(`Successfully enriched topic: ${topic.topic}`);
+              } else {
+                console.error(
+                  `Perplexity API error for "${topic.query}":`,
+                  await perplexityRes.text()
+                );
+
+                enrichmentResults.push({
+                  topic: topic.topic,
+                  query: topic.query,
+                  goal:  topic.goal,
+                  webContent: `[Perplexity error ${perplexityRes.status}]`,
+                  sources: []
+                });
+              }
+            } catch (err) {
+              console.error(`Perplexity fetch failed for "${topic.query}":`, err);
 
               enrichmentResults.push({
                 topic: topic.topic,
                 query: topic.query,
                 goal:  topic.goal,
-                webContent: `[Perplexity error ${perplexityRes.status}]`,
+                webContent: "[Perplexity request failed]",
                 sources: []
               });
             }
-          } catch (err) {
-            console.error(`Perplexity fetch failed for "${topic.query}":`, err);
-
-            enrichmentResults.push({
-              topic: topic.topic,
-              query: topic.query,
-              goal:  topic.goal,
-              webContent: "[Perplexity request failed]",
-              sources: []
-            });
           }
-        }
-        
-        // 12) Integrate Web Content with Original Analysis
-        logStep("Integrating web content with original analysis");
-        
-        const integrationPrompt = `You are an expert content integrator. You've been given:
+          
+          // 12) Integrate Web Content with Original Analysis
+          logStep("Integrating web content with original analysis");
+          
+          const integrationPrompt = `You are an expert content integrator. You've been given:
 1. An original analysis of Twitter bookmarks organized into main topics and sub-topics
 2. Additional web-sourced information for 3 selected topics
 
@@ -506,53 +552,53 @@ WEB-SOURCED INFORMATION:
 ${JSON.stringify(enrichmentResults, null, 2)}
 
 Provide the complete integrated analysis with all main topics and sub-topics, including the seamlessly integrated web-sourced information.`;
-        
-        const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              {
-                role: "system",
-                content: "You are an expert content integrator who seamlessly combines original analysis with web-sourced information to create richer, more informative content."
-              },
-              {
-                role: "user",
-                content: integrationPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 8000
-          })
-        });
-        
-        if (integrationRes.ok) {
-          const integrationJson = await integrationRes.json();
-          const enhancedAnalysis = integrationJson.choices[0].message.content.trim();
-          logStep("Successfully integrated web content with original analysis");
-          // Replace the original analysis with the enhanced one
-          analysisResult = enhancedAnalysis;
-        } else {
-          const txt = await integrationRes.text();
-          console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-          logStep("Failed to integrate web content, continuing with original analysis");
-          // Continue with the original analysis
+          
+          const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are an expert content integrator who seamlessly combines original analysis with web-sourced information to create richer, more informative content."
+                },
+                {
+                  role: "user",
+                  content: integrationPrompt
+                }
+              ],
+              temperature: 0.3,
+              max_tokens: 8000
+            })
+          });
+          
+          if (integrationRes.ok) {
+            const integrationJson = await integrationRes.json();
+            const enhancedAnalysis = integrationJson.choices[0].message.content.trim();
+            logStep("Successfully integrated web content with original analysis");
+            // Replace the original analysis with the enhanced one
+            analysisResult = enhancedAnalysis;
+          } else {
+            const txt = await integrationRes.text();
+            console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
+            logStep("Failed to integrate web content, continuing with original analysis");
+            // Continue with the original analysis
+          }
         }
       }
-    }
 
-    // Assume discourseAnalysis is not needed in the new workflow
-    const discourseAnalysis = "";
+      // Assume discourseAnalysis is not needed in the new workflow
+      const discourseAnalysis = "";
 
-    // 13) Generate Markdown formatted newsletter
-    let markdownNewsletter = "";
-    try {
-      logStep("Starting markdown newsletter formatting");
-      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
+      // 13) Generate Markdown formatted newsletter
+      let markdownNewsletter = "";
+      try {
+        logStep("Starting markdown newsletter formatting");
+        const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
 
 FORMAT GUIDELINES:
 - Use proper Markdown syntax for headings, subheadings, bullet points, columns, dividers, colors, and horizontal rules
@@ -581,8 +627,8 @@ CONTENT STRUCTURE:
 
 OUTPUT:
 Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
-      
-      const markdownUserPrompt = `I have analysis content that needs to be worded for better flow and accessibility, and then formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat this analysis into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
+        
+        const markdownUserPrompt = `I have analysis content that needs to be worded for better flow and accessibility, and then formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat this analysis into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
 
 MAIN ANALYSIS CONTENT:
 ${analysisResult}
@@ -611,54 +657,54 @@ Use proper Markdown formatting throughout:
 - Use bold and italic formatting where it enhances readability
 
 Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analysis is included.`;
-      
-      try {
-        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              {
-                role: "system",
-                content: markdownSystemPrompt
-              },
-              {
-                role: "user",
-                content: markdownUserPrompt
-              }
-            ],
-            temperature: 0.2,
-            max_tokens: 7000
-          })
-        });
         
-        if (markdownOpenaiRes.ok) {
-          const markdownJson = await markdownOpenaiRes.json();
-          markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("Markdown newsletter generated successfully");
-        } else {
-          const errorText = await markdownOpenaiRes.text();
-          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
+        try {
+          const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14",
+              messages: [
+                {
+                  role: "system",
+                  content: markdownSystemPrompt
+                },
+                {
+                  role: "user",
+                  content: markdownUserPrompt
+                }
+              ],
+              temperature: 0.2,
+              max_tokens: 7000
+            })
+          });
+          
+          if (markdownOpenaiRes.ok) {
+            const markdownJson = await markdownOpenaiRes.json();
+            markdownNewsletter = markdownJson.choices[0].message.content;
+            logStep("Markdown newsletter generated successfully");
+          } else {
+            const errorText = await markdownOpenaiRes.text();
+            console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+            markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
+          }
+        } catch (markdownError) {
+          console.error("Error in markdown formatting API call:", markdownError);
+          markdownNewsletter = "Error: Unable to generate markdown newsletter format due to API error.";
         }
-      } catch (markdownError) {
-        console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter = "Error: Unable to generate markdown newsletter format due to API error.";
+      } catch (err) {
+        console.error("Error generating Markdown newsletter:", err);
+        markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
       }
-    } catch (err) {
-      console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
-    }
 
-    // 14) Generate Enhanced Markdown with UI/UX improvements
-    let enhancedMarkdownNewsletter = "";
-    try {
-      logStep("Generating enhanced UI/UX markdown");
-      const enhancedSystemPrompt = `
+      // 14) Generate Enhanced Markdown with UI/UX improvements
+      let enhancedMarkdownNewsletter = "";
+      try {
+        logStep("Generating enhanced UI/UX markdown");
+        const enhancedSystemPrompt = `
 You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
 
 1. **Section headers** (H2/H3) use inline styles or HTML spans for colored accents (e.g., \`<span style="color:#0073e6">\`).  
@@ -683,8 +729,8 @@ You are a newsletter UI/UX specialist and markdown designer. Your goal is to tak
 
 Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
 `;
-      
-      const enhancedUserPrompt = `
+        
+        const enhancedUserPrompt = `
 I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
 
 - **No page breaks or "Page X" sections**—just a smooth scroll.  
@@ -700,386 +746,379 @@ Here is my markdown draft—please output one cohesive, styled markdown document
 ${markdownNewsletter}
 </current newsletter>
 `;
-      
-      try {
-        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", // Updated from chatgpt-4o-latest
-            messages: [
-              {
-                role: "system",
-                content: enhancedSystemPrompt
-              },
-              {
-                role: "user",
-                content: enhancedUserPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 8000
-          })
-        });
         
-        if (enhancedOpenaiRes.ok) {
-          const enhancedJson = await enhancedOpenaiRes.json();
-          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced UI/UX markdown newsletter generated successfully");
-        } else {
-          const errorText = await enhancedOpenaiRes.text();
-          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+        try {
+          const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14", // Updated from chatgpt-4o-latest
+              messages: [
+                {
+                  role: "system",
+                  content: enhancedSystemPrompt
+                },
+                {
+                  role: "user",
+                  content: enhancedUserPrompt
+                }
+              ],
+              temperature: 0.3,
+              max_tokens: 8000
+            })
+          });
+          
+          if (enhancedOpenaiRes.ok) {
+            const enhancedJson = await enhancedOpenaiRes.json();
+            enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
+            logStep("Enhanced UI/UX markdown newsletter generated successfully");
+          } else {
+            const errorText = await enhancedOpenaiRes.text();
+            console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+            enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
+          }
+        } catch (enhancedError) {
+          console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
           enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
         }
-      } catch (enhancedError) {
-        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
+      } catch (err) {
+        console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
         enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
       }
-    } catch (err) {
-      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-      enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
-    }
 
-    // 15) Clean up stray text around enhanced Markdown
-    function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
-      cleaned = cleaned.trim();
-      const match = cleaned.match(/(^|\n)(#{1,6}\s)/);
-      if (match && typeof match.index === "number") {
-        cleaned = cleaned.slice(match.index).trim();
+      // 15) Clean up stray text around enhanced Markdown
+      function cleanMarkdown(md: string): string {
+        let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
+        cleaned = cleaned.trim();
+        const match = cleaned.match(/(^|\n)(#{1,6}\s)/);
+        if (match && typeof match.index === "number") {
+          cleaned = cleaned.slice(match.index).trim();
+        }
+        return cleaned;
       }
-      return cleaned;
-    }
-    
-    const finalMarkdown = cleanMarkdown( cleanMarkdown(enhancedMarkdownNewsletter) );
-    logStep("Cleaned up final markdown");
+      
+      const finalMarkdown = cleanMarkdown( cleanMarkdown(enhancedMarkdownNewsletter) );
+      logStep("Cleaned up final markdown");
 
-    // 16) Convert final Markdown to HTML & inline CSS with enhanced renderers
-    const renderer = new marked.Renderer();
+      // 16) Convert final Markdown to HTML & inline CSS with enhanced renderers
+      const renderer = new marked.Renderer();
 
-    // Enhanced paragraph rendering with tighter spacing
-    renderer.paragraph = (text) => {
-      // Skip special divs and maintain their structure
-      if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
-        return text.trim() + '\n';
-      }
-      return `<p style="margin: 0 0 0.8em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
-    };
-
-    // Enhanced list item rendering with reduced spacing
-    renderer.listitem = (text, task, checked) => {
-      if (task) {
-        return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
-      }
-      return `<li style="margin: 0 0 0.5em 0; font-size: 16px; line-height: 1.6; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
-    };
-
-    // Enhanced heading renderer with optimized spacing and typography
-    renderer.heading = (text, level) => {
-      const sizes = {
-        1: '26px',  // Reduced from 32px
-        2: '22px',  // Reduced from 26px
-        3: '19px',  // Reduced from 22px
-        4: '17px',  // Reduced from 18px
-        5: '15px',  // Reduced from 16px
-        6: '14px'
+      // Enhanced paragraph rendering with tighter spacing
+      renderer.paragraph = (text) => {
+        // Skip special divs and maintain their structure
+        if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
+          return text.trim() + '\n';
+        }
+        return `<p style="margin: 0 0 0.8em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
       };
-      
-      const margins = {
-        1: '0 0 12px 0',    // Reduced from 24px
-        2: '20px 0 10px 0', // Reduced from 32px/16px
-        3: '16px 0 8px 0',  // Reduced from 24px/12px
-        4: '14px 0 6px 0',  // Reduced from 20px/10px
-        5: '12px 0 6px 0',  // Reduced from 16px/8px
-        6: '10px 0 6px 0'   // Reduced from 14px/8px
+
+      // Enhanced list item rendering with reduced spacing
+      renderer.listitem = (text, task, checked) => {
+        if (task) {
+          return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
+        }
+        return `<li style="margin: 0 0 0.5em 0; font-size: 16px; line-height: 1.6; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
       };
-      
-      const lineHeights = {
-        1: '1.2',  // Tight line height for main header
-        2: '1.3',
-        3: '1.4',
-        4: '1.4',
-        5: '1.4',
-        6: '1.4'
+
+      // Enhanced heading renderer with optimized spacing and typography
+      renderer.heading = (text, level) => {
+        const sizes = {
+          1: '26px',  // Reduced from 32px
+          2: '22px',  // Reduced from 26px
+          3: '19px',  // Reduced from 22px
+          4: '17px',  // Reduced from 18px
+          5: '15px',  // Reduced from 16px
+          6: '14px'
+        };
+        
+        const margins = {
+          1: '0 0 12px 0',    // Reduced from 24px
+          2: '20px 0 10px 0', // Reduced from 32px/16px
+          3: '16px 0 8px 0',  // Reduced from 24px/12px
+          4: '14px 0 6px 0',  // Reduced from 20px/10px
+          5: '12px 0 6px 0',  // Reduced from 16px/8px
+          6: '10px 0 6px 0'   // Reduced from 14px/8px
+        };
+        
+        const lineHeights = {
+          1: '1.2',  // Tight line height for main header
+          2: '1.3',
+          3: '1.4',
+          4: '1.4',
+          5: '1.4',
+          6: '1.4'
+        };
+        
+        const size = sizes[level as keyof typeof sizes] || '16px';
+        const margin = margins[level as keyof typeof margins] || '12px 0 6px 0';
+        const lineHeight = lineHeights[level as keyof typeof lineHeights] || '1.4';
+        
+        return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; line-height:${lineHeight}; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
       };
-      
-      const size = sizes[level as keyof typeof sizes] || '16px';
-      const margin = margins[level as keyof typeof margins] || '12px 0 6px 0';
-      const lineHeight = lineHeights[level as keyof typeof lineHeights] || '1.4';
-      
-      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; line-height:${lineHeight}; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
-    };
 
-    // Enhanced image renderer with reduced margins
-    renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 12px 0;">
-        <img src="${href}"
-             alt="${alt || 'Newsletter image'}"
-             style="
-               max-width:500px;
-               width:100%;
-               height:auto;
-               border-radius:8px;
-               display:inline-block;
-               box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      </div>`;
+      // Enhanced image renderer with reduced margins
+      renderer.image = (href, _title, alt) => `
+        <div class="image-container" style="text-align:center; margin: 12px 0;">
+          <img src="${href}"
+               alt="${alt || 'Newsletter image'}"
+               style="
+                 max-width:500px;
+                 width:100%;
+                 height:auto;
+                 border-radius:8px;
+                 display:inline-block;
+                 box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        </div>`;
 
-    const htmlBody = marked(finalMarkdown, { renderer });
+      const htmlBody = marked(finalMarkdown, { renderer });
 
-    const emailHtml = juice(`
-      <body style="background:#f5f7fa;margin:0;padding:0;font-family:Arial,sans-serif;">
+      const emailHtml = juice(`
+        <body style="background:#f5f7fa;margin:0;padding:0;font-family:Arial,sans-serif;">
 
-        <style>
-          /* Professional print CSS for PDF generation with tighter spacing */
-          @media print {
-            body, html {
-              width: 100%;
-              margin: 0;
-              background: #ffffff !important;
+          <style>
+            /* Professional print CSS for PDF generation with tighter spacing */
+            @media print {
+              body, html {
+                width: 100%;
+                margin: 0;
+                background: #ffffff !important;
+              }
+              
+              .wrapper {
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+              }
+              
+              .content-body {
+                padding: 24px 40px !important;
+                font-size: 14px !important;
+                line-height: 1.5 !important;
+              }
+              
+              /* Prevent page breaks in the middle of elements */
+              h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+              }
+              
+              p, li {
+                page-break-inside: avoid;
+              }
+              
+              .image-container {
+                page-break-inside: avoid;
+                page-break-before: auto;
+                page-break-after: auto;
+              }
+              
+              img {
+                max-width: 100% !important;
+                height: auto !important;
+              }
+              
+              /* Ensure callout boxes stay together */
+              div[style*="background"], blockquote {
+                page-break-inside: avoid;
+              }
+              
+              /* Tighter spacing for PDF */
+              h1 {
+                margin: 0 0 10px 0 !important;
+                font-size: 24px !important;
+                line-height: 1.2 !important;
+              }
+              
+              h2 {
+                margin-top: 20px !important;
+                margin-bottom: 8px !important;
+              }
+              
+              h3 {
+                margin-top: 16px !important;
+                margin-bottom: 6px !important;
+              }
+              
+              p {
+                margin-bottom: 0.7em !important;
+              }
             }
             
-            .wrapper {
-              max-width: none !important;
-              width: 100% !important;
-              margin: 0 !important;
-              box-shadow: none !important;
+            /* Mobile-first responsive design with optimized spacing */
+            @media screen and (max-width: 600px) {
+              body {
+                background: #ffffff !important;
+                padding: 0 !important;
+              }
+              
+              .wrapper {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+              }
+              
+              .content-body {
+                padding: 12px 10px !important;
+              }
+              
+              /* Mobile typography with tighter spacing */
+              h1 {
+                font-size: 22px !important;
+                margin: 0 0 10px 0 !important;
+                line-height: 1.2 !important;
+              }
+              
+              h2 {
+                font-size: 19px !important;
+                margin: 16px 0 8px 0 !important;
+                line-height: 1.3 !important;
+              }
+              
+              h3 {
+                font-size: 17px !important;
+                margin: 14px 0 6px 0 !important;
+                line-height: 1.3 !important;
+              }
+              
+              p, li {
+                font-size: 15px !important;
+                line-height: 1.6 !important;
+                margin-bottom: 0.7em !important;
+              }
+              
+              /* Mobile image handling */
+              .image-container {
+                margin: 10px 0 !important;
+              }
+              
+              .image-container img {
+                max-width: 100% !important;
+                border-radius: 4px !important;
+              }
+              
+              /* Mobile callout boxes with reduced padding */
+              div[style*="background"] {
+                padding: 8px !important;
+                margin: 10px 0 !important;
+                border-radius: 4px !important;
+              }
             }
             
-            .content-body {
-              padding: 24px 40px !important;
-              font-size: 14px !important;
-              line-height: 1.5 !important;
+            /* Tablet optimization with tighter spacing */
+            @media screen and (min-width: 601px) and (max-width: 900px) {
+              .wrapper {
+                max-width: 95% !important;
+                margin: 15px auto !important;
+              }
+              
+              .content-body {
+                padding: 20px 18px !important;
+              }
+              
+              h1 {
+                font-size: 24px !important;
+                line-height: 1.2 !important;
+              }
             }
             
-            /* Prevent page breaks in the middle of elements */
-            h1, h2, h3, h4, h5, h6 {
-              page-break-after: avoid;
-              page-break-inside: avoid;
+            /* Desktop enhancements with optimized spacing */
+            @media screen and (min-width: 901px) {
+              .wrapper {
+                max-width: 700px !important;
+              }
+              
+              .content-body {
+                padding: 24px 32px !important;
+              }
+              
+              h1 {
+                line-height: 1.2 !important;
+              }
             }
-            
-            p, li {
-              page-break-inside: avoid;
-            }
-            
-            .image-container {
-              page-break-inside: avoid;
-              page-break-before: auto;
-              page-break-after: auto;
-            }
-            
-            img {
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            
-            /* Ensure callout boxes stay together */
-            div[style*="background"], blockquote {
-              page-break-inside: avoid;
-            }
-            
-            /* Tighter spacing for PDF */
-            h1 {
-              margin: 0 0 10px 0 !important;
-              font-size: 24px !important;
-              line-height: 1.2 !important;
-            }
-            
-            h2 {
-              margin-top: 20px !important;
-              margin-bottom: 8px !important;
-            }
-            
-            h3 {
-              margin-top: 16px !important;
-              margin-bottom: 6px !important;
-            }
-            
-            p {
-              margin-bottom: 0.7em !important;
-            }
-          }
-          
-          /* Mobile-first responsive design with optimized spacing */
-          @media screen and (max-width: 600px) {
-            body {
-              background: #ffffff !important;
-              padding: 0 !important;
-            }
-            
-            .wrapper {
-              max-width: 100% !important;
-              width: 100% !important;
-              margin: 0 !important;
-              border-radius: 0 !important;
-              box-shadow: none !important;
-            }
-            
-            .content-body {
-              padding: 12px 10px !important;
-            }
-            
-            /* Mobile typography with tighter spacing */
-            h1 {
-              font-size: 22px !important;
-              margin: 0 0 10px 0 !important;
-              line-height: 1.2 !important;
-            }
-            
-            h2 {
-              font-size: 19px !important;
-              margin: 16px 0 8px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            h3 {
-              font-size: 17px !important;
-              margin: 14px 0 6px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            p, li {
-              font-size: 15px !important;
-              line-height: 1.6 !important;
-              margin-bottom: 0.7em !important;
-            }
-            
-            /* Mobile image handling */
-            .image-container {
-              margin: 10px 0 !important;
-            }
-            
-            .image-container img {
-              max-width: 100% !important;
-              border-radius: 4px !important;
-            }
-            
-            /* Mobile callout boxes with reduced padding */
-            div[style*="background"] {
-              padding: 8px !important;
-              margin: 10px 0 !important;
-              border-radius: 4px !important;
-            }
-          }
-          
-          /* Tablet optimization with tighter spacing */
-          @media screen and (min-width: 601px) and (max-width: 900px) {
-            .wrapper {
-              max-width: 95% !important;
-              margin: 15px auto !important;
-            }
-            
-            .content-body {
-              padding: 20px 18px !important;
-            }
-            
-            h1 {
-              font-size: 24px !important;
-              line-height: 1.2 !important;
-            }
-          }
-          
-          /* Desktop enhancements with optimized spacing */
-          @media screen and (min-width: 901px) {
-            .wrapper {
-              max-width: 700px !important;
-            }
-            
-            .content-body {
-              padding: 24px 32px !important;
-            }
-            
-            h1 {
-              line-height: 1.2 !important;
-            }
-          }
-        </style>
+          </style>
 
-        <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-          <div class="content-body" style="padding:16px 14px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-            ${htmlBody}
+          <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            <div class="content-body" style="padding:16px 14px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+              ${htmlBody}
+            </div>
           </div>
-        </div>
-      </body>
-    `);
-    
-    logStep("Converted markdown to HTML with inline CSS");
+        </body>
+      `);
+      
+      logStep("Converted markdown to HTML with inline CSS");
 
-    // 17) Send email via Resend
-    try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: fromEmail,
-        to: profile.sending_email,
-        subject: "Your Newsletter is Here",
-        html: emailHtml,
-        text: finalMarkdown
+      // 17) Send email via Resend
+      try {
+        const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
+        const { data: emailData, error: emailError } = await resend.emails.send({
+          from: fromEmail,
+          to: profile.sending_email,
+          subject: "Your Newsletter is Here",
+          html: emailHtml,
+          text: finalMarkdown
+        });
+        
+        if (emailError) {
+          console.error("Error sending email with Resend:", emailError);
+          throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+        }
+        
+        logStep("Email sent successfully", { id: emailData?.id });
+      } catch (sendErr) {
+        console.error("Error sending email:", sendErr);
+        // Continue with saving to database even if email fails
+      }
+
+      // 18) Save the newsletter to newsletter_storage table
+      try {
+        const { error: storageError } = await supabase.from('newsletter_storage').insert({
+          user_id: userId,
+          markdown_text: finalMarkdown
+        });
+        
+        if (storageError) {
+          console.error("Failed to save newsletter to storage:", storageError);
+        } else {
+          logStep("Newsletter successfully saved to storage");
+        }
+      } catch (storageErr) {
+        console.error("Error saving newsletter to storage:", storageErr);
+      }
+
+      // 19) Final success response - NO LONGER DECREMENT COUNT HERE!
+      const timestamp = new Date().toISOString();
+      logStep("Newsletter generation successful", {
+        userId,
+        timestamp,
+        tweetCount: selectedCount,
+        remainingGenerations: newGenerationCount
       });
-      
-      if (emailError) {
-        console.error("Error sending email with Resend:", emailError);
-        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
-      }
-      
-      logStep("Email sent successfully", { id: emailData?.id });
-    } catch (sendErr) {
-      console.error("Error sending email:", sendErr);
-      // Continue with saving to database even if email fails
+
+      return {
+        status: "success",
+        message: "Newsletter generated and emailed successfully",
+        remainingGenerations: newGenerationCount,
+        data: {
+          analysisResult,
+          discourseAnalysis, // Will be empty string
+          markdownNewsletter, // Original markdown before UI/UX enhancements
+          enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
+          timestamp
+        }
+      };
+
+    } catch (generationError) {
+      // Rollback the decrement since generation failed
+      await rollbackDecrement();
+      throw generationError;
     }
 
-    // 18) Save the newsletter to newsletter_storage table
-    try {
-      const { error: storageError } = await supabase.from('newsletter_storage').insert({
-        user_id: userId,
-        markdown_text: finalMarkdown
-      });
-      
-      if (storageError) {
-        console.error("Failed to save newsletter to storage:", storageError);
-      } else {
-        logStep("Newsletter successfully saved to storage");
-      }
-    } catch (storageErr) {
-      console.error("Error saving newsletter to storage:", storageErr);
-    }
-
-    // 19) Update remaining generations count - only for users without subscription or with remaining generations
-    if (profile.remaining_newsletter_generations > 0) {
-      const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({
-        remaining_newsletter_generations: newCount
-      }).eq("id", userId);
-      
-      if (updateError) {
-        console.error("Failed to update remaining generations:", updateError);
-      } else {
-        logStep("Updated remaining generations count", { newCount });
-      }
-    }
-
-    // 20) Final log & response
-    const timestamp = new Date().toISOString();
-    logStep("Newsletter generation successful", {
-      userId,
-      timestamp,
-      tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
-    });
-
-    return {
-      status: "success",
-      message: "Newsletter generated and emailed successfully",
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: {
-        analysisResult,
-        discourseAnalysis, // Will be empty string
-        markdownNewsletter, // Original markdown before UI/UX enhancements
-        enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
-        timestamp
-      }
-    };
   } catch (error) {
     console.error("Error in background newsletter generation process:", error);
     return {
