@@ -53,112 +53,158 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id (No changes here)
-    let numericalId = profile.numerical_id;
-    if (!numericalId && profile.twitter_handle) {
+    // 4.5) IMMEDIATE DECREMENT - This is the key fix!
+    // Atomically decrement the generation count to prevent spam clicking
+    let newGenerationCount = profile.remaining_newsletter_generations;
+    if (profile.remaining_newsletter_generations > 0) {
+      const { data: updateResult, error: decrementError } = await supabase
+        .from("profiles")
+        .update({ 
+          remaining_newsletter_generations: profile.remaining_newsletter_generations - 1 
+        })
+        .eq("id", userId)
+        .eq("remaining_newsletter_generations", profile.remaining_newsletter_generations) // Ensure count hasn't changed
+        .select("remaining_newsletter_generations")
+        .single();
+        
+      if (decrementError || !updateResult) {
+        console.error("Failed to decrement generations (possibly already decremented by another request):", decrementError);
+        throw new Error("Unable to reserve newsletter generation slot. Please try again.");
+      }
+      
+      // Update local variable for use throughout the function
+      newGenerationCount = updateResult.remaining_newsletter_generations;
+      logStep("Successfully reserved generation slot", { 
+        originalCount: profile.remaining_newsletter_generations,
+        remainingAfterDecrement: newGenerationCount 
+      });
+    }
+
+    // Helper function to rollback the decrement if generation fails
+    const rollbackDecrement = async () => {
       try {
-        const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-        if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
-        const cleanHandle = profile.twitter_handle.trim().replace("@", "");
-        const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
-          method: "GET",
-          headers: {
-            "x-rapidapi-key": RAPIDAPI_KEY,
-            "x-rapidapi-host": "twitter293.p.rapidapi.com"
+        if (profile.remaining_newsletter_generations >= 0) {
+          await supabase
+            .from("profiles")
+            .update({ 
+              remaining_newsletter_generations: profile.remaining_newsletter_generations // Restore original count
+            })
+            .eq("id", userId);
+          logStep("Rolled back generation count due to failure");
+        }
+      } catch (rollbackError) {
+        console.error("Failed to rollback generation count:", rollbackError);
+      }
+    };
+
+    // Wrap the entire generation process in try-catch for rollback
+    try {
+      // 5) Ensure numerical_id (No changes here)
+      let numericalId = profile.numerical_id;
+      if (!numericalId && profile.twitter_handle) {
+        try {
+          const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+          if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY in environment");
+          const cleanHandle = profile.twitter_handle.trim().replace("@", "");
+          const resp = await fetch(`https://twitter293.p.rapidapi.com/user/by/username/${encodeURIComponent(cleanHandle)}`, {
+            method: "GET",
+            headers: {
+              "x-rapidapi-key": RAPIDAPI_KEY,
+              "x-rapidapi-host": "twitter293.p.rapidapi.com"
+            }
+          });
+          if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
+          const j = await resp.json();
+          if (j?.user?.result?.rest_id) {
+            numericalId = j.user.result.rest_id;
+            const { error: updateError } = await supabase.from("profiles").update({
+              numerical_id: numericalId
+            }).eq("id", userId);
+            if (updateError) console.error("Error updating numerical_id:", updateError);
+          } else {
+            throw new Error("Could not retrieve your Twitter ID. Please try again later.");
           }
-        });
-        if (!resp.ok) throw new Error(`RapidAPI returned ${resp.status}`);
-        const j = await resp.json();
-        if (j?.user?.result?.rest_id) {
-          numericalId = j.user.result.rest_id;
-          const { error: updateError } = await supabase.from("profiles").update({
-            numerical_id: numericalId
-          }).eq("id", userId);
-          if (updateError) console.error("Error updating numerical_id:", updateError);
-        } else {
+        } catch (err) {
+          console.error("Error fetching numerical_id:", err);
           throw new Error("Could not retrieve your Twitter ID. Please try again later.");
         }
-      } catch (err) {
-        console.error("Error fetching numerical_id:", err);
-        throw new Error("Could not retrieve your Twitter ID. Please try again later.");
       }
-    }
-    if (!numericalId) {
-      throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
-    }
-
-    // 6) Fetch bookmarks (No changes here)
-    logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
-    const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
-        "Content-Type": "application/json"
+      if (!numericalId) {
+        throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
       }
-    });
-    if (!bookmarksResp.ok) {
-      const text = await bookmarksResp.text();
-      console.error(`Twitter API error (${bookmarksResp.status}):`, text);
-      if (bookmarksResp.status === 401) throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
-      if (bookmarksResp.status === 429) throw new Error("Twitter API rate limit exceeded. Please try again later.");
-      throw new Error(`Twitter API error: ${bookmarksResp.status}`);
-    }
-    const bookmarksData = await bookmarksResp.json();
-    if (!bookmarksData?.data) {
-      console.error("Invalid or empty bookmark data:", bookmarksData);
-      if (bookmarksData.meta?.result_count === 0) throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
-      throw new Error("Failed to retrieve bookmarks from Twitter");
-    }
-    const tweetIds = bookmarksData.data.map((t: any) => t.id);
-    logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 7) Fetch detailed tweets via Apify (No changes here)
-    logStep("Fetching detailed tweet data via Apify");
-    const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
-    if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
-    const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        "filter:blue_verified": false, "filter:consumer_video": false, "filter:has_engagement": false,
-        "filter:hashtags": false, "filter:images": false, "filter:links": false, "filter:media": false,
-        "filter:mentions": false, "filter:native_video": false, "filter:nativeretweets": false,
-        "filter:news": false, "filter:pro_video": false, "filter:quote": false, "filter:replies": false,
-        "filter:safe": false, "filter:spaces": false, "filter:twimg": false, "filter:videos": false,
-        "filter:vine": false, lang: "en", maxItems: selectedCount, tweetIDs: tweetIds
-      })
-    });
-    if (!apifyResp.ok) {
-      const text = await apifyResp.text();
-      console.error(`Apify API error (${apifyResp.status}):`, text);
-      throw new Error(`Apify API error: ${apifyResp.status}`);
-    }
-    const apifyData = await apifyResp.json();
-    logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
-
-    // 8) Format tweets for OpenAI (No changes here)
-    function parseToOpenAI(data: any) {
-      const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
-      let out = "";
-      arr.forEach((t, i) => {
-        const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
-        let dateStr = "N/A";
-        try { dateStr = new Date(t.createdAt).toISOString().split("T")[0]; } catch {}
-        const photo = t.extendedEntities?.media?.find((m: any) => m.type === "photo")?.media_url_https;
-        out += `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${t.replyCount || 0}\nLikes: ${t.likeCount || 0}\nImpressions: ${t.viewCount || 0}\nDate: ${dateStr}\nAuthor: ${t.author?.name || "Unknown"}\nPhotoUrl: ${photo || "N/A"}\n`;
-        if (i < arr.length - 1) out += "\n---\n\n";
+      // 6) Fetch bookmarks (No changes here)
+      logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
+      const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${profile.twitter_bookmark_access_token}`,
+          "Content-Type": "application/json"
+        }
       });
-      return out;
-    }
-    const formattedTweets = parseToOpenAI(apifyData);
-    logStep("Formatted tweets for analysis");
+      if (!bookmarksResp.ok) {
+        const text = await bookmarksResp.text();
+        console.error(`Twitter API error (${bookmarksResp.status}):`, text);
+        if (bookmarksResp.status === 401) throw new Error("Your Twitter access token is invalid. Please reconnect your Twitter bookmarks.");
+        if (bookmarksResp.status === 429) throw new Error("Twitter API rate limit exceeded. Please try again later.");
+        throw new Error(`Twitter API error: ${bookmarksResp.status}`);
+      }
+      const bookmarksData = await bookmarksResp.json();
+      if (!bookmarksData?.data) {
+        console.error("Invalid or empty bookmark data:", bookmarksData);
+        if (bookmarksData.meta?.result_count === 0) throw new Error("You don't have any bookmarks. Please save some tweets before generating a newsletter.");
+        throw new Error("Failed to retrieve bookmarks from Twitter");
+      }
+      const tweetIds = bookmarksData.data.map((t: any) => t.id);
+      logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 9) Call OpenAI for main analysis (MODIFIED FOR VARIED STRUCTURE, MORE COLOR INFO)
-    logStep("Calling OpenAI for initial thematic analysis and hook generation");
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
-    
-    const analysisSystemPrompt = `You are an expert content strategist and analyst for LetterNest. Your task is to analyze a collection of tweets and synthesize them into substantial, insightful, and structurally varied themes for the "Chain of Thought" newsletter. This includes crafting an engaging hook and proactively identifying relevant imagery.
+      // 7) Fetch detailed tweets via Apify (No changes here)
+      logStep("Fetching detailed tweet data via Apify");
+      const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
+      if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
+      const apifyResp = await fetch(`https://api.apify.com/v2/acts/kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest/run-sync-get-dataset-items?token=${APIFY_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          "filter:blue_verified": false, "filter:consumer_video": false, "filter:has_engagement": false,
+          "filter:hashtags": false, "filter:images": false, "filter:links": false, "filter:media": false,
+          "filter:mentions": false, "filter:native_video": false, "filter:nativeretweets": false,
+          "filter:news": false, "filter:pro_video": false, "filter:quote": false, "filter:replies": false,
+          "filter:safe": false, "filter:spaces": false, "filter:twimg": false, "filter:videos": false,
+          "filter:vine": false, lang: "en", maxItems: selectedCount, tweetIDs: tweetIds
+        })
+      });
+      if (!apifyResp.ok) {
+        const text = await apifyResp.text();
+        console.error(`Apify API error (${apifyResp.status}):`, text);
+        throw new Error(`Apify API error: ${apifyResp.status}`);
+      }
+      const apifyData = await apifyResp.json();
+      logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
+
+      // 8) Format tweets for OpenAI (No changes here)
+      function parseToOpenAI(data: any) {
+        const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+        let out = "";
+        arr.forEach((t, i) => {
+          const txt = (t.text || "").replace(/https?:\/\/\S+/g, "").trim();
+          let dateStr = "N/A";
+          try { dateStr = new Date(t.createdAt).toISOString().split("T")[0]; } catch {}
+          const photo = t.extendedEntities?.media?.find((m: any) => m.type === "photo")?.media_url_https;
+          out += `Tweet ${i + 1}\nID: ${t.id}\nText: ${txt}\nReplies: ${t.replyCount || 0}\nLikes: ${t.likeCount || 0}\nImpressions: ${t.viewCount || 0}\nDate: ${dateStr}\nAuthor: ${t.author?.name || "Unknown"}\nPhotoUrl: ${photo || "N/A"}\n`;
+          if (i < arr.length - 1) out += "\n---\n\n";
+        });
+        return out;
+      }
+      const formattedTweets = parseToOpenAI(apifyData);
+      logStep("Formatted tweets for analysis");
+
+      // 9) Call OpenAI for main analysis (MODIFIED FOR VARIED STRUCTURE, MORE COLOR INFO)
+      logStep("Calling OpenAI for initial thematic analysis and hook generation");
+      const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+      if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
+      
+      const analysisSystemPrompt = `You are an expert content strategist and analyst for LetterNest. Your task is to analyze a collection of tweets and synthesize them into substantial, insightful, and structurally varied themes for the "Chain of Thought" newsletter. This includes crafting an engaging hook and proactively identifying relevant imagery.
 
 CAPABILITIES:
 - Identify 4-5 main thematic clusters.
@@ -193,8 +239,8 @@ CRITICAL INSTRUCTIONS:
 
 Tweet data to analyze:
 ${formattedTweets}`;
-    
-    const analysisUserPrompt = `Based on the tweet collection, generate content for the "Chain of Thought" newsletter:
+      
+      const analysisUserPrompt = `Based on the tweet collection, generate content for the "Chain of Thought" newsletter:
 1.  HOOK (1-2 sentences).
 2.  4-5 MAIN THEMES, each with:
     *   Theme Title.
@@ -211,32 +257,32 @@ Ensure substantial, insightful content with varied text structures and proactive
 
 Tweet collection:
 ${formattedTweets}`;
-    
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-      body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
-        messages: [
-          { role: "system", content: analysisSystemPrompt },
-          { role: "user", content: analysisUserPrompt }
-        ],
-        temperature: 0.5,
-        max_tokens: 10000
-      })
-    });
-    if (!openaiRes.ok) {
-      const txt = await openaiRes.text();
-      console.error(`OpenAI API error (${openaiRes.status}):`, txt);
-      throw new Error(`OpenAI API error: ${openaiRes.status}`);
-    }
-    const openaiJson = await openaiRes.json();
-    let analysisResult = openaiJson.choices[0].message.content.trim();
-    logStep("Successfully generated initial thematic analysis (varied structure, image focus)");
+      
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14",
+          messages: [
+            { role: "system", content: analysisSystemPrompt },
+            { role: "user", content: analysisUserPrompt }
+          ],
+          temperature: 0.5,
+          max_tokens: 10000
+        })
+      });
+      if (!openaiRes.ok) {
+        const txt = await openaiRes.text();
+        console.error(`OpenAI API error (${openaiRes.status}):`, txt);
+        throw new Error(`OpenAI API error: ${openaiRes.status}`);
+      }
+      const openaiJson = await openaiRes.json();
+      let analysisResult = openaiJson.choices[0].message.content.trim();
+      logStep("Successfully generated initial thematic analysis (varied structure, image focus)");
 
-    // 10) Topic Selection and Query Generation for Perplexity (No changes needed here)
-    logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a thematic analysis, select up to 3 themes that would benefit most from additional web-based context.
+      // 10) Topic Selection and Query Generation for Perplexity (No changes needed here)
+      logStep("Selecting topics and generating search queries for Perplexity");
+      const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a thematic analysis, select up to 3 themes that would benefit most from additional web-based context.
 TASK: Review analysis, select up to 3 themes (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
 FORMAT:
 ===
@@ -248,102 +294,102 @@ ENRICHMENT GOAL: [Goal]
 THEMATIC ANALYSIS:
 ${analysisResult}`;
 
-    const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-      body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14", 
-        messages: [
-          { role: "system", content: "You are a search query optimization specialist." },
-          { role: "user", content: queryGenerationPrompt }
-        ],
-        temperature: 0.3, max_tokens: 10000
-      })
-    });
-    let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
-    if (!queryGenRes.ok) {
-      const txt = await queryGenRes.text();
-      console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
-      logStep("Failed to generate search queries, continuing without Perplexity enrichment");
-    } else {
-      const queryGenJson = await queryGenRes.json();
-      const searchQueriesText = queryGenJson.choices[0].message.content.trim();
-      logStep("Successfully generated search queries", { searchQueriesText });
-      const topicsToEnrich: { theme: string; query: string; goal: string }[] = [];
-      const regex = /THEME \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*THEME \d+:|$)/gis;
-      let match;
-      while ((match = regex.exec(searchQueriesText)) !== null) {
-        topicsToEnrich.push({ theme: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
-      }
-      const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-      if (!PERPLEXITY_API_KEY || topicsToEnrich.length === 0) {
-        logStep("Missing Perplexity API key or no topics to enrich, continuing without web enrichment");
+      const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14", 
+          messages: [
+            { role: "system", content: "You are a search query optimization specialist." },
+            { role: "user", content: queryGenerationPrompt }
+          ],
+          temperature: 0.3, max_tokens: 10000
+        })
+      });
+      let webEnrichmentContent: { themeName: string; webSummary: string; sources: any[] }[] | null = null;
+      if (!queryGenRes.ok) {
+        const txt = await queryGenRes.text();
+        console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
+        logStep("Failed to generate search queries, continuing without Perplexity enrichment");
       } else {
-        logStep("Making Perplexity API calls for web enrichment", { topicsCount: topicsToEnrich.length });
-        const enrichmentResults = [];
-        for (const topic of topicsToEnrich) {
-          try {
-            const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
-                body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: topic.query }], temperature: 0.2, max_tokens: 400 })
-            });
-            if (perplexityRes.ok) {
-              const data = await perplexityRes.json();
-              enrichmentResults.push({ themeName: topic.theme, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
-              logStep(`Successfully enriched theme: ${topic.theme}`);
-            } else {
-              console.error(`Perplexity API error for "${topic.query}": ${perplexityRes.status}`, await perplexityRes.text());
-              enrichmentResults.push({ themeName: topic.theme, webSummary: `[Perplexity error ${perplexityRes.status}]`, sources: [] });
-            }
-          } catch (err) {
-            console.error(`Perplexity fetch failed for "${topic.query}":`, err);
-            enrichmentResults.push({ themeName: topic.theme, webSummary: "[Perplexity request failed]", sources: [] });
-          }
+        const queryGenJson = await queryGenRes.json();
+        const searchQueriesText = queryGenJson.choices[0].message.content.trim();
+        logStep("Successfully generated search queries", { searchQueriesText });
+        const topicsToEnrich: { theme: string; query: string; goal: string }[] = [];
+        const regex = /THEME \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*THEME \d+:|$)/gis;
+        let match;
+        while ((match = regex.exec(searchQueriesText)) !== null) {
+          topicsToEnrich.push({ theme: match[1].trim(), query: match[2].trim(), goal: match[3].trim() });
         }
-        if (enrichmentResults.length > 0) { webEnrichmentContent = enrichmentResults; logStep("Web enrichment data collected"); }
+        const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+        if (!PERPLEXITY_API_KEY || topicsToEnrich.length === 0) {
+          logStep("Missing Perplexity API key or no topics to enrich, continuing without web enrichment");
+        } else {
+          logStep("Making Perplexity API calls for web enrichment", { topicsCount: topicsToEnrich.length });
+          const enrichmentResults = [];
+          for (const topic of topicsToEnrich) {
+            try {
+              const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${PERPLEXITY_API_KEY}` },
+                  body: JSON.stringify({ model: "sonar-pro", messages: [{ role: "user", content: topic.query }], temperature: 0.2, max_tokens: 400 })
+              });
+              if (perplexityRes.ok) {
+                const data = await perplexityRes.json();
+                enrichmentResults.push({ themeName: topic.theme, webSummary: data.choices[0].message.content, sources: data.choices[0].message.citations ?? [] });
+                logStep(`Successfully enriched theme: ${topic.theme}`);
+              } else {
+                console.error(`Perplexity API error for "${topic.query}": ${perplexityRes.status}`, await perplexityRes.text());
+                enrichmentResults.push({ themeName: topic.theme, webSummary: `[Perplexity error ${perplexityRes.status}]`, sources: [] });
+              }
+            } catch (err) {
+              console.error(`Perplexity fetch failed for "${topic.query}":`, err);
+              enrichmentResults.push({ themeName: topic.theme, webSummary: "[Perplexity request failed]", sources: [] });
+            }
+          }
+          if (enrichmentResults.length > 0) { webEnrichmentContent = enrichmentResults; logStep("Web enrichment data collected"); }
+        }
       }
-    }
 
-    // 12) Integrate Web Content (No changes needed here other than accommodating potentially longer base analysis)
-    let finalAnalysisForMarkdown = analysisResult; 
-    if (webEnrichmentContent && webEnrichmentContent.length > 0) {
-        logStep("Integrating web content with original thematic analysis");
-        const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided thematic analysis.
+      // 12) Integrate Web Content (No changes needed here other than accommodating potentially longer base analysis)
+      let finalAnalysisForMarkdown = analysisResult; 
+      if (webEnrichmentContent && webEnrichmentContent.length > 0) {
+          logStep("Integrating web content with original thematic analysis");
+          const integrationPrompt = `You are an expert content editor. Integrate web-sourced insights into the provided thematic analysis.
 RULES: Maintain original structure. For themes with web enrichment, weave 3-4+ points from 'webSummary' into 'Deeper Dive', under "Broader Context Online:" (make this substantial, 100-150 words if possible). Mention sources concisely. Ensure smooth flow.
 ORIGINAL ANALYSIS:
 ${analysisResult}
 WEB-SOURCED INFO:
 ${JSON.stringify(webEnrichmentContent, null, 2)}
 Provide complete, integrated analysis.`;
-        const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-            body: JSON.stringify({
-                model: "gpt-4.1-2025-04-14",
-                messages: [
-                    { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
-                    { role: "user", content: integrationPrompt }
-                ],
-                temperature: 0.3, max_tokens: 10000
-            })
-        });
-        if (integrationRes.ok) {
-            const integrationJson = await integrationRes.json();
-            finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
-            logStep("Successfully integrated web content with thematic analysis");
-        } else {
-            const txt = await integrationRes.text();
-            console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-            logStep("Failed to integrate web content, continuing with original thematic analysis");
-        }
-    }
+          const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+              body: JSON.stringify({
+                  model: "gpt-4.1-2025-04-14",
+                  messages: [
+                      { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information to create richer, more detailed texts." },
+                      { role: "user", content: integrationPrompt }
+                  ],
+                  temperature: 0.3, max_tokens: 10000
+              })
+          });
+          if (integrationRes.ok) {
+              const integrationJson = await integrationRes.json();
+              finalAnalysisForMarkdown = integrationJson.choices[0].message.content.trim();
+              logStep("Successfully integrated web content with thematic analysis");
+          } else {
+              const txt = await integrationRes.text();
+              console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
+              logStep("Failed to integrate web content, continuing with original thematic analysis");
+          }
+      }
 
-    // 13) Generate Markdown formatted newsletter (MODIFIED FOR VARIED STRUCTURE)
-    let markdownNewsletter = "";
-    try {
-      logStep("Starting 'Chain of Thought' markdown newsletter formatting (varied structure)");
-      const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes with varied structures like numbered lists/key takeaway boxes/synthesized quotes, sidetracks, image URLs) into clean, beautiful, visually appealing, well-structured Markdown.
+      // 13) Generate Markdown formatted newsletter (MODIFIED FOR VARIED STRUCTURE)
+      let markdownNewsletter = "";
+      try {
+        logStep("Starting 'Chain of Thought' markdown newsletter formatting (varied structure)");
+        const markdownSystemPrompt = `You are a professional newsletter editor for "Chain of Thought" by LetterNest. Format pre-analyzed thematic content (hook, main themes with varied structures like numbered lists/key takeaway boxes/synthesized quotes, sidetracks, image URLs) into clean, beautiful, visually appealing, well-structured Markdown.
 
 NEWSLETTER STRUCTURE:
 1.  HEADER: Title (H1 "Chain of Thought"), Date (H3/Subtitle), Subtle horizontal rule.
@@ -372,48 +418,48 @@ FORMATTING GUIDELINES:
 - Use bold and italic formatting where appropriate for emphasis
 
 OUTPUT: ONLY the formatted Markdown content.`;
-      
-      const markdownUserPrompt = `Format this thematic analysis (with varied structures) into the "Chain of Thought" Markdown newsletter. Prioritize including images and correctly formatting special text structures.
+        
+        const markdownUserPrompt = `Format this thematic analysis (with varied structures) into the "Chain of Thought" Markdown newsletter. Prioritize including images and correctly formatting special text structures.
 Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 THEMATIC ANALYSIS CONTENT:
 ${finalAnalysisForMarkdown}`;
-      
-      try {
-        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              { role: "system", content: markdownSystemPrompt },
-              { role: "user", content: markdownUserPrompt }
-            ],
-            temperature: 0.2, max_tokens: 10000
-          })
-        });
-        if (markdownOpenaiRes.ok) {
-          const markdownJson = await markdownOpenaiRes.json();
-          markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("'Chain of Thought' Markdown (varied structure) generated successfully");
-        } else {
-          const errorText = await markdownOpenaiRes.text();
-          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          markdownNewsletter = `Error: Unable to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+        
+        try {
+          const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14",
+              messages: [
+                { role: "system", content: markdownSystemPrompt },
+                { role: "user", content: markdownUserPrompt }
+              ],
+              temperature: 0.2, max_tokens: 10000
+            })
+          });
+          if (markdownOpenaiRes.ok) {
+            const markdownJson = await markdownOpenaiRes.json();
+            markdownNewsletter = markdownJson.choices[0].message.content;
+            logStep("'Chain of Thought' Markdown (varied structure) generated successfully");
+          } else {
+            const errorText = await markdownOpenaiRes.text();
+            console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
+            markdownNewsletter = `Error: Unable to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+          }
+        } catch (markdownError) {
+          console.error("Error in markdown formatting API call:", markdownError);
+          markdownNewsletter = `Error: API error in markdown. Analysis:\n${finalAnalysisForMarkdown}`;
         }
-      } catch (markdownError) {
-        console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter = `Error: API error in markdown. Analysis:\n${finalAnalysisForMarkdown}`;
+      } catch (err) {
+        console.error("Error generating Markdown newsletter:", err);
+        markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
       }
-    } catch (err) {
-      console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter = `Error: Failed to generate markdown. Analysis:\n${finalAnalysisForMarkdown}`;
-    }
 
-    // 14) Generate Enhanced Markdown with UI/UX (UPDATED WITH NEW PROFESSIONAL COLOR SCHEME)
-    let enhancedMarkdownNewsletter = markdownNewsletter;
-    try {
-      logStep("Generating enhanced UI/UX markdown with professional color scheme");
-      const enhancedSystemPrompt = `
+      // 14) Generate Enhanced Markdown with UI/UX (UPDATED WITH NEW PROFESSIONAL COLOR SCHEME)
+      let enhancedMarkdownNewsletter = markdownNewsletter;
+      try {
+        logStep("Generating enhanced UI/UX markdown with professional color scheme");
+        const enhancedSystemPrompt = `
 You are a newsletter UI/UX specialist. Your goal is to take "Chain of Thought" markdown (which may include specific structures like "KEY TAKEAWAY BOX:" or "THEME SNAPSHOT:") and output a **visually enhanced** markdown document using inline HTML/CSS with a sophisticated professional color palette.
 
 PROFESSIONAL COLOR PALETTE & STYLING:
@@ -456,8 +502,8 @@ ENHANCEMENT RULES:
 
 Transform the markdown below into a visually enhanced, appealing, and professionally styled newsletter.
 `;
-      
-      const enhancedUserPrompt = `
+        
+        const enhancedUserPrompt = `
 Transform the "Chain of Thought" markdown below into a **professionally enhanced** version using the sophisticated color palette and styling rules. Pay special attention to:
 - Professional hierarchy with the navy/blue color scheme
 - Enhanced styling for "KEY TAKEAWAY BOX:" and "THEME SNAPSHOT:" elements
@@ -470,333 +516,332 @@ Transform the "Chain of Thought" markdown below into a **professionally enhanced
 ${markdownNewsletter}
 </current newsletter>
 `;
-      
-      try {
-        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", 
-            messages: [
-              { role: "system", content: enhancedSystemPrompt },
-              { role: "user", content: enhancedUserPrompt }
-            ],
-            temperature: 0.1, // Very low temp for precise styling application
-            max_tokens: 10000 
-          })
-        });
-        if (enhancedOpenaiRes.ok) {
-          const enhancedJson = await enhancedOpenaiRes.json();
-          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced UI/UX markdown with professional color scheme generated");
-        } else {
-          const errorText = await enhancedOpenaiRes.text();
-          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+        
+        try {
+          const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+            body: JSON.stringify({
+              model: "gpt-4.1-2025-04-14", 
+              messages: [
+                { role: "system", content: enhancedSystemPrompt },
+                { role: "user", content: enhancedUserPrompt }
+              ],
+              temperature: 0.1, // Very low temp for precise styling application
+              max_tokens: 10000 
+            })
+          });
+          if (enhancedOpenaiRes.ok) {
+            const enhancedJson = await enhancedOpenaiRes.json();
+            enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
+            logStep("Enhanced UI/UX markdown with professional color scheme generated");
+          } else {
+            const errorText = await enhancedOpenaiRes.text();
+            console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
+          }
+        } catch (enhancedError) {
+          console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
         }
-      } catch (enhancedError) {
-        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
+      } catch (err) {
+        console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
       }
-    } catch (err) {
-      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-    }
 
-    // 15) Clean up stray text around enhanced Markdown (No changes needed here)
-    function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
-      cleaned = cleaned.trim();
-      const lines = cleaned.split('\n');
-      for(let i = 0; i < lines.length; i++){
-        if (lines[i].trim() !== "") {
-          if (!lines[i].trim().startsWith("#") && !lines[i].trim().startsWith("<h1") && !lines[i].trim().startsWith("<div")) {
-            const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/);
-            if (headingMatch && typeof headingMatch.index === 'number' && headingMatch.index > 0) {
-              if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
-                cleaned = cleaned.substring(headingMatch.index).trim();
+      // 15) Clean up stray text around enhanced Markdown (No changes needed here)
+      function cleanMarkdown(md: string): string {
+        let cleaned = md.replace(/^```(?:markdown)?\s*([\s\S]*?)\s*```$/i, '$1');
+        cleaned = cleaned.trim();
+        const lines = cleaned.split('\n');
+        for(let i = 0; i < lines.length; i++){
+          if (lines[i].trim() !== "") {
+            if (!lines[i].trim().startsWith("#") && !lines[i].trim().startsWith("<h1") && !lines[i].trim().startsWith("<div")) {
+              const headingMatch = cleaned.match(/(^|\n)(#+\s.*|<h[1-6].*>|<div.*>)/);
+              if (headingMatch && typeof headingMatch.index === 'number' && headingMatch.index > 0) {
+                if (cleaned.substring(0, headingMatch.index).trim().length > 0) {
+                  cleaned = cleaned.substring(headingMatch.index).trim();
+                }
               }
             }
+            break;
           }
-          break;
         }
+        return cleaned;
       }
-      return cleaned;
-    }
-    const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
-    logStep("Cleaned up final markdown for 'Chain of Thought'");
+      const finalMarkdown = cleanMarkdown(enhancedMarkdownNewsletter);
+      logStep("Cleaned up final markdown for 'Chain of Thought'");
 
-    // 16) Convert final Markdown to HTML & inline CSS (UPDATED RENDERER WITH PROFESSIONAL STYLING)
-    const renderer = new marked.Renderer();
-    
-    // Override paragraph rendering with professional styling
-    renderer.paragraph = (text) => {
-        if (text.trim().startsWith('<div style="height: 2px;') || text.trim().startsWith('<div style="background-color:')) {
-            return text.trim() + '\n';
+      // 16) Convert final Markdown to HTML & inline CSS (UPDATED RENDERER WITH PROFESSIONAL STYLING)
+      const renderer = new marked.Renderer();
+      
+      // Override paragraph rendering with professional styling
+      renderer.paragraph = (text) => {
+          if (text.trim().startsWith('<div style="height: 2px;') || text.trim().startsWith('<div style="background-color:')) {
+              return text.trim() + '\n';
+          }
+          return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px; color: #333333; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</p>\n`;
+      };
+
+      // Professional list item rendering
+      renderer.listitem = (text, task, checked) => {
+        if (task) {
+          return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
         }
-        return `<p style="margin: 0 0 1.4em 0; line-height: 1.8; font-size: 16px; color: #333333; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</p>\n`;
-    };
-
-    // Professional list item rendering
-    renderer.listitem = (text, task, checked) => {
-      if (task) {
-        return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
-      }
-      return `<li style="margin: 0 0 0.9em 0; font-size: 16px; line-height: 1.7; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">${text}</span></li>\n`;
-    };
-
-    // Professional heading renderer with enhanced typography
-    renderer.heading = (text, level) => {
-      const colors = {
-        1: '#142a4b',
-        2: '#142a4b', 
-        3: '#5774cd'
+        return `<li style="margin: 0 0 0.9em 0; font-size: 16px; line-height: 1.7; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;"><span style="color: #333333;">${text}</span></li>\n`;
       };
-      const sizes = {
-        1: '32px',
-        2: '26px',
-        3: '22px'
+
+      // Professional heading renderer with enhanced typography
+      renderer.heading = (text, level) => {
+        const colors = {
+          1: '#142a4b',
+          2: '#142a4b', 
+          3: '#5774cd'
+        };
+        const sizes = {
+          1: '32px',
+          2: '26px',
+          3: '22px'
+        };
+        const weights = {
+          1: '700',
+          2: '600',
+          3: '500'
+        };
+        
+        const color = colors[level as keyof typeof colors] || '#142a4b';
+        const size = sizes[level as keyof typeof sizes] || '18px';
+        const weight = weights[level as keyof typeof weights] || '500';
+        
+        const sectionClass = level === 2 ? ' class="section-heading"' : '';
+        
+        return `<h${level}${sectionClass} style="color:${color};
+                                 font-size:${size};
+                                 margin:1.5em 0 0.8em;
+                                 font-weight:${weight};
+                                 font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</h${level}>\n`;
       };
-      const weights = {
-        1: '700',
-        2: '600',
-        3: '500'
-      };
-      
-      const color = colors[level as keyof typeof colors] || '#142a4b';
-      const size = sizes[level as keyof typeof sizes] || '18px';
-      const weight = weights[level as keyof typeof weights] || '500';
-      
-      const sectionClass = level === 2 ? ' class="section-heading"' : '';
-      
-      return `<h${level}${sectionClass} style="color:${color};
-                               font-size:${size};
-                               margin:1.5em 0 0.8em;
-                               font-weight:${weight};
-                               font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">${text}</h${level}>\n`;
-    };
 
-    // Enhanced image renderer with professional container styling
-    renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 25px 0 35px; padding: 0;">
-        <img src="${href}"
-             alt="${alt || 'Newsletter image'}"
-             style="max-width:100%; width:auto; max-height:500px; height:auto; border-radius:12px;
-                    display:inline-block; box-shadow: 0 6px 20px rgba(20,42,75,0.15); border: 1px solid #d2ddec;">
-      </div>`;
+      // Enhanced image renderer with professional container styling
+      renderer.image = (href, _title, alt) => `
+        <div class="image-container" style="text-align:center; margin: 25px 0 35px; padding: 0;">
+          <img src="${href}"
+               alt="${alt || 'Newsletter image'}"
+               style="max-width:100%; width:auto; max-height:500px; height:auto; border-radius:12px;
+                      display:inline-block; box-shadow: 0 6px 20px rgba(20,42,75,0.15); border: 1px solid #d2ddec;">
+        </div>`;
 
-    // Convert the final markdown to HTML using the enhanced renderer
-    const htmlBody = marked(finalMarkdown, { renderer });
+      // Convert the final markdown to HTML using the enhanced renderer
+      const htmlBody = marked(finalMarkdown, { renderer });
 
-    // Generate the final email HTML with professional design system
-    const emailHtml = juice(`
-      <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-        <!-- Professional print CSS for PDF generation -->
-        <style>
-          @media print {
-            body, html { 
-              width: 100%; 
-              height: auto; 
-              background-color: #ffffff !important; 
+      // Generate the final email HTML with professional design system
+      const emailHtml = juice(`
+        <body style="background-color:#f5f7fa; margin:0; padding:0; -webkit-text-size-adjust:100%; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+          <!-- Professional print CSS for PDF generation -->
+          <style>
+            @media print {
+              body, html { 
+                width: 100%; 
+                height: auto; 
+                background-color: #ffffff !important; 
+              }
+              
+              h1, h2, h3 { 
+                page-break-after: avoid; 
+                margin-top: 1.2em;
+              }
+              
+              .image-container { 
+                page-break-inside: avoid; 
+              }
+              
+              p, ul, ol, dl, blockquote { 
+                page-break-inside: auto; 
+              }
+              
+              .section-break {
+                page-break-after: always;
+              }
+              
+              .content-container {
+                page-break-inside: auto !important;
+              }
             }
             
-            h1, h2, h3 { 
-              page-break-after: avoid; 
-              margin-top: 1.2em;
+            /* Mobile-first responsive design for full-width mobile experience */
+            @media screen and (max-width: 600px) {
+              body {
+                background-color: #ffffff !important;
+              }
+              
+              .content-wrapper {
+                padding: 0 !important;
+                background-color: #ffffff !important;
+              }
+              
+              .content-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+              
+              .content-body {
+                padding: 16px 10px !important;
+                font-size: 16px !important;
+                line-height: 1.6 !important;
+              }
+              
+              /* Mobile-optimized headings */
+              h1 {
+                font-size: 28px !important;
+                margin: 0 0 16px 0 !important;
+                line-height: 1.3 !important;
+              }
+              
+              h2 {
+                font-size: 22px !important;
+                margin: 24px 0 12px 0 !important;
+                line-height: 1.4 !important;
+              }
+              
+              h3 {
+                font-size: 20px !important;
+                margin: 20px 0 10px 0 !important;
+                line-height: 1.4 !important;
+              }
+              
+              /* Mobile-optimized paragraphs and text */
+              p {
+                font-size: 16px !important;
+                line-height: 1.6 !important;
+                margin: 0 0 16px 0 !important;
+              }
+              
+              /* Mobile-optimized lists */
+              li {
+                font-size: 16px !important;
+                line-height: 1.6 !important;
+                margin-bottom: 12px !important;
+              }
+              
+              /* Mobile-optimized special content blocks */
+              .image-container {
+                margin: 16px 0 20px 0 !important;
+                padding: 0 !important;
+              }
+              
+              .image-container img {
+                border-radius: 6px !important;
+                box-shadow: 0 2px 8px rgba(20,42,75,0.08) !important;
+                max-width: 100% !important;
+              }
+              
+              /* Mobile-optimized callout boxes with reduced padding */
+              div[style*="background-color: #d2ddec"] {
+                padding: 12px 10px !important;
+                margin: 16px 0 !important;
+                border-radius: 4px !important;
+              }
+              
+              div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
+                padding: 10px 10px !important;
+                margin: 14px 0 !important;
+                border-radius: 4px !important;
+              }
+              
+              div[style*="background-color: #f8f9fa"] {
+                padding: 12px 10px !important;
+                margin: 16px 0 !important;
+                border-radius: 4px !important;
+              }
+              
+              /* Mobile footer optimization */
+              .footer {
+                padding: 20px 10px 24px 10px !important;
+                font-size: 14px !important;
+                background-color: #ffffff !important;
+              }
             }
             
-            .image-container { 
-              page-break-inside: avoid; 
+            /* Enhanced typography and spacing for all devices */
+            .content-body h1, .content-body h2, .content-body h3 {
+              font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
             }
             
-            p, ul, ol, dl, blockquote { 
-              page-break-inside: auto; 
+            .content-body p, .content-body li {
+              font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
             }
             
-            .section-break {
-              page-break-after: always;
+            /* Tablet optimization (601px to 900px) */
+            @media screen and (min-width: 601px) and (max-width: 900px) {
+              .content-container {
+                max-width: 95% !important;
+                margin: 0 auto !important;
+              }
+              
+              .content-body {
+                padding: 35px 30px !important;
+              }
             }
-            
-            .content-container {
-              page-break-inside: auto !important;
-            }
-          }
-          
-          /* Mobile-first responsive design for full-width mobile experience */
-          @media screen and (max-width: 600px) {
-            body {
-              background-color: #ffffff !important;
-            }
-            
-            .content-wrapper {
-              padding: 0 !important;
-              background-color: #ffffff !important;
-            }
-            
-            .content-container {
-              max-width: 100% !important;
-              width: 100% !important;
-              margin: 0 !important;
-              border-radius: 0 !important;
-              box-shadow: none !important;
-              border: none !important;
-            }
-            
-            .content-body {
-              padding: 16px 10px !important;
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-            }
-            
-            /* Mobile-optimized headings */
-            h1 {
-              font-size: 28px !important;
-              margin: 0 0 16px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            h2 {
-              font-size: 22px !important;
-              margin: 24px 0 12px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            h3 {
-              font-size: 20px !important;
-              margin: 20px 0 10px 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            /* Mobile-optimized paragraphs and text */
-            p {
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-              margin: 0 0 16px 0 !important;
-            }
-            
-            /* Mobile-optimized lists */
-            li {
-              font-size: 16px !important;
-              line-height: 1.6 !important;
-              margin-bottom: 12px !important;
-            }
-            
-            /* Mobile-optimized special content blocks */
-            .image-container {
-              margin: 16px 0 20px 0 !important;
-              padding: 0 !important;
-            }
-            
-            .image-container img {
-              border-radius: 6px !important;
-              box-shadow: 0 2px 8px rgba(20,42,75,0.08) !important;
-              max-width: 100% !important;
-            }
-            
-            /* Mobile-optimized callout boxes with reduced padding */
-            div[style*="background-color: #d2ddec"] {
-              padding: 12px 10px !important;
-              margin: 16px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            div[style*="background-color: #ffffff"][style*="border: 2px solid #a1c181"] {
-              padding: 10px 10px !important;
-              margin: 14px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            div[style*="background-color: #f8f9fa"] {
-              padding: 12px 10px !important;
-              margin: 16px 0 !important;
-              border-radius: 4px !important;
-            }
-            
-            /* Mobile footer optimization */
-            .footer {
-              padding: 20px 10px 24px 10px !important;
-              font-size: 14px !important;
-              background-color: #ffffff !important;
-            }
-          }
-          
-          /* Enhanced typography and spacing for all devices */
-          .content-body h1, .content-body h2, .content-body h3 {
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          .content-body p, .content-body li {
-            font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;
-          }
-          
-          /* Tablet optimization (601px to 900px) */
-          @media screen and (min-width: 601px) and (max-width: 900px) {
-            .content-container {
-              max-width: 95% !important;
-              margin: 0 auto !important;
-            }
-            
-            .content-body {
-              padding: 35px 30px !important;
-            }
-          }
-        </style>
+          </style>
 
-        <!-- Professional newsletter container -->
-        <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f5f7fa; padding: 20px 0;">
-         <div class="content-container" style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
+          <!-- Professional newsletter container -->
+          <div class="content-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; text-align: center; background-color: #f5f7fa; padding: 20px 0;">
+           <div class="content-container" style="display: block; width: 100%; max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,42,75,0.12); text-align: left; border: 1px solid #d2ddec;">
 
-            <div class="content-body" style="padding: 24px 16px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+              <div class="content-body" style="padding: 24px 16px; line-height: 1.8; color: #333333; font-size: 16px; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
 
-              ${htmlBody}
+                ${htmlBody}
+              </div>
+            </div>
+            
+            <div class="footer" style="text-align: center; padding: 35px 0 45px 0; font-size: 14px; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
+              Powered by <strong>LetterNest</strong><br>
+              <span style="color: #888; font-size: 12px;">Professional Newsletter Generation</span>
             </div>
           </div>
-          
-          <div class="footer" style="text-align: center; padding: 35px 0 45px 0; font-size: 14px; color: #5774cd; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif;">
-            Powered by <strong>LetterNest</strong><br>
-            <span style="color: #888; font-size: 12px;">Professional Newsletter Generation</span>
-          </div>
-        </div>
-      </body>
-    `);
+        </body>
+      `);
 
-    logStep("Converted 'Chain of Thought' markdown to HTML with professional design system");
+      logStep("Converted 'Chain of Thought' markdown to HTML with professional design system");
 
-    // 17) Send email via Resend (No changes here)
-    try {
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai"; 
-      const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; 
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
+      // 17) Send email via Resend (No changes here)
+      try {
+        const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai"; 
+        const emailSubject = `Chain of Thought: Your Weekly Insights from LetterNest`; 
+        const { data: emailData, error: emailError } = await resend.emails.send({
+          from: `LetterNest <${fromEmail}>`, to: profile.sending_email, subject: emailSubject, html: emailHtml, text: finalMarkdown 
+        });
+        if (emailError) { console.error("Error sending email with Resend:", emailError); throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`); }
+        logStep("'Chain of Thought' Email sent successfully", { id: emailData?.id });
+      } catch (sendErr) { console.error("Error sending email:", sendErr); }
+
+      // 18) Save the newsletter to newsletter_storage table (No changes here)
+      try {
+        const { error: storageError } = await supabase.from('newsletter_storage').insert({ user_id: userId, markdown_text: finalMarkdown });
+        if (storageError) { console.error("Failed to save 'Chain of Thought' newsletter to storage:", storageError); } 
+        else { logStep("'Chain of Thought' Newsletter successfully saved to storage"); }
+      } catch (storageErr) { console.error("Error saving 'Chain of Thought' newsletter to storage:", storageErr); }
+
+      // 19) Final log & response - NO LONGER DECREMENT COUNT HERE!
+      const timestamp = new Date().toISOString();
+      logStep("'Chain of Thought' newsletter generation successful with professional design", {
+        userId, timestamp, tweetCount: selectedCount,
+        remainingGenerations: newGenerationCount
       });
-      if (emailError) { console.error("Error sending email with Resend:", emailError); throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`); }
-      logStep("'Chain of Thought' Email sent successfully", { id: emailData?.id });
-    } catch (sendErr) { console.error("Error sending email:", sendErr); }
+      return {
+        status: "success",
+        message: "'Chain of Thought' newsletter generated and process initiated for email.",
+        remainingGenerations: newGenerationCount,
+        data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
+      };
 
-    // 18) Save the newsletter to newsletter_storage table (No changes here)
-    try {
-      const { error: storageError } = await supabase.from('newsletter_storage').insert({ user_id: userId, markdown_text: finalMarkdown });
-      if (storageError) { console.error("Failed to save 'Chain of Thought' newsletter to storage:", storageError); } 
-      else { logStep("'Chain of Thought' Newsletter successfully saved to storage"); }
-    } catch (storageErr) { console.error("Error saving 'Chain of Thought' newsletter to storage:", storageErr); }
-
-    // 19) Update remaining generations count (No changes here)
-    if (profile.remaining_newsletter_generations > 0) {
-      const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({ remaining_newsletter_generations: newCount }).eq("id", userId);
-      if (updateError) { console.error("Failed to update remaining generations:", updateError); } 
-      else { logStep("Updated remaining generations count", { newCount }); }
+    } catch (generationError) {
+      // Rollback the decrement since generation failed
+      await rollbackDecrement();
+      throw generationError;
     }
 
-    // 20) Final log & response (No changes here)
-    const timestamp = new Date().toISOString();
-    logStep("'Chain of Thought' newsletter generation successful with professional design", {
-      userId, timestamp, tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
-    });
-    return {
-      status: "success",
-      message: "'Chain of Thought' newsletter generated and process initiated for email.",
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
-    };
   } catch (error) {
     console.error("Error in background 'Chain of Thought' newsletter generation process:", error);
     return {
