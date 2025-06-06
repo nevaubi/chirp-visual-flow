@@ -198,7 +198,7 @@ const PricingSection = () => {
       "Classic layout template"
     ],
     ctaText: "Start Standard",
-    popular: false,
+    popular: true,
     buttonClassName: "bg-[#ff7720] hover:bg-[#e86612] text-white shadow-[0_2px_6px_rgba(255,119,32,0.3)]",
     platformIcon: (
       <div className="w-16 h-16 rounded-full bg-[#fff9f0] flex items-center justify-center">
@@ -214,7 +214,7 @@ const PricingSection = () => {
 
   const newsletterProCard = {
     title: "Newsletter Pro",
-    price: "$30",
+    price: "$19",
     description: "For serious newsletter creators",
     features: [
       <span><strong>30 monthly newsletters</strong></span>,
@@ -225,7 +225,7 @@ const PricingSection = () => {
       "Priority support"
     ],
     ctaText: "Upgrade to Pro",
-    popular: true,
+    popular: false,
     buttonClassName: "bg-[#0ea5e9] hover:bg-[#0284c7] text-white shadow-[0_2px_6px_rgba(14,165,233,0.3)]",
     platformIcon: (
       <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center">
