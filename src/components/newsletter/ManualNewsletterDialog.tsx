@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { 
@@ -26,20 +25,23 @@ interface ManualNewsletterDialogProps {
 const TweetCountOption = ({ 
   count, 
   selected, 
-  onSelect 
+  onSelect,
+  disabled 
 }: { 
   count: number; 
   selected: boolean; 
-  onSelect: () => void; 
+  onSelect: () => void;
+  disabled?: boolean;
 }) => (
   <Card 
     className={cn(
       "flex flex-col items-center justify-center p-3 sm:p-4 cursor-pointer border-2 transition-all",
-      selected 
+      disabled && "opacity-50 cursor-not-allowed",
+      !disabled && selected 
         ? "border-[#FF6B35] bg-[#FF6B35]/10" 
         : "border-gray-200 hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5"
     )}
-    onClick={onSelect}
+    onClick={disabled ? undefined : onSelect}
   >
     <div className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">{count}</div>
     <div className="text-xs sm:text-sm text-gray-600">bookmarks</div>
@@ -53,23 +55,30 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
 }) => {
   const [selectedCount, setSelectedCount] = React.useState<number>(10);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [updatedRemainingGenerations, setUpdatedRemainingGenerations] = useState<number | null>(null);
+  const [optimisticRemainingGenerations, setOptimisticRemainingGenerations] = useState<number>(remainingGenerations);
   const [progress, setProgress] = useState(0);
   const { authState } = useAuth();
 
-  // Reset updatedRemainingGenerations and progress when dialog opens/closes
+  // Update optimistic count when prop changes
+  useEffect(() => {
+    if (!isGenerating) {
+      setOptimisticRemainingGenerations(remainingGenerations);
+    }
+  }, [remainingGenerations, isGenerating]);
+
+  // Reset state when dialog opens/closes
   React.useEffect(() => {
     if (!open) {
-      setUpdatedRemainingGenerations(null);
       setProgress(0);
       setIsGenerating(false);
+      // Reset optimistic count to actual count when dialog closes
+      setOptimisticRemainingGenerations(remainingGenerations);
     }
-  }, [open]);
+  }, [open, remainingGenerations]);
 
   // Simulate progress updates during processing
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    let completionTimer: NodeJS.Timeout;
     
     if (isGenerating && progress < 100) {
       interval = setInterval(() => {
@@ -83,7 +92,6 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
     
     return () => {
       clearInterval(interval);
-      clearTimeout(completionTimer);
     };
   }, [isGenerating, progress]);
 
@@ -92,6 +100,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       setIsGenerating(true);
       setProgress(0);
       
+      // **OPTIMISTIC UPDATE: Immediately decrement the count and disable UI**
+      const newOptimisticCount = Math.max(0, optimisticRemainingGenerations - 1);
+      setOptimisticRemainingGenerations(newOptimisticCount);
+      
       // Call the Supabase Edge Function to generate the newsletter
       const { data, error } = await supabase.functions.invoke('manual-newsletter-generation', {
         body: { selectedCount },
@@ -99,6 +111,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       
       if (error) {
         console.error('Error generating newsletter:', error);
+        
+        // **ROLLBACK: Restore optimistic count on error**
+        setOptimisticRemainingGenerations(optimisticRemainingGenerations);
+        
         toast.error('Failed to generate newsletter', {
           description: error.message || 'Please try again later',
         });
@@ -108,6 +124,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       
       if (data.error) {
         console.error('Function returned error:', data.error);
+        
+        // **ROLLBACK: Restore optimistic count on error**
+        setOptimisticRemainingGenerations(optimisticRemainingGenerations);
+        
         toast.error('Failed to generate newsletter', {
           description: data.error,
         });
@@ -115,9 +135,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
         return;
       }
       
-      // Success! Update local state with the new remaining generations count
+      // Success! The backend has already decremented the actual count
+      // Our optimistic update should match the backend response
       if (data.remainingGenerations !== undefined) {
-        setUpdatedRemainingGenerations(data.remainingGenerations);
+        setOptimisticRemainingGenerations(data.remainingGenerations);
       }
       
       // Set progress to 100% to show completion
@@ -136,6 +157,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       
     } catch (error) {
       console.error('Error in handleGenerate:', error);
+      
+      // **ROLLBACK: Restore optimistic count on error**
+      setOptimisticRemainingGenerations(optimisticRemainingGenerations);
+      
       toast.error('Failed to generate newsletter', {
         description: 'An unexpected error occurred. Please try again later.',
       });
@@ -143,13 +168,9 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
     }
   };
 
-  // Display either the updated count or the original count
-  const displayRemainingGenerations = updatedRemainingGenerations !== null 
-    ? updatedRemainingGenerations 
-    : remainingGenerations;
-
   return (
     <>
+      {/* ... keep existing code (style tag) */}
       <style>{`
         @keyframes bookmark-right {
           0% { transform: translateY(0) translateX(0) rotate(-15deg) scale(0.9); }
@@ -454,17 +475,20 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
                 <TweetCountOption 
                   count={10} 
                   selected={selectedCount === 10} 
-                  onSelect={() => setSelectedCount(10)} 
+                  onSelect={() => setSelectedCount(10)}
+                  disabled={isGenerating}
                 />
                 <TweetCountOption 
                   count={20} 
                   selected={selectedCount === 20} 
-                  onSelect={() => setSelectedCount(20)} 
+                  onSelect={() => setSelectedCount(20)}
+                  disabled={isGenerating}
                 />
                 <TweetCountOption 
                   count={30} 
                   selected={selectedCount === 30} 
-                  onSelect={() => setSelectedCount(30)} 
+                  onSelect={() => setSelectedCount(30)}
+                  disabled={isGenerating}
                 />
               </div>
             </div>
@@ -472,13 +496,13 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
           
           <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 sm:gap-4 pt-2">
             <div className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
-              {displayRemainingGenerations} generation{displayRemainingGenerations !== 1 ? 's' : ''} remaining
+              {optimisticRemainingGenerations} generation{optimisticRemainingGenerations !== 1 ? 's' : ''} remaining
             </div>
             <Button 
               type="button" 
               className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white w-full sm:w-auto order-1 sm:order-2 text-sm sm:text-base py-2 sm:py-3 px-4 sm:px-6"
               onClick={handleGenerate}
-              disabled={isGenerating || displayRemainingGenerations <= 0}
+              disabled={isGenerating || optimisticRemainingGenerations <= 0}
             >
               {isGenerating ? (
                 <>

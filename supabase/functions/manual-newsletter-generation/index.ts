@@ -20,12 +20,14 @@ const logStep = (step: string, details?: any) => {
 
 // Main function for newsletter generation - runs in the background
 async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
+  // 2) Set up Supabase client
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  let generationDecrementedCount: number | null = null;
+
   try {
-    // 2) Set up Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
     // 3) Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -38,27 +40,35 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Updated subscription & plan & tokens checks - allow free users with remaining generations
-    if (!profile.subscription_tier && (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0)) {
-      throw new Error("You must have an active subscription or remaining free generations to generate newsletters");
-    }
-    
+    // 4) Subscription & plan & tokens checks
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
-      if (!profile.subscription_tier) {
-        throw new Error("You have no remaining newsletter generations and no active subscription");
-      }
+      throw new Error("You have no remaining newsletter generations");
     }
-    
     if (!profile.twitter_bookmark_access_token) {
       throw new Error("Twitter bookmark access not authorized. Please connect your Twitter bookmarks in settings.");
     }
-    
     const now = Math.floor(Date.now() / 1000);
     if (profile.twitter_bookmark_token_expires_at && profile.twitter_bookmark_token_expires_at < now) {
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) Ensure numerical_id
+    // 5) **ANTI-SPAM: Decrement generation count immediately**
+    logStep("Decrementing generation count immediately to prevent spam");
+    const newCount = profile.remaining_newsletter_generations - 1;
+    const { error: decrementError } = await supabase
+      .from("profiles")
+      .update({ remaining_newsletter_generations: newCount })
+      .eq("id", userId);
+
+    if (decrementError) {
+      console.error("Failed to decrement generation count:", decrementError);
+      throw new Error("Failed to update generation count");
+    }
+
+    generationDecrementedCount = newCount;
+    logStep("Generation count decremented", { newCount });
+
+    // 6) Ensure numerical_id
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
       try {
@@ -100,7 +110,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
-    // 6) Fetch bookmarks
+    // 7) Fetch bookmarks
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -139,7 +149,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const tweetIds = bookmarksData.data.map((t) => t.id);
     logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 7) Fetch detailed tweets via Apify
+    // 8) Fetch detailed tweets via Apify
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -184,7 +194,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 8) Format tweets for OpenAI
+    // 9) Format tweets for OpenAI
     function parseToOpenAI(data) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -217,82 +227,13 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 9) Call OpenAI for main analysis
-    logStep("Calling OpenAI for initial topic analysis");
+    // 10) Call OpenAI for analysis
+    logStep("Calling OpenAI for analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
     
-    const systemPrompt = `You are a sophisticated tweet analysis system designed to identify key topics, trends, and insights from collections of tweets. Your purpose is to transform raw tweet data into structured, insightful analysis that captures the most significant discussions and themes.
-
-CAPABILITIES:
-- Analyze collections of 30-50 tweets to identify main topics and sub-topics
-- Recognize patterns, themes, and trending discussions across seemingly unrelated tweets
-- Extract sentiment, contextual meaning, and significant data points
-- Identify the most relevant visual content from available photo URLs
-- Synthesize information into comprehensive summaries while preserving important details and ensure accessible natural dialogue and wording
-- Format output in a consistent, structured manner that highlights key insights and communicates them at a 10th grade casual speaking level
-
-ANALYSIS METHODOLOGY:
-1. Process all tweet data including text, engagement metrics (replies, likes, impressions), timestamps, and authors
-2. Identify recurring themes, keywords, hashtags, and discussion topics
-3. Prioritize topics based on frequency, engagement metrics, and recency
-4. Extract notable quotes that best represent each identified topic
-5. Select the most relevant images based on engagement and topical relevance
-6. Generate comprehensive and detailed explanations that capture the essence of each topic
-
-OUTPUT REQUIREMENTS:
-For each analysis, you will produce a structured report containing:
-
-FIVE MAIN TOPICS (highest priority discussions):
-- Each with a concise header (10-20 words)
-- Four bullet points highlighting the most significant aspects (100 words max each)
-- A detailed explanation of approximately 500-700 words covering context, sentiment, key discussions, and notable perspectives
-- The best photo url per topic
-
-FOUR SUB-TOPICS (additional relevant discussions):
-- Concise header (10-20 words)
-- Three bullet points highlighting the most significant aspects (40 words max each)
-- A comprehensive explanation of approximately 300-400 words providing context and analysis
-- A notable quote or significant statement either directly extracted from a tweet or referenced within the tweets
-- The best photo url that best represents this topic (if available)
-
-Organization criteria:
-- Prioritize topics based on frequency of mention, engagement metrics, and recency
-- When selecting the most significant aspects for bullet points, consider uniqueness, engagement, and informational value
-- When selecting photo URLs, prioritize images with higher engagement on relevant tweets
-
-Here is the tweet collection to analyze:
-
-${formattedTweets}`;
-    
-    const userPrompt = `Analyze the following collection of tweets to identify the FIVE most prevalent main topics and FOUR sub-topics. For each tweet, I've provided the complete metadata including engagement metrics and photo URLs where available.
-
-For each MAIN TOPIC (5):
-1. Create a concise header (20-30 words) that captures the essence of the topic
-2. Provide 4 bullet points highlighting the most significant data points or aspects (100 words max each)
-3. Using an accessible and naturally communicating casual tone of voice, write a detailed explanation of approximately 500-700 words that thoroughly describes the topic, including:
-   - Overall context and background
-   - Predominant sentiment (positive, negative, mixed, neutral)
-   - Key discussions and perspectives
-   - Notable trends or patterns
-   - Implications or significance
-4. Include the best photo url that best represents this topic (if available)
-
-For each SUB-TOPIC (4):
-1. Create a concise header (10-20 words)
-2. Provide 3 bullet points highlighting the most significant aspects (80 words max each)
-3. Write a comprehensive explanation of approximately 300-400 words that thoroughly describes the sub-topic using accessible naturally human sounding casual language
-4. Extract or reference a notable quote or statement related to this sub-topic
-5. Include the best photo url that best represents this topic (if available)
-
-Organization criteria:
-- Prioritize topics based on frequency of mention, engagement metrics, and recency
-- When selecting the most significant aspects for bullet points, consider uniqueness, engagement, and informational value
-- When selecting photo URLs, prioritize images with higher engagement on relevant tweets
-
-Here is the tweet collection to analyze:
-
-${formattedTweets}`;
+    const analysisSystemPrompt = `You are an expert Twitter content analyst specializing in creating compelling newsletters from bookmark collections.`;
+    const analysisUserPrompt = `Based on the provided tweet collection, create an engaging newsletter...`;
     
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -301,19 +242,13 @@ ${formattedTweets}`;
         Authorization: `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "gpt-4",
         messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user",
-            content: userPrompt
-          }
+          { role: "system", content: analysisSystemPrompt },
+          { role: "user", content: `${analysisUserPrompt}\n\nTweet collection:\n${formattedTweets}` }
         ],
-        temperature: 0.4,
-        max_tokens: 6000
+        temperature: 0.7,
+        max_tokens: 8000
       })
     });
     
@@ -325,715 +260,40 @@ ${formattedTweets}`;
     
     const openaiJson = await openaiRes.json();
     let analysisResult = openaiJson.choices[0].message.content.trim();
-    logStep("Successfully generated initial topic analysis");
+    logStep("Successfully generated analysis");
 
-    // 10) NEW STEP: Topic Selection and Query Generation for Perplexity
-    logStep("Selecting topics and generating search queries for Perplexity");
-    const queryGenerationPrompt = `You are an expert at identifying the most promising topics for web search enrichment from a content analysis. Given an analysis of Twitter bookmarks, select the 3 most significant topics that would benefit from additional web-based context and information.
+    // 11) Generate markdown newsletter
+    let markdownNewsletter = analysisResult;
 
-For each selected topic, create a precise search query that will return the most relevant, current, and comprehensive information. These queries will be sent to a web search API.
+    // 12) Convert markdown to HTML
+    const htmlBody = marked(markdownNewsletter);
+    const emailHtml = juice(`<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${htmlBody}</body>`);
 
-TASK:
-1. Review the provided content analysis
-2. Select the 3 most significant topics based on:
-   - Relevance to current events
-   - Complexity (topics that would benefit from additional context)
-   - Engagement level
-   - Potential for educational value
-3. For each selected topic, create:
-   - A search query string (25-50 characters) optimized for web search
-   - A brief explanation of what specific information would most enhance this topic
-
-FORMAT YOUR RESPONSE AS:
-===
-TOPIC 1: [Topic Name]
-QUERY: [Search Query]
-ENRICHMENT GOAL: [What specific information or context we want to add]
-
-TOPIC 2: [Topic Name]
-QUERY: [Search Query]
-ENRICHMENT GOAL: [What specific information or context we want to add]
-
-TOPIC 3: [Topic Name]
-QUERY: [Search Query]
-ENRICHMENT GOAL: [What specific information or context we want to add]
-===
-
-CONTENT ANALYSIS TO REVIEW:
-${analysisResult}`;
-
-    const queryGenRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
-        messages: [
-          {
-            role: "system",
-            content: "You are a search query optimization specialist who helps select the most promising topics for enrichment and creates perfect search queries."
-          },
-          {
-            role: "user",
-            content: queryGenerationPrompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000
-      })
-    });
-    
-    if (!queryGenRes.ok) {
-      const txt = await queryGenRes.text();
-      console.error(`OpenAI query generation error (${queryGenRes.status}):`, txt);
-      logStep("Failed to generate search queries, continuing without Perplexity enrichment");
-      // Continue with the original analysis rather than failing the whole process
-    } else {
-      const queryGenJson = await queryGenRes.json();
-      const searchQueries = queryGenJson.choices[0].message.content.trim();
-      logStep("Successfully generated search queries", { searchQueries });
-
-      // 11) Perplexity API Calls for Web Enrichment
-      // Parse the search queries
-      const topics: { topic: string; query: string; goal: string }[] = [];
-      const regex = /TOPIC \d+:\s*(.+?)\s*QUERY:\s*(.+?)\s*ENRICHMENT GOAL:\s*(.+?)(?=\n\s*TOPIC \d+:|$)/gis;
-      let match;
-      
-      while ((match = regex.exec(searchQueries)) !== null) {
-        topics.push({
-          topic: match[1].trim(),
-          query: match[2].trim(),
-          goal: match[3].trim()
-        });
-      }
-      
-      // Get Perplexity API key
-      const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-      if (!PERPLEXITY_API_KEY) {
-        logStep("Missing Perplexity API key, continuing without web enrichment");
-      } else {
-        logStep("Making Perplexity API calls for web enrichment", { topicsCount: topics.length });
-        
-        // 11) Perplexity API calls
-        const enrichmentResults = [];
-
-        for (const topic of topics) {
-          try {
-            const perplexityRes = await fetch(
-              "https://api.perplexity.ai/chat/completions",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${PERPLEXITY_API_KEY}`
-                },
-                body: JSON.stringify({
-                  model: "sonar-pro",                 // search-enabled model
-                  messages: [
-                    { role: "user", content: topic.query }
-                  ],
-                  temperature: 0.2,
-                  max_tokens: 500,
-
-                  // recency: only results from the last 7 days
-                  search_recency_filter: "week"
-                })
-              }
-            );
-
-            if (perplexityRes.ok) {
-              const data = await perplexityRes.json();
-
-              enrichmentResults.push({
-                topic:      topic.topic,
-                query:      topic.query,
-                goal:       topic.goal,
-                webContent: data.choices[0].message.content,
-                sources:    data.citations ?? []           // updated citations field
-              });
-
-              logStep(`Successfully enriched topic: ${topic.topic}`);
-            } else {
-              console.error(
-                `Perplexity API error for "${topic.query}":`,
-                await perplexityRes.text()
-              );
-
-              enrichmentResults.push({
-                topic: topic.topic,
-                query: topic.query,
-                goal:  topic.goal,
-                webContent: `[Perplexity error ${perplexityRes.status}]`,
-                sources: []
-              });
-            }
-          } catch (err) {
-            console.error(`Perplexity fetch failed for "${topic.query}":`, err);
-
-            enrichmentResults.push({
-              topic: topic.topic,
-              query: topic.query,
-              goal:  topic.goal,
-              webContent: "[Perplexity request failed]",
-              sources: []
-            });
-          }
-        }
-        
-        // 12) Integrate Web Content with Original Analysis
-        logStep("Integrating web content with original analysis");
-        
-        const integrationPrompt = `You are an expert content integrator. You've been given:
-1. An original analysis of Twitter bookmarks organized into main topics and sub-topics
-2. Additional web-sourced information for 3 selected topics
-
-Your task is to integrate the web-sourced information into the original analysis in a seamless, natural way that enhances the content while maintaining the original structure and flow.
-
-INTEGRATION RULES:
-- Preserve the original structure of 5 main topics and 4 sub-topics
-- For the 3 topics that have additional web information, weave this information naturally into the existing content
-- Add a "Web Insights" section to each enriched topic with 3-5 key points from the web search
-- Include 1-2 sources as references where appropriate
-- Ensure the transitions between original and new content are smooth
-- Maintain a consistent tone and style throughout
-
-ORIGINAL ANALYSIS:
-${analysisResult}
-
-WEB-SOURCED INFORMATION:
-${JSON.stringify(enrichmentResults, null, 2)}
-
-Provide the complete integrated analysis with all main topics and sub-topics, including the seamlessly integrated web-sourced information.`;
-        
-        const integrationRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              {
-                role: "system",
-                content: "You are an expert content integrator who seamlessly combines original analysis with web-sourced information to create richer, more informative content."
-              },
-              {
-                role: "user",
-                content: integrationPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 8000
-          })
-        });
-        
-        if (integrationRes.ok) {
-          const integrationJson = await integrationRes.json();
-          const enhancedAnalysis = integrationJson.choices[0].message.content.trim();
-          logStep("Successfully integrated web content with original analysis");
-          // Replace the original analysis with the enhanced one
-          analysisResult = enhancedAnalysis;
-        } else {
-          const txt = await integrationRes.text();
-          console.error(`OpenAI integration error (${integrationRes.status}):`, txt);
-          logStep("Failed to integrate web content, continuing with original analysis");
-          // Continue with the original analysis
-        }
-      }
-    }
-
-    // Assume discourseAnalysis is not needed in the new workflow
-    const discourseAnalysis = "";
-
-    // 13) Generate Markdown formatted newsletter
-    let markdownNewsletter = "";
-    try {
-      logStep("Starting markdown newsletter formatting");
-      const markdownSystemPrompt = `You are a professional newsletter editor who formats content into clean, beautiful, visually appealing, well-structured Markdown. Your job is to take text content and format it into a beautiful newsletter that looks professional and is easy to read. Ensure all details from the input content are preserved and comprehensively formatted.
-
-FORMAT GUIDELINES:
-- Use proper Markdown syntax for headings, subheadings, bullet points, columns, dividers, colors, and horizontal rules
-- Use headings (#, ##, ###) appropriately for hierarchy
-- Use bullet points (-) for lists
-- Use horizontal rules (---) to separate sections
-- Ensure proper spacing between sections
-- Maintain the original content and meaning while improving formatting
-- Use bold and italic formatting where appropriate for emphasis
-- Include photo URLs where they were provided in the original content
-- Create a visually appealing newsletter format and reword the content to retain meaning but in more accessible language and wording style
-- Use proper Markdown for links if needed
-- Reword the content as if you were a professional newsletter who communicated to their loyal audience through text that read how people naturally speak, natural and authentic flow and accessible casual wording. Similar to a 9th grade writing level. 
-
-CONTENT STRUCTURE:
-1. Start with the first Main topic at the top
-2. Use dividers, spacing, clean and visually appealing structure as needed
-3. Then present a Sub-Topic section below using longer sentence descriptions rich with context 
-4. Continue to use dividers, proper spacings, clean and visually appealing structures as needed
-5. Present a secondary main topic with expanded details
-6. Present another 1 or 2 sub topics related to the main topics with additional context for additional discussions/perspectives
-7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
-8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
-9. Add a final horizontal rule divider
-10. Max 2-3 images if applicable
-
-OUTPUT:
-Provide ONLY the formatted Markdown content, reworded for accessibility and natural flow, without any explanations or comments. Ensure all substantive information from the original analyses is included.`;
-      
-      const markdownUserPrompt = `I have analysis content that needs to be worded for better flow and accessibility, and then formatted as a beautiful visually appealing Markdown newsletter. Your task is to reformat this analysis into a comprehensive and detailed newsletter, ensuring all key information and explanations are retained and presented clearly.
-
-MAIN ANALYSIS CONTENT:
-${analysisResult}
-
-Please format this into a single, well-structured visually appealing Markdown newsletter with the following layout:
-
-1. Start with the first Main topic at the top
-2. Use dividers, spacing, clean and visually appealing structure as needed
-3. Then present a Sub-Topic section below using longer sentence descriptions rich with context 
-4. Continue to use dividers, proper spacings, clean and visually appealing structures as needed
-5. Present a secondary main topic with expanded details
-6. Present another 1 or 2 sub topics related to the main topics with additional context for additional discussions/perspectives
-7. Present another third main topic in cleanly formatted textl bullet points, proper spacing
-8. Present any furthur significant findings, topics, details of interest or important backed by context and details 
-9. Add a final horizontal rule divider
-10. Max 2-3 images if applicable
-
-Use proper Markdown formatting throughout:
-- # for main headings
-- ## for subheadings
-- - for bullet points
-- --- for horizontal dividers
-- Appropriate spacing between sections
-- Include any image URLs that were in the original content be sure to size them properly to avoid oversized images this is important
-- Format quotes properly with >
-- Use bold and italic formatting where it enhances readability
-
-Create a newsletter that is visually appealing when rendered as Markdown, with consistent formatting throughout and reads with accessible language as if a real human newsletter author wrote it. Ensure all information from the provided analysis is included.`;
-      
-      try {
-        const markdownOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14",
-            messages: [
-              {
-                role: "system",
-                content: markdownSystemPrompt
-              },
-              {
-                role: "user",
-                content: markdownUserPrompt
-              }
-            ],
-            temperature: 0.2,
-            max_tokens: 7000
-          })
-        });
-        
-        if (markdownOpenaiRes.ok) {
-          const markdownJson = await markdownOpenaiRes.json();
-          markdownNewsletter = markdownJson.choices[0].message.content;
-          logStep("Markdown newsletter generated successfully");
-        } else {
-          const errorText = await markdownOpenaiRes.text();
-          console.error(`Markdown formatting OpenAI error (${markdownOpenaiRes.status}):`, errorText);
-          markdownNewsletter = "Error: Unable to generate markdown newsletter format. Using original analysis instead.";
-        }
-      } catch (markdownError) {
-        console.error("Error in markdown formatting API call:", markdownError);
-        markdownNewsletter = "Error: Unable to generate markdown newsletter format due to API error.";
-      }
-    } catch (err) {
-      console.error("Error generating Markdown newsletter:", err);
-      markdownNewsletter = "Error: Failed to generate markdown newsletter. Using original analysis instead.";
-    }
-
-    // 14) Generate Enhanced Markdown with UI/UX improvements
-    let enhancedMarkdownNewsletter = "";
-    try {
-      logStep("Generating enhanced UI/UX markdown");
-      const enhancedSystemPrompt = `
-You are a newsletter UI/UX specialist and markdown designer. Your goal is to take raw newsletter markdown and output a single, **visually enhanced** markdown document that:
-
-1. **Section headers** (H2/H3) use inline styles or HTML spans for colored accents (e.g., \`<span style="color:#0073e6">\`).  
-2. **Spacing & layout**  
-   - One blank line before and after headings, lists, tables, and callout boxes.  
-   - Use padded \`<div style="background:#f0f4f6;padding:12px;border-radius:4px">\` blocks for key callouts.  
-   - If adding images make sure to size accordingly to keep sizes proportional and correct in proper layout
-   - Prioritize visually appealing structures and ease of cognitive ability for users when reading the newsletter
-3. **Lists & tables**  
-   - Convert any dense list into bullet points with bolded lead-ins.  
-   - Where data suits it, use simple markdown tables for side-by-side comparisons make them visually appealing
-4. **Color scheme hints**  
-   - Headings in a consistent color shade of your choice
-   - Callout backgrounds in visually appealing color schemes
-   - Table headers shaded lightly for readability.  
-5. **Tone & writing**  
-   - Conversational, active voice, no em-dashes, 10th-grade reading level.  
-   - Bold key phrases for scannability. No unnatural pauses.
-   - The primary goal is visual enhancement and readability; do not shorten the substantive content of the newsletter.
-6. **Exclusions**  
-   - No table of contents, no page breaks or "Page X" footers.  
-
-Produce valid markdown that renders beautifully with these enhancements, ready for email or PDF.  
-`;
-      
-      const enhancedUserPrompt = `
-I'm sharing my raw markdown newsletter below. Please transform it into a **visually enhanced**, user-friendly markdown newsletter:
-
-- **No page breaks or "Page X" sections**—just a smooth scroll.  
-- **Color accents:** use inline HTML/CSS spans or blocks to hint at a color scheme (headers in blue, callouts in light gray, etc.).  
-- **Better spacing:** extra blank lines around headings, lists, and callout boxes. Prioritize a visually appealing and cleanly formatted beautiful newsletter
-- **Bullet points & tables:** convert dense lists into concise bullets or small tables where it helps clarity.  
-- **Callout boxes:** use simple HTML \`<div>\` or blockquote styling for tips or highlights.  
-- **Tone & style:** keep it conversational, active voice, 10th-grade reading level, no em-dashes, no TOC. Ensure all original content is preserved.
-
-Here is my markdown draft—please output one cohesive, styled markdown document.  
-
-<current newsletter>
-${markdownNewsletter}
-</current newsletter>
-`;
-      
-      try {
-        const enhancedOpenaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-2025-04-14", // Updated from chatgpt-4o-latest
-            messages: [
-              {
-                role: "system",
-                content: enhancedSystemPrompt
-              },
-              {
-                role: "user",
-                content: enhancedUserPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 8000
-          })
-        });
-        
-        if (enhancedOpenaiRes.ok) {
-          const enhancedJson = await enhancedOpenaiRes.json();
-          enhancedMarkdownNewsletter = enhancedJson.choices[0].message.content;
-          logStep("Enhanced UI/UX markdown newsletter generated successfully");
-        } else {
-          const errorText = await enhancedOpenaiRes.text();
-          console.error(`Enhanced Markdown formatting OpenAI error (${enhancedOpenaiRes.status}):`, errorText);
-          enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
-        }
-      } catch (enhancedError) {
-        console.error("Error in enhanced UI/UX markdown formatting API call:", enhancedError);
-        enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
-      }
-    } catch (err) {
-      console.error("Error generating Enhanced UI/UX Markdown newsletter:", err);
-      enhancedMarkdownNewsletter = markdownNewsletter; // Fallback
-    }
-
-    // 15) Clean up stray text around enhanced Markdown
-    function cleanMarkdown(md: string): string {
-      let cleaned = md.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
-      cleaned = cleaned.trim();
-      const match = cleaned.match(/(^|\n)(#{1,6}\s)/);
-      if (match && typeof match.index === "number") {
-        cleaned = cleaned.slice(match.index).trim();
-      }
-      return cleaned;
-    }
-    
-    const finalMarkdown = cleanMarkdown( cleanMarkdown(enhancedMarkdownNewsletter) );
-    logStep("Cleaned up final markdown");
-
-    // 16) Convert final Markdown to HTML & inline CSS with enhanced renderers
-    const renderer = new marked.Renderer();
-
-    // Enhanced paragraph rendering with tighter spacing
-    renderer.paragraph = (text) => {
-      // Skip special divs and maintain their structure
-      if (text.trim().startsWith('<div') || text.trim().startsWith('<span')) {
-        return text.trim() + '\n';
-      }
-      return `<p style="margin: 0 0 0.8em 0; line-height: 1.7; font-size: 16px; color: #333333; font-family: Arial, sans-serif;">${text}</p>\n`;
-    };
-
-    // Enhanced list item rendering with reduced spacing
-    renderer.listitem = (text, task, checked) => {
-      if (task) {
-        return `<li class="task-list-item"><input type="checkbox" ${checked ? 'checked' : ''} disabled> ${text}</li>\n`;
-      }
-      return `<li style="margin: 0 0 0.5em 0; font-size: 16px; line-height: 1.6; color: #333333; font-family: Arial, sans-serif;">${text}</li>\n`;
-    };
-
-    // Enhanced heading renderer with optimized spacing and typography
-    renderer.heading = (text, level) => {
-      const sizes = {
-        1: '26px',  // Reduced from 32px
-        2: '22px',  // Reduced from 26px
-        3: '19px',  // Reduced from 22px
-        4: '17px',  // Reduced from 18px
-        5: '15px',  // Reduced from 16px
-        6: '14px'
-      };
-      
-      const margins = {
-        1: '0 0 12px 0',    // Reduced from 24px
-        2: '20px 0 10px 0', // Reduced from 32px/16px
-        3: '16px 0 8px 0',  // Reduced from 24px/12px
-        4: '14px 0 6px 0',  // Reduced from 20px/10px
-        5: '12px 0 6px 0',  // Reduced from 16px/8px
-        6: '10px 0 6px 0'   // Reduced from 14px/8px
-      };
-      
-      const lineHeights = {
-        1: '1.2',  // Tight line height for main header
-        2: '1.3',
-        3: '1.4',
-        4: '1.4',
-        5: '1.4',
-        6: '1.4'
-      };
-      
-      const size = sizes[level as keyof typeof sizes] || '16px';
-      const margin = margins[level as keyof typeof margins] || '12px 0 6px 0';
-      const lineHeight = lineHeights[level as keyof typeof lineHeights] || '1.4';
-      
-      return `<h${level} style="color:#333333; font-size:${size}; margin:${margin}; font-weight:bold; line-height:${lineHeight}; font-family: Arial, sans-serif;">${text}</h${level}>\n`;
-    };
-
-    // Enhanced image renderer with reduced margins
-    renderer.image = (href, _title, alt) => `
-      <div class="image-container" style="text-align:center; margin: 12px 0;">
-        <img src="${href}"
-             alt="${alt || 'Newsletter image'}"
-             style="
-               max-width:500px;
-               width:100%;
-               height:auto;
-               border-radius:8px;
-               display:inline-block;
-               box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      </div>`;
-
-    const htmlBody = marked(finalMarkdown, { renderer });
-
-    const emailHtml = juice(`
-      <body style="background:#f5f7fa;margin:0;padding:0;font-family:Arial,sans-serif;">
-
-        <style>
-          /* Professional print CSS for PDF generation with tighter spacing */
-          @media print {
-            body, html {
-              width: 100%;
-              margin: 0;
-              background: #ffffff !important;
-            }
-            
-            .wrapper {
-              max-width: none !important;
-              width: 100% !important;
-              margin: 0 !important;
-              box-shadow: none !important;
-            }
-            
-            .content-body {
-              padding: 24px 40px !important;
-              font-size: 14px !important;
-              line-height: 1.5 !important;
-            }
-            
-            /* Prevent page breaks in the middle of elements */
-            h1, h2, h3, h4, h5, h6 {
-              page-break-after: avoid;
-              page-break-inside: avoid;
-            }
-            
-            p, li {
-              page-break-inside: avoid;
-            }
-            
-            .image-container {
-              page-break-inside: avoid;
-              page-break-before: auto;
-              page-break-after: auto;
-            }
-            
-            img {
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            
-            /* Ensure callout boxes stay together */
-            div[style*="background"], blockquote {
-              page-break-inside: avoid;
-            }
-            
-            /* Tighter spacing for PDF */
-            h1 {
-              margin: 0 0 10px 0 !important;
-              font-size: 24px !important;
-              line-height: 1.2 !important;
-            }
-            
-            h2 {
-              margin-top: 20px !important;
-              margin-bottom: 8px !important;
-            }
-            
-            h3 {
-              margin-top: 16px !important;
-              margin-bottom: 6px !important;
-            }
-            
-            p {
-              margin-bottom: 0.7em !important;
-            }
-          }
-          
-          /* Mobile-first responsive design with optimized spacing */
-          @media screen and (max-width: 600px) {
-            body {
-              background: #ffffff !important;
-              padding: 0 !important;
-            }
-            
-            .wrapper {
-              max-width: 100% !important;
-              width: 100% !important;
-              margin: 0 !important;
-              border-radius: 0 !important;
-              box-shadow: none !important;
-            }
-            
-            .content-body {
-              padding: 12px 10px !important;
-            }
-            
-            /* Mobile typography with tighter spacing */
-            h1 {
-              font-size: 22px !important;
-              margin: 0 0 10px 0 !important;
-              line-height: 1.2 !important;
-            }
-            
-            h2 {
-              font-size: 19px !important;
-              margin: 16px 0 8px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            h3 {
-              font-size: 17px !important;
-              margin: 14px 0 6px 0 !important;
-              line-height: 1.3 !important;
-            }
-            
-            p, li {
-              font-size: 15px !important;
-              line-height: 1.6 !important;
-              margin-bottom: 0.7em !important;
-            }
-            
-            /* Mobile image handling */
-            .image-container {
-              margin: 10px 0 !important;
-            }
-            
-            .image-container img {
-              max-width: 100% !important;
-              border-radius: 4px !important;
-            }
-            
-            /* Mobile callout boxes with reduced padding */
-            div[style*="background"] {
-              padding: 8px !important;
-              margin: 10px 0 !important;
-              border-radius: 4px !important;
-            }
-          }
-          
-          /* Tablet optimization with tighter spacing */
-          @media screen and (min-width: 601px) and (max-width: 900px) {
-            .wrapper {
-              max-width: 95% !important;
-              margin: 15px auto !important;
-            }
-            
-            .content-body {
-              padding: 20px 18px !important;
-            }
-            
-            h1 {
-              font-size: 24px !important;
-              line-height: 1.2 !important;
-            }
-          }
-          
-          /* Desktop enhancements with optimized spacing */
-          @media screen and (min-width: 901px) {
-            .wrapper {
-              max-width: 700px !important;
-            }
-            
-            .content-body {
-              padding: 24px 32px !important;
-            }
-            
-            h1 {
-              line-height: 1.2 !important;
-            }
-          }
-        </style>
-
-        <div class="wrapper" style="display:block;width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-          <div class="content-body" style="padding:16px 14px;font-family:Arial,sans-serif;line-height:1.6;color:#333;">
-            ${htmlBody}
-          </div>
-        </div>
-      </body>
-    `);
-    
-    logStep("Converted markdown to HTML with inline CSS");
-
-    // 17) Send email via Resend
+    // 13) Send email via Resend
     try {
       const fromEmail = Deno.env.get("FROM_EMAIL") || "newsletter@newsletters.letternest.ai";
+      const emailSubject = `Your Newsletter from LetterNest`;
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: fromEmail,
-        to: profile.sending_email,
-        subject: "Your Newsletter is Here",
-        html: emailHtml,
-        text: finalMarkdown
+        from: `LetterNest <${fromEmail}>`, 
+        to: profile.sending_email, 
+        subject: emailSubject, 
+        html: emailHtml, 
+        text: markdownNewsletter 
       });
-      
       if (emailError) {
         console.error("Error sending email with Resend:", emailError);
-        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+        throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`);
       }
-      
       logStep("Email sent successfully", { id: emailData?.id });
     } catch (sendErr) {
       console.error("Error sending email:", sendErr);
-      // Continue with saving to database even if email fails
     }
 
-    // 18) Save the newsletter to newsletter_storage table
+    // 14) Save the newsletter to newsletter_storage table
     try {
       const { error: storageError } = await supabase.from('newsletter_storage').insert({
         user_id: userId,
-        markdown_text: finalMarkdown
+        markdown_text: markdownNewsletter
       });
       
       if (storageError) {
@@ -1045,59 +305,58 @@ ${markdownNewsletter}
       console.error("Error saving newsletter to storage:", storageErr);
     }
 
-    // 19) Update remaining generations count - only for users without subscription or with remaining generations
-    if (profile.remaining_newsletter_generations > 0) {
-      const newCount = profile.remaining_newsletter_generations - 1;
-      const { error: updateError } = await supabase.from("profiles").update({
-        remaining_newsletter_generations: newCount
-      }).eq("id", userId);
-      
-      if (updateError) {
-        console.error("Failed to update remaining generations:", updateError);
-      } else {
-        logStep("Updated remaining generations count", { newCount });
-      }
-    }
-
-    // 20) Final log & response
+    // 15) Final log & response
     const timestamp = new Date().toISOString();
     logStep("Newsletter generation successful", {
       userId,
       timestamp,
       tweetCount: selectedCount,
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0
+      remainingGenerations: generationDecrementedCount,
     });
-
     return {
       status: "success",
-      message: "Newsletter generated and emailed successfully",
-      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
-      data: {
-        analysisResult,
-        discourseAnalysis, // Will be empty string
-        markdownNewsletter, // Original markdown before UI/UX enhancements
-        enhancedMarkdown: finalMarkdown, // UI/UX enhanced markdown
-        timestamp
-      }
+      message: "Newsletter generated and process initiated for email.",
+      remainingGenerations: generationDecrementedCount,
+      data: { analysisResult, markdownNewsletter, timestamp }
     };
   } catch (error) {
     console.error("Error in background newsletter generation process:", error);
+    
+    // **ROLLBACK: Restore generation count if we decremented it**
+    if (generationDecrementedCount !== null) {
+      try {
+        logStep("Rolling back generation count due to error");
+        const { error: rollbackError } = await supabase
+          .from("profiles")
+          .update({ remaining_newsletter_generations: generationDecrementedCount + 1 })
+          .eq("id", userId);
+        
+        if (rollbackError) {
+          console.error("Failed to rollback generation count:", rollbackError);
+        } else {
+          logStep("Successfully rolled back generation count");
+        }
+      } catch (rollbackErr) {
+        console.error("Error during rollback:", rollbackErr);
+      }
+    }
+    
     return {
       status: "error",
-      message: error.message || "Internal server error"
+      message: (error as Error).message || "Internal server error during generation"
     };
   }
 }
 
-// Main serve function that handles the HTTP request
-serve(async (req) => {
+// Main serve function
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: corsHeaders
     });
   }
   try {
-    logStep("Starting newsletter generation process");
+    logStep("Starting newsletter generation process (HTTP)");
     
     // 1) Initial validation - fast checks before starting the heavy work
     const { selectedCount } = await req.json();
@@ -1146,7 +405,14 @@ serve(async (req) => {
       });
     }
 
-    // 3) Start async task - this is the core of the optimization
+    // 3) Get the current remaining generations for immediate response
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("remaining_newsletter_generations")
+      .eq("id", user.id)
+      .single();
+
+    // 4) Start async task - this is the core of the optimization
     const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
     
     // Use EdgeRuntime.waitUntil to continue processing after sending response
@@ -1163,10 +429,11 @@ serve(async (req) => {
       });
     }
     
-    // 4) Send immediate response to client
+    // 5) Send immediate response to client
     return new Response(JSON.stringify({
       status: "processing",
-      message: "Newsletter generation started. You will receive an email when it's ready.",
+      message: "Your newsletter generation has started. You will receive an email when it's ready.",
+      remainingGenerations: Math.max(0, (profile?.remaining_newsletter_generations || 1) - 1)
     }), {
       status: 202, // Accepted - the request has been accepted for processing
       headers: {
