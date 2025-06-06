@@ -27,16 +27,19 @@ const TemplateSelectionCard = ({
       onClick={isLocked ? undefined : onClick}
       className={`cursor-pointer transition-all hover:shadow-md border-2 relative ${
         isLocked 
-          ? 'opacity-50 cursor-not-allowed bg-gray-50' 
+          ? 'opacity-30 cursor-not-allowed bg-gray-100 border-dashed border-gray-300' 
           : isSelected 
             ? 'border-primary bg-primary/5' 
             : 'hover:border-primary/50'
       }`}
     >
       {isLocked && (
-        <div className="absolute top-2 right-2 z-10">
-          <Lock className="w-4 h-4 text-gray-400" />
-        </div>
+        <>
+          <div className="absolute inset-0 bg-gray-200/40 rounded-lg z-10"></div>
+          <div className="absolute top-3 right-3 z-20">
+            <Lock className="w-6 h-6 text-gray-500" />
+          </div>
+        </>
       )}
       
       <CardHeader className="p-4">
@@ -49,6 +52,11 @@ const TemplateSelectionCard = ({
                   Free
                 </Badge>
               )}
+              {isLocked && (
+                <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
+                  Premium
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription className="text-sm mt-1">
               {description}
@@ -58,11 +66,11 @@ const TemplateSelectionCard = ({
         
         {isLocked && (
           <div className="mt-2">
-            <Badge variant="secondary" className="text-xs">
-              Upgrade to unlock
+            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+              🔓 Upgrade to unlock
             </Badge>
             {price && (
-              <p className="text-xs text-gray-500 mt-1">{price}</p>
+              <p className="text-xs text-gray-600 mt-1 font-medium">{price}</p>
             )}
           </div>
         )}
