@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
@@ -89,7 +90,7 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
                   return (
                     <div 
                       key={tab.name}
-                      className="bg-[#1A1F2C] text-white p-3 rounded-lg flex items-center gap-3 animate-fade-in"
+                      className="bg-[#1A1F2C] text-white p-3 rounded-lg flex items-center gap-3 animate-fade-in h-12"
                       style={{ 
                         animationDelay: `${index * 0.2}s`,
                         animationFillMode: 'both'
@@ -107,7 +108,7 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
                 {tabs.map((tab, index) => (
                   <div 
                     key={`${tab.name}-desc`}
-                    className="p-3 flex items-center h-[52px] animate-fade-in"
+                    className="p-3 flex items-center h-12 animate-fade-in"
                     style={{ 
                       animationDelay: `${index * 0.2 + 0.1}s`,
                       animationFillMode: 'both'
@@ -138,7 +139,7 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
             </h3>
             <Button 
               onClick={onGotIt}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-[1.02] shadow-lg animate-fade-in"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-[1.02] shadow-lg animate-fade-in"
             >
               Got it!
             </Button>
