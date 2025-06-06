@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Calendar } from "@/components/ui/calendar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Dialog, 
   DialogContent, 
@@ -391,6 +392,15 @@ const Library = () => {
           </div>
         </div>
       </div>
+
+      {/* Free tier notice for users without subscription */}
+      {authState.profile && !authState.profile.subscription_tier && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="text-blue-800">
+            Free tier newsletters appear here. Please upgrade to also have them emailed.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Date Range Display */}
       <div className="text-sm text-muted-foreground">
