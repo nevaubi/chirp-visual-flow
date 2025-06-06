@@ -1,5 +1,5 @@
 
-import { CalendarIcon, CheckCircle, Settings, Bookmark } from "lucide-react";
+import { CalendarIcon, CheckCircle, Settings, Bookmark, Zap } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,13 +78,13 @@ export function SubscriptionStatusCard() {
                 ? "bg-green-100 text-green-800" 
                 : "bg-gray-100 text-gray-800"
             }`}>
-              {isSubscribed ? "Active" : "Inactive"}
+              {isSubscribed ? "Active" : "Free Plan"}
             </span>
           </div>
           
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Plan:</span>
-            <span className="text-sm">{subscriptionTier}</span>
+            <span className="text-sm">{isSubscribed ? subscriptionTier : "Free"}</span>
           </div>
           
           {subscriptionEnd && (
@@ -106,21 +106,24 @@ export function SubscriptionStatusCard() {
             </div>
           )}
           
-          {/* Add Newsletter Generations counter */}
-          {subscriptionTier?.toLowerCase().includes('newsletter') && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Newsletter Generations:</span>
-              <span className="text-sm flex items-center gap-1">
+          {/* Newsletter Generations counter - Show for all users */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Newsletter Generations:</span>
+            <span className="text-sm flex items-center gap-1">
+              {isSubscribed ? (
                 <Bookmark className="h-3 w-3" />
-                <span className={remainingNewsletterGenerations > 0 ? "text-green-600 font-medium" : "text-gray-600"}>
-                  {remainingNewsletterGenerations}
-                </span>
+              ) : (
+                <Zap className="h-3 w-3" />
+              )}
+              <span className={remainingNewsletterGenerations > 0 ? "text-green-600 font-medium" : "text-gray-600"}>
+                {remainingNewsletterGenerations}
+                {!isSubscribed && " free"}
               </span>
-            </div>
-          )}
+            </span>
+          </div>
         </div>
         
-        {isSubscribed && (
+        {isSubscribed ? (
           <div className="rounded-md bg-blue-50 p-3">
             <div className="flex items-start">
               <CheckCircle className="h-5 w-5 text-blue-500 mt-0.5" />
@@ -131,11 +134,32 @@ export function SubscriptionStatusCard() {
                   {willCancel ? "cancel" : "renew"} on{" "}
                   {subscriptionEnd ? format(subscriptionEnd, "MMMM d, yyyy") : "N/A"}.
                   
-                  {/* Add newsletter generations if applicable */}
-                  {subscriptionTier?.toLowerCase().includes('newsletter') && remainingNewsletterGenerations > 0 && (
+                  {remainingNewsletterGenerations > 0 && (
                     <p className="mt-1">
                       You have <span className="font-medium">{remainingNewsletterGenerations} newsletter generations</span> available.
                     </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md bg-amber-50 p-3">
+            <div className="flex items-start">
+              <Zap className="h-5 w-5 text-amber-500 mt-0.5" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-amber-800">Free Plan</h3>
+                <div className="mt-1 text-sm text-amber-700">
+                  {remainingNewsletterGenerations > 0 ? (
+                    <>
+                      You have <span className="font-medium">{remainingNewsletterGenerations} free newsletter generation{remainingNewsletterGenerations !== 1 ? 's' : ''}</span> remaining.
+                      <p className="mt-1">Free plan includes access to the Classic Layout template.</p>
+                    </>
+                  ) : (
+                    <>
+                      You've used all your free newsletter generations.
+                      <p className="mt-1">Upgrade to unlock all templates and unlimited generations.</p>
+                    </>
                   )}
                 </div>
               </div>
