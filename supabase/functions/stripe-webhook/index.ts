@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -8,25 +9,28 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Helper function to determine newsletter generation count based on newsletter_day_preference or subscription
-const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
-  // If it's a newsletter subscription, set appropriate value based on tier
+// Helper function to determine newsletter generation count based on subscription tier
+const determineNewsletterGenerationCount = (priceId: string | null | undefined): number => {
+  // Newsletter subscription tiers based on price IDs
   if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
     return 20; // Newsletter Standard
   } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
     return 30; // Newsletter Pro
   }
   
-  // Otherwise use preference-based logic as fallback
-  if (!preference) return 0;
-  
-  if (preference.includes('Manual: 8')) {
-    return 8;
-  } else if (preference.includes('Manual: 4')) {
-    return 4;
+  // Default to 0 for unknown price IDs
+  return 0;
+};
+
+// Helper function to determine subscription tier based on price ID
+const determineSubscriptionTier = (priceId: string | null | undefined): string | null => {
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+    return "Newsletter Standard";
+  } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+    return "Newsletter Pro";
   }
   
-  return 0;
+  return null;
 };
 
 serve(async (req) => {
@@ -127,9 +131,9 @@ serve(async (req) => {
         }
         
         // Set remaining newsletter generations based on subscription tier
-        let remainingNewsletterGenerations = isNewsletterSubscription 
-          ? determineNewsletterGenerationCount(newsletterDayPreference, priceId)
-          : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
+        const remainingNewsletterGenerations = isNewsletterSubscription 
+          ? determineNewsletterGenerationCount(priceId)
+          : 0;
         
         logStep("Newsletter generations determined", { 
           isNewsletterSubscription, 
@@ -181,13 +185,9 @@ serve(async (req) => {
         // Get price information
         const priceId = subscription.items.data[0].price.id;
         
-        // Determine subscription tier based on price ID
-        let subscriptionTier = null;
-        if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
-          subscriptionTier = "Newsletter Standard";
-        } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
-          subscriptionTier = "Newsletter Pro";
-        }
+        // Determine subscription tier and generation count based on price ID
+        const subscriptionTier = determineSubscriptionTier(priceId);
+        const remainingNewsletterGenerations = determineNewsletterGenerationCount(priceId);
         
         // Calculate subscription period end
         const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
@@ -195,7 +195,7 @@ serve(async (req) => {
         // Find profiles with this customer ID
         const { data: profiles, error: profilesError } = await supabaseAdmin
           .from('profiles')
-          .select('id, newsletter_day_preference')
+          .select('id')
           .eq('stripe_customer_id', customerId);
           
         if (profilesError) {
@@ -210,18 +210,9 @@ serve(async (req) => {
         
         // Update each profile
         for (const profile of profiles) {
-          // Determine the generation count based on price ID
-          const isNewsletterSubscription = priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || 
-                                          priceId === "price_1RX2YIDBIslKIY5sV4I0E592";
-          
-          // Set based on tier: Standard = 20, Pro = 30
-          const remainingNewsletterGenerations = isNewsletterSubscription 
-            ? determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId)
-            : determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId);
-          
           logStep("Setting newsletter generations", { 
             profileId: profile.id, 
-            isNewsletterSubscription,
+            subscriptionTier,
             remainingNewsletterGenerations
           });
           
@@ -243,6 +234,7 @@ serve(async (req) => {
           } else {
             logStep("Profile updated with subscription data", { 
               profileId: profile.id, 
+              subscriptionTier,
               remainingNewsletterGenerations 
             });
           }

@@ -38,25 +38,28 @@ const extractCustomerId = (customer: string | any): string => {
   return String(customer);
 };
 
-// Helper function to determine newsletter generation count based on subscription type and price
-const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
-  // If it's a newsletter subscription, set appropriate value based on tier
+// Helper function to determine newsletter generation count based on subscription tier
+const determineNewsletterGenerationCount = (priceId: string | null | undefined): number => {
+  // Newsletter subscription tiers based on price IDs
   if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
     return 20; // Newsletter Standard
   } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
     return 30; // Newsletter Pro
   }
   
-  // Otherwise use preference-based logic as fallback
-  if (!preference) return 0;
-  
-  if (preference.includes('Manual: 8')) {
-    return 8;
-  } else if (preference.includes('Manual: 4')) {
-    return 4;
+  // Default to 0 for unknown price IDs
+  return 0;
+};
+
+// Helper function to determine subscription tier based on price ID
+const determineSubscriptionTier = (priceId: string | null | undefined): string | null => {
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+    return "Newsletter Standard";
+  } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+    return "Newsletter Pro";
   }
   
-  return 0;
+  return null;
 };
 
 serve(async (req) => {
@@ -146,9 +149,9 @@ serve(async (req) => {
         }
         
         // Set remaining_newsletter_generations based on subscription tier
-        let remainingNewsletterGenerations = isNewsletterSubscription 
-          ? determineNewsletterGenerationCount(newsletterDayPreference, priceId)
-          : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
+        const remainingNewsletterGenerations = isNewsletterSubscription 
+          ? determineNewsletterGenerationCount(priceId)
+          : 0;
         
         if (session.metadata?.newsletter_content_preferences) {
           try {
@@ -198,15 +201,9 @@ serve(async (req) => {
               // Get price info
               const priceId = subscription.items.data[0].price.id;
               
-              // Determine subscription tier based on price ID
-              let subscriptionTier = null;
-              
-              // Map price IDs to subscription tiers
-              if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
-                subscriptionTier = "Newsletter Standard";
-              } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
-                subscriptionTier = "Newsletter Pro";
-              }
+              // Determine subscription tier and generation count based on price ID
+              const subscriptionTier = determineSubscriptionTier(priceId);
+              const remainingNewsletterGenerations = determineNewsletterGenerationCount(priceId);
               
               // Calculate subscription period end
               const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
@@ -258,7 +255,7 @@ serve(async (req) => {
     // Fetch user profile to check if they have a Stripe customer ID
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_customer_id, newsletter_day_preference')
+      .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
       
@@ -353,21 +350,12 @@ serve(async (req) => {
       // Continue despite product error
     }
     
-    // Determine subscription tier based on price ID
-    let subscriptionTier = null;
-    
-    // Map price IDs to subscription tiers
-    if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
-      subscriptionTier = "Newsletter Standard";
-    } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
-      subscriptionTier = "Newsletter Pro";
-    }
+    // Determine subscription tier and generation count based on price ID
+    const subscriptionTier = determineSubscriptionTier(priceId);
+    const remainingNewsletterGenerations = determineNewsletterGenerationCount(priceId);
 
     // Calculate subscription period end
     const subscriptionPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-    
-    // Determine remaining newsletter generations based on the user's preference
-    const remainingNewsletterGenerations = determineNewsletterGenerationCount(profileData.newsletter_day_preference, priceId);
     
     // Update the user's profile with subscription details
     const { error: updateError } = await supabaseAdmin
