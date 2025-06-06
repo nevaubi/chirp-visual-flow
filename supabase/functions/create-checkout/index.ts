@@ -14,6 +14,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
+// Valid Newsletter price IDs
+const VALID_NEWSLETTER_PRICE_IDS = {
+  "price_1RQUm7DBIslKIY5sNlWTFrQH": "Newsletter Standard",
+  "price_1RX2YIDBIslKIY5sV4I0E592": "Newsletter Pro"
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -42,7 +48,17 @@ serve(async (req) => {
       });
     }
     
-    logStep("Request data", { priceId, platform });
+    // Validate Newsletter price ID
+    if (!VALID_NEWSLETTER_PRICE_IDS[priceId]) {
+      logStep("Invalid price ID provided", { priceId, validPriceIds: Object.keys(VALID_NEWSLETTER_PRICE_IDS) });
+      return new Response(JSON.stringify({ error: "Invalid Newsletter price ID" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    
+    const subscriptionTier = VALID_NEWSLETTER_PRICE_IDS[priceId];
+    logStep("Request data", { priceId, platform, subscriptionTier });
 
     // Initialize Supabase client using anon key (for authentication only)
     const supabaseClient = createClient(
@@ -122,7 +138,8 @@ serve(async (req) => {
     // Prepare session metadata
     const sessionMetadata = {
       user_id: user.id,
-      platform: platform || "default"
+      platform: platform || "newsletter",
+      subscription_tier: subscriptionTier
     };
 
     logStep("Creating checkout session with metadata", sessionMetadata);

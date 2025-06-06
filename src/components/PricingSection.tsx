@@ -133,14 +133,19 @@ const handleManageSubscription = async () => {
 const PricingSection = () => {
   const navigate = useNavigate();
   const { authState } = useAuth();
-  const [isLoadingNewsletter, setIsLoadingNewsletter] = useState(false);
+  const [isLoadingStandard, setIsLoadingStandard] = useState(false);
+  const [isLoadingPro, setIsLoadingPro] = useState(false);
   
-  // Check if user is subscribed to newsletter plan
-  const isSubscribedToNewsletter = authState.profile?.subscription_tier === "Newsletter";
+  // Check subscription status
+  const isSubscribedToStandard = authState.profile?.subscription_tier === "Newsletter Standard";
+  const isSubscribedToPro = authState.profile?.subscription_tier === "Newsletter Pro";
   
   // Handle checkout process
   const handleCheckout = async (priceId: string) => {
-    setIsLoadingNewsletter(true);
+    const isStandard = priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH";
+    const setLoading = isStandard ? setIsLoadingStandard : setIsLoadingPro;
+    
+    setLoading(true);
     
     try {
       // Check if user is logged in
@@ -177,22 +182,23 @@ const PricingSection = () => {
       console.error("Error in checkout process:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
-      setIsLoadingNewsletter(false);
+      setLoading(false);
     }
   };
 
-  const newsletterCard = {
-    title: "Auto Newsletter Platform",
+  const newsletterStandardCard = {
+    title: "Newsletter Standard",
     price: "$10",
-    description: "Your bookmarks → professional newsletters",
+    description: "Perfect for getting started with newsletters",
     features: [
       <span><strong>20 monthly newsletters</strong></span>,
       "Easy X (Twitter) integration",
       "Smart context boost",
-      "Any topic or niche"
+      "Any topic or niche",
+      "Classic layout template"
     ],
-    ctaText: "Try It Free",
-    popular: true,
+    ctaText: "Start Standard",
+    popular: false,
     buttonClassName: "bg-[#ff7720] hover:bg-[#e86612] text-white shadow-[0_2px_6px_rgba(255,119,32,0.3)]",
     platformIcon: (
       <div className="w-16 h-16 rounded-full bg-[#fff9f0] flex items-center justify-center">
@@ -201,9 +207,36 @@ const PricingSection = () => {
     ),
     priceId: "price_1RQUm7DBIslKIY5sNlWTFrQH",
     onPurchase: handleCheckout,
-    isLoading: isLoadingNewsletter,
-    isSubscribed: isSubscribedToNewsletter,
+    isLoading: isLoadingStandard,
+    isSubscribed: isSubscribedToStandard,
     borderColor: "border-2 border-orange-200"
+  };
+
+  const newsletterProCard = {
+    title: "Newsletter Pro",
+    price: "$30",
+    description: "For serious newsletter creators",
+    features: [
+      <span><strong>30 monthly newsletters</strong></span>,
+      "Easy X (Twitter) integration",
+      "Smart context boost",
+      "Any topic or niche",
+      "All premium templates",
+      "Priority support"
+    ],
+    ctaText: "Upgrade to Pro",
+    popular: true,
+    buttonClassName: "bg-[#0ea5e9] hover:bg-[#0284c7] text-white shadow-[0_2px_6px_rgba(14,165,233,0.3)]",
+    platformIcon: (
+      <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center">
+        <Bookmark className="h-7 w-7 text-[#0ea5e9]" />
+      </div>
+    ),
+    priceId: "price_1RX2YIDBIslKIY5sV4I0E592",
+    onPurchase: handleCheckout,
+    isLoading: isLoadingPro,
+    isSubscribed: isSubscribedToPro,
+    borderColor: "border-2 border-blue-200"
   };
 
   return (
@@ -224,9 +257,12 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="flex justify-center w-full max-w-md px-2 md:px-0">
-            {/* Auto Newsletter Platform Card */}
-            <PricingCard {...newsletterCard} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl px-2 md:px-0">
+            {/* Newsletter Standard Card */}
+            <PricingCard {...newsletterStandardCard} />
+            
+            {/* Newsletter Pro Card */}
+            <PricingCard {...newsletterProCard} />
           </div>
         </div>
       </div>
