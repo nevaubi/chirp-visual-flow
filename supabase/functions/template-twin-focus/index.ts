@@ -20,14 +20,12 @@ const logStep = (step: string, details?: any) => {
 
 // Main function for newsletter generation - runs in the background
 async function generateNewsletter(userId: string, selectedCount: number, jwt: string) {
-  // 2) Set up Supabase client
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-  let generationDecrementedCount: number | null = null;
-
   try {
+    // 2) Set up Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // 3) Load profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -40,7 +38,10 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Generation count and token checks (allow free users with remaining generations)
+    // 4) Subscription & plan & tokens checks
+    if (!profile.subscription_tier) {
+      throw new Error("You must have an active subscription to generate newsletters");
+    }
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
       throw new Error("You have no remaining newsletter generations");
     }
@@ -52,23 +53,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Twitter bookmark access token has expired. Please reconnect your Twitter bookmarks.");
     }
 
-    // 5) **ANTI-SPAM: Decrement generation count immediately**
-    logStep("Decrementing generation count immediately to prevent spam");
-    const newCount = profile.remaining_newsletter_generations - 1;
-    const { error: decrementError } = await supabase
-      .from("profiles")
-      .update({ remaining_newsletter_generations: newCount })
-      .eq("id", userId);
-
-    if (decrementError) {
-      console.error("Failed to decrement generation count:", decrementError);
-      throw new Error("Failed to update generation count");
-    }
-
-    generationDecrementedCount = newCount;
-    logStep("Generation count decremented", { newCount });
-
-    // 6) Ensure numerical_id
+    // 5) Ensure numerical_id
     let numericalId = profile.numerical_id;
     if (!numericalId && profile.twitter_handle) {
       try {
@@ -102,7 +87,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Could not determine your Twitter ID. Please update your Twitter handle in settings.");
     }
 
-    // 7) Fetch bookmarks
+    // 6) Fetch bookmarks
     logStep("Fetching bookmarks", { count: selectedCount, userId: numericalId });
     const bookmarksResp = await fetch(`https://api.twitter.com/2/users/${numericalId}/bookmarks?max_results=${selectedCount}&expansions=author_id,attachments.media_keys&tweet.fields=created_at,text,public_metrics,entities&user.fields=name,username,profile_image_url`, {
       method: "GET",
@@ -127,7 +112,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const tweetIds = bookmarksData.data.map((t: any) => t.id);
     logStep("Successfully fetched bookmarks", { count: tweetIds.length });
 
-    // 8) Fetch detailed tweets via Apify
+    // 7) Fetch detailed tweets via Apify
     logStep("Fetching detailed tweet data via Apify");
     const APIFY_API_KEY = Deno.env.get("APIFY_API_KEY");
     if (!APIFY_API_KEY) throw new Error("Missing APIFY_API_KEY environment variable");
@@ -167,7 +152,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const apifyData = await apifyResp.json();
     logStep("Successfully fetched detailed tweet data", { tweetCount: apifyData.length || 0 });
 
-    // 9) Format tweets for OpenAI
+    // 8) Format tweets for OpenAI
     function parseToOpenAI(data: any) {
       const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
       let out = "";
@@ -184,7 +169,7 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
     const formattedTweets = parseToOpenAI(apifyData);
     logStep("Formatted tweets for analysis");
 
-    // 10) Call OpenAI for main analysis
+    // 9) Call OpenAI for main analysis
     logStep("Calling OpenAI for Twin Focus analysis");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY environment variable");
@@ -264,7 +249,7 @@ ${formattedTweets}`;
     let analysisResult = openaiJson.choices[0].message.content.trim();
     logStep("Successfully generated Twin Focus analysis");
 
-    // 11) Topic Selection and Query Generation for Perplexity
+    // 10) Topic Selection and Query Generation for Perplexity
     logStep("Selecting topics and generating search queries for Perplexity");
     const queryGenerationPrompt = `You are an expert at identifying promising themes for web search enrichment. Given a Twin Focus analysis, select up to 3 focus areas that would benefit most from additional web-based context.
 TASK: Review analysis, select up to 3 focus areas (relevance, complexity, value). For each: search query (25-50 chars), enrichment goal.
@@ -685,36 +670,16 @@ ${finalAnalysisForMarkdown}`;
       userId,
       timestamp,
       tweetCount: selectedCount,
-      remainingGenerations: generationDecrementedCount,
+      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
     });
     return {
       status: "success",
       message: "Twin Focus newsletter generated and process initiated for email.",
-      remainingGenerations: generationDecrementedCount,
+      remainingGenerations: profile.remaining_newsletter_generations > 0 ? profile.remaining_newsletter_generations - 1 : 0,
       data: { analysisResult: finalAnalysisForMarkdown, markdownNewsletter: finalMarkdown, timestamp }
     };
   } catch (error) {
     console.error("Error in background Twin Focus newsletter generation process:", error);
-    
-    // **ROLLBACK: Restore generation count if we decremented it**
-    if (generationDecrementedCount !== null) {
-      try {
-        logStep("Rolling back generation count due to error");
-        const { error: rollbackError } = await supabase
-          .from("profiles")
-          .update({ remaining_newsletter_generations: generationDecrementedCount + 1 })
-          .eq("id", userId);
-        
-        if (rollbackError) {
-          console.error("Failed to rollback generation count:", rollbackError);
-        } else {
-          logStep("Successfully rolled back generation count");
-        }
-      } catch (rollbackErr) {
-        console.error("Error during rollback:", rollbackErr);
-      }
-    }
-    
     return {
       status: "error",
       message: (error as Error).message || "Internal server error during Twin Focus generation"
@@ -749,14 +714,6 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Authentication failed" }), 
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    // Get the current remaining generations for immediate response
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("remaining_newsletter_generations")
-      .eq("id", user.id)
-      .single();
-
     const backgroundTask = generateNewsletter(user.id, selectedCount, jwt);
     // @ts-ignore 
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
@@ -769,7 +726,6 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({
       status: "processing",
       message: "Your Twin Focus newsletter generation has started. You will receive an email when it's ready.",
-      remainingGenerations: Math.max(0, (profile?.remaining_newsletter_generations || 1) - 1)
     }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("Error in Twin Focus newsletter generation function:", error);
