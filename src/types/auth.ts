@@ -50,6 +50,8 @@ export interface Profile {
   // Voice profile and tweet dataset
   voice_profile_analysis: string | null;
   personal_tweet_dataset: string | null;
+  // First time login tracking
+  first_time_login: boolean | null;
 }
 
 export interface AuthState {

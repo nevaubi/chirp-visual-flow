@@ -63,6 +63,7 @@ export type Database = {
           bio: string | null
           cancel_at_period_end: boolean | null
           created_at: string | null
+          first_time_login: boolean | null
           follower_count: number | null
           following_count: number | null
           id: string
@@ -98,6 +99,7 @@ export type Database = {
           bio?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string | null
+          first_time_login?: boolean | null
           follower_count?: number | null
           following_count?: number | null
           id: string
@@ -133,6 +135,7 @@ export type Database = {
           bio?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string | null
+          first_time_login?: boolean | null
           follower_count?: number | null
           following_count?: number | null
           id?: string

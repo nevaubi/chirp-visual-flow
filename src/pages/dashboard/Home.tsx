@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
+import WelcomeNewUserPopup from '@/components/auth/WelcomeNewUserPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
@@ -395,14 +396,42 @@ const DashboardHome = () => {
   const { authState, updateProfile, refreshProfile } = useAuth();
   const profile = authState.profile;
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const [showWelcomeNewUser, setShowWelcomeNewUser] = useState(false);
 
-  // Check if we need to show the walkthrough popup for newsletter platform
+  // Check if we need to show the welcome popup for first-time users
   useEffect(() => {
     if (profile) {
+      // Show welcome popup if this is a first-time user
+      if (profile.first_time_login === true) {
+        setShowWelcomeNewUser(true);
+      }
+      
       // For newsletter platform: show walkthrough if twitter_bookmark_access_token is null
-      setShowWalkthrough(profile.twitter_bookmark_access_token === null);
+      // Only show if not showing the welcome popup
+      if (!profile.first_time_login && profile.twitter_bookmark_access_token === null) {
+        setShowWalkthrough(true);
+      }
     }
   }, [profile]);
+
+  // Handle welcome popup "Got it" button click
+  const handleWelcomeGotIt = async () => {
+    try {
+      // Update the profile to set first_time_login to false
+      await updateProfile({ first_time_login: false });
+      
+      // Hide the welcome popup
+      setShowWelcomeNewUser(false);
+      
+      // Now check if we should show the walkthrough popup
+      if (profile && profile.twitter_bookmark_access_token === null) {
+        setShowWalkthrough(true);
+      }
+    } catch (error) {
+      console.error("Error updating first_time_login:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
 
   // Handle walkthrough completion
   const handleWalkthroughComplete = async () => {
@@ -418,7 +447,16 @@ const DashboardHome = () => {
     <>
       <NewsletterDashboard profile={profile} />
       
-      {showWalkthrough && (
+      {/* Welcome popup for first-time users - highest priority, non-closable */}
+      {showWelcomeNewUser && (
+        <WelcomeNewUserPopup 
+          open={showWelcomeNewUser} 
+          onGotIt={handleWelcomeGotIt}
+        />
+      )}
+      
+      {/* Walkthrough popup - lower priority, only shown after welcome is dismissed */}
+      {showWalkthrough && !showWelcomeNewUser && (
         <WalkthroughPopup 
           open={showWalkthrough} 
           onComplete={handleWalkthroughComplete} 
