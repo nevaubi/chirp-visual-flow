@@ -55,7 +55,7 @@ const BookmarksCallback = () => {
         }
 
         sessionStorage.setItem('twitter_bookmarks_authorized', 'true');
-        toast({ title: 'Bookmarks connected' });
+        // Success toast disabled - bookmarks connected silently
       } catch (err) {
         toast({
           title: 'Authorization error',

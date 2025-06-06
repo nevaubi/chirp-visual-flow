@@ -37,7 +37,7 @@ const AuthCallback = () => {
 
         if (data.session) {
           console.log('Successfully authenticated with session:', data.session.user.id);
-          toast.success('Successfully authenticated');
+          // Success toast disabled - authentication completed silently
           
           // Check if this is a new user by fetching their profile
           const { data: profileData, error: profileError } = await supabase

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -135,10 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile: prev.profile ? { ...prev.profile, ...updates } : null,
       }));
 
-      // Only show success toast for certain updates, not automatic ones like timezone
-      if (!('timezone' in updates && Object.keys(updates).length === 1)) {
-        toast.success("Profile updated successfully");
-      }
+      // Success toast disabled - only show errors for debugging
     } catch (error) {
       const err = error as Error;
       toast.error("Error updating profile", {
@@ -409,7 +405,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       clearAuthState();
       navigate('/', { replace: true });
-      toast.success('Signed out successfully');
+      // Success toast disabled - sign out completed silently
     } catch (error) {
       const err = error as Error;
       
