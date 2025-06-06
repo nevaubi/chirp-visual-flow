@@ -200,7 +200,7 @@ const CreateNewsletter = () => {
       const dayPreference = getDayPreference();
       const contentPreferences = getContentPreferences();
       
-      const remainingGenerations = dayPreference === 'Manual: 8' ? 8 : dayPreference === 'Manual: 4' ? 4 : null;
+      const remainingGenerationsToSet = dayPreference === 'Manual: 8' ? 8 : dayPreference === 'Manual: 4' ? 4 : null;
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -209,7 +209,7 @@ const CreateNewsletter = () => {
           metadata: {
             newsletter_day_preference: dayPreference,
             newsletter_content_preferences: JSON.stringify(contentPreferences),
-            remaining_newsletter_generations: remainingGenerations
+            remaining_newsletter_generations: remainingGenerationsToSet
           }
         },
       });
@@ -349,7 +349,7 @@ const CreateNewsletter = () => {
                         </Card>
                       </div>
 
-                      {/* ... keep existing code (delivery preference section) */}
+                      {/* Delivery preference section */}
                       {selectedFrequency && (
                         <div className="mt-1 pt-1 border-t border-gray-100">
                           <h3 className="text-xs font-medium mb-1">Delivery preference</h3>
