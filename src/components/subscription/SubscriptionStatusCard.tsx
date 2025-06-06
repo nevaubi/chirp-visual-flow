@@ -8,6 +8,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
+// Helper function to determine generation limits based on tier
+const getGenerationLimitByTier = (tier: string | null): number => {
+  if (!tier) return 0;
+  
+  switch (tier) {
+    case "Newsletter Standard":
+      return 20;
+    case "Newsletter Pro":
+      return 30;
+    default:
+      return 0;
+  }
+};
+
+// Helper function to get tier display name
+const getTierDisplayName = (tier: string | null, isSubscribed: boolean): string => {
+  if (!isSubscribed) return "Free";
+  if (!tier) return "Unknown";
+  
+  // Remove "Newsletter" prefix for cleaner display
+  return tier.replace("Newsletter ", "");
+};
+
 export function SubscriptionStatusCard() {
   const { authState, checkSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -16,11 +39,15 @@ export function SubscriptionStatusCard() {
   const { profile } = authState;
   
   const isSubscribed = profile?.subscribed;
-  const subscriptionTier = profile?.subscription_tier || "None";
+  const subscriptionTier = profile?.subscription_tier || null;
   const subscriptionEnd = profile?.subscription_period_end ? 
     new Date(profile.subscription_period_end) : null;
   const willCancel = profile?.cancel_at_period_end;
   const remainingNewsletterGenerations = profile?.remaining_newsletter_generations || 0;
+  
+  // Get tier-specific information
+  const tierDisplayName = getTierDisplayName(subscriptionTier, isSubscribed || false);
+  const generationLimit = getGenerationLimitByTier(subscriptionTier);
   
   const handleCheckStatus = async () => {
     setIsLoading(true);
@@ -84,7 +111,7 @@ export function SubscriptionStatusCard() {
           
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Plan:</span>
-            <span className="text-sm">{isSubscribed ? subscriptionTier : "Free"}</span>
+            <span className="text-sm font-medium">{tierDisplayName}</span>
           </div>
           
           {subscriptionEnd && (
@@ -106,7 +133,7 @@ export function SubscriptionStatusCard() {
             </div>
           )}
           
-          {/* Newsletter Generations counter - Show for all users */}
+          {/* Newsletter Generations counter with tier-aware display */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Newsletter Generations:</span>
             <span className="text-sm flex items-center gap-1">
@@ -117,6 +144,7 @@ export function SubscriptionStatusCard() {
               )}
               <span className={remainingNewsletterGenerations > 0 ? "text-green-600 font-medium" : "text-gray-600"}>
                 {remainingNewsletterGenerations}
+                {generationLimit > 0 && ` / ${generationLimit}`}
                 {!isSubscribed && " free"}
               </span>
             </span>
@@ -128,15 +156,15 @@ export function SubscriptionStatusCard() {
             <div className="flex items-start">
               <CheckCircle className="h-5 w-5 text-blue-500 mt-0.5" />
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Active Subscription</h3>
+                <h3 className="text-sm font-medium text-blue-800">Active {tierDisplayName} Plan</h3>
                 <div className="mt-1 text-sm text-blue-700">
-                  You have access to all {subscriptionTier.toLowerCase()} features. Your subscription will{" "}
+                  You have access to all {tierDisplayName.toLowerCase()} features. Your subscription will{" "}
                   {willCancel ? "cancel" : "renew"} on{" "}
                   {subscriptionEnd ? format(subscriptionEnd, "MMMM d, yyyy") : "N/A"}.
                   
-                  {remainingNewsletterGenerations > 0 && (
+                  {remainingNewsletterGenerations > 0 && generationLimit > 0 && (
                     <p className="mt-1">
-                      You have <span className="font-medium">{remainingNewsletterGenerations} newsletter generations</span> available.
+                      You have <span className="font-medium">{remainingNewsletterGenerations} of {generationLimit} newsletter generations</span> available this month.
                     </p>
                   )}
                 </div>

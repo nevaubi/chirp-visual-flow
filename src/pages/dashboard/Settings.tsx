@@ -8,6 +8,40 @@ import { NewsletterPreferences } from "@/components/settings/NewsletterPreferenc
 import { useEffect } from "react";
 import { Crown, Star } from "lucide-react";
 
+// Helper function to get tier display name and remove "Newsletter" prefix
+const getTierDisplayName = (tier: string | null, isSubscribed: boolean): string => {
+  if (!isSubscribed) return "Free";
+  if (!tier) return "Unknown";
+  
+  // Remove "Newsletter" prefix for cleaner display
+  return tier.replace("Newsletter ", "");
+};
+
+// Helper function to get tier-specific information
+const getTierInfo = (tier: string | null, isSubscribed: boolean) => {
+  const displayName = getTierDisplayName(tier, isSubscribed);
+  
+  if (!isSubscribed) {
+    return {
+      displayName,
+      badgeVariant: "outline" as const,
+      badgeClass: "px-3 py-1 text-sm font-semibold text-gray-600 bg-gray-50 border-gray-200",
+      cardIcon: Star,
+      cardIconClass: "h-5 w-5 text-gray-600",
+      cardBgClass: "p-2 rounded-full bg-gray-100"
+    };
+  }
+  
+  return {
+    displayName,
+    badgeVariant: "default" as const,
+    badgeClass: "px-3 py-1 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white",
+    cardIcon: Crown,
+    cardIconClass: "h-5 w-5 text-green-600",
+    cardBgClass: "p-2 rounded-full bg-green-100"
+  };
+};
+
 const Settings = () => {
   const { authState, checkSubscription } = useAuth();
   const { profile } = authState;
@@ -20,8 +54,8 @@ const Settings = () => {
 
   // Get current plan details
   const isSubscribed = profile?.subscribed;
-  const subscriptionTier = profile?.subscription_tier || "Free";
-  const currentPlan = isSubscribed ? subscriptionTier : "Free";
+  const subscriptionTier = profile?.subscription_tier || null;
+  const tierInfo = getTierInfo(subscriptionTier, isSubscribed || false);
 
   return (
     <div className="space-y-6">
@@ -53,16 +87,16 @@ const Settings = () => {
                 {/* Enhanced Current Plan Indicator */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-gray-100">
-                      <Star className="h-5 w-5 text-gray-600" />
+                    <div className={tierInfo.cardBgClass}>
+                      <tierInfo.cardIcon className={tierInfo.cardIconClass} />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
-                      <p className="text-2xl font-bold text-gray-900">{currentPlan}</p>
+                      <p className="text-2xl font-bold text-gray-900">{tierInfo.displayName}</p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="px-3 py-1 text-sm font-semibold text-gray-600 bg-gray-50 border-gray-200">
-                    {currentPlan.toUpperCase()}
+                  <Badge variant={tierInfo.badgeVariant} className={tierInfo.badgeClass}>
+                    {tierInfo.displayName.toUpperCase()}
                   </Badge>
                 </div>
                 
@@ -86,22 +120,22 @@ const Settings = () => {
               <CardHeader>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-green-100">
-                      <Crown className="h-5 w-5 text-green-600" />
+                    <div className={tierInfo.cardBgClass}>
+                      <tierInfo.cardIcon className={tierInfo.cardIconClass} />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
-                      <p className="text-2xl font-bold text-green-700">{currentPlan}</p>
+                      <p className="text-2xl font-bold text-green-700">{tierInfo.displayName}</p>
                     </div>
                   </div>
-                  <Badge className="px-3 py-1 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white">
-                    {currentPlan.toUpperCase()}
+                  <Badge className={tierInfo.badgeClass}>
+                    {tierInfo.displayName.toUpperCase()}
                   </Badge>
                 </div>
                 
                 <CardTitle>Premium Active</CardTitle>
                 <CardDescription>
-                  You have access to all premium features
+                  You have access to all {tierInfo.displayName.toLowerCase()} features
                 </CardDescription>
               </CardHeader>
               <CardContent>
