@@ -1,11 +1,10 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield } from 'lucide-react';
+import { Check, CreditCard, Clock, AlertCircle, Info, Twitter, Bookmark, TrendingUp, Zap, Shield, Lock } from 'lucide-react';
 import WalkthroughPopup from '@/components/auth/WalkthroughPopup';
 import WelcomeNewUserPopup from '@/components/auth/WelcomeNewUserPopup';
 import { toast } from 'sonner';
@@ -24,6 +23,7 @@ const NewsletterDashboard = ({ profile }) => {
   const isSubscribed = profile?.subscribed;
   const subscriptionTier = profile?.subscription_tier;
   const isPremium = subscriptionTier === "Newsletter Premium";
+  const isFreePlan = !isSubscribed;
   
   // Number of remaining manual generations
   const remainingGenerations = profile?.remaining_newsletter_generations || 0;
@@ -31,7 +31,7 @@ const NewsletterDashboard = ({ profile }) => {
   // Check if user has required subscription tier for pro templates
   const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
                           profile?.subscription_tier === "Newsletter Premium";
-  
+
   // Function to handle subscription checkout
   const handleUpgradeSubscription = async () => {
     setIsLoading(true);
@@ -181,112 +181,145 @@ const NewsletterDashboard = ({ profile }) => {
     avgLengthActive = 5,
     researchDepthActive = 5,
     mediaActive = 3,
-    disabled = false
-  }) => (
-    <Card className={`bg-white rounded-xl shadow-sm h-full flex flex-col ${disabled ? 'opacity-60' : ''}`}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-semibold text-gray-900">
-          {title}
-        </CardTitle>
-        {templateNumber && (
-          <Badge variant="secondary" className="w-fit text-xs">
-            Template {templateNumber}
-          </Badge>
+    isLocked = false
+  }) => {
+    // Determine if this template should be disabled
+    const isDisabled = isLocked || (isManual && remainingGenerations <= 0);
+    
+    return (
+      <Card className={`bg-white rounded-xl shadow-sm h-full flex flex-col relative ${
+        isLocked ? 'opacity-60 border-dashed border-gray-300' : ''
+      }`}>
+        {isLocked && (
+          <>
+            <div className="absolute inset-0 bg-gray-200/30 rounded-xl z-10"></div>
+            <div className="absolute top-4 right-4 z-20">
+              <Lock className="w-5 h-5 text-gray-500" />
+            </div>
+          </>
         )}
-        <CardDescription className="text-sm text-gray-600">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 flex-1">
-        {/* Enhanced Content Preview Area */}
-        <div className="bg-gray-50 rounded-lg p-4 h-48 overflow-hidden">
-          <ScrollArea className="h-full w-full">
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
-              <div className="h-4 bg-gray-200 rounded-full w-4/5"></div>
-              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
-              <div className="h-4 bg-gray-200 rounded-full w-2/5"></div>
-              <div className="h-4 bg-gray-200 rounded-full w-full"></div>
-              <div className="h-4 bg-gray-200 rounded-full w-3/5"></div>
-            </div>
-          </ScrollArea>
-        </div>
+        
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold text-gray-900">
+            {title}
+          </CardTitle>
+          <div className="flex gap-2">
+            {templateNumber && (
+              <Badge variant="secondary" className="w-fit text-xs">
+                Template {templateNumber}
+              </Badge>
+            )}
+            {isLocked && (
+              <Badge variant="secondary" className="w-fit text-xs bg-amber-100 text-amber-800 border-amber-200">
+                Premium
+              </Badge>
+            )}
+          </div>
+          <CardDescription className="text-sm text-gray-600">
+            {description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 flex-1">
+          {/* Enhanced Content Preview Area */}
+          <div className="bg-gray-50 rounded-lg p-4 h-48 overflow-hidden">
+            <ScrollArea className="h-full w-full">
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+                <div className="h-4 bg-gray-200 rounded-full w-4/5"></div>
+                <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+                <div className="h-4 bg-gray-200 rounded-full w-2/5"></div>
+                <div className="h-4 bg-gray-200 rounded-full w-full"></div>
+                <div className="h-4 bg-gray-200 rounded-full w-3/5"></div>
+              </div>
+            </ScrollArea>
+          </div>
 
-        {/* Enhanced Metrics Display */}
-        <div className="space-y-3">
-          {/* Avg Length */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Avg Length</span>
-            <div className="flex space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <span 
-                  key={i} 
-                  className={`text-base ${i >= avgLengthActive ? 'opacity-20' : ''}`}
-                >
-                  📄
-                </span>
-              ))}
+          {/* Enhanced Metrics Display */}
+          <div className="space-y-3">
+            {/* Avg Length */}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700 font-medium">Avg Length</span>
+              <div className="flex space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <span 
+                    key={i} 
+                    className={`text-base ${i >= avgLengthActive ? 'opacity-20' : ''}`}
+                  >
+                    📄
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            {/* Research Depth */}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700 font-medium">Research Depth</span>
+              <div className="flex space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <span 
+                    key={i} 
+                    className={`text-base ${i >= researchDepthActive ? 'opacity-20' : ''}`}
+                  >
+                    🔍
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            {/* Media */}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700 font-medium">Media</span>
+              <div className="flex space-x-2">
+                {['📝', '🖼️', '📊'].map((emoji, i) => (
+                  <span 
+                    key={i} 
+                    className={`text-base ${i >= mediaActive ? 'opacity-20' : ''}`}
+                  >
+                    {emoji}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-          
-          {/* Research Depth */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Research Depth</span>
-            <div className="flex space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <span 
-                  key={i} 
-                  className={`text-base ${i >= researchDepthActive ? 'opacity-20' : ''}`}
-                >
-                  🔍
-                </span>
-              ))}
+        </CardContent>
+        
+        <CardFooter className="flex flex-col items-center gap-3 pt-4">
+          {isLocked && (
+            <div className="w-full text-center mb-2">
+              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                🔓 Upgrade to unlock
+              </Badge>
             </div>
-          </div>
-          
-          {/* Media */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Media</span>
-            <div className="flex space-x-2">
-              {['📝', '🖼️', '📊'].map((emoji, i) => (
-                <span 
-                  key={i} 
-                  className={`text-base ${i >= mediaActive ? 'opacity-20' : ''}`}
-                >
-                  {emoji}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="flex flex-col items-center gap-3 pt-4">
-        <Button 
-          onClick={isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName)}
-          className={`w-full font-medium py-3 px-4 rounded-full transition-all duration-200 transform hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
-            disabled 
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-              : isManual 
-                ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
-                : "bg-[#0078d7] hover:bg-[#106ebe] text-white"
-          }`}
-          disabled={disabled || (isManual ? remainingGenerations <= 0 : loadingTemplate === templateName)}
-        >
-          {!isManual && loadingTemplate === templateName ? (
-            <>
-              <span className="mr-2">Generating...</span>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </>
-          ) : disabled ? (
-            "Subscription Required"
-          ) : (
-            buttonText
           )}
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+          
+          <Button 
+            onClick={isLocked ? undefined : (isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName))}
+            className={`w-full font-medium py-3 px-4 rounded-full transition-all duration-200 transform hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
+              isDisabled
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                : isManual 
+                  ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
+                  : "bg-[#0078d7] hover:bg-[#106ebe] text-white"
+            }`}
+            disabled={isDisabled || (isManual ? remainingGenerations <= 0 : loadingTemplate === templateName)}
+          >
+            {!isManual && loadingTemplate === templateName ? (
+              <>
+                <span className="mr-2">Generating...</span>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </>
+            ) : isLocked ? (
+              "Upgrade Required"
+            ) : isManual && remainingGenerations <= 0 ? (
+              "No Generations Left"
+            ) : (
+              buttonText
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -331,7 +364,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={3}
           researchDepthActive={3}
           mediaActive={2}
-          disabled={remainingGenerations <= 0}
+          isLocked={false}
         />
 
         {/* Twin Focus Template - Daily Bytes (3/5, 4/5, 2/3) */}
@@ -346,7 +379,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={3}
           researchDepthActive={4}
           mediaActive={2}
-          disabled={remainingGenerations <= 0}
+          isLocked={isFreePlan}
         />
 
         {/* Modern Clean Template - Weekly Lens (4/5, 5/5, 2/3) */}
@@ -361,7 +394,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={4}
           researchDepthActive={5}
           mediaActive={2}
-          disabled={remainingGenerations <= 0}
+          isLocked={isFreePlan}
         />
       </div>
 
