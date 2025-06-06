@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Home, Book, TrendingUp, Settings } from 'lucide-react';
 
 interface WelcomeNewUserPopupProps {
   open: boolean;
@@ -19,10 +20,10 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
   const username = authState.profile?.twitter_username || 'User';
 
   const tabs = [
-    { name: 'Home', description: 'Generate custom newsletters easily' },
-    { name: 'Library', description: 'Access your newsletter history' },
-    { name: 'Tweets', description: 'Create engaging social content' },
-    { name: 'Settings', description: 'Customize your preferences completely' }
+    { name: 'Home', description: 'Generate custom newsletters easily', icon: Home },
+    { name: 'Library', description: 'Access your newsletter history', icon: Book },
+    { name: 'Tweets', description: 'Create engaging social content', icon: TrendingUp },
+    { name: 'Settings', description: 'Customize your preferences completely', icon: Settings }
   ];
 
   useEffect(() => {
@@ -43,19 +44,19 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
       }, 300);
     }, 2000));
 
-    // Tabs phase - show for 3 seconds
+    // Tabs phase - show for 5 seconds (increased from 3)
     timers.push(setTimeout(() => {
       setShowContent(false);
       setTimeout(() => {
         setPhase('cta');
         setShowContent(true);
       }, 300);
-    }, 5300));
+    }, 7300)); // Updated timing: 2000 + 300 + 5000
 
     // CTA phase - show for 2 seconds then show button
     timers.push(setTimeout(() => {
       setPhase('button');
-    }, 7300));
+    }, 9300)); // Updated timing: 7300 + 2000
 
     return () => {
       timers.forEach(timer => clearTimeout(timer));
@@ -71,7 +72,7 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
               Hi {username}!
             </h2>
             <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-              Welcome to LetterNest 🎉
+              Welcome to letter<span className="text-[#FF6B35]">nest</span> 🎉
             </h3>
           </div>
         );
@@ -82,20 +83,42 @@ const WelcomeNewUserPopup = ({ open, onGotIt }: WelcomeNewUserPopupProps) => {
             <h3 className="text-xl font-semibold text-gray-900 mb-6">
               Explore our features:
             </h3>
-            <div className="grid grid-cols-2 gap-4">
-              {tabs.map((tab, index) => (
-                <div 
-                  key={tab.name}
-                  className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-gray-100 animate-fade-in"
-                  style={{ 
-                    animationDelay: `${index * 0.2}s`,
-                    animationFillMode: 'both'
-                  }}
-                >
-                  <h4 className="font-semibold text-gray-900 mb-1">{tab.name}</h4>
-                  <p className="text-sm text-gray-600">{tab.description}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-6 max-w-lg mx-auto">
+              {/* Left column - Sidebar-style tabs */}
+              <div className="space-y-2">
+                {tabs.map((tab, index) => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <div 
+                      key={tab.name}
+                      className="bg-[#1A1F2C] text-white p-3 rounded-lg flex items-center gap-3 animate-fade-in"
+                      style={{ 
+                        animationDelay: `${index * 0.2}s`,
+                        animationFillMode: 'both'
+                      }}
+                    >
+                      <IconComponent className="w-4 h-4 flex-shrink-0" />
+                      <span className="font-medium text-sm">{tab.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Right column - Descriptions */}
+              <div className="space-y-2 text-left">
+                {tabs.map((tab, index) => (
+                  <div 
+                    key={`${tab.name}-desc`}
+                    className="p-3 flex items-center h-[52px] animate-fade-in"
+                    style={{ 
+                      animationDelay: `${index * 0.2 + 0.1}s`,
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    <p className="text-sm text-gray-600">{tab.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
