@@ -40,9 +40,11 @@ const extractCustomerId = (customer: string | any): string => {
 
 // Helper function to determine newsletter generation count based on subscription type and price
 const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
-  // If it's a newsletter subscription, set a fixed value of 20
-  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-    return 20; // Fixed value for newsletter subscriptions
+  // If it's a newsletter subscription, set appropriate value based on tier
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+    return 20; // Newsletter Standard
+  } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+    return 30; // Newsletter Pro
   }
   
   // Otherwise use preference-based logic as fallback
@@ -136,16 +138,16 @@ serve(async (req) => {
           for (const item of lineItems) {
             priceId = item.price?.id;
             // Check if it's a newsletter price ID
-            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
               isNewsletterSubscription = true;
               break;
             }
           }
         }
         
-        // Set remaining_newsletter_generations to 20 for newsletter subscriptions
+        // Set remaining_newsletter_generations based on subscription tier
         let remainingNewsletterGenerations = isNewsletterSubscription 
-          ? 20 
+          ? determineNewsletterGenerationCount(newsletterDayPreference, priceId)
           : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
         
         if (session.metadata?.newsletter_content_preferences) {
@@ -202,8 +204,8 @@ serve(async (req) => {
               // Map price IDs to subscription tiers
               if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
                 subscriptionTier = "Newsletter Standard";
-              } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-                subscriptionTier = "Newsletter Premium";
+              } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+                subscriptionTier = "Newsletter Pro";
               }
               
               // Calculate subscription period end
@@ -357,8 +359,8 @@ serve(async (req) => {
     // Map price IDs to subscription tiers
     if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
       subscriptionTier = "Newsletter Standard";
-    } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-      subscriptionTier = "Newsletter Premium";
+    } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+      subscriptionTier = "Newsletter Pro";
     }
 
     // Calculate subscription period end

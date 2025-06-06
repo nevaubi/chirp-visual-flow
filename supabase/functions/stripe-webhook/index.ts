@@ -10,9 +10,11 @@ const logStep = (step: string, details?: any) => {
 
 // Helper function to determine newsletter generation count based on newsletter_day_preference or subscription
 const determineNewsletterGenerationCount = (preference: string | null | undefined, priceId: string | null | undefined): number => {
-  // If it's a newsletter subscription, set a fixed value of 20
-  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-    return 20; // Fixed value for newsletter subscriptions
+  // If it's a newsletter subscription, set appropriate value based on tier
+  if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
+    return 20; // Newsletter Standard
+  } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+    return 30; // Newsletter Pro
   }
   
   // Otherwise use preference-based logic as fallback
@@ -117,20 +119,17 @@ serve(async (req) => {
           for (const item of lineItems) {
             priceId = item.price?.id;
             // Check if it's a newsletter price ID
-            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
+            if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
               isNewsletterSubscription = true;
               break;
             }
           }
         }
         
-        // Set remaining newsletter generations based on subscription or preference
-        let remainingNewsletterGenerations = 20; // Default to 20 for newsletter subscriptions
-        
-        // If not a newsletter subscription, determine from preference
-        if (!isNewsletterSubscription) {
-          remainingNewsletterGenerations = determineNewsletterGenerationCount(newsletterDayPreference, priceId);
-        }
+        // Set remaining newsletter generations based on subscription tier
+        let remainingNewsletterGenerations = isNewsletterSubscription 
+          ? determineNewsletterGenerationCount(newsletterDayPreference, priceId)
+          : determineNewsletterGenerationCount(newsletterDayPreference, priceId);
         
         logStep("Newsletter generations determined", { 
           isNewsletterSubscription, 
@@ -152,7 +151,7 @@ serve(async (req) => {
             profileUpdates.newsletter_content_preferences = newsletterContentPreferences;
           }
           
-          // Set the remaining_newsletter_generations to 20 for newsletter subscriptions
+          // Set the remaining_newsletter_generations based on tier
           profileUpdates.remaining_newsletter_generations = remainingNewsletterGenerations;
           
           const { error: updateError } = await supabaseAdmin
@@ -186,8 +185,8 @@ serve(async (req) => {
         let subscriptionTier = null;
         if (priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH") {
           subscriptionTier = "Newsletter Standard";
-        } else if (priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr") {
-          subscriptionTier = "Newsletter Premium";
+        } else if (priceId === "price_1RX2YIDBIslKIY5sV4I0E592") {
+          subscriptionTier = "Newsletter Pro";
         }
         
         // Calculate subscription period end
@@ -211,13 +210,13 @@ serve(async (req) => {
         
         // Update each profile
         for (const profile of profiles) {
-          // Determine the generation count based on price ID and preference
+          // Determine the generation count based on price ID
           const isNewsletterSubscription = priceId === "price_1RQUm7DBIslKIY5sNlWTFrQH" || 
-                                          priceId === "price_1RQUmRDBIslKIY5seHRZm8Gr";
+                                          priceId === "price_1RX2YIDBIslKIY5sV4I0E592";
           
-          // Set to 20 for newsletter subscriptions, otherwise use preference-based logic
+          // Set based on tier: Standard = 20, Pro = 30
           const remainingNewsletterGenerations = isNewsletterSubscription 
-            ? 20 
+            ? determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId)
             : determineNewsletterGenerationCount(profile.newsletter_day_preference, priceId);
           
           logStep("Setting newsletter generations", { 
