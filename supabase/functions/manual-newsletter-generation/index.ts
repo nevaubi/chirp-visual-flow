@@ -38,13 +38,15 @@ async function generateNewsletter(userId: string, selectedCount: number, jwt: st
       throw new Error("Failed to fetch user profile");
     }
 
-    // 4) Subscription & plan & tokens checks
-    if (!profile.subscription_tier) {
-      throw new Error("You must have an active subscription to generate newsletters");
+    // 4) Updated subscription & plan & tokens checks - allow free users with remaining generations
+    if (!profile.subscription_tier && (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0)) {
+      throw new Error("You must have an active subscription or remaining free generations to generate newsletters");
     }
     
     if (!profile.remaining_newsletter_generations || profile.remaining_newsletter_generations <= 0) {
-      throw new Error("You have no remaining newsletter generations");
+      if (!profile.subscription_tier) {
+        throw new Error("You have no remaining newsletter generations and no active subscription");
+      }
     }
     
     if (!profile.twitter_bookmark_access_token) {
@@ -1043,7 +1045,7 @@ ${markdownNewsletter}
       console.error("Error saving newsletter to storage:", storageErr);
     }
 
-    // 19) Update remaining generations count
+    // 19) Update remaining generations count - only for users without subscription or with remaining generations
     if (profile.remaining_newsletter_generations > 0) {
       const newCount = profile.remaining_newsletter_generations - 1;
       const { error: updateError } = await supabase.from("profiles").update({
