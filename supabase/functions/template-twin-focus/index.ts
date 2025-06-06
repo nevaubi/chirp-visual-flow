@@ -283,7 +283,7 @@ ${formattedTweets}`;
             { role: "user", content: analysisUserPrompt }
           ],
           temperature: 0.5,
-          max_tokens: 8000
+          max_tokens: 10000
         })
       });
       if (!openaiRes.ok) {
@@ -386,7 +386,7 @@ Provide complete, integrated analysis.`;
               { role: "system", content: "You are an expert content editor, skilled at seamlessly integrating supplementary information." },
               { role: "user", content: integrationPrompt }
             ],
-            temperature: 0.3, max_tokens: 8000
+            temperature: 0.3, max_tokens: 10000
           })
         });
         if (integrationRes.ok) {
@@ -494,7 +494,7 @@ ${finalAnalysisForMarkdown}`;
                 { role: "system", content: markdownSystemPrompt },
                 { role: "user", content: markdownUserPrompt }
               ],
-              temperature: 0.2, max_tokens: 8000
+              temperature: 0.2, max_tokens: 10000
             })
           });
           if (markdownOpenaiRes.ok) {
