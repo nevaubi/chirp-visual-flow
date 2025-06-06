@@ -10,13 +10,25 @@ import WelcomeNewUserPopup from '@/components/auth/WelcomeNewUserPopup';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ManualNewsletterDialog from '@/components/newsletter/ManualNewsletterDialog';
+import TemplateNewsletterDialog from '@/components/newsletter/TemplateNewsletterDialog';
 
-// Newsletter Platform Dashboard - enhanced version
+// Newsletter Platform Dashboard - enhanced version with template dialogs
 const NewsletterDashboard = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [selectedCount, setSelectedCount] = useState(10);
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
+  
+  // NEW STATE for template dialogs
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    id: number;
+    name: string;
+    displayName: string;
+    allowedCounts: number[];
+    edgeFunctionName: string;
+  } | null>(null);
+  
   const { refreshProfile } = useAuth();
 
   // Check if user has a subscription
@@ -69,7 +81,8 @@ const NewsletterDashboard = ({ profile }) => {
     setShowManualDialog(true);
   };
 
-  const handleUseTemplate = async (templateId: number, templateName: string) => {
+  // UPDATED handleUseTemplate function to open dialogs instead of direct calls
+  const handleUseTemplate = async (templateId: number, templateName: string, templateDisplayName: string) => {
     // Check if user has required subscription tier
     if (!hasRequiredTier) {
       toast.error("Subscription Required", {
@@ -85,87 +98,32 @@ const NewsletterDashboard = ({ profile }) => {
       return;
     }
 
-    // Handle different templates
+    // Configure template settings
+    let templateConfig = null;
+    
     if (templateId === 1) {
-      // Modern Clean template
-      setLoadingTemplate(templateName);
-      
-      try {
-        const selectedCount = 20;
-        console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
-
-        const { data, error } = await supabase.functions.invoke('template-modern-clean', {
-          body: { selectedCount },
-        });
-
-        if (error) {
-          console.error(`Error generating ${templateName} newsletter:`, error);
-          toast.error(`Failed to generate ${templateName} newsletter`, {
-            description: error.message || 'Please try again later',
-          });
-          return;
-        }
-
-        if (data.error) {
-          console.error(`Function returned error:`, data.error);
-          toast.error(`Failed to generate ${templateName} newsletter`, {
-            description: data.error,
-          });
-          return;
-        }
-
-        toast.success(`${templateName} Newsletter Generated!`, {
-          description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
-        });
-
-      } catch (error) {
-        console.error(`Error in handleUseTemplate for ${templateName}:`, error);
-        toast.error(`Failed to generate ${templateName} newsletter`, {
-          description: 'An unexpected error occurred. Please try again later.',
-        });
-      } finally {
-        setLoadingTemplate(null);
-      }
+      // Modern Clean template (Template 3 in UI) - only 20, 30 bookmarks allowed
+      templateConfig = {
+        id: templateId,
+        name: templateName,
+        displayName: templateDisplayName,
+        allowedCounts: [20, 30],
+        edgeFunctionName: 'template-modern-clean'
+      };
     } else if (templateId === 2) {
-      // Twin Focus template
-      setLoadingTemplate(templateName);
-      
-      try {
-        const selectedCount = 20;
-        console.log(`Using ${templateName} template with ${selectedCount} bookmarks`);
+      // Twin Focus template (Template 2 in UI) - 10, 20, 30 bookmarks allowed
+      templateConfig = {
+        id: templateId,
+        name: templateName,
+        displayName: templateDisplayName,
+        allowedCounts: [10, 20, 30],
+        edgeFunctionName: 'template-twin-focus'
+      };
+    }
 
-        const { data, error } = await supabase.functions.invoke('template-twin-focus', {
-          body: { selectedCount },
-        });
-
-        if (error) {
-          console.error(`Error generating ${templateName} newsletter:`, error);
-          toast.error(`Failed to generate ${templateName} newsletter`, {
-            description: error.message || 'Please try again later',
-          });
-          return;
-        }
-
-        if (data.error) {
-          console.error(`Function returned error:`, data.error);
-          toast.error(`Failed to generate ${templateName} newsletter`, {
-            description: data.error,
-          });
-          return;
-        }
-
-        toast.success(`${templateName} Newsletter Generated!`, {
-          description: `Your ${templateName.toLowerCase()} newsletter is being processed and will be available in your Library and email soon.`,
-        });
-
-      } catch (error) {
-        console.error(`Error in handleUseTemplate for ${templateName}:`, error);
-        toast.error(`Failed to generate ${templateName} newsletter`, {
-          description: 'An unexpected error occurred. Please try again later.',
-        });
-      } finally {
-        setLoadingTemplate(null);
-      }
+    if (templateConfig) {
+      setSelectedTemplate(templateConfig);
+      setShowTemplateDialog(true);
     }
   };
 
@@ -175,6 +133,7 @@ const NewsletterDashboard = ({ profile }) => {
     description, 
     templateId, 
     templateName, 
+    templateDisplayName,
     buttonText, 
     isManual = false, 
     templateNumber,
@@ -293,7 +252,11 @@ const NewsletterDashboard = ({ profile }) => {
           )}
           
           <Button 
-            onClick={isLocked ? undefined : (isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName))}
+            onClick={isLocked ? undefined : (
+              isManual 
+                ? handleGenerateNewsletter 
+                : () => handleUseTemplate(templateId, templateName, templateDisplayName)
+            )}
             className={`w-full font-medium py-3 px-4 rounded-full transition-all duration-200 transform hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
               isDisabled
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
@@ -325,7 +288,7 @@ const NewsletterDashboard = ({ profile }) => {
     <div className="space-y-6">
       {/* Header row with welcome text on left and instructions on right */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        {/* Left - Welcome text - updated from "Welcome to Newsletters" to "Welcome" */}
+        {/* Left - Welcome text */}
         <div className="text-center lg:text-left">
           <h1 className="text-3xl font-bold text-gray-900">Welcome, {profile?.twitter_username || 'User'}</h1>
         </div>
@@ -358,6 +321,7 @@ const NewsletterDashboard = ({ profile }) => {
           description="Manually generate a newsletter with your chosen bookmark count - clean, structured layout for polished daily reading."
           templateId={null}
           templateName=""
+          templateDisplayName=""
           buttonText="Generate Newsletter"
           isManual={true}
           templateNumber="1"
@@ -373,6 +337,7 @@ const NewsletterDashboard = ({ profile }) => {
           description="A sleek, balanced layout designed for fast yet detailed insights—built to inform, not overload."
           templateId={2}
           templateName="Twin Focus"
+          templateDisplayName="Daily Bytes"
           buttonText="Generate Newsletter"
           isManual={false}
           templateNumber="2"
@@ -388,6 +353,7 @@ const NewsletterDashboard = ({ profile }) => {
           description="A minimalist design with white background and clean formatting, perfect for audiences or production use cases"
           templateId={1}
           templateName="Modern Clean"
+          templateDisplayName="Weekly Lens"
           buttonText="Generate Newsletter"
           isManual={false}
           templateNumber="3"
@@ -421,6 +387,20 @@ const NewsletterDashboard = ({ profile }) => {
         onOpenChange={setShowManualDialog}
         remainingGenerations={remainingGenerations}
       />
+
+      {/* NEW: Template Newsletter Dialog */}
+      {selectedTemplate && (
+        <TemplateNewsletterDialog
+          open={showTemplateDialog}
+          onOpenChange={setShowTemplateDialog}
+          templateId={selectedTemplate.id}
+          templateName={selectedTemplate.name}
+          templateDisplayName={selectedTemplate.displayName}
+          allowedCounts={selectedTemplate.allowedCounts}
+          remainingGenerations={remainingGenerations}
+          edgeFunctionName={selectedTemplate.edgeFunctionName}
+        />
+      )}
     </div>
   );
 };
