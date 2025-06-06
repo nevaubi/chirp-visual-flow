@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { 
@@ -41,7 +42,7 @@ const TweetCountOption = ({
     onClick={onSelect}
   >
     <div className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">{count}</div>
-    <div className="text-xs sm:text-sm text-gray-600">tweets</div>
+    <div className="text-xs sm:text-sm text-gray-600">bookmarks</div>
   </Card>
 );
 
@@ -213,10 +214,10 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[95vw] max-w-[90vw] sm:max-w-md md:max-w-lg max-h-[85vh] sm:max-h-[80vh]">
           <DialogHeader className="space-y-2 sm:space-y-3">
-            <DialogTitle className="text-lg sm:text-xl">Generate Newsletter Manually</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Classic Layout</DialogTitle>
             <DialogDescription className="text-sm sm:text-base">
               Instantly trigger a newsletter from your saved bookmarks. 
-              It will be sent to your email and displayed here.
+              It will be sent to your email and saved in your library.
             </DialogDescription>
           </DialogHeader>
           
@@ -444,7 +445,7 @@ const ManualNewsletterDialog: React.FC<ManualNewsletterDialogProps> = ({
           
           <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
             <div className="bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-md p-2 sm:p-3 text-xs sm:text-sm text-[#FF6B35]">
-              <p>Make sure you've already saved the bookmarks you'd like to include in your newsletter.</p>
+              <p>Make sure the tweets you want to use are already bookmarked!</p>
             </div>
             
             <div className="space-y-2 sm:space-y-3">
