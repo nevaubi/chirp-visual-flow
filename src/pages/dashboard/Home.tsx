@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -178,9 +179,10 @@ const NewsletterDashboard = ({ profile }) => {
     templateNumber,
     avgLengthActive = 5,
     researchDepthActive = 5,
-    mediaActive = 3
+    mediaActive = 3,
+    disabled = false
   }) => (
-    <Card className="bg-white rounded-xl shadow-sm h-full flex flex-col">
+    <Card className={`bg-white rounded-xl shadow-sm h-full flex flex-col ${disabled ? 'opacity-60' : ''}`}>
       <CardHeader className="pb-4">
         <CardTitle className="text-xl font-semibold text-gray-900">
           {title}
@@ -259,20 +261,24 @@ const NewsletterDashboard = ({ profile }) => {
       </CardContent>
       
       <CardFooter className="flex flex-col items-center gap-3 pt-4">
-        {/* Removed generation counter display for home page manual card */}
-        
         <Button 
           onClick={isManual ? handleGenerateNewsletter : () => handleUseTemplate(templateId, templateName)}
           className={`w-full font-medium py-3 px-4 rounded-full transition-all duration-200 transform hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
-            isManual ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" : "bg-[#0078d7] hover:bg-[#106ebe] text-white"
+            disabled 
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+              : isManual 
+                ? "bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white" 
+                : "bg-[#0078d7] hover:bg-[#106ebe] text-white"
           }`}
-          disabled={isManual ? remainingGenerations <= 0 : loadingTemplate === templateName}
+          disabled={disabled || (isManual ? remainingGenerations <= 0 : loadingTemplate === templateName)}
         >
           {!isManual && loadingTemplate === templateName ? (
             <>
               <span className="mr-2">Generating...</span>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             </>
+          ) : disabled ? (
+            "Subscription Required"
           ) : (
             buttonText
           )}
@@ -324,6 +330,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={3}
           researchDepthActive={3}
           mediaActive={2}
+          disabled={remainingGenerations <= 0}
         />
 
         {/* Twin Focus Template - Daily Bytes (3/5, 4/5, 2/3) */}
@@ -338,6 +345,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={3}
           researchDepthActive={4}
           mediaActive={2}
+          disabled={remainingGenerations <= 0}
         />
 
         {/* Modern Clean Template - Weekly Lens (4/5, 5/5, 2/3) */}
@@ -352,6 +360,7 @@ const NewsletterDashboard = ({ profile }) => {
           avgLengthActive={4}
           researchDepthActive={5}
           mediaActive={2}
+          disabled={remainingGenerations <= 0}
         />
       </div>
 
