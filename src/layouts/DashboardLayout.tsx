@@ -52,9 +52,12 @@ const DashboardLayout = () => {
   const isCreatorPlatform = profile?.is_creator_platform;
   const isSubscribed = profile?.subscribed;
   
-  // Check if user has the required subscription tier
+  // Check if user has the required subscription tier for templates 2 & 3
   const hasRequiredTier = profile?.subscription_tier === "Newsletter Standard" || 
                           profile?.subscription_tier === "Newsletter Premium";
+
+  // Check if user can use Quick Create (Template 1) - available for free users with remaining generations
+  const canUseQuickCreate = profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0;
 
   // Listen for topic selection events
   useEffect(() => {
@@ -114,20 +117,14 @@ const DashboardLayout = () => {
   };
 
   const handleCreateNewsletter = () => {
-    if (!hasRequiredTier) {
-      toast.error("Subscription Required", {
-        description: "Please upgrade to Newsletter Standard or Premium to create newsletters.",
+    if (!canUseQuickCreate) {
+      toast.error("No Generations Available", {
+        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
       });
       return;
     }
     
-    if (profile?.remaining_newsletter_generations && profile.remaining_newsletter_generations > 0) {
-      setIsManualGenerationOpen(true);
-    } else {
-      toast.error("No Generations Available", {
-        description: "You don't have any remaining newsletter generations. Please upgrade your plan.",
-      });
-    }
+    setIsManualGenerationOpen(true);
     
     if (isMobile && mobileMenuOpen) {
       setMobileMenuOpen(false);
@@ -386,12 +383,12 @@ const DashboardLayout = () => {
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3 text-white rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
                       shouldShowExpanded ? "justify-center" : "justify-center px-0",
-                      hasRequiredTier 
+                      canUseQuickCreate 
                         ? "bg-gradient-to-r from-[#FF6B35] to-[#ff5722] hover:from-[#ff5722] hover:to-[#e64a19] shadow-md" 
                         : "bg-[#FF6B35]/40 text-white/70 cursor-not-allowed"
                     )}
                     onClick={handleCreateNewsletter}
-                    disabled={!hasRequiredTier}
+                    disabled={!canUseQuickCreate}
                   >
                     <Zap size={20} />
                     {shouldShowExpanded && (
